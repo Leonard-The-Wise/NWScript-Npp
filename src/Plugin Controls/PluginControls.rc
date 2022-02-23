@@ -1,0 +1,108 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "PluginControlsRC.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <Windows.h>
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Portuguese (Brazil) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PTB)
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "PluginControlsRC.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include <Windows.h>\r\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 309, 242
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About NWScript Plugin"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,222,50,14
+    CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
+    CTEXT           "NWScript Unicode for Notepad++",IDC_LBLPLUGINNAME,118,18,188,8
+    CTEXT           "(C) Feb 2022, Leonardo Silva (aka: Leonard-The-Wise)",IDC_LBLCOPYRIGHT,118,46,188,8
+    CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
+                    "SysLink",WS_TABSTOP,71,113,204,14
+    CTEXT           "Special Credits:\n\nDon HO for Notepad++\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (nwsc) Team",IDC_LBLSPECIALCREDITS,118,66,189,42
+    EDITTEXT        IDC_TXTABOUT,7,126,295,89,ES_MULTILINE | ES_READONLY | WS_VSCROLL,WS_EX_STATICEDGE
+    LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,8
+    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,118,27,189,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 302
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 236
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_NWSCRIPTLOGO        BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript.bmp"
+
+#endif    // Portuguese (Brazil) resources
+/////////////////////////////////////////////////////////////////////////////
+
+

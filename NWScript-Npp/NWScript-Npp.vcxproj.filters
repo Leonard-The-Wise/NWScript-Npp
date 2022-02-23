@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Precompiled Header Files">
+      <UniqueIdentifier>{4a737d6f-3737-4407-a782-b7ad75e19fe4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin Interface">
+      <UniqueIdentifier>{317db69f-b0d1-4a41-9b3d-8714f6ea043f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Custom Lexers">
+      <UniqueIdentifier>{46423f29-1bbd-4894-90f3-d75e3ef61f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Custom Lexers\Scintilla">
+      <UniqueIdentifier>{b3cafbc5-328f-4cf8-95f4-d91fa7abefd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Custom Lexers\Lexlib">
+      <UniqueIdentifier>{7d8286bb-e2a5-47df-b859-c1cf53dc0c83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{90a8dbe2-10ff-4f24-babb-23d96f92342b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Media">
+      <UniqueIdentifier>{abdc2c96-0ca0-4ead-832d-35671218effd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Notepad Controls">
+      <UniqueIdentifier>{e35432f4-6e71-474d-8987-b140a5fc1196}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\PluginMain.h" />
+    <ClInclude Include="..\src\framework.h">
+      <Filter>Precompiled Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\pch.h">
+      <Filter>Precompiled Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Scintilla\ILexer.h">
+      <Filter>Custom Lexers\Scintilla</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h">
+      <Filter>Custom Lexers\Scintilla</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h">
+      <Filter>Custom Lexers\Scintilla</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\Notepad_plus_msgs.h">
+      <Filter>Plugin Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\PluginInterface.h">
+      <Filter>Plugin Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\menuCmdID.h">
+      <Filter>Plugin Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\CharacterSet.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\LexAccessor.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\OptionSet.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\SparseState.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\StyleContext.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\WordList.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\Accessor.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexlib\SubStyles.h">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\LexNWScript.h">
+      <Filter>Custom Lexers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Scintilla\SciLexer.h">
+      <Filter>Custom Lexers\Scintilla</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\LexerInterface.h">
+      <Filter>Plugin Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\LexerCatalogue.h">
+      <Filter>Custom Lexers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\MiniINI.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\DllMain.h">
+      <Filter>Plugin Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\Serialization.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\dockingResource.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\Docking.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\StaticDialog.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\Window.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\VersionFromResource.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
+    <ClInclude Include="..\src\ProjectVersion.h" />
+    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\PluginMain.cxx" />
+    <ClCompile Include="..\src\pch.cxx">
+      <Filter>Precompiled Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx">
+      <Filter>Custom Lexers\Lexlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\LexNWScript.cxx">
+      <Filter>Custom Lexers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Interface\LexerInterface.cxx">
+      <Filter>Plugin Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\LexerCatalogue.cxx">
+      <Filter>Custom Lexers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Interface\PluginInterface.cxx">
+      <Filter>Plugin Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LineIndentor.cxx" />
+    <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp">
+      <Filter>Notepad Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\src\ProjectVersion.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Publish.Dll.To.Notepad.targets">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\UnityTest.nss">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\ReadMe.md">
+      <Filter>Media</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Media\Sample-Colorization.jpg">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="..\Media\NWScript.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
