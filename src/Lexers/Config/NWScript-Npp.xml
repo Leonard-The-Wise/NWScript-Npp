@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<NotepadPlus>
+	<Languages>
+        <Language name="NWScript" ext="nss" commentLine="//" commentStart="/*" commentEnd="*/">
+            <Keywords name="instre1">break case continue default do else FALSE for if return switch TRUE while</Keywords>
+            <Keywords name="type1">const float int string struct vector void</Keywords>
+            <Keywords name="type2">effect event location talent itemproperty sqlquery cassowary json</Keywords>
+            <Keywords name="type3">object</Keywords>
+            <Keywords name="type4">OBJECT_INVALID AC_VS_DAMAGE_TYPE_ALL ALIGNMENT_ALL SAVING_THROW_ALL SAVING_THROW_TYPE_ALL SAVING_THROW_TYPE_NONE</Keywords>
+            <Keywords name="type5" />
+            <Keywords name="type6">GetIsPC</Keywords>
+            <Keywords name="type7" />
+        </Language>	
+	</Languages>
+	<LexerStyles>
+        <LexerType name="NWScript" desc="Bioware's NWScript" ext="">
+            <WordsStyle name="PREPROCESSOR" styleID="9" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="INSTRUCTION WORD" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
+            <WordsStyle name="TYPE WORD" styleID="16" fgColor="AA00AA" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type1" />
+            <WordsStyle name="ENGINE TYPE" styleID="28" fgColor="FF09FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type2" />
+            <WordsStyle name="OBJECT TYPE" styleID="29" fgColor="0065CA" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="type3" />
+            <WordsStyle name="ENGINE CONSTANT" styleID="30" fgColor="0075EA" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type4" />
+            <WordsStyle name="CUSTOM CONSTANT" styleID="31" fgColor="0057AE" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type5">COLOR_WHITE</WordsStyle>
+            <WordsStyle name="ENGINE FUNCTION" styleID="32" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
+            <WordsStyle name="USER FUNCTION" styleID="36" fgColor="5200A4" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type7">GetNamePCColor</WordsStyle>
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="STRING" styleID="6" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        </LexerType>
+	</LexerStyles>
+</NotepadPlus>
