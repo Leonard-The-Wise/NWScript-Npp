@@ -120,8 +120,10 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
-    <ClInclude Include="..\src\ProjectVersion.h" />
-    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
+    <ClInclude Include="..\src\ProjectVersion.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Settings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cxx" />
@@ -154,6 +156,7 @@
       <Filter>Notepad Controls</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
+    <ClCompile Include="..\src\Settings.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">

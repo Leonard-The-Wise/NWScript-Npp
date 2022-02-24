@@ -58,7 +58,7 @@ BEGIN
     CTEXT           "(C) Feb 2022, Leonardo Silva (aka: Leonard-The-Wise)",IDC_LBLCOPYRIGHT,118,46,188,8
     CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
                     "SysLink",WS_TABSTOP,71,113,204,14
-    CTEXT           "Special Credits:\n\nDon HO for Notepad++\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (nwsc) Team",IDC_LBLSPECIALCREDITS,118,66,189,42
+    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (NWNSC) Team",IDC_LBLSPECIALCREDITS,118,66,189,42
     EDITTEXT        IDC_TXTABOUT,7,126,295,89,ES_MULTILINE | ES_READONLY | WS_VSCROLL,WS_EX_STATICEDGE
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,8
     CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,118,27,189,8

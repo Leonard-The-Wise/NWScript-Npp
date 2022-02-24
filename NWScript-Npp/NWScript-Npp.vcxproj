@@ -216,7 +216,6 @@
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
     <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -224,6 +223,7 @@
     <ClInclude Include="..\src\Plugin Interface\PluginInterface.h" />
     <ClInclude Include="..\src\PluginMain.h" />
     <ClInclude Include="..\src\ProjectVersion.h" />
+    <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
     <ClInclude Include="..\src\Utils\Serialization.h" />
     <ClInclude Include="..\src\Utils\VersionFromResource.h" />
@@ -251,6 +251,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Interface\PluginInterface.cxx" />
+    <ClCompile Include="..\src\Settings.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc" />

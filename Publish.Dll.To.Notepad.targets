@@ -7,7 +7,7 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="NotepadPlugin.DllExport.MSBuild.DllExportTask"
              AssemblyFile="NotepadPlugin.DllExport.MSBuild.dll"/>
-  <Target Name="AfterBuild" DependsOnTargets="GetFrameworkPaths">
+  <Target Name="AfterBuild">
     <PropertyGroup>
       <!-- LibToolPath is optional - it's needed to debug C++, but you can still debug the C# code without it
 			If you don't have the C++ toolchain installed this is missing, but then you can't' debug C++ anyway -->
