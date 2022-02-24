@@ -5,8 +5,6 @@
  * 
  * To use this file, you MUST add "version.lib" to your project Linker's "Aditional Dependencies"
  * 
- * DEPRECATED: Moved to a dynamic versioning control. Kept for library additions.
- * 
  **/
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
@@ -14,9 +12,8 @@
 #pragma once
 
 #include <Windows.h>
-#include "resource.h"
 
-// If version resource renamed in resource.h, change VS_VERSION_INFO to point to the new resource ID
+// If version resource renamed, change VS_VERSION_INFO to point to the new resource ID
 #ifdef VS_VERSION_INFO
 #define VERSION_POINTER VS_VERSION_INFO
 #else
@@ -54,7 +51,7 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 	LPVOID pRes, pResCopy;
 	UINT uLen = 0;
 	VS_FIXEDFILEINFO* lpFfi = NULL;
-	HINSTANCE hInst = hModule; // getThisModuleHandle();
+	HINSTANCE hInst = hModule; 
 	DllVersionInfo VersionInfo;
 
 	hResInfo = FindResource(hInst, reinterpret_cast<LPCWSTR>(MAKEINTRESOURCE(VERSION_POINTER)), RT_VERSION);
@@ -72,7 +69,7 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 				{
 					CopyMemory(pResCopy, pRes, dwSize);
 
-					if (VerQueryValue(pResCopy, L"\\", (LPVOID*)&lpFfi, &uLen))
+					if (VerQueryValue(pResCopy, L"\\", reinterpret_cast<LPVOID*>(&lpFfi), &uLen))
 					{
 						if (lpFfi != NULL)
 						{
@@ -88,4 +85,10 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 	}
 
 	return VersionInfo;
+}
+
+DllVersionInfo GetVersionFromLocalResource()
+{
+	HMODULE hModule = getThisModuleHandle();
+	return GetVersionFromResource(hModule);
 }

@@ -11,13 +11,6 @@
 
 using namespace NWScriptPlugin;
 
-// Extracted from "resource.h" from Notepad++ repository
-#define MACRO_USER    (WM_USER + 4000)
-#define WM_GETCURRENTMACROSTATUS (MACRO_USER + 01)
-#define WM_MACRODLGRUNMACRO       (MACRO_USER + 02)
-#define MACRO_RECORDING_IN_PROGRESS 1
-#define MACRO_RECORDING_HAS_STOPPED 2
-
 // Define static member
 Plugin::Messenger* Plugin::LineIndentor::pMsg(nullptr);
 
@@ -144,10 +137,6 @@ void Plugin::LineIndentor::SetMessenger(Messenger* SciMessenger)
 void Plugin::LineIndentor::AutoIndentLine(TCHAR ch)
 {
 	if (!pMsg)
-		return;
-
-	auto MacroRunning = pMsg->SendNppMessage<int>(WM_GETCURRENTMACROSTATUS);
-	if (MacroRunning == MACRO_RECORDING_IN_PROGRESS)
 		return;
 
 	intptr_t eolMode = pMsg->SendSciMessage<intptr_t>(SCI_GETEOLMODE);

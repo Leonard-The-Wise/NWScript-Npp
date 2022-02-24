@@ -38,6 +38,8 @@ enum LangType {
 	// The end of enumated language type, so it should be always at the end
 	L_EXTERNAL
 };
+enum class LangAutoIndentType { Standard = 1, Extended, Custom };
+enum class MacroStatus { Idle, RecordInProgress, RecordStop, PlayingBack };
 
 enum winVer { WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV_S2003, WV_XPX64, WV_VISTA, WV_WIN7, WV_WIN8, WV_WIN81, WV_WIN10 };
 enum Platform { PF_UNKNOWN, PF_X86, PF_X64, PF_IA64, PF_ARM64 };
@@ -456,6 +458,26 @@ struct toolbarIconsWithDarkMode {
 	HICON	hToolbarIconDarkMode;
 };
 
+#define NPPM_GETLANGUAGEAUTOINDENTATION  (NPPMSG + 103)
+// INT NPPM_GETLANGUAGEAUTOINDENTATION(const TCHAR *languageName, LangAutoIndentType &autoIndentType)
+// Get LangAutoIndentType for an installed external programming language.
+// returned values: TRUE for successful searches, otherwise FALSE.
+
+#define NPPM_SETLANGUAGEAUTOINDENTATION  (NPPMSG + 104)
+// BOOL NPPM_SETLANGUAGEAUTOINDENTATION(const TCHAR *languageName, LangAutoIndentType autoIndentType)
+// Set LangAutoIndentType for an installed external programming language.
+// returned value: TRUE if function call was successful, otherwise FALSE.
+
+#define NPPM_GETUSEAUTOINDENTATIONSETTING  (NPPMSG + 105)
+// BOOL NPPM_GETUSEAUTOINDENTATIONSETTING(0, 0)
+// Returns the current Use Auto-Indentation setting in Notepad++ Preferences.
+
+#define NPPM_GETCURRENTMACROSTATUS (NPPMSG + 106)
+// MACROSTATUS NPPM_GETCURRENTMACROSTATUS(0, 0)
+// Gets current enum class MacroStatus { Idle, RecordInProgress, RecordStop, PlayingBack }
+
+
+
 #define VAR_NOT_RECOGNIZED 0
 #define FULL_CURRENT_PATH 1
 #define CURRENT_DIRECTORY 2
@@ -468,6 +490,7 @@ struct toolbarIconsWithDarkMode {
 #define CURRENT_COLUMN 9
 #define NPP_FULL_FILE_PATH 10
 #define GETFILENAMEATCURSOR 11
+#define CURRENT_LINESTR 12
 
 #define	RUNCOMMAND_USER    (WM_USER + 3000)
 #define NPPM_GETFULLCURRENTPATH		(RUNCOMMAND_USER + FULL_CURRENT_PATH)
@@ -478,6 +501,7 @@ struct toolbarIconsWithDarkMode {
 #define NPPM_GETCURRENTWORD			(RUNCOMMAND_USER + CURRENT_WORD)
 #define NPPM_GETNPPDIRECTORY		(RUNCOMMAND_USER + NPP_DIRECTORY)
 #define NPPM_GETFILENAMEATCURSOR	(RUNCOMMAND_USER + GETFILENAMEATCURSOR)
+#define NPPM_GETCURRENTLINESTR      (RUNCOMMAND_USER + CURRENT_LINESTR)
 // BOOL NPPM_GETXXXXXXXXXXXXXXXX(size_t strLen, TCHAR *str)
 // where str is the allocated TCHAR array,
 //	     strLen is the allocated array size
