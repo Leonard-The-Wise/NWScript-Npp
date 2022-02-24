@@ -12,7 +12,9 @@ namespace NWScriptPlugin {
 
 	struct Settings {
 		bool bEnableAutoIndentation = false;
+		bool bAutoIndentationWarningShown = false;
 
+		void Save() {};
+		void Load() {};
 	};
-
 }

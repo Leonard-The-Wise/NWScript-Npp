@@ -27,7 +27,7 @@ typedef void(PLUGININTERNALS);
 namespace NWScriptPlugin {
 
 	// Plugin Singleton
-	class Plugin {
+	class Plugin final {
 	private:
 
 		struct MessageParams {
@@ -40,12 +40,12 @@ namespace NWScriptPlugin {
 		{
 		public:
 			explicit Messenger(const NppData& data)
-				: m_NppData(data) {}
+				: _NppData(data) {}
 
 			template<typename T = void>
 			constexpr T SendNppMessage(const UINT msg, WPARAM wParam = 0, LPARAM lParam = 0) 
 			{
-				return static_cast<T>(::SendMessage(m_NppData._nppHandle, msg, wParam, lParam));
+				return static_cast<T>(::SendMessage(_NppData._nppHandle, msg, wParam, lParam));
 			}
 
 			template<typename T = void>
@@ -56,16 +56,13 @@ namespace NWScriptPlugin {
 			}
 
 			void PostNppMessages(const std::initializer_list<MessageParams> params) const;
-
 			void PostSciMessages(const std::initializer_list<MessageParams> params) const;
-
 			HWND GetCurentScintillaHwnd() const;
-
 			HWND GetNotepadHwnd() const;
 
 		private:
 			
-			const NppData m_NppData;
+			const NppData _NppData;
 		};
 
 		struct NotepadLanguage {
@@ -83,27 +80,26 @@ namespace NWScriptPlugin {
 		class LineIndentor
 		{
 		public:
-			static void AutoIndentLine(TCHAR ch);
-			static void SetMessenger(Messenger* SciMessenger);
+			LineIndentor() 
+				:	pMsg(nullptr) {}
+			void IndentLine(TCHAR ch);
+			void SetMessenger(Messenger* SciMessenger);
+			Messenger& Msg() { return *pMsg; }
 
 		private:
-			LineIndentor();
+			Messenger* pMsg;
 
-			static Messenger* pMsg;
-
-			static Sci_CharacterRange getSelection();
-			static bool isConditionExprLine(intptr_t lineNumber);
-			static intptr_t findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol);
-			static void setLineIndent(size_t line, size_t indent);
-			static intptr_t getLineLength(size_t line);
-			static intptr_t getLineIdent(size_t line);
+			Sci_CharacterRange getSelection();
+			bool isConditionExprLine(intptr_t lineNumber);
+			intptr_t findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol);
+			void setLineIndent(size_t line, size_t indent);
+			intptr_t getLineLength(size_t line);
+			intptr_t getLineIdent(size_t line);
 		};
 
 	public:
 		Plugin(Plugin& other) = delete;
 		void operator =(const Plugin &) = delete;
-
-		// TODO: Convert all pointer returning functions to References
 
 		// Basic plugin setup;
 		static void PluginInit(HANDLE hModule);
@@ -112,48 +108,50 @@ namespace NWScriptPlugin {
 		FuncItem GetFunction(int index) const { return pluginFunctions[index]; }
 		FuncItem* GetFunctions() const { return pluginFunctions; }
 		int GetFunctionCount() const; // { return (int)std::size(pluginFunctions); }
-		static Plugin* Instance() { return m_instance; }
-		Settings* Settings() { return m_Settings.get(); }
-		Messenger* MessengerInst() const { return m_MessageInstance.get(); }
-		LineIndentor* Indentor() const { return m_Indentor.get(); }
-		static HMODULE DllHModule() { return m_DllHModule; }
+		static Plugin& Instance() { return *(_instance); }
+		Settings& Settings() { return *(_Settings.get()); }
+		Messenger& MessengerInst() const { return *(_MessageInstance.get()); }
+		LineIndentor& Indentor() const { return *(_Indentor.get()); }
+		HMODULE DllHModule() { return _DllHModule; }
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
 		void SetNotepadData(NppData data);
 
 		// Plugin functionality
-		void IsReady(bool ready) { m_isReady = ready; }
-		bool IsReady() const { return m_isReady; }
-		bool IsPluginLanguage() const { return m_NotepadLanguage->isPluginLang; }
-		bool NeedsPluginAutoIndent() const { return m_NeedPluginAutoIndent; }
-		NotepadLanguage* GetNotepadLanguage() {	return Instance()->m_NotepadLanguage.get();	}
+		void IsReady(bool ready) { _isReady = ready; }
+		bool IsReady() const { return _isReady; }
+		bool IsPluginLanguage() const { return _NotepadLanguage->isPluginLang; }
+		bool NeedsPluginAutoIndent() const { return _NeedPluginAutoIndent; }
+		NotepadLanguage* GetNotepadLanguage() {	return Instance()._NotepadLanguage.get();	}
 		void LoadNotepadLanguage();
 		void SetAutoIndentSupport();
 		HMENU GetNppMainMenu();
 		void RemoveAutoIndentMenu();
 
 		// All Menu Command function pointers to export. 
-		static PLUGINCOMMAND AutoIndent();
+		static PLUGINCOMMAND SwitchAutoIndent();
 		static PLUGINCOMMAND CompileScript();
 		static PLUGINCOMMAND OpenSettings();
 		static PLUGINCOMMAND GenerateDefinitions();
 		static PLUGINCOMMAND AboutMe();
 
 	private:
-		Plugin() {};
+		Plugin()
+			: _isReady(false), _NeedPluginAutoIndent(true), _DllHModule() {}
 
-		static bool m_isReady;
-		static bool m_NeedPluginAutoIndent;
-		static std::unique_ptr<NotepadLanguage> m_NotepadLanguage;
-		static std::unique_ptr<Messenger> m_MessageInstance;
-		static std::unique_ptr<LineIndentor> m_Indentor;
-		static Plugin* m_instance;
-		static HMODULE m_DllHModule;
+		bool _isReady;
+		bool _NeedPluginAutoIndent;
+		std::unique_ptr<NotepadLanguage> _NotepadLanguage;
+		std::unique_ptr<Messenger> _MessageInstance;
+		std::unique_ptr<LineIndentor> _Indentor;
+		static Plugin* _instance;
+		HMODULE _DllHModule;
 
-		static std::unique_ptr<NWScriptPlugin::Settings> m_Settings;
+		std::unique_ptr<NWScriptPlugin::Settings> _Settings;
 
-		static std::unique_ptr<AboutDialog> m_AboutDialog;
+		std::unique_ptr<AboutDialog> _AboutDialog;
 
+		// We'll define this on code, hence made them static
 		static FuncItem pluginFunctions[];
 		static TCHAR pluginName[];
 	};

@@ -54,7 +54,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 		{
 			// Get version from module's binary file
-			DllVersionInfo versionInfo = GetVersionFromResource(Plugin::DllHModule());
+			DllVersionInfo versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
 			generic_stringstream sVersion;
 			sVersion << "(Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
 				versionInfo.dwSecondRight << " [build " << versionInfo.dwRightMost << "])";
@@ -64,7 +64,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			sTxtAbout << ABOUT_TEXT;
 
 			// For older notepad, display the Issues warning.
-			if (Plugin::Instance()->NeedsPluginAutoIndent())
+			if (Plugin::Instance().NeedsPluginAutoIndent())
 				sTxtAbout << ABOUT_TEXT_ISSUES;
 			else
 				sTxtAbout << ABOUT_TEXT_NEW;
