@@ -1,5 +1,5 @@
 /** @file PluginMain.cxx
- * Controls the Plugin functions
+ * Controls the Plugin functions, processes all Plugin messages
  * 
  * The ACTUAL DLL Entry point is defined in PluginInterface.cxx
  * 
@@ -15,10 +15,10 @@
 
 using namespace NWScriptPlugin;
 
-TCHAR Plugin::pluginName[] = TEXT("NWScript for Npp");
+TCHAR Plugin::pluginName[] = TEXT("NWScript for Notepad++");
 
 FuncItem Plugin::pluginFunctions[] = {
-    {TEXT("Use Auto-Identation"), Plugin::AutoIndent},
+    {TEXT("Use Auto-Identation"), Plugin::SwitchAutoIndent},
     {TEXT("Compile Script"), Plugin::CompileScript},
     {TEXT("---")},
     {TEXT("Import NWScript definitions"), Plugin::GenerateDefinitions},
@@ -30,27 +30,20 @@ FuncItem Plugin::pluginFunctions[] = {
 #pragma region
 
 
-// Static members definitions
-Plugin* Plugin::m_instance(nullptr);
-HMODULE Plugin::m_DllHModule(nullptr);
-bool Plugin::m_isReady(false);
-bool Plugin::m_NeedPluginAutoIndent(true);
-std::unique_ptr<Plugin::Messenger> Plugin::m_MessageInstance(nullptr);
-std::unique_ptr<Plugin::NotepadLanguage> Plugin::m_NotepadLanguage(nullptr);
-std::unique_ptr<Plugin::LineIndentor> Plugin::m_Indentor(nullptr);
-std::unique_ptr<AboutDialog> Plugin::m_AboutDialog(nullptr);
-std::unique_ptr<Settings> Plugin::m_Settings(nullptr);
+// Static member definition
+Plugin* Plugin::_instance(nullptr);
+
 
 HWND Plugin::Messenger::GetCurentScintillaHwnd() const
 {
     int currentView = -1;
-    ::SendMessage(m_NppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, reinterpret_cast<LPARAM>(&currentView));
-    return (currentView == 0) ? m_NppData._scintillaMainHandle : m_NppData._scintillaSecondHandle;
+    ::SendMessage(_NppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, reinterpret_cast<LPARAM>(&currentView));
+    return (currentView == 0) ? _NppData._scintillaMainHandle : _NppData._scintillaSecondHandle;
 }
 
 HWND Plugin::Messenger::GetNotepadHwnd() const
 {
-    return m_NppData._nppHandle;
+    return _NppData._nppHandle;
 }
 
 void Plugin::Messenger::PostSciMessages(const std::initializer_list<MessageParams> params) const
@@ -63,51 +56,51 @@ void Plugin::Messenger::PostSciMessages(const std::initializer_list<MessageParam
 void Plugin::Messenger::PostNppMessages(const std::initializer_list<MessageParams> params) const
 {
     for (const auto& Param : params)
-        ::PostMessage(m_NppData._nppHandle, Param.msg, Param.wParam, Param.lParam);
+        ::PostMessage(_NppData._nppHandle, Param.msg, Param.wParam, Param.lParam);
 }
 
 // Initialize plugin Singleton
 void Plugin::PluginInit(HANDLE hModule)
 {
     // Instantiate the Plugin
-    if (!m_instance)
-        m_instance = new Plugin();
+    if (!_instance)
+        _instance = new Plugin();
 
     // Set HMODULE
-	Instance()->m_DllHModule = (HMODULE)hModule;
+	Instance()._DllHModule = (HMODULE)hModule;
 
-    Instance()->m_Settings = std::make_unique<NWScriptPlugin::Settings>();
     // TODO: Load Settings from file
+    Instance()._Settings = std::make_unique<NWScriptPlugin::Settings>();
 
-    // HACK: setting menu visibility outside Settings class
-    pluginFunctions[0]._init2Check = false;
-
+    // TODO: 
+    Instance().pluginFunctions[0]._init2Check = false;
 }
 
 // Delete Singleton
 void Plugin::PluginCleanUp()
 {
-    delete m_instance;
-    m_instance = nullptr;
+    delete _instance;
+    _instance = nullptr;
 }
 
 int Plugin::GetFunctionCount() const
 {
-    return (int)std::size(Instance()->pluginFunctions);
+    return (int)std::size(Instance().pluginFunctions);
 }
 
 void Plugin::SetNotepadData(NppData data)
 {
     // Init Notepad-Scintilla Messender
-	if (!Instance()->m_MessageInstance)
+	if (!Instance()._MessageInstance)
 	{
-		Instance()->m_MessageInstance = std::make_unique<Messenger>(data);
-		Instance()->Indentor()->SetMessenger(m_MessageInstance.get());
+		Instance()._MessageInstance = std::make_unique<Messenger>(data);
+        Instance()._Indentor = std::make_unique<LineIndentor>();
+		Instance().Indentor().SetMessenger(_MessageInstance.get());
 	}
 
     // Init Plugin Window Instances
-    Instance()->m_AboutDialog = std::make_unique<AboutDialog>();
-    Instance()->m_AboutDialog->init(m_DllHModule, data._nppHandle);
+    Instance()._AboutDialog = std::make_unique<AboutDialog>();
+    Instance()._AboutDialog->init(_DllHModule, data._nppHandle);
 }
 
 #pragma endregion Plugin internal processing
@@ -147,8 +140,9 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             // - Notepad is in Ready state;
             // - Current Language is set to one of the plugin supported langs
             // - Notepad version doesn't yet support Extended AutoIndent functionality
-            if (IsReady() && IsPluginLanguage() && Instance()->NeedsPluginAutoIndent())
-				Instance()->Indentor()->AutoIndentLine(static_cast<TCHAR>(notifyCode->ch));
+            if (IsReady() && IsPluginLanguage() && Instance().NeedsPluginAutoIndent()
+                && Instance().Settings().bEnableAutoIndentation)
+				    Instance().Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
             break;
 
         default:
@@ -164,57 +158,57 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 void Plugin::LoadNotepadLanguage()
 {
     // Get Current notepad language;
-    Messenger* msg = Instance()->MessengerInst();
+    Messenger& msg = Instance().MessengerInst();
     bool langSearch = FALSE;
     int currLang = 0;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
-    msg->SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
+    msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
 
     // First call: retrieve buffer size. Second call, fill up name (from Manual).
-    int buffSize = msg->SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
+    int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
     TCHAR* langName = new TCHAR[buffSize+1];
-    msg->SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(langName));
+    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(langName));
 
     // Try to get Language Auto-Indentation
     if (_tcscmp(langName, TEXT("NWScript"))==0)
-        langSearch = msg->SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+        langSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
             reinterpret_cast<WPARAM>(langName), reinterpret_cast<LPARAM>(&langIndent));
 
-    m_NotepadLanguage.release();
-    m_NotepadLanguage = std::make_unique<NotepadLanguage>(currLang, langName, _tcscmp(langName, TEXT("NWScript"))==0, langIndent);
+    _NotepadLanguage.release();
+    _NotepadLanguage = std::make_unique<NotepadLanguage>(currLang, langName, _tcscmp(langName, TEXT("NWScript"))==0, langIndent);
 }
 
 void Plugin::SetAutoIndentSupport()
 {
-    Messenger* msg = Instance()->MessengerInst();
+    Messenger& msg = Instance().MessengerInst();
     bool langSearch = false;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
 
     // Try to get Language Auto-Indentation. Older versions of NPP will return FALSE (cause this message won't exist).
-    langSearch = msg->SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+    langSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
             reinterpret_cast<WPARAM>(TEXT("NWScript")), reinterpret_cast<LPARAM>(&langIndent));
 
     if (langSearch)
     {
         if (langIndent != LangAutoIndentType::Extended)
         {
-            bool success = msg->SendNppMessage<bool>(NPPM_SETLANGUAGEAUTOINDENTATION,
+            bool success = msg.SendNppMessage<bool>(NPPM_SETLANGUAGEAUTOINDENTATION,
                 reinterpret_cast<WPARAM>(TEXT("NWScript")), (LPARAM)LangAutoIndentType::Extended);
 
             if (success)
             {
-                Instance()->m_NeedPluginAutoIndent = false;
+                Instance()._NeedPluginAutoIndent = false;
 
                 // Remove the "Use Auto-Indent" menu command
                 RemoveAutoIndentMenu();
                 // Auto-adjust the settings
-                Instance()->Settings()->bEnableAutoIndentation = false;
+                Instance().Settings().bEnableAutoIndentation = false;
             }
         }        
     }
     else
     {
-        Instance()->m_NeedPluginAutoIndent = true;
+        Instance()._NeedPluginAutoIndent = true;
     }
 }
 
@@ -223,25 +217,25 @@ void Plugin::SetAutoIndentSupport()
 
 HMENU Plugin::GetNppMainMenu()
 {
-    Messenger* pMsg = Instance()->MessengerInst();
+    Messenger& pMsg = Instance().MessengerInst();
     HMENU hMenu;
 
     // Notepad++ ver > 6.3
-    hMenu = reinterpret_cast<HMENU>(pMsg->SendNppMessage<LRESULT>(NPPM_GETMENUHANDLE, 1, 0));
+    hMenu = reinterpret_cast<HMENU>(pMsg.SendNppMessage<LRESULT>(NPPM_GETMENUHANDLE, 1, 0));
     if (hMenu && IsMenu(hMenu))
         return hMenu;
 
     // Notepad++ ver <= 6.3
-    hMenu = reinterpret_cast<HMENU>(pMsg->SendNppMessage<LRESULT>(NPPM_INTERNAL_GETMENU, 0, 0));
+    hMenu = reinterpret_cast<HMENU>(pMsg.SendNppMessage<LRESULT>(NPPM_INTERNAL_GETMENU, 0, 0));
     if (hMenu && IsMenu(hMenu))
         return hMenu;
 
-    return ::GetMenu(Instance()->MessengerInst()->GetNotepadHwnd());
+    return ::GetMenu(Instance().MessengerInst().GetNotepadHwnd());
 }
 
 void Plugin::RemoveAutoIndentMenu()
 {
-    HMENU hMenu = Instance()->GetNppMainMenu();
+    HMENU hMenu = Instance().GetNppMainMenu();
     if (hMenu)
     {
         RemoveMenu(hMenu, pluginFunctions[0]._cmdID, MF_BYCOMMAND);
@@ -256,31 +250,32 @@ void Plugin::RemoveAutoIndentMenu()
 
 
 // Command for old versions of Notepad++
-PLUGINCOMMAND Plugin::AutoIndent()
+PLUGINCOMMAND Plugin::SwitchAutoIndent()
 {
     // Change settings
-    Instance()->Settings()->bEnableAutoIndentation = !Instance()->Settings()->bEnableAutoIndentation;
-    bool bEnableAutoIndent = Instance()->Settings()->bEnableAutoIndentation;
+    Instance().Settings().bEnableAutoIndentation = !Instance().Settings().bEnableAutoIndentation;
+    bool bEnableAutoIndent = Instance().Settings().bEnableAutoIndentation;
 
-    HMENU hMenu = Instance()->GetNppMainMenu();
+    HMENU hMenu = Instance().GetNppMainMenu();
     if (hMenu)
     {
         CheckMenuItem(hMenu, pluginFunctions[0]._cmdID,
             MF_BYCOMMAND | ((bEnableAutoIndent) ? MF_CHECKED : MF_UNCHECKED));
     }
 
-    // Huge message box of incompatibility
-    if (bEnableAutoIndent)
+    // Huge message box of incompatibility: Only shown ONCE.
+    if (bEnableAutoIndent && !Instance().Settings().bAutoIndentationWarningShown)
         MessageBox(NULL, TEXT("Current Auto-Indentation feature has conflicts with Notepad++. \
 Please disable Notepad++'s \"Use Auto-Indent\" feature on:\r\n\
 Settings -> Preferences -> Auto-Completion -> Auto-Indention\r\n\
 while editting NSS Script files."), TEXT("NWScript Auto-Indentor"), MB_ICONWARNING | MB_OK);
 
+    Instance().Settings().bAutoIndentationWarningShown = true;
 }
 
 PLUGINCOMMAND Plugin::CompileScript()
 {
-    MessageBox(NULL, TEXT("Coming soon! :)"), TEXT("NWScript Compiler"), MB_OK);
+    MessageBox(NULL, TEXT("Coming soon! :)"), TEXT("NWScript Compiler"), MB_OK | MB_ICONINFORMATION);
 }
 
 PLUGINCOMMAND Plugin::OpenSettings()
@@ -295,6 +290,6 @@ PLUGINCOMMAND Plugin::GenerateDefinitions()
 
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    Instance()->m_AboutDialog->doDialog();
+    Instance()._AboutDialog->doDialog();
 }
 

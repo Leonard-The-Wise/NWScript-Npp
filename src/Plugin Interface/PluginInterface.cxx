@@ -36,23 +36,23 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD  reasonForCall, LPVOID /*lpReserved*
 
 extern "C" DLLAPI void setInfo(NppData notpadPlusData)
 {
-	Plugin::Instance()->SetNotepadData(notpadPlusData);
+	Plugin::Instance().SetNotepadData(notpadPlusData);
 }
 
 extern "C" DLLAPI const TCHAR* getName()
 {
-	return Plugin::Instance()->GetName();
+	return Plugin::Instance().GetName();
 }
 
 extern "C" DLLAPI FuncItem* getFuncsArray(int *nbF)
 {
-	*nbF = Plugin::Instance()->GetFunctionCount();
-	return Plugin::Instance()->GetFunctions();
+	*nbF = Plugin::Instance().GetFunctionCount();
+	return Plugin::Instance().GetFunctions();
 }
 
 extern "C" DLLAPI void beNotified(SCNotification *notifyCode)
 {
-	Plugin::Instance()->ProcessMessagesSci(notifyCode);
+	Plugin::Instance().ProcessMessagesSci(notifyCode);
 }
 
 
@@ -63,7 +63,7 @@ extern "C" DLLAPI void beNotified(SCNotification *notifyCode)
 //
 extern "C" DLLAPI LRESULT messageProc(UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	return Plugin::Instance()->ProcessMessagesNpp(Message, wParam, lParam);
+	return Plugin::Instance().ProcessMessagesNpp(Message, wParam, lParam);
 }
 
 #ifdef UNICODE
