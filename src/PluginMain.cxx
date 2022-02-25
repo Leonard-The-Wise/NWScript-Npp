@@ -7,13 +7,14 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-
-#include <vector>
+#include <sstream>
 
 #include "Notepad_plus_msgs.h"
+#include "LexerCatalogue.h"
 #include "PluginMain.h"
 
 using namespace NWScriptPlugin;
+using namespace LexerInterface;
 
 TCHAR Plugin::pluginName[] = TEXT("NWScript for Notepad++");
 
@@ -26,6 +27,9 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("---")},
     {TEXT("About Me"), Plugin::AboutMe},
 };
+
+typedef std::basic_string<TCHAR> generic_string;
+typedef std::basic_stringstream<TCHAR> generic_stringstream;
 
 #pragma region
 
@@ -134,7 +138,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 
         case NPPN_BUFFERACTIVATED:
             if (IsReady())
-               LoadNotepadLanguage();
+                LoadNotepadLanguage();
             break;
 
         case SCN_CHARADDED:
@@ -161,52 +165,77 @@ void Plugin::LoadNotepadLanguage()
 {
     // Get Current notepad language;
     Messenger& msg = MessengerInst();
-    bool langSearch = FALSE;
+    bool lexerSearch = FALSE;
     int currLang = 0;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
     msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
 
     // First call: retrieve buffer size. Second call, fill up name (from Manual).
     int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
-    TCHAR* langName = new TCHAR[buffSize+1];
-    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(langName));
+    TCHAR* lexerName = new TCHAR[buffSize+1];
+    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
 
-    // Try to get Language Auto-Indentation
-    if (_tcscmp(langName, TEXT("NWScript"))==0)
-        langSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
-            reinterpret_cast<WPARAM>(langName), reinterpret_cast<LPARAM>(&langIndent));
+    // Try to get Language Auto-Indentation if it's one of the plugin installed languages
+    generic_stringstream lexerNameW;
+    for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
+    {
+        lexerNameW = {};
+        lexerNameW << LexerCatalogue::GetLexerName(i);
 
-    _notepadLanguage.release();
-    _notepadLanguage = std::make_unique<NotepadLanguage>(currLang, langName, _tcscmp(langName, TEXT("NWScript"))==0, langIndent);
+        if (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0)
+            lexerSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
+    }
+
+    _notepadLexer.release();
+    _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, _tcscmp(lexerName, lexerNameW.str().c_str()) == 0, langIndent);
 }
 
 void Plugin::SetAutoIndentSupport()
 {
     Messenger& msg = Instance().MessengerInst();
-    bool langSearch = false;
+    bool lexerSearch = false;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
 
-    // Try to get Language Auto-Indentation. Older versions of NPP will return FALSE (cause this message won't exist).
-    langSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
-            reinterpret_cast<WPARAM>(TEXT("NWScript")), reinterpret_cast<LPARAM>(&langIndent));
-
-    if (langSearch)
+    // Try to set Plugin's Lexers Auto-Indentation. Older versions of NPP will return langSearch=FALSE (cause this message won't exist).
+    generic_stringstream lexerNameW;
+    for (int i = 0; i < LexerCatalogue::GetLexerCount(); i++)
     {
-        if (langIndent != LangAutoIndentType::Extended)
+        lexerNameW = {};
+        lexerNameW << LexerCatalogue::GetLexerName(i);
+
+        lexerSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+            reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
+
+        if (lexerSearch)
         {
-            bool success = msg.SendNppMessage<bool>(NPPM_SETLANGUAGEAUTOINDENTATION,
-                reinterpret_cast<WPARAM>(TEXT("NWScript")), (LPARAM)LangAutoIndentType::Extended);
-
-            if (success)
+            if (langIndent != LangAutoIndentType::Extended)
             {
-                Instance()._needPluginAutoIndent = false;
+                bool success = msg.SendNppMessage<bool>(NPPM_SETLANGUAGEAUTOINDENTATION,
+                    reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), static_cast<LPARAM>(LangAutoIndentType::Extended));
 
-                // Remove the "Use Auto-Indent" menu command
-                RemoveAutoIndentMenu();
-                // Auto-adjust the settings
-                Instance().Settings().bEnableAutoIndentation = false;
+                // We got a problem here. Our procedure SHOULD succeed in setting this.
+                if (!success)
+                {
+                    generic_stringstream sWarning = {};
+                    sWarning << TEXT("Warning: failed to set Auto-Indentation for language [") << lexerNameW.str().c_str() << "].";
+                    MessageBox(NULL, reinterpret_cast<LPCWSTR>(sWarning.str().c_str()),
+                           TEXT("NWScript Plugin"), MB_OK | MB_ICONWARNING);
+                    return;
+                }
             }
-        }        
+        }
+    }
+
+    // lexerSearch will be TRUE if Notepad++ support NPPM_GETLANGUAGEAUTOINDENTATION message
+    if (lexerSearch)
+    {
+        Instance()._needPluginAutoIndent = false;
+
+        // Remove the "Use Auto-Indent" menu command
+        RemoveAutoIndentMenu();
+        // Auto-adjust the settings
+        Instance().Settings().bEnableAutoIndentation = false;
     }
     else
     {

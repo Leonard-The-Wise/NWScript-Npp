@@ -66,16 +66,16 @@ namespace NWScriptPlugin {
 			const NppData _nppData;
 		};
 
-		struct NotepadLanguage {
+		struct NotepadLexer {
 			const int langID;
 			const TCHAR* langName;
 			const bool isPluginLang;
 			const LangAutoIndentType langIndent;
 
-			explicit NotepadLanguage(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const LangAutoIndentType _langIndent)
+			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const LangAutoIndentType _langIndent)
 				: langID(_LangID), langName(_LangName), isPluginLang(_isPluginLang), langIndent(_langIndent) {}
 
-			~NotepadLanguage() { delete[] langName; }
+			~NotepadLexer() { delete[] langName; }
 		};
 
 		class LineIndentor
@@ -121,9 +121,9 @@ namespace NWScriptPlugin {
 		// Plugin functionality
 		void IsReady(bool ready) { _isReady = ready; }
 		bool IsReady() const { return _isReady; }
-		bool IsPluginLanguage() const { return _notepadLanguage->isPluginLang; }
+		bool IsPluginLanguage() const { return _notepadLexer->isPluginLang; }
 		bool NeedsPluginAutoIndent() const { return _needPluginAutoIndent; }
-		NotepadLanguage* GetNotepadLanguage() {	return Instance()._notepadLanguage.get();	}
+		NotepadLexer* GetNotepadLanguage() {	return Instance()._notepadLexer.get();	}
 		void LoadNotepadLanguage();
 		void SetAutoIndentSupport();
 		HMENU GetNppMainMenu();
@@ -142,7 +142,7 @@ namespace NWScriptPlugin {
 
 		bool _isReady;
 		bool _needPluginAutoIndent;
-		std::unique_ptr<NotepadLanguage> _notepadLanguage;
+		std::unique_ptr<NotepadLexer> _notepadLexer;
 		std::unique_ptr<Messenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
 		static Plugin* _instance;

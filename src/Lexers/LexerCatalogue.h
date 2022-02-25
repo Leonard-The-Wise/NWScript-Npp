@@ -10,42 +10,33 @@
 #include <wtypes.h>
 
 #include "ILexer.h"
+#include "Notepad_plus_msgs.h"
 
+#define MAX_LEXERNAMELENGTH 16
+#define MAX_LEXERDESCLENGHT 32
 
 using namespace Scintilla;
 
 namespace LexerInterface {
 	typedef ILexer5* (*MyLexerFactoryFunction)();
 
-	struct LexerDefinition {
-		const char lexerName[16] = {};
-		const TCHAR lexerStatusText[32] = {};
+	struct LexerDefinition final {
+		const char lexerName[MAX_LEXERNAMELENGTH] = {};
+		const TCHAR lexerStatusText[MAX_LEXERDESCLENGHT] = {};
 		const int LexerID = 0;
 		const MyLexerFactoryFunction ptrFactoryFunction = nullptr;
+		const LangAutoIndentType langAutoIndent = LangAutoIndentType::Standard;
 	};
 
-	class LexerCatalogue {
+	class LexerCatalogue final {
 
 	public:
-		static int GetLexerCount();
+		static int GetLexerCount() noexcept;
 		static void GetLexerName(unsigned int index, char* name, int buflength);
+		static const char* GetLexerName(unsigned int index);
 		static void GetLexerStatusText(unsigned int index, WCHAR* desc, int buflength);
+		static LangAutoIndentType GetLexerIndentType(unsigned int index);
 		static MyLexerFactoryFunction GetLexerFactory(unsigned int index);
 	};
 }
 
-// Shut up annoying Visual C++ warnings:
-#ifdef _MSC_VER
-#pragma warning(disable: 4244 4456 4457)
-#endif
-
-// Turn off shadow warnings for lexers as may be maintained by others
-#if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
-// Clang doesn't like omitting braces in array initialization but they just add
-// noise to LexicalClass arrays in lexers
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
