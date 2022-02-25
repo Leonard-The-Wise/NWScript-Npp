@@ -126,6 +126,9 @@
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\WarningDialog.h" />
+    <ClInclude Include="..\src\Lexers\InstalledLexers.h">
+      <Filter>Custom Lexers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cxx" />

@@ -195,6 +195,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\framework.h" />
+    <ClInclude Include="..\src\Lexers\InstalledLexers.h" />
     <ClInclude Include="..\src\Lexers\LexerCatalogue.h" />
     <ClInclude Include="..\src\Lexers\Lexlib\Accessor.h" />
     <ClInclude Include="..\src\Lexers\Lexlib\CharacterSet.h" />

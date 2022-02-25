@@ -23,7 +23,7 @@ extern "C" DLLAPI inline void WINAPI GetLexerName(unsigned int index, char* name
 	LexerCatalogue::GetLexerName(index, name, buflength);
 }
 
-extern "C" DLLAPI inline void WINAPI GetLexerStatusText(unsigned int index, WCHAR * desc, int buflength)
+extern "C" DLLAPI inline void WINAPI GetLexerStatusText(unsigned int index, WCHAR* desc, int buflength)
 {
 	LexerCatalogue::GetLexerStatusText(index, desc, buflength);
 }
