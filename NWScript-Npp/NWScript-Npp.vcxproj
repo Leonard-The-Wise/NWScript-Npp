@@ -210,6 +210,7 @@
     <ClInclude Include="..\src\Lexers\Scintilla\SciLexer.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h" />
+    <ClInclude Include="..\src\LineIndentor.h" />
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
@@ -224,6 +225,7 @@
     <ClInclude Include="..\src\Plugin Interface\Notepad_plus_msgs.h" />
     <ClInclude Include="..\src\Plugin Interface\PluginInterface.h" />
     <ClInclude Include="..\src\PluginMain.h" />
+    <ClInclude Include="..\src\PluginMessenger.h" />
     <ClInclude Include="..\src\ProjectVersion.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
@@ -254,6 +256,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Interface\PluginInterface.cxx" />
+    <ClCompile Include="..\src\PluginMessenger.cxx" />
     <ClCompile Include="..\src\Settings.cxx" />
     <ClCompile Include="..\src\WarningDialog.cxx" />
   </ItemGroup>

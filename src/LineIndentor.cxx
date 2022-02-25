@@ -1,4 +1,5 @@
 /** @file LineIndentor.cxx
+ * Implements Base LineIndentor class.
  * Code extracted and adapted from Notepad++ Auto Indentation features
  * (original source: @Notepad_plus.cpp)
  * 
@@ -6,30 +7,28 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-
 #include "PluginMain.h"
+#include "LineIndentor.h"
 
 using namespace NWScriptPlugin;
 
-bool Plugin::LineIndentor::isConditionExprLine(intptr_t lineNumber)
+// Returns TRUE if there is a conditional (if | else | for | while) expression on lineNumber
+bool LineIndentor::isConditionExprLine(intptr_t lineNumber)
 {
-	if (!pMsg)
+	if (lineNumber < 0 || lineNumber > pMsg.SendSciMessage<intptr_t>(SCI_GETLINECOUNT))
 		return false;
 
-	if (lineNumber < 0 || lineNumber > Msg().SendSciMessage<intptr_t>(SCI_GETLINECOUNT))
-		return false;
-
-	auto startPos = Msg().SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, lineNumber);
-	auto endPos = Msg().SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, lineNumber);
-	Msg().SendSciMessage<void>(SCI_SETSEARCHFLAGS, SCFIND_REGEXP | SCFIND_POSIX);
-	Msg().SendSciMessage<void>(SCI_SETTARGETRANGE, startPos, endPos);
+	auto startPos = pMsg.SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, lineNumber);
+	auto endPos = pMsg.SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, lineNumber);
+	pMsg.SendSciMessage<void>(SCI_SETSEARCHFLAGS, SCFIND_REGEXP | SCFIND_POSIX);
+	pMsg.SendSciMessage<void>(SCI_SETTARGETRANGE, startPos, endPos);
 
 	const char ifElseForWhileExpr[] = "((else[ \t]+)?if|for|while)[ \t]*[(].*[)][ \t]*|else[ \t]*";
 
-	auto posFound = Msg().SendSciMessage<intptr_t>(SCI_SEARCHINTARGET, strlen(ifElseForWhileExpr), reinterpret_cast<LPARAM>(ifElseForWhileExpr));
+	auto posFound = pMsg.SendSciMessage<intptr_t>(SCI_SEARCHINTARGET, strlen(ifElseForWhileExpr), reinterpret_cast<LPARAM>(ifElseForWhileExpr));
 	if (posFound >= 0)
 	{
-		auto end = Msg().SendSciMessage<intptr_t>(SCI_GETTARGETEND);
+		auto end = pMsg.SendSciMessage<intptr_t>(SCI_GETTARGETEND);
 		if (end == endPos)
 			return true;
 	}
@@ -37,7 +36,8 @@ bool Plugin::LineIndentor::isConditionExprLine(intptr_t lineNumber)
 	return false;
 }
 
-intptr_t Plugin::LineIndentor::findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol)
+// Returns TRUE if there is a conditional (if | else | for | while) expression on lineNumber inside a Scintilla Text Editor window.
+intptr_t LineIndentor::findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol)
 {
 	if (startPos == endPos)
 		return -1;
@@ -47,7 +47,7 @@ intptr_t Plugin::LineIndentor::findMachedBracePos(size_t startPos, size_t endPos
 		int balance = 0;
 		for (intptr_t i = startPos; i >= static_cast<intptr_t>(endPos); --i)
 		{
-			char aChar = Msg().SendSciMessage<char>(SCI_GETCHARAT, i);
+			char aChar = pMsg.SendSciMessage<char>(SCI_GETCHARAT, i);
 			if (aChar == targetSymbol)
 			{
 				if (balance == 0)
@@ -66,20 +66,22 @@ intptr_t Plugin::LineIndentor::findMachedBracePos(size_t startPos, size_t endPos
 	return -1;
 }
 
-Sci_CharacterRange Plugin::LineIndentor::getSelection()
+// Returns the range of current selected characters inside a Scintilla Text Editor window.
+Sci_CharacterRange LineIndentor::getSelection()
 {
 	Sci_CharacterRange crange;
-	crange.cpMin = Msg().SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONSTART);
-	crange.cpMax = Msg().SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONEND);
+	crange.cpMin = pMsg.SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONSTART);
+	crange.cpMax = pMsg.SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONEND);
 	return crange;
 };
 
-void Plugin::LineIndentor::setLineIndent(size_t line, size_t indent)
+// Sets the indentation size for a given line inside a Scintilla Text Editor window
+void LineIndentor::setLineIndent(size_t line, size_t indent)
 {
 	Sci_CharacterRange crange = getSelection();
-	size_t posBefore = Msg().SendSciMessage<size_t>(SCI_GETLINEINDENTPOSITION, line);
-	Msg().SendSciMessage<>(SCI_SETLINEINDENTATION, line, indent);
-	size_t posAfter = Msg().SendSciMessage<size_t>(SCI_GETLINEINDENTPOSITION, line);
+	size_t posBefore = pMsg.SendSciMessage<size_t>(SCI_GETLINEINDENTPOSITION, line);
+	pMsg.SendSciMessage<>(SCI_SETLINEINDENTATION, line, indent);
+	size_t posAfter = pMsg.SendSciMessage<size_t>(SCI_GETLINEINDENTPOSITION, line);
 	long long posDifference = posAfter - posBefore;
 	if (posAfter > posBefore)
 	{
@@ -112,34 +114,29 @@ void Plugin::LineIndentor::setLineIndent(size_t line, size_t indent)
 				crange.cpMax = static_cast<Sci_PositionCR>(posAfter);
 		}
 	}
-	Msg().SendSciMessage<>(SCI_SETSEL, crange.cpMin, crange.cpMax);
+	pMsg.SendSciMessage<>(SCI_SETSEL, crange.cpMin, crange.cpMax);
 }
 
-intptr_t Plugin::LineIndentor::getLineLength(size_t line)
+// Gets the a given line Length inside a Scintilla Text Editor window
+intptr_t LineIndentor::getLineLength(size_t line)
 {
-	return Msg().SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, line) - Msg().SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, line);
+	return pMsg.SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, line) - pMsg.SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, line);
 }
 
-intptr_t Plugin::LineIndentor::getLineIdent(size_t line)
+// Gets the a given line Indention size inside a Scintilla Text Editor window
+intptr_t LineIndentor::getLineIdent(size_t line)
 {
-	return Msg().SendSciMessage<size_t>(SCI_GETLINEINDENTATION, line);
+	return pMsg.SendSciMessage<size_t>(SCI_GETLINEINDENTATION, line);
 }
 
-void Plugin::LineIndentor::SetMessenger(Messenger* SciMessenger)
+// Performs live Line Indentation using a given Character as an input
+void LineIndentor::IndentLine(TCHAR ch)
 {
-	pMsg = SciMessenger;
-}
-
-void Plugin::LineIndentor::IndentLine(TCHAR ch)
-{
-	if (!pMsg)
-		return;
-
-	intptr_t eolMode = Msg().SendSciMessage<intptr_t>(SCI_GETEOLMODE);
-	intptr_t curLine = Msg().SendSciMessage<intptr_t>(SCI_LINEFROMPOSITION, Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS));
+	intptr_t eolMode = pMsg.SendSciMessage<intptr_t>(SCI_GETEOLMODE);
+	intptr_t curLine = pMsg.SendSciMessage<intptr_t>(SCI_LINEFROMPOSITION, pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS));
 	intptr_t prevLine = curLine - 1;
 	intptr_t indentAmountPrevLine = 0;
-	intptr_t tabWidth = Msg().SendSciMessage<intptr_t>(SCI_GETTABWIDTH);
+	intptr_t tabWidth = pMsg.SendSciMessage<intptr_t>(SCI_GETTABWIDTH);
 
 	// Do not alter indentation if we were at the beginning of the line and we pressed Enter
 	if ((((eolMode == SC_EOL_CRLF || eolMode == SC_EOL_LF) && ch == '\n') ||
@@ -161,10 +158,10 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 		}
 
 		// get previous char from current line
-		intptr_t prevPos = Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS) - (eolMode == SC_EOL_CRLF ? 3 : 2);
-		UCHAR prevChar = Msg().SendSciMessage<UCHAR>(SCI_GETCHARAT, prevPos);
-		auto curPos = Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
-		UCHAR nextChar = Msg().SendSciMessage<UCHAR>(SCI_GETCHARAT, curPos);
+		intptr_t prevPos = pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS) - (eolMode == SC_EOL_CRLF ? 3 : 2);
+		UCHAR prevChar = pMsg.SendSciMessage<UCHAR>(SCI_GETCHARAT, prevPos);
+		auto curPos = pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
+		UCHAR nextChar = pMsg.SendSciMessage<UCHAR>(SCI_GETCHARAT, curPos);
 
 		if (prevChar == '{')
 		{
@@ -178,7 +175,7 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 				else
 					eolChars = "\r";
 
-				Msg().SendSciMessage<>(SCI_INSERTTEXT, Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS), reinterpret_cast<LPARAM>(eolChars));
+				pMsg.SendSciMessage<>(SCI_INSERTTEXT, pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS), reinterpret_cast<LPARAM>(eolChars));
 				setLineIndent(curLine + 1, indentAmountPrevLine);
 			}
 			setLineIndent(curLine, indentAmountPrevLine + tabWidth);
@@ -205,12 +202,12 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 	else if (ch == '{')
 	{
 		// if no character in front of {, aligned with prev line's indentation
-		auto startPos = Msg().SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, curLine);
-		LRESULT endPos = Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
+		auto startPos = pMsg.SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, curLine);
+		LRESULT endPos = pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
 
 		for (LRESULT i = endPos - 2; i > 0 && i > startPos; --i)
 		{
-			UCHAR aChar = Msg().SendSciMessage<UCHAR>(SCI_GETCHARAT, i);
+			UCHAR aChar = pMsg.SendSciMessage<UCHAR>(SCI_GETCHARAT, i);
 			if (aChar != ' ' && aChar != '\t')
 				return;
 		}
@@ -224,17 +221,17 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 		{
 			indentAmountPrevLine = getLineIdent(prevLine);
 
-			auto startPos2 = Msg().SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, prevLine);
-			auto endPos2 = Msg().SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, prevLine);
-			Msg().SendSciMessage<intptr_t>(SCI_SETSEARCHFLAGS, SCFIND_REGEXP | SCFIND_POSIX);
-			Msg().SendSciMessage<intptr_t>(SCI_SETTARGETRANGE, startPos2, endPos2);
+			auto startPos2 = pMsg.SendSciMessage<intptr_t>(SCI_POSITIONFROMLINE, prevLine);
+			auto endPos2 = pMsg.SendSciMessage<intptr_t>(SCI_GETLINEENDPOSITION, prevLine);
+			pMsg.SendSciMessage<intptr_t>(SCI_SETSEARCHFLAGS, SCFIND_REGEXP | SCFIND_POSIX);
+			pMsg.SendSciMessage<intptr_t>(SCI_SETTARGETRANGE, startPos2, endPos2);
 
 			const char braceExpr[] = "[ \t]*\\{.*";
 
-			intptr_t posFound = Msg().SendSciMessage<intptr_t>(SCI_SEARCHINTARGET, strlen(braceExpr), reinterpret_cast<LPARAM>(braceExpr));
+			intptr_t posFound = pMsg.SendSciMessage<intptr_t>(SCI_SEARCHINTARGET, strlen(braceExpr), reinterpret_cast<LPARAM>(braceExpr));
 			if (posFound >= 0)
 			{
-				auto end = Msg().SendSciMessage<intptr_t>(SCI_GETTARGETEND);
+				auto end = pMsg.SendSciMessage<intptr_t>(SCI_GETTARGETEND);
 				if (end == endPos2)
 					indentAmountPrevLine += tabWidth;
 			}
@@ -244,7 +241,7 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 	else if (ch == '}')
 	{
 		// Look backward for the pair {
-		intptr_t startPos = Msg().SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
+		intptr_t startPos = pMsg.SendSciMessage<intptr_t>(SCI_GETCURRENTPOS);
 		if (startPos != 0)
 			startPos -= 1;
 		intptr_t posFound = findMachedBracePos(startPos - 1, 0, '{', '}');
@@ -254,7 +251,7 @@ void Plugin::LineIndentor::IndentLine(TCHAR ch)
 			return;
 
 		// if { is in the same line, do nothing
-		intptr_t matchedPairLine = Msg().SendSciMessage<intptr_t>(SCI_LINEFROMPOSITION, posFound);
+		intptr_t matchedPairLine = pMsg.SendSciMessage<intptr_t>(SCI_LINEFROMPOSITION, posFound);
 		if (matchedPairLine == curLine)
 			return;
 

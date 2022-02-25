@@ -9,8 +9,8 @@
 
 #include <sstream>
 
-#include "Notepad_plus_msgs.h"
 #include "LexerCatalogue.h"
+
 #include "PluginMain.h"
 
 using namespace NWScriptPlugin;
@@ -31,38 +31,12 @@ FuncItem Plugin::pluginFunctions[] = {
 typedef std::basic_string<TCHAR> generic_string;
 typedef std::basic_stringstream<TCHAR> generic_stringstream;
 
-#pragma region
-
-
 // Static member definition
 Plugin* Plugin::_instance(nullptr);
 
+#pragma region
 
-HWND Plugin::Messenger::GetCurentScintillaHwnd() const
-{
-    int currentView = -1;
-    ::SendMessage(_nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, reinterpret_cast<LPARAM>(&currentView));
-    return (currentView == 0) ? _nppData._scintillaMainHandle : _nppData._scintillaSecondHandle;
-}
-
-HWND Plugin::Messenger::GetNotepadHwnd() const
-{
-    return _nppData._nppHandle;
-}
-
-void Plugin::Messenger::PostSciMessages(const std::initializer_list<MessageParams> params) const
-{
-    const HWND ScintillaHwnd = GetCurentScintillaHwnd();
-    for (const auto& Param : params)
-        ::PostMessage(ScintillaHwnd, Param.msg, Param.wParam, Param.lParam);
-}
-
-void Plugin::Messenger::PostNppMessages(const std::initializer_list<MessageParams> params) const
-{
-    for (const auto& Param : params)
-        ::PostMessage(_nppData._nppHandle, Param.msg, Param.wParam, Param.lParam);
-}
-
+// Initializes the Plugin (called by Main DLL entry point - ATTACH)
 void Plugin::PluginInit(HANDLE hModule)
 {
     // Instantiate the Plugin
@@ -79,25 +53,28 @@ void Plugin::PluginInit(HANDLE hModule)
     Instance().pluginFunctions[0]._init2Check = false;
 }
 
+// Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
 void Plugin::PluginCleanUp()
 {
     delete _instance;
     _instance = nullptr;
 }
 
+// Return the number of Menu Functions Count
 int Plugin::GetFunctionCount() const
 {
     return static_cast<int>(std::size(Instance().pluginFunctions));
 }
 
+// Setup Notepad++ and Scintilla handles and finish initializing the
+// plugin's objects that need a Windows Handle to work
 void Plugin::SetNotepadData(NppData data)
 {
     // Init Notepad-Scintilla Messender
 	if (!Instance()._messageInstance)
 	{
-		Instance()._messageInstance = std::make_unique<Messenger>(data);
-        Instance()._indentor = std::make_unique<LineIndentor>();
-		Instance().Indentor().SetMessenger(_messageInstance.get());
+		Instance()._messageInstance = std::make_unique<PluginMessenger>(data);
+        Instance()._indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
 	}
 
     // TODO: Init Plugin Window Instances with Notepad Handle
@@ -113,11 +90,14 @@ void Plugin::SetNotepadData(NppData data)
 
 #pragma region 
 
+// Processes Notepad++ specific messages. Currently unused by this Plugin
 LRESULT Plugin::ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam)
 {
     return TRUE;
 }
 
+// Processes all Notepad++ and Scintilla messages. Newer versions of Notepad++ will 
+// send messages through this function.
 void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 {
     switch (notifyCode->nmhdr.code)
@@ -125,7 +105,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         case NPPN_READY:
             IsReady(true);
             SetAutoIndentSupport();
-            LoadNotepadLanguage();
+            LoadNotepadLexer();
             break;
 
         // TODO: Save Configurations file
@@ -133,12 +113,12 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             break;
 
         case NPPN_LANGCHANGED:
-            LoadNotepadLanguage();
+            LoadNotepadLexer();
             break;
 
         case NPPN_BUFFERACTIVATED:
             if (IsReady())
-                LoadNotepadLanguage();
+                LoadNotepadLexer();
             break;
 
         case SCN_CHARADDED:
@@ -161,10 +141,10 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 
 #pragma region 
 
-void Plugin::LoadNotepadLanguage()
+// Get Current notepad lexer language;
+void Plugin::LoadNotepadLexer()
 {
-    // Get Current notepad language;
-    Messenger& msg = MessengerInst();
+    PluginMessenger& msg = Messenger();
     bool lexerSearch = FALSE;
     int currLang = 0;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
@@ -191,9 +171,10 @@ void Plugin::LoadNotepadLanguage()
     _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, _tcscmp(lexerName, lexerNameW.str().c_str()) == 0, langIndent);
 }
 
+// Set the Auto-Indent type for all of this Plugin's installed languages
 void Plugin::SetAutoIndentSupport()
 {
-    Messenger& msg = Instance().MessengerInst();
+    PluginMessenger& msg = Instance().Messenger();
     bool lexerSearch = false;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
 
@@ -248,7 +229,7 @@ void Plugin::SetAutoIndentSupport()
 
 HMENU Plugin::GetNppMainMenu()
 {
-    Messenger& pMsg = Instance().MessengerInst();
+    PluginMessenger& pMsg = Instance().Messenger();
     HMENU hMenu;
 
     // Notepad++ ver > 6.3
@@ -261,7 +242,7 @@ HMENU Plugin::GetNppMainMenu()
     if (hMenu && IsMenu(hMenu))
         return hMenu;
 
-    return ::GetMenu(Instance().MessengerInst().GetNotepadHwnd());
+    return ::GetMenu(Instance().Messenger().GetNotepadHwnd());
 }
 
 void Plugin::RemoveAutoIndentMenu()
@@ -278,9 +259,7 @@ void Plugin::RemoveAutoIndentMenu()
 
 
 
-
-
-// Command for old versions of Notepad++
+// Support for Auto-Indentation for old versions of Notepad++
 PLUGINCOMMAND Plugin::SwitchAutoIndent()
 {
     // Change settings
@@ -305,21 +284,25 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     Instance().Settings().bAutoIndentationWarningShown = true;
 }
 
+// Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
     MessageBox(NULL, TEXT("Coming soon! :)"), TEXT("NWScript Compiler"), MB_OK | MB_ICONINFORMATION);
 }
 
+// Opens the Plugin's Settings panel
 PLUGINCOMMAND Plugin::OpenSettings()
 {
     MessageBox(NULL, TEXT("Not yet implemented"), TEXT("NWScript Settings"), MB_OK);
 }
 
+// Generates Lexer's functions and constants declarations from a NWScript.nss file
 PLUGINCOMMAND Plugin::GenerateDefinitions()
 {
     MessageBox(NULL, TEXT("Not yet implemented"), TEXT("NWScript Generation"), MB_OK);
 }
 
+// Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
     Instance()._aboutDialog->doDialog();
