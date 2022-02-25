@@ -64,6 +64,15 @@ BEGIN
     CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,118,27,189,8
 END
 
+IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_SYSMENU
+EXSTYLE WS_EX_TRANSPARENT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         IDB_HEREBEDRAGONS,IDC_HEREBEDRAGONS,"Static",SS_BITMAP,0,0,400,208
+    CONTROL         "",IDC_CHKOK,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,196,178,13,12,WS_EX_TRANSPARENT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -80,6 +89,10 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 236
     END
+
+    IDD_HEREBEDRAGONS, DIALOG
+    BEGIN
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -94,6 +107,11 @@ BEGIN
     0
 END
 
+IDD_HEREBEDRAGONS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -101,6 +119,8 @@ END
 //
 
 IDB_NWSCRIPTLOGO        BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript.bmp"
+
+IDB_HEREBEDRAGONS       BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

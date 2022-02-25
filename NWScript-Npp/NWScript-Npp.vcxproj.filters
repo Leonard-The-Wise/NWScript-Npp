@@ -124,6 +124,8 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h" />
+    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
+    <ClInclude Include="..\src\WarningDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cxx" />
@@ -157,6 +159,7 @@
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
     <ClCompile Include="..\src\Settings.cxx" />
+    <ClCompile Include="..\src\WarningDialog.cxx" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -187,6 +190,12 @@
       <Filter>Media</Filter>
     </Image>
     <Image Include="..\Media\NWScript.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\media\bitmap1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\Here-be-Dragons.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

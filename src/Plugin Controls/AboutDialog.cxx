@@ -30,18 +30,6 @@ USAGE:\r\n\
   - To be able to compile .nss files you first need to setup the environment and point to the proper Neverwinter folders where the include files are present (tip: map shortcuts to the compilation menu to facilitate the process). \
 \r\n\r\n")
 
-#define ABOUT_TEXT_ISSUES \
-TEXT("KNOWN ISSUES (for this version of Notepad++ and bellow):\r\n\
-  - Notepad++ Auto-Indentation function will conflict with the Plugin's Auto-Indentation. Please disable Notepad++ Auto-Indentation while editting NWScript files;\r\n\
-  - Type-In kind of macros will also break auto-indentation feature, please disable the Plugin \"Use Auto-Indentation\" feature while playing a macro;\r\n\
-\r\n\
-[Remark]: These are not bugs, but technical limitations for the Notepad++ of versions 8.3.x and bellow. I am currently working with Notepad++ \
-Team to fix these issues for future versions, so if this message still appears for you, consider upgrading Notepad++. It will auto-disappear upon having the necessary funcionality.")
-
-#define ABOUT_TEXT_NEW \
-TEXT("FEATURES:\r\n\
-  - Auto-Indentation feature integrated into Notepad++. You can now turn Notepad++'s Auto-Indentation on while editing .nss scripts.")
-
 
 using namespace NWScriptPlugin;
 typedef std::basic_string<TCHAR> generic_string;
@@ -57,20 +45,10 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			DllVersionInfo versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
 			generic_stringstream sVersion;
 			sVersion << "(Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
-				versionInfo.dwSecondRight << " [build " << versionInfo.dwRightMost << "])";
-
-			// Build the "About" text
-			generic_stringstream sTxtAbout;
-			sTxtAbout << ABOUT_TEXT;
-
-			// For older notepad, display the Issues warning.
-			if (Plugin::Instance().NeedsPluginAutoIndent())
-				sTxtAbout << ABOUT_TEXT_ISSUES;
-			else
-				sTxtAbout << ABOUT_TEXT_NEW;
+				versionInfo.dwSecondRight << " build " << versionInfo.dwRightMost << ")";
 
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
-			::SetDlgItemText(_hSelf, IDC_TXTABOUT, reinterpret_cast<LPCWSTR>(sTxtAbout.str().c_str()));
+			::SetDlgItemText(_hSelf, IDC_TXTABOUT, ABOUT_TEXT);
 
 			return TRUE;
 		}
