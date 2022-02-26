@@ -20,7 +20,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD  reasonForCall, LPVOID /*lpReserved*
 		  break;
 
       case DLL_PROCESS_DETACH:
-		  Plugin::PluginCleanUp();
+		  Plugin::PluginRelease();
 		  break;
 
       case DLL_THREAD_ATTACH:

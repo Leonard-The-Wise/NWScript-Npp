@@ -9,7 +9,7 @@
 
 namespace NWScriptPlugin {
 
-	// The Plugin's base custom Line Indentor for a given Scintilla Text Editor window.
+	// The Plugin's base custom Line Indentor for a given Scintilla Text Editor window.	
 	class LineIndentor
 	{
 	public:

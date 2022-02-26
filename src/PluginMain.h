@@ -46,12 +46,15 @@ namespace NWScriptPlugin {
 		Plugin(Plugin& other) = delete;
 		void operator =(const Plugin &) = delete;
 
-		// Basic plugin setup;
+		/*
+		* Basic plugin setup;
+		*/ 
 
 		// Initializes the Plugin Instance with a DLL or EXE handle. Called from DLL Main message DLL_ATTACH
 		static void PluginInit(HANDLE hModule);
 		// Performs the instance cleanup: Called from DLL Main message DLL_DETACH
-		static void PluginCleanUp();
+		static void PluginRelease();
+
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName; }
 		// Returns the Plugin Menu Items count. Notepad++ Callback function
@@ -63,16 +66,24 @@ namespace NWScriptPlugin {
 		static Plugin& Instance() { return *(_instance); }
 
 		// Retrieve's Plugin's Settings Object
-		Settings& Settings() { return *(_settings.get()); }
+		Settings& Settings() { return *(_settings); }
 		// Retrieve's Plugin's Messenger Object
-		PluginMessenger& Messenger() const { return *(_messageInstance.get()); }
-		LineIndentor& Indentor() const { return *(_indentor.get()); }
+		PluginMessenger& Messenger() const { return *(_messageInstance); }
+		// Retrieve's Plugin's LineIndentor Object
+		LineIndentor& Indentor() const { return *(_indentor); }
+		// Retrieve's Plugin's Module Handle
 		HMODULE DllHModule() { return _dllHModule; }
+		// Processes Messages from a Notepad++ editor and the coupled Scintilla Text Editor
 		void ProcessMessagesSci(SCNotification* notifyCode);
+		// Old message processor for Notepad++. Currently deprecated.
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
+		// Setup Notepad++ and Scintilla handles and finish initializing the
+		// plugin's objects that need a Windows Handle to work
 		void SetNotepadData(NppData data);
 
-		// Plugin functionality
+		/*
+		* Plugin functionality
+		*/
 
 		// Sets the Plugin Ready state (after NPPN_READY)
 		void IsReady(bool ready) { _isReady = ready; }
@@ -94,16 +105,25 @@ namespace NWScriptPlugin {
 		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
 		void RemoveAutoIndentMenu();
 
-		// All Menu Command function pointers to export. 
+		// Opens the About dialog
+		void OpenAboutDialog();
+		// Opens the Warning dialog
+		void OpenWarningDialog();
+
+		// Menu Command "Use Auto-Indentation" function handler. 
 		static PLUGINCOMMAND SwitchAutoIndent();
+		// Menu Command "Compile Script" function handler. 
 		static PLUGINCOMMAND CompileScript();
+		// Menu Command "Settings" function handler. 
 		static PLUGINCOMMAND OpenSettings();
+		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND GenerateDefinitions();
+		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
 	private:
-		Plugin()
-			: _isReady(false), _needPluginAutoIndent(true), _dllHModule() {}
+		Plugin(HMODULE dllModule)
+			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule) {}
 
 		static Plugin* _instance;
 
