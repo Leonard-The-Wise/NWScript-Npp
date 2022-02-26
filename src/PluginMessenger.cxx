@@ -27,7 +27,7 @@ HWND PluginMessenger::GetNotepadHwnd() const
 }
 
 // Post an array of messages to current Scintilla Text Editor
-void PluginMessenger::PostSciMessages(const std::initializer_list<MessageParams> params) const
+void PluginMessenger::PostSciMessages(const std::initializer_list<MessageParams>& params) const
 {
     const HWND ScintillaHwnd = GetCurentScintillaHwnd();
     for (const auto& Param : params)
@@ -35,7 +35,7 @@ void PluginMessenger::PostSciMessages(const std::initializer_list<MessageParams>
 }
 
 // Post an array of messages to current Notepad++ instance
-void PluginMessenger::PostNppMessages(const std::initializer_list<MessageParams> params) const
+void PluginMessenger::PostNppMessages(const std::initializer_list<MessageParams>& params) const
 {
     for (const auto& Param : params)
         ::PostMessage(_nppData._nppHandle, Param.msg, Param.wParam, Param.lParam);

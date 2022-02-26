@@ -41,9 +41,9 @@ namespace NWScriptPlugin {
 		}
 
 		// Post an array of messages to current Notepad++ instance (and don't wait for return).
-		void PostNppMessages(const std::initializer_list<MessageParams> params) const;
+		void PostNppMessages(const std::initializer_list<MessageParams>& params) const;
 		// Post an array of messages to current Scintilla Text Editor (and don't wait for return).
-		void PostSciMessages(const std::initializer_list<MessageParams> params) const;
+		void PostSciMessages(const std::initializer_list<MessageParams>& params) const;
 		// Gets the current working Scintilla Text Editor window from Notepad++.
 		HWND GetCurentScintillaHwnd() const;
 		// Returns a handle for Notepad++ Windows.

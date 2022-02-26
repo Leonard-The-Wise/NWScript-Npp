@@ -7,6 +7,7 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
+#include <stdexcept>
 #include <sstream>
 
 #include "LexerCatalogue.h"
@@ -39,12 +40,15 @@ Plugin* Plugin::_instance(nullptr);
 // Initializes the Plugin (called by Main DLL entry point - ATTACH)
 void Plugin::PluginInit(HANDLE hModule)
 {
-    // Instantiate the Plugin
-    if (!_instance)
-        _instance = new Plugin();
+    // Can't be called twice
+    if (_instance)
+    {
+        throw std::runtime_error("Double initialization of a singleton class.");
+        return;
+    }
 
-    // Set HMODULE
-	Instance()._dllHModule = (HMODULE)hModule;
+    // Instantiate the Plugin
+    _instance = new Plugin(static_cast<HMODULE>(hModule));
 
     // TODO: Load Settings from file
     Instance()._settings = std::make_unique<NWScriptPlugin::Settings>();
@@ -54,16 +58,22 @@ void Plugin::PluginInit(HANDLE hModule)
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
-void Plugin::PluginCleanUp()
+void Plugin::PluginRelease()
 {
+    if (!_instance)
+    {
+        throw std::runtime_error("Trying to release an uninitalized class.");
+        return;
+    }
+
     delete _instance;
     _instance = nullptr;
 }
 
-// Return the number of Menu Functions Count
+// Return the number of Menu Functions Count. Can't be inline because pluginFunctions is defined outside class
 int Plugin::GetFunctionCount() const
 {
-    return static_cast<int>(std::size(Instance().pluginFunctions));
+    return static_cast<int>(std::size(pluginFunctions));
 }
 
 // Setup Notepad++ and Scintilla handles and finish initializing the
@@ -76,14 +86,6 @@ void Plugin::SetNotepadData(NppData data)
 		Instance()._messageInstance = std::make_unique<PluginMessenger>(data);
         Instance()._indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
 	}
-
-    // TODO: Init Plugin Window Instances with Notepad Handle
-    Instance()._aboutDialog = std::make_unique<AboutDialog>();
-    Instance()._aboutDialog->init(_dllHModule, data._nppHandle);
-
-    Instance()._warningDialog = std::make_unique<WarningDialog>();
-    Instance()._warningDialog->init(_dllHModule, data._nppHandle);
-
 }
 
 #pragma endregion Plugin internal processing
@@ -167,7 +169,7 @@ void Plugin::LoadNotepadLexer()
                 reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
     }
 
-    _notepadLexer.release();
+    // Create or Replace current lexer language.
     _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, _tcscmp(lexerName, lexerNameW.str().c_str()) == 0, langIndent);
 }
 
@@ -229,7 +231,7 @@ void Plugin::SetAutoIndentSupport()
 
 HMENU Plugin::GetNppMainMenu()
 {
-    PluginMessenger& pMsg = Instance().Messenger();
+    PluginMessenger& pMsg = Messenger();
     HMENU hMenu;
 
     // Notepad++ ver > 6.3
@@ -242,7 +244,7 @@ HMENU Plugin::GetNppMainMenu()
     if (hMenu && IsMenu(hMenu))
         return hMenu;
 
-    return ::GetMenu(Instance().Messenger().GetNotepadHwnd());
+    return ::GetMenu(pMsg.GetNotepadHwnd());
 }
 
 void Plugin::RemoveAutoIndentMenu()
@@ -254,8 +256,30 @@ void Plugin::RemoveAutoIndentMenu()
     }
 }
 
-#pragma endregion Plugin Funcionality
+// Opens the About dialog
+void Plugin::OpenAboutDialog()
+{
+    if (!Instance()._aboutDialog)
+    {
+        Instance()._aboutDialog = std::make_unique<AboutDialog>();
+        Instance()._aboutDialog->init(Instance()._dllHModule, Instance().Messenger().GetNotepadHwnd());
+    }
 
+    Instance()._aboutDialog->doDialog();
+}
+
+void Plugin::OpenWarningDialog()
+{
+    if (!Instance()._warningDialog)
+    {
+        Instance()._warningDialog = std::make_unique<WarningDialog>();
+        Instance()._warningDialog->init(Instance()._dllHModule, Instance().Messenger().GetNotepadHwnd());
+    }
+
+    Instance()._warningDialog->doDialog();
+}
+
+#pragma endregion Plugin Funcionality
 
 
 
@@ -279,7 +303,7 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 
     // Warning user of function
     if (bEnableAutoIndent && !Instance().Settings().bAutoIndentationWarningShown)
-        Instance()._warningDialog->doDialog();
+        Instance().OpenWarningDialog();
 
     Instance().Settings().bAutoIndentationWarningShown = true;
 }
@@ -305,6 +329,6 @@ PLUGINCOMMAND Plugin::GenerateDefinitions()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    Instance()._aboutDialog->doDialog();
+    Instance().OpenAboutDialog();
 }
 

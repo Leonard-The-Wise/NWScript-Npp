@@ -44,8 +44,8 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			// Get version from module's binary file
 			DllVersionInfo versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
 			generic_stringstream sVersion = {};
-			sVersion << "(Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
-				versionInfo.dwSecondRight << " build " << versionInfo.dwRightMost << ")";
+			sVersion << "Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
+				versionInfo.dwSecondRight << " (build " << versionInfo.dwRightMost << ")";
 
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_TXTABOUT, ABOUT_TEXT);
