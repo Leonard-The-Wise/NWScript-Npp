@@ -18,6 +18,7 @@
 // recompilation of this file.
 // #include "ProjectVersion.h"
 
+#include "Common.h"
 #include "VersionFromResource.h"
 
 
@@ -32,8 +33,6 @@ USAGE:\r\n\
 
 
 using namespace NWScriptPlugin;
-typedef std::basic_string<TCHAR> generic_string;
-typedef std::basic_stringstream<TCHAR> generic_stringstream;
 
 intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {

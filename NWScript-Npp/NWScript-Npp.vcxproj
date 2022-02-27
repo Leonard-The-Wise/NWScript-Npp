@@ -198,6 +198,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Common.h" />
     <ClInclude Include="..\src\framework.h" />
     <ClInclude Include="..\src\Lexers\InstalledLexers.h" />
     <ClInclude Include="..\src\Lexers\LexerCatalogue.h" />
@@ -279,7 +280,6 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\media\bitmap1.bmp" />
     <Image Include="..\Media\Here-be-Dragons.bmp" />
     <Image Include="..\Media\NWScript.bmp" />
     <Image Include="..\Media\Sample-Colorization.jpg" />
