@@ -7,12 +7,15 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <stdexcept>
+#include <Windows.h>
 #include <sstream>
+#include <stdexcept>
 
+#include "Common.h"
 #include "LexerCatalogue.h"
 
 #include "PluginMain.h"
+
 
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
@@ -23,14 +26,12 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use Auto-Identation"), Plugin::SwitchAutoIndent},
     {TEXT("Compile Script"), Plugin::CompileScript},
     {TEXT("---")},
-    {TEXT("Import NWScript definitions"), Plugin::GenerateDefinitions},
+    {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
     {TEXT("Settings..."), Plugin::OpenSettings},
     {TEXT("---")},
+    {TEXT("Fix Editor Colors"), Plugin::FixLanguageColors},
     {TEXT("About Me"), Plugin::AboutMe},
 };
-
-typedef std::basic_string<TCHAR> generic_string;
-typedef std::basic_stringstream<TCHAR> generic_stringstream;
 
 // Static member definition
 Plugin* Plugin::_instance(nullptr);
@@ -86,6 +87,9 @@ void Plugin::SetNotepadData(NppData data)
 		Instance()._messageInstance = std::make_unique<PluginMessenger>(data);
         Instance()._indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
 	}
+
+    //Keep a copy of Notepad HWND to easy access
+    _notepadHwnd = Instance().Messenger().GetNotepadHwnd();
 }
 
 #pragma endregion Plugin internal processing
@@ -106,6 +110,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     {
         case NPPN_READY:
             IsReady(true);
+            SetupMenuIcons();
             SetAutoIndentSupport();
             LoadNotepadLexer();
             break;
@@ -148,6 +153,7 @@ void Plugin::LoadNotepadLexer()
 {
     PluginMessenger& msg = Messenger();
     bool lexerSearch = FALSE;
+    bool isPluginLanguage = FALSE;
     int currLang = 0;
     LangAutoIndentType langIndent = LangAutoIndentType::Standard;
     msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
@@ -163,14 +169,15 @@ void Plugin::LoadNotepadLexer()
     {
         lexerNameW = {};
         lexerNameW << LexerCatalogue::GetLexerName(i);
+        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
 
-        if (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0)
+        if (isPluginLanguage)
             lexerSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
                 reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
     }
 
     // Create or Replace current lexer language.
-    _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, _tcscmp(lexerName, lexerNameW.str().c_str()) == 0, langIndent);
+    _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
 // Set the Auto-Indent type for all of this Plugin's installed languages
@@ -221,9 +228,7 @@ void Plugin::SetAutoIndentSupport()
         Instance().Settings().bEnableAutoIndentation = false;
     }
     else
-    {
         Instance()._needPluginAutoIndent = true;
-    }
 }
 
 #define NOTEPADPLUS_USER_INTERNAL  (WM_USER + 0000)
@@ -244,7 +249,7 @@ HMENU Plugin::GetNppMainMenu()
     if (hMenu && IsMenu(hMenu))
         return hMenu;
 
-    return ::GetMenu(pMsg.GetNotepadHwnd());
+    return ::GetMenu(Instance().NotepadHwnd());
 }
 
 void Plugin::RemoveAutoIndentMenu()
@@ -256,13 +261,37 @@ void Plugin::RemoveAutoIndentMenu()
     }
 }
 
+void Plugin::SetupMenuIcons()
+{
+
+    // TODO: Setup the shield icon ONLY when user needs privilege to access file
+
+    HMENU hMenu = Instance().GetNppMainMenu();
+    if (hMenu)
+    {
+        HBITMAP iShield = GetStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, IconSize::Size16x16);
+        MENUITEMINFO iChange;
+        ZeroMemory(&iChange, sizeof(iChange));
+        iChange.cbSize = sizeof(iChange);
+
+        if (GetMenuItemInfo(hMenu, Instance().GetFunctions()[6]._cmdID, FALSE, &iChange))
+        {
+            iChange.fMask = MIIM_BITMAP;
+            iChange.hbmpItem = iShield;
+            SetMenuItemInfo(hMenu, Instance().GetFunctions()[6]._cmdID, FALSE, &iChange);
+        }
+    
+    }
+
+}
+
 // Opens the About dialog
 void Plugin::OpenAboutDialog()
 {
     if (!Instance()._aboutDialog)
     {
         Instance()._aboutDialog = std::make_unique<AboutDialog>();
-        Instance()._aboutDialog->init(Instance()._dllHModule, Instance().Messenger().GetNotepadHwnd());
+        Instance()._aboutDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
     }
 
     Instance()._aboutDialog->doDialog();
@@ -273,7 +302,7 @@ void Plugin::OpenWarningDialog()
     if (!Instance()._warningDialog)
     {
         Instance()._warningDialog = std::make_unique<WarningDialog>();
-        Instance()._warningDialog->init(Instance()._dllHModule, Instance().Messenger().GetNotepadHwnd());
+        Instance()._warningDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
     }
 
     Instance()._warningDialog->doDialog();
@@ -320,10 +349,20 @@ PLUGINCOMMAND Plugin::OpenSettings()
     MessageBox(NULL, TEXT("Not yet implemented"), TEXT("NWScript Settings"), MB_OK);
 }
 
-// Generates Lexer's functions and constants declarations from a NWScript.nss file
-PLUGINCOMMAND Plugin::GenerateDefinitions()
+// Imports Lexer's functions and constants declarations from a NWScript.nss file
+PLUGINCOMMAND Plugin::ImportDefinitions()
 {
-    MessageBox(NULL, TEXT("Not yet implemented"), TEXT("NWScript Generation"), MB_OK);
+    std::unique_ptr<generic_string> nFileName = std::make_unique<generic_string>();
+    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("NWScritpt.nss File\0nwscript.nss\0"), *nFileName.get()))
+    {
+        
+    }
+}
+
+// Fixes the language colors to default
+PLUGINCOMMAND Plugin::FixLanguageColors()
+{
+
 }
 
 // Opens About Box

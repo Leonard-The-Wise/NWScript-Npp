@@ -72,7 +72,9 @@ namespace NWScriptPlugin {
 		// Retrieve's Plugin's LineIndentor Object
 		LineIndentor& Indentor() const { return *(_indentor); }
 		// Retrieve's Plugin's Module Handle
-		HMODULE DllHModule() { return _dllHModule; }
+		HMODULE DllHModule() const { return _dllHModule; }
+		// Retrieves Notepad++ HWND
+		HWND NotepadHwnd() const { return _notepadHwnd; }
 		// Processes Messages from a Notepad++ editor and the coupled Scintilla Text Editor
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		// Old message processor for Notepad++. Currently deprecated.
@@ -104,6 +106,8 @@ namespace NWScriptPlugin {
 		HMENU GetNppMainMenu();
 		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
 		void RemoveAutoIndentMenu();
+		// Setup Menu Icons. For now, only the "Fix Editor Colors" use it
+		void SetupMenuIcons();
 
 		// Opens the About dialog
 		void OpenAboutDialog();
@@ -117,13 +121,15 @@ namespace NWScriptPlugin {
 		// Menu Command "Settings" function handler. 
 		static PLUGINCOMMAND OpenSettings();
 		// Menu Command "Import NWScript definitions" function handler. 
-		static PLUGINCOMMAND GenerateDefinitions();
+		static PLUGINCOMMAND ImportDefinitions();
+		// Menu Command "Fix Dark Mode"
+		static PLUGINCOMMAND FixLanguageColors();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule) {}
+			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule), _notepadHwnd(nullptr) {}
 
 		static Plugin* _instance;
 
@@ -133,6 +139,7 @@ namespace NWScriptPlugin {
 		std::unique_ptr<PluginMessenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
 		HMODULE _dllHModule;
+		HWND _notepadHwnd;
 
 		std::unique_ptr<NWScriptPlugin::Settings> _settings;
 

@@ -131,6 +131,7 @@
     </ClInclude>
     <ClInclude Include="..\src\PluginMessenger.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
+    <ClInclude Include="..\src\Common.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cxx" />
@@ -196,9 +197,6 @@
       <Filter>Media</Filter>
     </Image>
     <Image Include="..\Media\NWScript.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\media\bitmap1.bmp">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\Here-be-Dragons.bmp">
