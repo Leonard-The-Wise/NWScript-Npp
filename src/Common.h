@@ -1,5 +1,8 @@
 /** @file Common.h
- * Definitions for common types
+ * Definitions for common types.
+ * 
+ * Remarks: MUST include shlwapi.lib reference for Linker dependencies
+ * in order to be able to build projects using this file.
  *
  **/
  // Copyright 2022 by Leonardo Silva 
@@ -7,14 +10,15 @@
 
 #pragma once
 
+#include <assert.h>
 #include <windows.h>
 #include <commdlg.h>
 #include <shellapi.h>
 #include <ShlObj.h>
+#include <Shlwapi.h>
 #include <stdexcept>
-
+#include <errhandlingapi.h>
 #include <sstream>
-
 
 
 namespace {
@@ -73,7 +77,7 @@ namespace {
                 generic_stringstream sError;
                 sError << TEXT("Error opening dialog box. Please report it to the plugin creator!\r\n") <<
                     TEXT("Error code: ") << n2hexstrg(nFail, 4).c_str();
-                    MessageBox(hOwnerWnd, sError.str().c_str(), TEXT("NWScript Plugin Error"), MB_OK | MB_ICONERROR);
+                    MessageBox(hOwnerWnd, sError.str().c_str(), TEXT("NWScript Plugin Error"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
             }
 
             return false;
@@ -93,7 +97,7 @@ namespace {
         Size32x32 = 32, Size40x40 = 40, Size48x48 = 48, Size64x64 = 64, Size96x96 = 96, Size128x128 = 128, Size256x256 = 256
     };
 
-    //Retrieves an HICON from the standard Windows libraries
+    // Retrieves an HICON from the standard Windows libraries
     HICON GetStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize)
     {
         UINT uiFlags = SHGSI_ICONLOCATION;
@@ -166,8 +170,57 @@ namespace {
         return winBitmap;
     }
 
+    // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     inline HBITMAP GetStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize) {
         return IconToBitmap(GetStockIcon(stockIconID, iconSize));
+    }
+
+    enum class FileWritePermission {
+        FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
+    };
+
+    // Checks for a file's write permission.
+    // returns false if not successful (eg: file doesn't exist), else returns true and fills outFilePermission enums
+    bool CheckFileWritePermission(const generic_string& sFilePath, FileWritePermission& outFilePermission)
+    {
+        WIN32_FILE_ATTRIBUTE_DATA attributes = {};
+        
+        if (!PathFileExists(sFilePath.c_str()))
+            return false;
+
+        if (!GetFileAttributesEx(sFilePath.c_str(), GetFileExInfoStandard, &attributes))
+            return false;
+
+        if (attributes.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+            outFilePermission =  FileWritePermission::FileIsReadOnly;
+
+        // We are only touching a file, hence all shared attributes may apply
+        // Also, to Open a file, we call a "CreateFile" function. Lol Windows API
+        HANDLE f = CreateFile(sFilePath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            NULL, OPEN_EXISTING, attributes.dwFileAttributes, NULL);
+        
+        // Gets last error code documentation
+        // https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+        if (f == INVALID_HANDLE_VALUE)
+        {
+            switch (GetLastError())
+            {
+            case ERROR_ACCESS_DENIED:
+                outFilePermission = FileWritePermission::RequiresAdminPrivileges;
+                break;
+            case ERROR_SHARING_VIOLATION:
+                outFilePermission = FileWritePermission::BlockedByApplication;
+                break;
+            default:
+                outFilePermission = FileWritePermission::UndeterminedError;
+            }
+
+            return true;
+        }
+
+        CloseHandle(f);
+        outFilePermission = FileWritePermission::WriteAllowed;
+        return true;
     }
 
 #pragma warning(pop)

@@ -5,11 +5,11 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-
 #pragma once
 
 #include <memory>
 #include <vector>
+#include <filesystem>
 
 #include "PluginMessenger.h"
 #include "LineIndentor.h"
@@ -17,9 +17,12 @@
 
 #include "AboutDialog.h"
 #include "WarningDialog.h"
+#include "Common.h"
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
+
+namespace fs = std::filesystem;
 
 // Namespace NWScriptPlugin
 // Should hold all classes relative to the plugin's functionality
@@ -46,6 +49,7 @@ namespace NWScriptPlugin {
 		Plugin(Plugin& other) = delete;
 		void operator =(const Plugin &) = delete;
 
+
 		/*
 		* Basic plugin setup;
 		*/ 
@@ -56,28 +60,30 @@ namespace NWScriptPlugin {
 		static void PluginRelease();
 
 		// Returns the Plugin Name. Notepad++ Callback function
-		TCHAR* GetName() const { return pluginName; }
+		TCHAR* GetName() const { return pluginName.data(); }
 		// Returns the Plugin Menu Items count. Notepad++ Callback function
 		int GetFunctionCount() const; 
 		// Returns the Plugin Menu Items pointer. Notepad++ Callback function
 		FuncItem* GetFunctions() const { return pluginFunctions; }
 
 		// Retrieves the unique Plugin's Instance
-		static Plugin& Instance() { return *(_instance); }
+		static Plugin& Instance() { return *_instance; }
 
 		// Retrieve's Plugin's Settings Object
-		Settings& Settings() { return *(_settings); }
+		Settings& Settings() { return *_settings; }
 		// Retrieve's Plugin's Messenger Object
-		PluginMessenger& Messenger() const { return *(_messageInstance); }
+		PluginMessenger& Messenger() const { return *_messageInstance; }
 		// Retrieve's Plugin's LineIndentor Object
-		LineIndentor& Indentor() const { return *(_indentor); }
+		LineIndentor& Indentor() const { return *_indentor; }
 		// Retrieve's Plugin's Module Handle
 		HMODULE DllHModule() const { return _dllHModule; }
 		// Retrieves Notepad++ HWND
 		HWND NotepadHwnd() const { return _notepadHwnd; }
+		// Retrieves the Plugin Path class
+		fs::path& PluginPath() const { return *_pluginPath; };
 		// Processes Messages from a Notepad++ editor and the coupled Scintilla Text Editor
 		void ProcessMessagesSci(SCNotification* notifyCode);
-		// Old message processor for Notepad++. Currently deprecated.
+		// Processes Raw messages from a Notepad++ window (the ones not handled by editor). Currently unused by the plugin
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
 		// Setup Notepad++ and Scintilla handles and finish initializing the
 		// plugin's objects that need a Windows Handle to work
@@ -92,7 +98,7 @@ namespace NWScriptPlugin {
 		// Reads the current Plugin Ready state
 		bool IsReady() const { return _isReady; }
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
-		bool IsPluginLanguage() const { return _notepadLexer->isPluginLang; }
+		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
 		// Checks if the current version of Notepad++ requires a custom indentator
 		bool NeedsPluginAutoIndent() const { return _needPluginAutoIndent; }
 
@@ -106,7 +112,7 @@ namespace NWScriptPlugin {
 		HMENU GetNppMainMenu();
 		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
 		void RemoveAutoIndentMenu();
-		// Setup Menu Icons. For now, only the "Fix Editor Colors" use it
+		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupMenuIcons();
 
 		// Opens the About dialog
@@ -131,25 +137,61 @@ namespace NWScriptPlugin {
 		Plugin(HMODULE dllModule)
 			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule), _notepadHwnd(nullptr) {}
 
+		// Set a plugin menu Icon to a given stock Shell Icon
+		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
+
+		// Unique plugin Instance
 		static Plugin* _instance;
 
+		// Internal states
 		bool _isReady;
 		bool _needPluginAutoIndent;
-		std::unique_ptr<NotepadLexer> _notepadLexer;
+
+		// Internal classes
+		std::unique_ptr<NotepadLexer> _notepadCurrentLexer;
 		std::unique_ptr<PluginMessenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
+		// Internal handles
 		HMODULE _dllHModule;
 		HWND _notepadHwnd;
 
+		// Settings instance
 		std::unique_ptr<NWScriptPlugin::Settings> _settings;
 
+
+		// Meta Information about the plugin
+
+		// Current Plugin Install Path
+		std::unique_ptr<fs::path> _pluginPath;
+
+		// Plugin module name without extension (eg: NWScript-Npp)
+		generic_string _pluginFileName;
+		// Plugin module extension (eg: .dll)
+		generic_string _pluginFileExtension;
+		// Plugin Lexer config file (eg: NWScript-Npp.xml)
+		generic_string _pluginLexerConfigFile;
+		// Plugin Lexer config file path (eg: %ProgramFiles%\Notepad++\plugins\config\NWScript-Npp.xml)
+		generic_string _pluginLexerConfigFilePath;
+
+		// Notepad Installation Directory (eg: %ProgramFiles%\Notepad++\)
+		generic_string _notepadInstallDir;
+		// Notepad Plugin Installation Pathg (eg: %ProgramFiles%\Notepad++\plugins\)
+		generic_string _notepadPluginHomePath;
+		// Notepad Themes Installation Directory (eg: %ProgramFiles%\Notepad++\themes)
+		generic_string _notepadThemesInstallDir;
+		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
+		generic_string _notepadDarkThemeFilePath;
+
+		// Dialog boxes
 		std::unique_ptr<AboutDialog> _aboutDialog;
 		std::unique_ptr<WarningDialog> _warningDialog;
+
+		// Compilation-time information
 
 		// We are defining this on code and dynamic allocated, hence made it static.
 		static FuncItem pluginFunctions[];
 		// We are defining this on code and dynamic allocated, hence made it static.
-		static TCHAR pluginName[];
+		static generic_string pluginName;
 	};
 
 }
