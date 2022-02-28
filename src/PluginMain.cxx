@@ -10,17 +10,26 @@
 #include <Windows.h>
 #include <sstream>
 #include <stdexcept>
+#include <ShlObj.h>
 
 #include "Common.h"
 #include "LexerCatalogue.h"
 
 #include "PluginMain.h"
 
-
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
 
-TCHAR Plugin::pluginName[] = TEXT("NWScript for Notepad++");
+
+generic_string Plugin::pluginName = TEXT("NWScript for Notepad++");
+
+// Menu functions order. Needs to be Sync'ed with pluginFunctions[]
+#define PLUGINMENU_SWITCHAUTOINDENT 0
+#define PLUGINMENU_COMPILESCRIPT 1
+#define PLUGINMENU_IMPORTDEFINITIONS 3
+#define PLUGINMENU_SETTINGS 4
+#define PLUGINMENU_FIXEDITORCOLORS 6
+#define PLUGINMENU_ABOUTME 7
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use Auto-Identation"), Plugin::SwitchAutoIndent},
@@ -32,6 +41,14 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Fix Editor Colors"), Plugin::FixLanguageColors},
     {TEXT("About Me"), Plugin::AboutMe},
 };
+
+// Notepad Plugin Configuration installation root directory. We made it const, since we're not retrieving this outside a plugin build 
+const generic_string NotepadPluginConfigRootDir = TEXT("config\\");
+// Notepad Default Themes install directory. We made it const, since we're not retrieving this outside a plugin build
+const generic_string NotepadDefaultThemesRootDir = TEXT("themes\\");
+// Notepad Default Darkl Theme file. We made it const, since we're not retrieving this outside a plugin build
+const generic_string NotepadDefaultDarkThemeFile = TEXT("DarkModeDefault.xml");
+
 
 // Static member definition
 Plugin* Plugin::_instance(nullptr);
@@ -51,11 +68,22 @@ void Plugin::PluginInit(HANDLE hModule)
     // Instantiate the Plugin
     _instance = new Plugin(static_cast<HMODULE>(hModule));
 
-    // TODO: Load Settings from file
-    Instance()._settings = std::make_unique<NWScriptPlugin::Settings>();
+    // Get metainformation about this plugin
+    TCHAR fTemp[MAX_PATH] = {};
+    DWORD fSize = GetModuleFileName(static_cast<HMODULE>(hModule), fTemp, MAX_PATH);
+    Instance()._pluginPath = std::make_unique<fs::path>(fTemp);
+    Instance()._pluginFileName = Instance()._pluginPath.get()->stem();
+    Instance()._pluginFileExtension = Instance()._pluginPath.get()->extension();
+    Instance()._pluginLexerConfigFile = Instance()._pluginPath.get()->stem();
+    Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
-    // TODO: 
-    Instance().pluginFunctions[0]._init2Check = false;
+    // The rest of metainformation is get when Notepad Messenger is set...
+    // Check on Plugin::SetNotepadData
+
+    // Settings instance created.
+    // Settings initialization (load settings), only after Notepad Messenger acquired...
+    // Check on Plugin::SetNotepadData
+    Instance()._settings = std::make_unique<NWScriptPlugin::Settings>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -81,22 +109,52 @@ int Plugin::GetFunctionCount() const
 // plugin's objects that need a Windows Handle to work
 void Plugin::SetNotepadData(NppData data)
 {
-    // Init Notepad-Scintilla Messender
-	if (!Instance()._messageInstance)
+    // Init Notepad-Scintilla Messenger
+	if (!_messageInstance)
 	{
-		Instance()._messageInstance = std::make_unique<PluginMessenger>(data);
-        Instance()._indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
+		_messageInstance = std::make_unique<PluginMessenger>(data);
+        _indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
 	}
 
     //Keep a copy of Notepad HWND to easy access
-    _notepadHwnd = Instance().Messenger().GetNotepadHwnd();
+    _notepadHwnd = Messenger().GetNotepadHwnd();
+
+    // Finish initializing the Plugin Metainformation
+    TCHAR fName[MAX_PATH] = {};
+    Messenger().SendNppMessage(NPPM_GETNPPDIRECTORY, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
+    _notepadInstallDir = fName;
+    _notepadThemesInstallDir = _notepadInstallDir;
+    _notepadThemesInstallDir.append(TEXT("\\"));
+    _notepadThemesInstallDir.append(NotepadDefaultThemesRootDir);
+    _notepadDarkThemeFilePath = _notepadThemesInstallDir;
+    _notepadDarkThemeFilePath.append(NotepadDefaultDarkThemeFile);
+
+    ZeroMemory(fName, sizeof(fName));
+    Messenger().SendNppMessage(NPPM_GETPLUGINHOMEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
+    _notepadPluginHomePath = fName;
+    _pluginLexerConfigFilePath = _notepadPluginHomePath;
+    _pluginLexerConfigFilePath.append(TEXT("\\"));
+    _pluginLexerConfigFilePath.append(NotepadPluginConfigRootDir);
+    _pluginLexerConfigFilePath.append(_pluginLexerConfigFile);
+
+    // Settings directory is different than Plugin Install Dir.
+    ZeroMemory(fName, sizeof(fName));
+    Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
+    Settings().sPluginConfigPath = fName;
+    Settings().sPluginConfigPath.append(TEXT("\\"));
+    Settings().sPluginConfigPath.append(_pluginFileName);
+    Settings().sPluginConfigPath.append(TEXT(".ini"));
+
+
+    // TODO: Load Settings from file
+
 }
 
 #pragma endregion Plugin internal processing
 
 #pragma region 
 
-// Processes Notepad++ specific messages. Currently unused by this Plugin
+// Processes Raw messages from a Notepad++ window (the ones not handled by editor). 
 LRESULT Plugin::ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam)
 {
     return TRUE;
@@ -109,10 +167,10 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     switch (notifyCode->nmhdr.code)
     {
         case NPPN_READY:
-            IsReady(true);
-            SetupMenuIcons();
+            IsReady(true);            
             SetAutoIndentSupport();
             LoadNotepadLexer();
+            SetupMenuIcons();
             break;
 
         // TODO: Save Configurations file
@@ -127,6 +185,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             if (IsReady())
                 LoadNotepadLexer();
             break;
+
 
         case SCN_CHARADDED:
             // Conditions to perform the Auto-Indent:
@@ -177,7 +236,7 @@ void Plugin::LoadNotepadLexer()
     }
 
     // Create or Replace current lexer language.
-    _notepadLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
+    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
 // Set the Auto-Indent type for all of this Plugin's installed languages
@@ -209,8 +268,8 @@ void Plugin::SetAutoIndentSupport()
                 {
                     generic_stringstream sWarning = {};
                     sWarning << TEXT("Warning: failed to set Auto-Indentation for language [") << lexerNameW.str().c_str() << "].";
-                    MessageBox(NULL, reinterpret_cast<LPCWSTR>(sWarning.str().c_str()),
-                           TEXT("NWScript Plugin"), MB_OK | MB_ICONWARNING);
+                    MessageBox(_notepadHwnd, reinterpret_cast<LPCWSTR>(sWarning.str().c_str()),
+                           pluginName.c_str(), MB_OK | MB_ICONWARNING | MB_APPLMODAL);
                     return;
                 }
             }
@@ -230,6 +289,7 @@ void Plugin::SetAutoIndentSupport()
     else
         Instance()._needPluginAutoIndent = true;
 }
+
 
 #define NOTEPADPLUS_USER_INTERNAL  (WM_USER + 0000)
 #define NPPM_INTERNAL_GETMENU      (NOTEPADPLUS_USER_INTERNAL + 14)
@@ -257,32 +317,75 @@ void Plugin::RemoveAutoIndentMenu()
     HMENU hMenu = Instance().GetNppMainMenu();
     if (hMenu)
     {
-        RemoveMenu(hMenu, pluginFunctions[0]._cmdID, MF_BYCOMMAND);
+        RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
     }
+}
+
+bool Plugin::SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
+{
+    HMENU hMenu = Instance().GetNppMainMenu();
+    if (hMenu)
+    {
+        HBITMAP hIconBmp = GetStockIconBitmap(stockIconID, IconSize::Size16x16);
+        bool bSuccess = false;
+        if (bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
+        if (bSetToUncheck && !bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
+        if (!bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
+
+        return bSuccess;
+    }
+
+    return false;
 }
 
 void Plugin::SetupMenuIcons()
 {
+    // Only show error messages once per session.
+    static bool bErrorShown = false;
 
-    // TODO: Setup the shield icon ONLY when user needs privilege to access file
+    // Only do file operations once per session.
+    static bool bFilesCheched = false;
+    static bool bSuccessLexer = false;
+    static bool bSuccessDark = false;
+    static FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
+    static FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
 
-    HMENU hMenu = Instance().GetNppMainMenu();
-    if (hMenu)
+    // Don't use the shield icons when user runs in Administrator mode
+    if (IsUserAnAdmin())
+        return;
+
+    if (!bFilesCheched)
     {
-        HBITMAP iShield = GetStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, IconSize::Size16x16);
-        MENUITEMINFO iChange;
-        ZeroMemory(&iChange, sizeof(iChange));
-        iChange.cbSize = sizeof(iChange);
-
-        if (GetMenuItemInfo(hMenu, Instance().GetFunctions()[6]._cmdID, FALSE, &iChange))
-        {
-            iChange.fMask = MIIM_BITMAP;
-            iChange.hbmpItem = iShield;
-            SetMenuItemInfo(hMenu, Instance().GetFunctions()[6]._cmdID, FALSE, &iChange);
-        }
-    
+        // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
+        bSuccessLexer = CheckFileWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
+        bSuccessDark = CheckFileWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
     }
 
+    if ((!bSuccessLexer || !bSuccessDark) && !bErrorShown)
+    {
+        generic_stringstream sError;
+        sError << TEXT("Unable to read information for file(s) bellow: ") << "\r\n";
+        if (!bSuccessLexer)
+            sError << _pluginLexerConfigFilePath << "\r\n";
+        if (!bSuccessDark)
+            sError << _notepadDarkThemeFilePath << "\r\n";
+        sError << "\r\n";
+        sError << "NWScript Plugin may not work properly, please check your installation!";
+
+        ::MessageBox(_notepadHwnd, sError.str().c_str(), pluginName.c_str(), MB_ICONERROR | MB_APPLMODAL | MB_OK);
+
+        bErrorShown = true;
+    }
+
+    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions Menu 
+    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
+        SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD);
+    // For users without permission to _pluginLexerConfigFilePath or _notepadDarkThemeFilePath, set shield on Fix Editor Colors
+    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
+        SetStockMenuItemIcon(PLUGINMENU_FIXEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD);
 }
 
 // Opens the About dialog
@@ -340,13 +443,13 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
-    MessageBox(NULL, TEXT("Coming soon! :)"), TEXT("NWScript Compiler"), MB_OK | MB_ICONINFORMATION);
+    MessageBox(Instance().NotepadHwnd(), TEXT("Coming soon! :)"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 // Opens the Plugin's Settings panel
 PLUGINCOMMAND Plugin::OpenSettings()
 {
-    MessageBox(NULL, TEXT("Not yet implemented"), TEXT("NWScript Settings"), MB_OK);
+    MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 // Imports Lexer's functions and constants declarations from a NWScript.nss file
@@ -355,14 +458,14 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
     std::unique_ptr<generic_string> nFileName = std::make_unique<generic_string>();
     if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("NWScritpt.nss File\0nwscript.nss\0"), *nFileName.get()))
     {
-        
+        MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
     }
 }
 
 // Fixes the language colors to default
 PLUGINCOMMAND Plugin::FixLanguageColors()
 {
-
+    MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 // Opens About Box
