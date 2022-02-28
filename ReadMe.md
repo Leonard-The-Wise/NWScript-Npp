@@ -17,7 +17,19 @@ The plugin adds support for function Auto-Completion and can import newly define
 Just download the latest release and put it into Notepad++ plugins directory, overwritting any existing file or folder.
 - The plugin requires it's XML to be properly placed on the **plugins/Config/** folder in Notepad++ in order for it to work, or else it will be considered "incompatible".
 
-Here is a sample of the plugin's funcionality: ![Main Edition](Media/Sample-Colorization.jpg)
+```
+Here is a sample of the plugin's funcionality:
+```
+<div align="center"><img src="Media/Sample-Colorization.jpg" width="285"/></div>
+<p></p>
+<p></p>
+
+```
+Dark Mode version:
+```
+<div align="center"><img src="Media/Sample-Colorization-DarkMode.jpg" width="285"/></div>
+<p></p>
+
 
 The unity test file I used to take this screenshot is provided [here](Media/UnityTest.nss).
 
@@ -38,7 +50,7 @@ This plugin was a test to check my C++ skills, also an example on how to write a
 
 I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.Cxx file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cxx)
 
-All files under this project are provided under the [GNU License](license.txt).
+All files under this project are provided under the [GPL v3.0 License](license.txt).
 
 For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the following way:
 
