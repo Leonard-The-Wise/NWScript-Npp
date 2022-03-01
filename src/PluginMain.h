@@ -11,13 +11,13 @@
 #include <vector>
 #include <filesystem>
 
+#include "Common.h"
+
+#include "Notepad_plus_msgs.h"
+
 #include "PluginMessenger.h"
 #include "LineIndentor.h"
 #include "Settings.h"
-
-#include "AboutDialog.h"
-#include "WarningDialog.h"
-#include "Common.h"
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -49,16 +49,14 @@ namespace NWScriptPlugin {
 		Plugin(Plugin& other) = delete;
 		void operator =(const Plugin &) = delete;
 
-
-		/*
-		* Basic plugin setup;
-		*/ 
-
 		// Initializes the Plugin Instance with a DLL or EXE handle. Called from DLL Main message DLL_ATTACH
 		static void PluginInit(HANDLE hModule);
 		// Performs the instance cleanup: Called from DLL Main message DLL_DETACH
 		static void PluginRelease();
 
+		// Setup Notepad++ and Scintilla handles and finish initializing the
+		// plugin's objects that need a Windows Handle to work
+		void SetNotepadData(NppData data);
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName.data(); }
 		// Returns the Plugin Menu Items count. Notepad++ Callback function
@@ -85,35 +83,6 @@ namespace NWScriptPlugin {
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		// Processes Raw messages from a Notepad++ window (the ones not handled by editor). Currently unused by the plugin
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
-		// Setup Notepad++ and Scintilla handles and finish initializing the
-		// plugin's objects that need a Windows Handle to work
-		void SetNotepadData(NppData data);
-
-		/*
-		* Plugin functionality
-		*/
-
-		// Sets the Plugin Ready state (after NPPN_READY)
-		void IsReady(bool ready) { _isReady = ready; }
-		// Reads the current Plugin Ready state
-		bool IsReady() const { return _isReady; }
-		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
-		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
-		// Checks if the current version of Notepad++ requires a custom indentator
-		bool NeedsPluginAutoIndent() const { return _needPluginAutoIndent; }
-
-		// Load current Notepad++ Language Lexer.
-		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
-		void LoadNotepadLexer();
-		// Setup plugin and Notepad++ Auto-Indentation Support.
-		// If it's a newer version of notepad++, we use the built-in auto-indentation, or else, we use our customized one
-		void SetAutoIndentSupport();
-		// Returns tha handle of Notepad++ Main Menu
-		HMENU GetNppMainMenu();
-		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
-		void RemoveAutoIndentMenu();
-		// Setup Menu Icons. Some of them are dynamic shown/hidden.
-		void SetupMenuIcons();
 
 		// Opens the About dialog
 		void OpenAboutDialog();
@@ -137,6 +106,21 @@ namespace NWScriptPlugin {
 		Plugin(HMODULE dllModule)
 			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule), _notepadHwnd(nullptr) {}
 
+		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
+		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
+		// Load current Notepad++ Language Lexer.
+		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
+		void LoadNotepadLexer();
+		// Setup plugin and Notepad++ Auto-Indentation Support.
+		// If it's a newer version of notepad++, we use the built-in auto-indentation, or else, we use our customized one
+		void SetAutoIndentSupport();
+		// Returns tha handle of Notepad++ Main Menu
+		HMENU GetNppMainMenu();
+		// Setup Menu Icons. Some of them are dynamic shown/hidden.
+		void SetupMenuIcons();
+
+		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
+		void RemoveAutoIndentMenu();
 		// Set a plugin menu Icon to a given stock Shell Icon
 		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
 
@@ -181,10 +165,6 @@ namespace NWScriptPlugin {
 		generic_string _notepadThemesInstallDir;
 		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
 		generic_string _notepadDarkThemeFilePath;
-
-		// Dialog boxes
-		std::unique_ptr<AboutDialog> _aboutDialog;
-		std::unique_ptr<WarningDialog> _warningDialog;
 
 		// Compilation-time information
 

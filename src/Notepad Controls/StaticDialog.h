@@ -14,27 +14,19 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//::///////////////////////////////////////////////////////////////
+//::
+//:: Patched by Leonardo Silva (Feb-2022)
+//:: - Turned some functions virtual to allow more overriding 
+//:: - Changed some method's visibility as they are not supposed to
+//::   be called directly.
+//::
+//::///////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "Window.h"
 #include "Notepad_plus_msgs.h"
-
-enum class PosAlign { left, right, top, bottom };
-
-struct DLGTEMPLATEEX {
-      WORD   dlgVer;
-      WORD   signature;
-      DWORD  helpID;
-      DWORD  exStyle;
-      DWORD  style; 
-      WORD   cDlgItems;
-      short  x;
-      short  y;    
-      short  cx;
-      short  cy;
-      // The structure has more fields but are variable length
-} ;
 
 class StaticDialog : public Window
 {
@@ -52,8 +44,7 @@ public :
 		return (_hSelf != NULL);
 	};
 
-	void goToCenter();
-    void destroy() {
+    virtual void destroy() {
 		::SendMessage(_hParent, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, (WPARAM)_hSelf);
 		::DestroyWindow(_hSelf);
 	};
@@ -63,7 +54,8 @@ protected :
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 
-    void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT & point);
+	virtual void goToCenter();
+	void alignWith(HWND handle, HWND handle2Align, PosAlign pos, POINT & point);
 	HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate);
 };
 

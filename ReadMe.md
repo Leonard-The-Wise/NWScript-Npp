@@ -4,9 +4,9 @@
 
 ![GPL-3.0 License](https://img.shields.io/badge/License-GPL%20v3-green)
  
- # Bioware's NWScript Language support and compiler for Notepad++.
+ # NWScript Tools for Notepad++.
 
-Since there's not much functionality to User-Defined Languages in [Notepad++](https://notepad-plus-plus.org/) I decided to create a custom Lexer to support Bioware's NWScript. A [Lexer](https://en.wikipedia.org/wiki/Lexical_analysis) is just a program that can read, interpret and highlight syntax for code. 
+Since there's not much functionality to User-Defined Languages in [Notepad++](https://notepad-plus-plus.org/) I decided to create a custom Lexer to support Bioware's NWScript language. A [Lexer](https://en.wikipedia.org/wiki/Lexical_analysis) is just a program that can read, interpret and highlight syntax for code. 
 
 But in this plugin, things rapidly expanded, so I also decided to provide the tools to compile and publish NWScript files directly into the target games: Neverwinter Nights [Enhanced](https://www.beamdog.com/games/neverwinter-nights-enhanced/) and [2] (this one still a Work In Progress).
 

@@ -9,8 +9,8 @@
 #include <Commctrl.h>
 #include <sstream>
 
-#include "AboutDialog.h"
 #include "PluginMain.h"
+#include "AboutDialog.h"
 
 #include "PluginControlsRC.h"
 
@@ -59,6 +59,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			case IDCANCEL:
 			case IDOK:
 				display(false);
+				destroy();
 				return TRUE;
 			}
 		}

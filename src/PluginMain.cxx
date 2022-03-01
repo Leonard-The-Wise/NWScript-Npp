@@ -17,17 +17,26 @@
 
 #include "PluginMain.h"
 
+#include "AboutDialog.h"
+#include "WarningDialog.h"
+#include "ElevateDialog.h"
+
+
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
 
 
-generic_string Plugin::pluginName = TEXT("NWScript for Notepad++");
+// Static members definition
+
+generic_string Plugin::pluginName = TEXT("NWScript Tools");
 
 // Menu functions order. Needs to be Sync'ed with pluginFunctions[]
 #define PLUGINMENU_SWITCHAUTOINDENT 0
 #define PLUGINMENU_COMPILESCRIPT 1
+#define PLUGINMENU_DASH1 2
 #define PLUGINMENU_IMPORTDEFINITIONS 3
 #define PLUGINMENU_SETTINGS 4
+#define PLUGINMENU_DASH2 5
 #define PLUGINMENU_FIXEDITORCOLORS 6
 #define PLUGINMENU_ABOUTME 7
 
@@ -42,16 +51,14 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("About Me"), Plugin::AboutMe},
 };
 
+Plugin* Plugin::_instance(nullptr);
+
 // Notepad Plugin Configuration installation root directory. We made it const, since we're not retrieving this outside a plugin build 
 const generic_string NotepadPluginConfigRootDir = TEXT("config\\");
 // Notepad Default Themes install directory. We made it const, since we're not retrieving this outside a plugin build
 const generic_string NotepadDefaultThemesRootDir = TEXT("themes\\");
 // Notepad Default Darkl Theme file. We made it const, since we're not retrieving this outside a plugin build
 const generic_string NotepadDefaultDarkThemeFile = TEXT("DarkModeDefault.xml");
-
-
-// Static member definition
-Plugin* Plugin::_instance(nullptr);
 
 #pragma region
 
@@ -79,11 +86,6 @@ void Plugin::PluginInit(HANDLE hModule)
 
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
-
-    // Settings instance created.
-    // Settings initialization (load settings), only after Notepad Messenger acquired...
-    // Check on Plugin::SetNotepadData
-    Instance()._settings = std::make_unique<NWScriptPlugin::Settings>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -140,14 +142,17 @@ void Plugin::SetNotepadData(NppData data)
     // Settings directory is different than Plugin Install Dir.
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    Settings().sPluginConfigPath = fName;
-    Settings().sPluginConfigPath.append(TEXT("\\"));
-    Settings().sPluginConfigPath.append(_pluginFileName);
-    Settings().sPluginConfigPath.append(TEXT(".ini"));
+    generic_string sPluginConfigPath = fName;
+    sPluginConfigPath.append(TEXT("\\"));
+    sPluginConfigPath.append(_pluginFileName);
+    sPluginConfigPath.append(TEXT(".ini"));
 
+    // Create settings instance and load all values
+    _settings = std::make_unique<NWScriptPlugin::Settings>(sPluginConfigPath);
+    Settings().Load();
 
-    // TODO: Load Settings from file
-
+    // Adjust menu checked or not
+    pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().bEnableAutoIndentation;
 }
 
 #pragma endregion Plugin internal processing
@@ -167,7 +172,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     switch (notifyCode->nmhdr.code)
     {
         case NPPN_READY:
-            IsReady(true);            
+            _isReady = true;
             SetAutoIndentSupport();
             LoadNotepadLexer();
             SetupMenuIcons();
@@ -175,6 +180,8 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 
         // TODO: Save Configurations file
         case NPPN_SHUTDOWN:
+            _isReady = false;
+            Settings().Save();
             break;
 
         case NPPN_LANGCHANGED:
@@ -182,7 +189,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             break;
 
         case NPPN_BUFFERACTIVATED:
-            if (IsReady())
+            if (_isReady)
                 LoadNotepadLexer();
             break;
 
@@ -192,9 +199,9 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             // - Notepad is in Ready state;
             // - Current Language is set to one of the plugin supported langs
             // - Notepad version doesn't yet support Extended AutoIndent functionality
-            if (IsReady() && IsPluginLanguage() && Instance().NeedsPluginAutoIndent()
-                && Instance().Settings().bEnableAutoIndentation)
-				    Instance().Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
+            if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
+                && Settings().bEnableAutoIndentation)
+				    Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
             break;
 
         default:
@@ -382,33 +389,33 @@ void Plugin::SetupMenuIcons()
 
     // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions Menu 
     if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
-        SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD);
+        SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
     // For users without permission to _pluginLexerConfigFilePath or _notepadDarkThemeFilePath, set shield on Fix Editor Colors
     if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
-        SetStockMenuItemIcon(PLUGINMENU_FIXEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD);
+        SetStockMenuItemIcon(PLUGINMENU_FIXEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
 // Opens the About dialog
 void Plugin::OpenAboutDialog()
 {
-    if (!Instance()._aboutDialog)
-    {
-        Instance()._aboutDialog = std::make_unique<AboutDialog>();
-        Instance()._aboutDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
-    }
+    // Dialog boxes need to be static unless it's modal.
+    static AboutDialog aboutDialog = {};
 
-    Instance()._aboutDialog->doDialog();
+    if (!aboutDialog.isCreated())
+        aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    aboutDialog.doDialog();
 }
 
 void Plugin::OpenWarningDialog()
 {
-    if (!Instance()._warningDialog)
-    {
-        Instance()._warningDialog = std::make_unique<WarningDialog>();
-        Instance()._warningDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
-    }
+    // Dialog boxes need to be static unless it's modal.
+    static WarningDialog warningDialog = {};
 
-    Instance()._warningDialog->doDialog();
+    if (!warningDialog.isCreated())
+        warningDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    warningDialog.doDialog();
 }
 
 #pragma endregion Plugin Funcionality
@@ -418,6 +425,8 @@ void Plugin::OpenWarningDialog()
 // Support for Auto-Indentation for old versions of Notepad++
 PLUGINCOMMAND Plugin::SwitchAutoIndent()
 {
+    static bool bAutoIndentationWarningShown = false;
+
     // Change settings
     Instance().Settings().bEnableAutoIndentation = !Instance().Settings().bEnableAutoIndentation;
     bool bEnableAutoIndent = Instance().Settings().bEnableAutoIndentation;
@@ -433,11 +442,12 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     if (Instance().Settings().bAutoIndentationWarningAccepted)
         return;
 
-    // Warning user of function
-    if (bEnableAutoIndent && !Instance().Settings().bAutoIndentationWarningShown)
+    // Warning user of function: only once in a session (and perhaps in a lifetime if INI file doesn't change)
+    if (bEnableAutoIndent && !bAutoIndentationWarningShown)
+    {
         Instance().OpenWarningDialog();
-
-    Instance().Settings().bAutoIndentationWarningShown = true;
+        bAutoIndentationWarningShown = true;
+    }
 }
 
 // Compiles current .NSS Script file
@@ -465,7 +475,32 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
 // Fixes the language colors to default
 PLUGINCOMMAND Plugin::FixLanguageColors()
 {
-    MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
+    // Get file permissions to style files
+    static bool bSuccessLexer = false;
+    static bool bSuccessDark = false;
+    static FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
+    static FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
+
+    bSuccessLexer = CheckFileWritePermission(Instance()._pluginLexerConfigFilePath, fLexerPerm);
+    bSuccessDark = CheckFileWritePermission(Instance()._notepadDarkThemeFilePath, fDarkThemePerm);
+
+    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
+    {
+        std::vector<generic_string> s = {};
+        if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
+            s.push_back(Instance()._pluginLexerConfigFilePath);
+        if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
+            s.push_back(Instance()._notepadDarkThemeFilePath);
+
+        ElevateDialog ePermission = {};
+        ePermission.SetFilesText(s);
+
+        INT_PTR bRunAdmin = ePermission.doDialog(Instance().DllHModule(), Instance().NotepadHwnd());
+        if (bRunAdmin)
+        {
+
+        }
+    }
 }
 
 // Opens About Box

@@ -29,6 +29,9 @@
     <Filter Include="Notepad Controls">
       <UniqueIdentifier>{e35432f4-6e71-474d-8987-b140a5fc1196}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Plugin Dialogs">
+      <UniqueIdentifier>{bc8f6c69-15c8-4ae4-9125-f04f61638c09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -98,9 +101,6 @@
     <ClInclude Include="..\src\Plugin Interface\DllMain.h">
       <Filter>Plugin Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Utils\Serialization.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h">
       <Filter>Notepad Controls</Filter>
     </ClInclude>
@@ -119,19 +119,37 @@
     <ClInclude Include="..\src\Utils\VersionFromResource.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
     <ClInclude Include="..\src\ProjectVersion.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h" />
-    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
-    <ClInclude Include="..\src\WarningDialog.h" />
     <ClInclude Include="..\src\Lexers\InstalledLexers.h">
       <Filter>Custom Lexers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PluginMessenger.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
     <ClInclude Include="..\src\Common.h" />
+    <ClInclude Include="..\src\Utils\tinyxml2.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\WarningDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\ElevateDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\ModalDialog.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\DialogCommons.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cxx" />
@@ -163,10 +181,23 @@
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp">
       <Filter>Notepad Controls</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
     <ClCompile Include="..\src\Settings.cxx" />
-    <ClCompile Include="..\src\WarningDialog.cxx" />
     <ClCompile Include="..\src\PluginMessenger.cxx" />
+    <ClCompile Include="..\src\Utils\tinyxml2.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\WarningDialog.cxx">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\ElevateDialog.cxx">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp">
+      <Filter>Notepad Controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -201,6 +232,9 @@
     </Image>
     <Image Include="..\Media\Here-be-Dragons.bmp">
       <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\Sample-Colorization-DarkMode.jpg">
+      <Filter>Media</Filter>
     </Image>
   </ItemGroup>
 </Project>

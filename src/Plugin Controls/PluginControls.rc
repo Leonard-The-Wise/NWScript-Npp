@@ -49,12 +49,12 @@ END
 
 IDD_ABOUT DIALOGEX 0, 0, 309, 242
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About NWScript Plugin"
+CAPTION "About NWScript Tools Plugin"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,130,222,50,14
     CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
-    CTEXT           "NWScript Unicode for Notepad++",IDC_LBLPLUGINNAME,118,18,188,8
+    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,118,18,188,8
     CTEXT           "(C) Feb 2022, Leonardo Silva (aka: Leonard-The-Wise)",IDC_LBLCOPYRIGHT,118,46,188,8
     CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
                     "SysLink",WS_TABSTOP,71,113,204,14
@@ -71,6 +71,19 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         IDB_HEREBEDRAGONS,IDC_HEREBEDRAGONS,"Static",SS_BITMAP,0,0,400,208
     CONTROL         "",IDC_CHKOK,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,196,178,13,12,WS_EX_TRANSPARENT
+END
+
+IDD_REQUIREPRIVILEGE DIALOGEX 0, 0, 309, 139
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Privilege Elevation"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Run Notepad++ in Administrator Mode",IDOK,7,118,145,14
+    DEFPUSHBUTTON   "I'll provide the permissions manually",IDCANCEL,163,118,137,14
+    CONTROL         "",IDC_SHIELDICON,"Static",SS_BITMAP,11,21,43,39
+    LTEXT           "WARNING - this action requires write permission to the following file(s):",IDC_LBLWARNING,66,15,236,21
+    EDITTEXT        IDC_TXTREQUIREDFILES,63,36,239,33,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    LTEXT           "To solve this, you may either:\r\n  - Try to reopen Notepad++ with elevated privileges (Administrator Mode); or\r\n  - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties -> Security Tab.",IDC_STATIC,16,72,272,33
 END
 
 
@@ -93,6 +106,14 @@ BEGIN
     IDD_HEREBEDRAGONS, DIALOG
     BEGIN
     END
+
+    IDD_REQUIREPRIVILEGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 302
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 132
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -108,6 +129,11 @@ BEGIN
 END
 
 IDD_HEREBEDRAGONS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_REQUIREPRIVILEGE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

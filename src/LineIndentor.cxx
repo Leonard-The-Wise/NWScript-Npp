@@ -69,7 +69,7 @@ intptr_t LineIndentor::findMachedBracePos(size_t startPos, size_t endPos, char t
 // Returns the range of current selected characters inside a Scintilla Text Editor window.
 Sci_CharacterRange LineIndentor::getSelection()
 {
-	Sci_CharacterRange crange;
+	Sci_CharacterRange crange = {};
 	crange.cpMin = pMsg.SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONSTART);
 	crange.cpMax = pMsg.SendSciMessage<Sci_PositionCR>(SCI_GETSELECTIONEND);
 	return crange;

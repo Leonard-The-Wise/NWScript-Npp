@@ -14,11 +14,33 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//::///////////////////////////////////////////////////////////////
+//::
+//:: Patched by Leonardo Silva (Feb-2022)
+//:: - Moved common structures to Window.h
+//::
+//::///////////////////////////////////////////////////////////////
 
 #ifndef WINDOW_CONTROL_H
 #define WINDOW_CONTROL_H
 
 #include <windows.h>
+
+enum class PosAlign { left, right, top, bottom };
+
+struct DLGTEMPLATEEX {
+	WORD   dlgVer;
+	WORD   signature;
+	DWORD  helpID;
+	DWORD  exStyle;
+	DWORD  style;
+	WORD   cDlgItems;
+	short  x;
+	short  y;
+	short  cx;
+	short  cy;
+	// The structure has more fields but are variable length
+};
 
 class Window
 {

@@ -2,7 +2,7 @@
  * The MIT License (MIT)
  * Copyright (c) 2018 Danijel Durakovic
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * Permission is hereby granted, free of TCHARge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
@@ -23,7 +23,7 @@
 
  ///////////////////////////////////////////////////////////////////////////////
  //
- //  /mINI/ v0.9.11
+ //  /mINI/ v0.9.12
  //  An INI file reader and writer for the modern age.
  //
  ///////////////////////////////////////////////////////////////////////////////
@@ -53,11 +53,11 @@
  //
  //  /* read value; gets a reference to actual value in the structure.
  //     if key or section don't exist, a new empty value will be created */
- //  std::string& value = ini["section"]["key"];
+ //  generic_string& value = ini["section"]["key"];
  //
  //  /* read value safely; gets a copy of value in the structure.
  //     does not alter the structure */
- //  std::string value = ini.get("section").get("key");
+ //  generic_string value = ini.get("section").get("key");
  //
  //  /* set or update values */
  //  ini["section"]["key"] = "value";
@@ -79,9 +79,12 @@
  //  Long live the INI file!!!
  //
  ///////////////////////////////////////////////////////////////////////////////
+ //  Patched to support Unicode files if compiled in UNICODE mode
+ //  BY: Leonardo Silva (Feb-2022)
+ ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef MINI_INI_H_
-#define MINI_INI_H_
+
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -94,30 +97,47 @@
 #include <sys/stat.h>
 #include <cctype>
 
+#ifndef GENERIC_STRING
+#define GENERIC_STRING
+typedef std::basic_string<TCHAR> generic_string;
+#endif
+
+#ifdef  UNICODE
+#define _tstat _wstat
+struct tstat : _stat64i32 {};
+#else 
+#define _tstat stat
+struct tstat : stat {};
+#endif
+
+typedef std::basic_ofstream<TCHAR> tofstream;
+typedef std::basic_ifstream<TCHAR> tifstream;
+
+
 namespace mINI
 {
 	namespace INIStringUtil
 	{
-		const char* const whitespaceDelimiters = " \t\n\r\f\v";
-		inline void trim(std::string& str)
+		const TCHAR* const whitespaceDelimiters = TEXT(" \t\n\r\f\v");
+		inline void trim(generic_string& str)
 		{
 			str.erase(str.find_last_not_of(whitespaceDelimiters) + 1);
 			str.erase(0, str.find_first_not_of(whitespaceDelimiters));
 		}
 #ifndef MINI_CASE_SENSITIVE
-		inline void toLower(std::string& str)
+		inline void toLower(generic_string& str)
 		{
-			std::transform(str.begin(), str.end(), str.begin(), [](const char c) {
-				return static_cast<char>(std::tolower(c));
+			std::transform(str.begin(), str.end(), str.begin(), [](const TCHAR c) {
+				return static_cast<TCHAR>(std::tolower(c));
 			});
 		}
 #endif
-		inline void replace(std::string& str, std::string const& a, std::string const& b)
+		inline void replace(generic_string& str, generic_string const& a, generic_string const& b)
 		{
 			if (!a.empty())
 			{
 				std::size_t pos = 0;
-				while ((pos = str.find(a, pos)) != std::string::npos)
+				while ((pos = str.find(a, pos)) != generic_string::npos)
 				{
 					str.replace(pos, a.size(), b);
 					pos += b.size();
@@ -125,9 +145,9 @@ namespace mINI
 			}
 		}
 #ifdef _WIN32
-		const char* const endl = "\r\n";
+		const TCHAR* const endl = TEXT("\r\n");
 #else
-		const char* const endl = "\n";
+		const TCHAR* const endl = TEXT("\n");
 #endif
 	}
 
@@ -135,15 +155,15 @@ namespace mINI
 	class INIMap
 	{
 	private:
-		using T_DataIndexMap = std::unordered_map<std::string, std::size_t>;
-		using T_DataItem = std::pair<std::string, T>;
+		using T_DataIndexMap = std::unordered_map<generic_string, std::size_t>;
+		using T_DataItem = std::pair<generic_string, T>;
 		using T_DataContainer = std::vector<T_DataItem>;
-		using T_MultiArgs = typename std::vector<std::pair<std::string, T>>;
+		using T_MultiArgs = typename std::vector<std::pair<generic_string, T>>;
 
 		T_DataIndexMap dataIndexMap;
 		T_DataContainer data;
 
-		inline std::size_t setEmpty(std::string& key)
+		inline std::size_t setEmpty(generic_string& key)
 		{
 			std::size_t index = data.size();
 			dataIndexMap[key] = index;
@@ -168,7 +188,7 @@ namespace mINI
 			dataIndexMap = T_DataIndexMap(other.dataIndexMap);
 		}
 
-		T& operator[](std::string key)
+		T& operator[](generic_string key)
 		{
 			INIStringUtil::trim(key);
 #ifndef MINI_CASE_SENSITIVE
@@ -179,7 +199,7 @@ namespace mINI
 			std::size_t index = (hasIt) ? it->second : setEmpty(key);
 			return data[index].second;
 		}
-		T get(std::string key) const
+		T get(generic_string key) const
 		{
 			INIStringUtil::trim(key);
 #ifndef MINI_CASE_SENSITIVE
@@ -192,7 +212,7 @@ namespace mINI
 			}
 			return T(data[it->second].second);
 		}
-		bool has(std::string key) const
+		bool has(generic_string key) const
 		{
 			INIStringUtil::trim(key);
 #ifndef MINI_CASE_SENSITIVE
@@ -200,7 +220,7 @@ namespace mINI
 #endif
 			return (dataIndexMap.count(key) == 1);
 		}
-		void set(std::string key, T obj)
+		void set(generic_string key, T obj)
 		{
 			INIStringUtil::trim(key);
 #ifndef MINI_CASE_SENSITIVE
@@ -226,7 +246,7 @@ namespace mINI
 				set(key, obj);
 			}
 		}
-		bool remove(std::string key)
+		bool remove(generic_string key)
 		{
 			INIStringUtil::trim(key);
 #ifndef MINI_CASE_SENSITIVE
@@ -263,13 +283,13 @@ namespace mINI
 		const_iterator end() const { return data.end(); }
 	};
 
-	using INIStructure = INIMap<INIMap<std::string>>;
+	using INIStructure = INIMap<INIMap<generic_string>>;
 
 	namespace INIParser
 	{
-		using T_ParseValues = std::pair<std::string, std::string>;
+		using T_ParseValues = std::pair<generic_string, generic_string>;
 
-		enum class PDataType : char
+		enum class PDataType : TCHAR
 		{
 			PDATA_NONE,
 			PDATA_COMMENT,
@@ -278,7 +298,7 @@ namespace mINI
 			PDATA_UNKNOWN
 		};
 
-		inline PDataType parseLine(std::string line, T_ParseValues& parseData)
+		inline PDataType parseLine(generic_string line, T_ParseValues& parseData)
 		{
 			parseData.first.clear();
 			parseData.second.clear();
@@ -287,20 +307,20 @@ namespace mINI
 			{
 				return PDataType::PDATA_NONE;
 			}
-			char firstCharacter = line[0];
-			if (firstCharacter == ';')
+			TCHAR firstCharacter = line[0];
+			if (firstCharacter == TEXT(';'))
 			{
 				return PDataType::PDATA_COMMENT;
 			}
-			if (firstCharacter == '[')
+			if (firstCharacter == TEXT('['))
 			{
-				auto commentAt = line.find_first_of(';');
-				if (commentAt != std::string::npos)
+				auto commentAt = line.find_first_of(TEXT(';'));
+				if (commentAt != generic_string::npos)
 				{
 					line = line.substr(0, commentAt);
 				}
-				auto closingBracketAt = line.find_last_of(']');
-				if (closingBracketAt != std::string::npos)
+				auto closingBracketAt = line.find_last_of(TEXT(']'));
+				if (closingBracketAt != generic_string::npos)
 				{
 					auto section = line.substr(1, closingBracketAt - 1);
 					INIStringUtil::trim(section);
@@ -309,13 +329,13 @@ namespace mINI
 				}
 			}
 			auto lineNorm = line;
-			INIStringUtil::replace(lineNorm, "\\=", "  ");
-			auto equalsAt = lineNorm.find_first_of('=');
-			if (equalsAt != std::string::npos)
+			INIStringUtil::replace(lineNorm, TEXT("\\="), TEXT("  "));
+			auto equalsAt = lineNorm.find_first_of(TEXT('='));
+			if (equalsAt != generic_string::npos)
 			{
 				auto key = line.substr(0, equalsAt);
 				INIStringUtil::trim(key);
-				INIStringUtil::replace(key, "\\=", "=");
+				INIStringUtil::replace(key, TEXT("\\="), TEXT("="));
 				auto value = line.substr(equalsAt + 1);
 				INIStringUtil::trim(value);
 				parseData.first = key;
@@ -329,16 +349,16 @@ namespace mINI
 	class INIReader
 	{
 	public:
-		using T_LineData = std::vector<std::string>;
+		using T_LineData = std::vector<generic_string>;
 		using T_LineDataPtr = std::shared_ptr<T_LineData>;
 
 	private:
-		std::ifstream fileReadStream;
+		tifstream fileReadStream;
 		T_LineDataPtr lineData;
 
 		T_LineData readFile()
 		{
-			std::string fileContents;
+			generic_string fileContents;
 			fileReadStream.seekg(0, std::ios::end);
 			fileContents.resize(static_cast<std::size_t>(fileReadStream.tellg()));
 			fileReadStream.seekg(0, std::ios::beg);
@@ -350,18 +370,18 @@ namespace mINI
 			{
 				return output;
 			}
-			std::string buffer;
+			generic_string buffer;
 			buffer.reserve(50);
 			for (std::size_t i = 0; i < fileSize; ++i)
 			{
-				char& c = fileContents[i];
-				if (c == '\n')
+				TCHAR& c = fileContents[i];
+				if (c == TEXT('\n'))
 				{
 					output.emplace_back(buffer);
 					buffer.clear();
 					continue;
 				}
-				if (c != '\0' && c != '\r')
+				if (c != TEXT('\0') && c != TEXT('\r'))
 				{
 					buffer += c;
 				}
@@ -371,9 +391,9 @@ namespace mINI
 		}
 
 	public:
-		INIReader(std::string const& filename, bool keepLineData = false)
+		INIReader(generic_string const& filename, bool keepLineData = false)
 		{
-			fileReadStream.open(filename, std::ios::in | std::ios::binary);
+			fileReadStream.open(filename.c_str(), std::ios::in | std::ios::binary);
 			if (keepLineData)
 			{
 				lineData = std::make_shared<T_LineData>();
@@ -388,7 +408,7 @@ namespace mINI
 				return false;
 			}
 			T_LineData fileLines = readFile();
-			std::string section;
+			generic_string section;
 			bool inSection = false;
 			INIParser::T_ParseValues parseData;
 			for (auto const& line : fileLines)
@@ -425,14 +445,14 @@ namespace mINI
 	class INIGenerator
 	{
 	private:
-		std::ofstream fileWriteStream;
+		tofstream fileWriteStream;
 
 	public:
 		bool prettyPrint = false;
 
-		INIGenerator(std::string const& filename)
+		INIGenerator(generic_string const& filename)
 		{
-			fileWriteStream.open(filename, std::ios::out | std::ios::binary);
+			fileWriteStream.open(filename.c_str(), std::ios::out | std::ios::binary);
 		}
 		~INIGenerator() { }
 
@@ -452,9 +472,9 @@ namespace mINI
 				auto const& section = it->first;
 				auto const& collection = it->second;
 				fileWriteStream
-					<< "["
+					<< TEXT("[")
 					<< section
-					<< "]";
+					<< TEXT("]");
 				if (collection.size())
 				{
 					fileWriteStream << INIStringUtil::endl;
@@ -462,12 +482,12 @@ namespace mINI
 					for (;;)
 					{
 						auto key = it2->first;
-						INIStringUtil::replace(key, "=", "\\=");
+						INIStringUtil::replace(key, TEXT("="), TEXT("\\="));
 						auto value = it2->second;
 						INIStringUtil::trim(value);
 						fileWriteStream
 							<< key
-							<< ((prettyPrint) ? " = " : "=")
+							<< ((prettyPrint) ? TEXT(" = ") : TEXT("="))
 							<< value;
 						if (++it2 == collection.end())
 						{
@@ -493,16 +513,16 @@ namespace mINI
 	class INIWriter
 	{
 	private:
-		using T_LineData = std::vector<std::string>;
+		using T_LineData = std::vector<generic_string>;
 		using T_LineDataPtr = std::shared_ptr<T_LineData>;
 
-		std::string filename;
+		generic_string filename;
 
 		T_LineData getLazyOutput(T_LineDataPtr const& lineData, INIStructure& data, INIStructure& original)
 		{
 			T_LineData output;
 			INIParser::T_ParseValues parseData;
-			std::string sectionCurrent;
+			generic_string sectionCurrent;
 			bool parsingSection = false;
 			bool continueToNextSection = false;
 			bool discardNextEmpty = false;
@@ -560,16 +580,16 @@ namespace mINI
 								{
 									INIStringUtil::trim(outputValue);
 									auto lineNorm = *line;
-									INIStringUtil::replace(lineNorm, "\\=", "  ");
+									INIStringUtil::replace(lineNorm, TEXT("\\="), TEXT("  "));
 									auto equalsAt = lineNorm.find_first_of('=');
 									auto valueAt = lineNorm.find_first_not_of(
 										INIStringUtil::whitespaceDelimiters,
 										equalsAt + 1
 									);
-									std::string outputLine = line->substr(0, valueAt);
+									generic_string outputLine = line->substr(0, valueAt);
 									if (prettyPrint && equalsAt + 1 == valueAt)
 									{
-										outputLine += " ";
+										outputLine += TEXT(" ");
 									}
 									outputLine += outputValue;
 									output.emplace_back(outputLine);
@@ -605,10 +625,10 @@ namespace mINI
 								continue;
 							}
 							auto value = it.second;
-							INIStringUtil::replace(key, "=", "\\=");
+							INIStringUtil::replace(key, TEXT("="), TEXT("\\="));
 							INIStringUtil::trim(value);
 							linesToAdd.emplace_back(
-								key + ((prettyPrint) ? " = " : "=") + value
+								key + ((prettyPrint) ? TEXT(" = ") : TEXT("=")) + value
 							);
 						}
 					}
@@ -638,16 +658,16 @@ namespace mINI
 				{
 					output.emplace_back();
 				}
-				output.emplace_back("[" + section + "]");
+				output.emplace_back(TEXT("[") + section + TEXT("]"));
 				auto const& collection = it.second;
 				for (auto const& it2 : collection)
 				{
 					auto key = it2.first;
 					auto value = it2.second;
-					INIStringUtil::replace(key, "=", "\\=");
+					INIStringUtil::replace(key, TEXT("="), TEXT("\\="));
 					INIStringUtil::trim(value);
 					output.emplace_back(
-						key + ((prettyPrint) ? " = " : "=") + value
+						key + ((prettyPrint) ? TEXT(" = ") : TEXT("=")) + value
 					);
 				}
 			}
@@ -657,7 +677,7 @@ namespace mINI
 	public:
 		bool prettyPrint = false;
 
-		INIWriter(std::string const& filename)
+		INIWriter(generic_string const& filename)
 			: filename(filename)
 		{
 		}
@@ -665,8 +685,8 @@ namespace mINI
 
 		bool operator<<(INIStructure& data)
 		{
-			struct stat buf;
-			bool fileExists = (stat(filename.c_str(), &buf) == 0);
+			struct tstat buf = {};
+			bool fileExists = (_tstat(filename.c_str(), &buf) == 0);
 			if (!fileExists)
 			{
 				INIGenerator generator(filename);
@@ -688,7 +708,7 @@ namespace mINI
 				return false;
 			}
 			T_LineData output = getLazyOutput(lineData, data, originalData);
-			std::ofstream fileWriteStream(filename, std::ios::out | std::ios::binary);
+			tofstream fileWriteStream(filename, std::ios::out | std::ios::binary);
 			if (fileWriteStream.is_open())
 			{
 				if (output.size())
@@ -713,10 +733,10 @@ namespace mINI
 	class INIFile
 	{
 	private:
-		std::string filename;
+		generic_string filename;
 
 	public:
-		INIFile(std::string const& filename)
+		INIFile(generic_string const& filename)
 			: filename(filename)
 		{ }
 
@@ -758,4 +778,3 @@ namespace mINI
 	};
 }
 
-#endif // MINI_INI_H_
