@@ -9,8 +9,8 @@
 #include <Commctrl.h>
 #include <sstream>
 
-#include "WarningDialog.h"
 #include "PluginMain.h"
+#include "WarningDialog.h"
 
 #include "PluginControlsRC.h"
 
@@ -30,15 +30,14 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 		{
 			switch (wParam)
 			{
-				//case IDCANCEL:
-				case IDOK:
-					display(false);
-					return TRUE;
-
-				case IDC_CHKOK:
-					Plugin::Instance().Settings().bAutoIndentationWarningAccepted = true;
-					display(false);
-					return TRUE;
+			//case IDCANCEL: disabled
+				// Check settings and fall back to IDOK
+			case IDC_CHKOK:
+				Plugin::Instance().Settings().bAutoIndentationWarningAccepted = true;
+			case IDOK:
+				display(false);
+				destroy();
+				return TRUE;
 			}
 		}
 	}

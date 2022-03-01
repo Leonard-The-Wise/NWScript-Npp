@@ -26,7 +26,7 @@ void StaticDialog::goToCenter()
 {
 	RECT rc;
 	::GetClientRect(_hParent, &rc);
-	POINT center;
+	POINT center = {};
 	center.x = rc.left + (rc.right - rc.left)/2;
 	center.y = rc.top + (rc.bottom - rc.top)/2;
 	::ClientToScreen(_hParent, &center);

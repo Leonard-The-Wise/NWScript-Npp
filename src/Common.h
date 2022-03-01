@@ -21,10 +21,16 @@
 #include <sstream>
 
 
-namespace {
+#ifndef GENERIC_STRING
+#define GENERIC_STRING
+typedef std::basic_string<TCHAR> generic_string;
+#endif
+#ifndef GENERIC_STRINGSTREAM
+#define GENERIC_STRINGSTREAM
+typedef std::basic_stringstream<TCHAR> generic_stringstream;
+#endif
 
-    typedef std::basic_string<TCHAR> generic_string;
-    typedef std::basic_stringstream<TCHAR> generic_stringstream;
+namespace {
 
     // Formats numeric type I into hexadecimal format
     // Extracted from here: https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c

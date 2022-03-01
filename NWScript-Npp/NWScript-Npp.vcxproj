@@ -216,13 +216,16 @@
     <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
+    <ClInclude Include="..\src\Notepad Controls\DialogCommons.h" />
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
+    <ClInclude Include="..\src\Notepad Controls\ModalDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
     <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\ElevateDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
@@ -234,7 +237,7 @@
     <ClInclude Include="..\src\ProjectVersion.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
-    <ClInclude Include="..\src\Utils\Serialization.h" />
+    <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\VersionFromResource.h" />
     <ClInclude Include="..\src\WarningDialog.h" />
   </ItemGroup>
@@ -245,6 +248,7 @@
     <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx" />
     <ClCompile Include="..\src\Lexers\LexNWScript.cxx" />
     <ClCompile Include="..\src\LineIndentor.cxx" />
+    <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\pch.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -253,6 +257,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
+    <ClCompile Include="..\src\Plugin Controls\ElevateDialog.cxx" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cxx" />
     <ClCompile Include="..\src\PluginMain.cxx">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -263,6 +268,7 @@
     <ClCompile Include="..\src\Plugin Interface\PluginInterface.cxx" />
     <ClCompile Include="..\src\PluginMessenger.cxx" />
     <ClCompile Include="..\src\Settings.cxx" />
+    <ClCompile Include="..\src\Utils\tinyxml2.cpp" />
     <ClCompile Include="..\src\WarningDialog.cxx" />
   </ItemGroup>
   <ItemGroup>
@@ -282,6 +288,7 @@
   <ItemGroup>
     <Image Include="..\Media\Here-be-Dragons.bmp" />
     <Image Include="..\Media\NWScript.bmp" />
+    <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
