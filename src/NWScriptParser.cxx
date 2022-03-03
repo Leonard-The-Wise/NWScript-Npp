@@ -117,9 +117,9 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 	// uni8Bit is also returned by pure ASCII files.
 	int encoding = Utf8_16_Read::determineEncoding((unsigned char*)sFileContents.c_str(), (blockSize > sFileContents.size()) ? sFileContents.size() : blockSize);
 #ifdef USEADVANCEDENCODINGDETECTION
-	// Cannot determine UTF-8 encoding.. try other method
+	// Cannot determine file encoding.. try a more advanced method
 	if (encoding == -1)
-		encoding = detectCodepage(data, lenFile);
+		encoding = detectCodepage(char*)sFileContents.c_str(), (blockSize > sFileContents.size()) ? sFileContents.size() : blockSize);
 #endif
 
 	if (encoding == uni8Bit || encoding == uni7Bit || encoding == uniCookie)
