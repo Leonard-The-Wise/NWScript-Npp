@@ -9,19 +9,19 @@
 #include <Commctrl.h>
 #include "Common.h"
 
-#include "ElevateDialog.h"
+#include "FileAccessDialog.h"
 
 #include "PluginControlsRC.h"
 
 
-INT_PTR CALLBACK ElevateDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK FileAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
 	case WM_INITDIALOG:
 	{
-		HBITMAP hBitmap = GetStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, IconSize::Size64x64);
-		// Set picturebox to System Shield icon
+		HBITMAP hBitmap = GetStockIconBitmap(_iconID, IconSize::Size64x64);
+		// Set picturebox to desired icon
 		::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE,
 			static_cast<WPARAM>(IMAGE_BITMAP),
 			reinterpret_cast<LPARAM>(hBitmap));
@@ -32,7 +32,17 @@ INT_PTR CALLBACK ElevateDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 		::SendMessage(GetDlgItem(_hSelf, IDC_LBLWARNING), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
 
 		// Set the text for accessed files.
+		::SetDlgItemText(_hSelf, IDC_LBLWARNING, _sWarning.c_str());
 		::SetDlgItemText(_hSelf, IDC_TXTREQUIREDFILES, _sFiles.str().c_str());
+		::SetDlgItemText(_hSelf, IDC_LBLSOLUTION, _sSolution.c_str());
+
+		// Set visibility and mode for admin
+		if (!_bAdminMode)
+		{
+			// Hide the Admin button by calling 'Show Window'.. Yeah, Windows API...
+			::ShowWindow(GetDlgItem(_hSelf, IDOK), SW_HIDE);
+			::SetDlgItemText(_hSelf, IDCANCEL, TEXT("Understood"));
+		}
 
 		return TRUE;
 	}
@@ -55,8 +65,8 @@ INT_PTR CALLBACK ElevateDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 	return FALSE;
 }
 
-INT_PTR ElevateDialog::doDialog(HINSTANCE hInst, HWND hParent)
+INT_PTR FileAccessDialog::doDialog()
 {
-	return ShowModal(hInst, hParent, IDD_REQUIREPRIVILEGE);
+	return ShowModal(IDD_FILEACCESSDIALOG);
 }
 

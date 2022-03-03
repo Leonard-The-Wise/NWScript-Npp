@@ -32,6 +32,9 @@
     <Filter Include="Plugin Dialogs">
       <UniqueIdentifier>{bc8f6c69-15c8-4ae4-9125-f04f61638c09}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils\Boost Library">
+      <UniqueIdentifier>{bf3dcdfe-4043-4ab7-9ec0-1c78a982ff24}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -141,7 +144,7 @@
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\ElevateDialog.h">
+    <ClInclude Include="..\src\Plugin Controls\FileAccessDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h">
@@ -149,6 +152,16 @@
     </ClInclude>
     <ClInclude Include="..\src\Notepad Controls\DialogCommons.h">
       <Filter>Notepad Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NWScriptParser.h" />
+    <ClInclude Include="..\src\Utils\FileInterface.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\Utf8_16.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Utils\boost\regex.hpp">
+      <Filter>Utils\Boost Library</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -192,11 +205,18 @@
     <ClCompile Include="..\src\WarningDialog.cxx">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\ElevateDialog.cxx">
+    <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cxx">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp">
       <Filter>Notepad Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NWScriptParser.cxx" />
+    <ClCompile Include="..\src\Utils\Utf8_16.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Utils\FileInterface.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <errhandlingapi.h>
 #include <sstream>
+#include <tchar.h>
 
 
 #ifndef GENERIC_STRING
@@ -29,6 +30,23 @@ typedef std::basic_string<TCHAR> generic_string;
 #define GENERIC_STRINGSTREAM
 typedef std::basic_stringstream<TCHAR> generic_stringstream;
 #endif
+#ifndef GENERIC_FILESTREAM
+#define GENERIC_FILESTREAM
+typedef std::basic_ofstream<TCHAR> tofstream;
+typedef std::basic_ifstream<TCHAR> tifstream;
+#endif
+
+#ifndef UNICODE_TSTAT
+#define UNICODE_TSTAT
+#ifdef  UNICODE
+#define _tstat _wstat
+struct tstat : _stat64i32 {};
+#else 
+#define _tstat stat
+struct tstat : stat {};
+#endif
+#endif
+
 
 namespace {
 
@@ -60,12 +78,11 @@ namespace {
 
         OPENFILENAME ofn;
 
-        outFileName.reserve(MAX_PATH);
-
+        TCHAR sFileOpen[MAX_PATH];
         ZeroMemory(&ofn, sizeof(ofn));
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = hOwnerWnd;
-        ofn.lpstrFile = outFileName.data();
+        ofn.lpstrFile = sFileOpen;
         ofn.lpstrFile[0] = L'\0';
         ofn.nMaxFile = MAX_PATH * sizeof(TCHAR);
         ofn.lpstrFilter = sFilters;
@@ -88,6 +105,8 @@ namespace {
 
             return false;
         }
+
+        outFileName.append(sFileOpen);
 
         return true;
     }
@@ -198,14 +217,17 @@ namespace {
             return false;
 
         if (attributes.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-            outFilePermission =  FileWritePermission::FileIsReadOnly;
+        {
+            outFilePermission = FileWritePermission::FileIsReadOnly;
+            return true;
+        }
 
         // We are only touching a file, hence all shared attributes may apply
         // Also, to Open a file, we call a "CreateFile" function. Lol Windows API
         HANDLE f = CreateFile(sFilePath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             NULL, OPEN_EXISTING, attributes.dwFileAttributes, NULL);
-        
-        // Gets last error code documentation
+
+        // The GetLastError codes are documented here:
         // https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
         if (f == INVALID_HANDLE_VALUE)
         {

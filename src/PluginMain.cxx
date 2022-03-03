@@ -19,7 +19,7 @@
 
 #include "AboutDialog.h"
 #include "WarningDialog.h"
-#include "ElevateDialog.h"
+#include "FileAccessDialog.h"
 
 
 using namespace NWScriptPlugin;
@@ -221,7 +221,7 @@ void Plugin::LoadNotepadLexer()
     bool lexerSearch = FALSE;
     bool isPluginLanguage = FALSE;
     int currLang = 0;
-    LangAutoIndentType langIndent = LangAutoIndentType::Standard;
+    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
     msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
 
     // First call: retrieve buffer size. Second call, fill up name (from Manual).
@@ -238,7 +238,7 @@ void Plugin::LoadNotepadLexer()
         isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
 
         if (isPluginLanguage)
-            lexerSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+            lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
                 reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
     }
 
@@ -251,7 +251,7 @@ void Plugin::SetAutoIndentSupport()
 {
     PluginMessenger& msg = Instance().Messenger();
     bool lexerSearch = false;
-    LangAutoIndentType langIndent = LangAutoIndentType::Standard;
+    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
 
     // Try to set Plugin's Lexers Auto-Indentation. Older versions of NPP will return langSearch=FALSE (cause this message won't exist).
     generic_stringstream lexerNameW;
@@ -260,15 +260,15 @@ void Plugin::SetAutoIndentSupport()
         lexerNameW = {};
         lexerNameW << LexerCatalogue::GetLexerName(i);
 
-        lexerSearch = msg.SendNppMessage<int>(NPPM_GETLANGUAGEAUTOINDENTATION,
+        lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
             reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
 
         if (lexerSearch)
         {
-            if (langIndent != LangAutoIndentType::Extended)
+            if (langIndent != LangAutoIndentMode::Extended)
             {
-                bool success = msg.SendNppMessage<bool>(NPPM_SETLANGUAGEAUTOINDENTATION,
-                    reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), static_cast<LPARAM>(LangAutoIndentType::Extended));
+                bool success = msg.SendNppMessage<bool>(NPPM_SETEXTERNALLANGAUTOINDENTMODE,
+                    reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), static_cast<LPARAM>(LangAutoIndentMode::Extended));
 
                 // We got a problem here. Our procedure SHOULD succeed in setting this.
                 if (!success)
@@ -283,7 +283,7 @@ void Plugin::SetAutoIndentSupport()
         }
     }
 
-    // lexerSearch will be TRUE if Notepad++ support NPPM_GETLANGUAGEAUTOINDENTATION message
+    // lexerSearch will be TRUE if Notepad++ support NPPM_GETEXTERNALLANGAUTOINDENTMODE message
     if (lexerSearch)
     {
         Instance()._needPluginAutoIndent = false;
@@ -296,7 +296,6 @@ void Plugin::SetAutoIndentSupport()
     else
         Instance()._needPluginAutoIndent = true;
 }
-
 
 #define NOTEPADPLUS_USER_INTERNAL  (WM_USER + 0000)
 #define NPPM_INTERNAL_GETMENU      (NOTEPADPLUS_USER_INTERNAL + 14)
@@ -395,6 +394,132 @@ void Plugin::SetupMenuIcons()
         SetStockMenuItemIcon(PLUGINMENU_FIXEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
+Plugin::FileCheckResults Plugin::FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles)
+{
+    struct stCheckedFiles {
+        bool bExists;
+        generic_string sFile;
+        FileWritePermission fPerm;
+    };
+
+    std::vector<stCheckedFiles> checkedFiles;
+    checkedFiles.reserve(sFiles.size());
+
+    // Batch check files
+    for (const generic_string& s : sFiles)
+    {
+        bool bExists = false;
+        FileWritePermission fPerm = FileWritePermission::UndeterminedError;
+
+        bExists = CheckFileWritePermission(s, fPerm);
+        checkedFiles.emplace_back(stCheckedFiles{ bExists, s, fPerm });
+    }
+
+    // Check for Admin privileges required first
+    std::vector<generic_string> sWhichFiles;
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::RequiresAdminPrivileges)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Admin Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(true);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
+        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following file(s):"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
+- Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
+                
+        INT_PTR RunAdmin = ePermission.doDialog();
+        if (RunAdmin == 1)
+        {
+            // TODO: Run program as administrator
+        }
+
+        return FileCheckResults::RequiresAdminPrivileges;
+    }
+
+    // Check for read-only second
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::FileIsReadOnly)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary file permissions to use this option.\r\n \
+  Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::ReadOnlyFiles;
+    }
+
+    // Check for blocked by application third
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::BlockedByApplication)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::BlockedByApplication;
+    }
+
+    // Finally, check for inexistent files and/or other unknown errors
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.bExists == false || st.fPerm == FileWritePermission::UndeterminedError)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
+        ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
+you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::UnknownError;
+    }
+
+    return FileCheckResults::CheckSuccess;
+}
+
+void Plugin::DoImportDefinitions()
+{
+
+}
+
+
 // Opens the About dialog
 void Plugin::OpenAboutDialog()
 {
@@ -465,42 +590,43 @@ PLUGINCOMMAND Plugin::OpenSettings()
 // Imports Lexer's functions and constants declarations from a NWScript.nss file
 PLUGINCOMMAND Plugin::ImportDefinitions()
 {
-    std::unique_ptr<generic_string> nFileName = std::make_unique<generic_string>();
-    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("NWScritpt.nss File\0nwscript.nss\0"), *nFileName.get()))
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginLexerConfigFilePath);
+
+    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
+    generic_string nFileName;
+    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("NWScritpt.nss File\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName))
     {
-        MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
+        // Opens the NWScript file and parse it. Keep the results for later use
+        NWScriptParser nParser(Instance().NotepadHwnd());
+        
+        Instance()._NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
+        bool bSuccess = nParser.ParseFile(nFileName, *Instance()._NWScriptParseResults);
     }
+
+    // Show File Parsing dialog message and since we don't want it to be a modal, wait for callback in DoImportDefinitions.
+
+
 }
 
 // Fixes the language colors to default
 PLUGINCOMMAND Plugin::FixLanguageColors()
 {
-    // Get file permissions to style files
-    static bool bSuccessLexer = false;
-    static bool bSuccessDark = false;
-    static FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
-    static FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.reserve(2);
+    sFiles.emplace_back(Instance()._pluginLexerConfigFilePath);
+    sFiles.emplace_back(Instance()._notepadDarkThemeFilePath);
 
-    bSuccessLexer = CheckFileWritePermission(Instance()._pluginLexerConfigFilePath, fLexerPerm);
-    bSuccessDark = CheckFileWritePermission(Instance()._notepadDarkThemeFilePath, fDarkThemePerm);
+    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles);
+    if (static_cast<int>(fResult) < 1)
+        return;
 
-    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
-    {
-        std::vector<generic_string> s = {};
-        if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
-            s.push_back(Instance()._pluginLexerConfigFilePath);
-        if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
-            s.push_back(Instance()._notepadDarkThemeFilePath);
-
-        ElevateDialog ePermission = {};
-        ePermission.SetFilesText(s);
-
-        INT_PTR bRunAdmin = ePermission.doDialog(Instance().DllHModule(), Instance().NotepadHwnd());
-        if (bRunAdmin)
-        {
-
-        }
-    }
+    // TODO: Procedures to fix editor colors
 }
 
 // Opens About Box

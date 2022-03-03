@@ -102,6 +102,8 @@
 typedef std::basic_string<TCHAR> generic_string;
 #endif
 
+#ifndef UNICODE_TSTAT
+#define UNICODE_TSTAT
 #ifdef  UNICODE
 #define _tstat _wstat
 struct tstat : _stat64i32 {};
@@ -109,9 +111,14 @@ struct tstat : _stat64i32 {};
 #define _tstat stat
 struct tstat : stat {};
 #endif
+#endif
 
+#ifndef GENERIC_FILESTREAM
+#define GENERIC_FILESTREAM
 typedef std::basic_ofstream<TCHAR> tofstream;
 typedef std::basic_ifstream<TCHAR> tifstream;
+#endif
+
 
 
 namespace mINI

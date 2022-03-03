@@ -12,7 +12,7 @@
 class ModalDialog 
 {
 public:
-	ModalDialog() : _hSelf(nullptr), _rc(), _hParent(nullptr)
+	ModalDialog() : _hSelf(nullptr), _rc(), _hParent(nullptr), _hInst(nullptr)
 	{ };
 	~ModalDialog() {
 		if (_hSelf) {
@@ -21,8 +21,16 @@ public:
 		}
 	};
 
+	void init(HINSTANCE hInst, HWND hParent) {
+		_hInst = hInst, _hParent = hParent;
+	}
+
+	bool isInitialized() {
+		return (_hInst && _hParent);
+	}
+
 	// Derived classes should implement this
-	virtual INT_PTR doDialog(HINSTANCE hInst, HWND hParent) = 0;
+	virtual INT_PTR doDialog() = 0;
 
 protected:
 	// Derived classes should implement this
@@ -30,10 +38,12 @@ protected:
 
 	// Internal functions
 	HWND _hSelf;
-	virtual INT_PTR ShowModal(HINSTANCE hInst, HWND hParent, int dialogID, bool isRTL = false);
+	INT_PTR ShowModal(int dialogID, bool isRTL = false);
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-	HGLOBAL makeRTLResource(HINSTANCE hInst, int dialogID, DLGTEMPLATE** ppMyDlgTemplate);
+	HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE** ppMyDlgTemplate);
+
 private:
+	HINSTANCE _hInst;
 	HWND _hParent;
 	RECT _rc;
 	void goToCenter();
