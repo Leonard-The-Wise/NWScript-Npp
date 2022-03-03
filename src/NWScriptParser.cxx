@@ -18,6 +18,11 @@
 #include <locale>
 #include <codecvt>
 
+// #define USEADVANCEDENCODINGDETECTION
+#ifdef USEADVANCEDENCODINGDETECTION
+#include "uchardet.h"
+#endif
+
 // Replacing std::regex with boost because of crappy performance (10x increase!!!!).
 //#include <regex>
 #include "boost/regex.hpp"
@@ -111,6 +116,12 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 	// Determines file encoding. We are using a maximum fixed block size to that.
 	// uni8Bit is also returned by pure ASCII files.
 	int encoding = Utf8_16_Read::determineEncoding((unsigned char*)sFileContents.c_str(), (blockSize > sFileContents.size()) ? sFileContents.size() : blockSize);
+#ifdef USEADVANCEDENCODINGDETECTION
+	// Cannot determine UTF-8 encoding.. try other method
+	if (encoding == -1)
+		encoding = detectCodepage(data, lenFile);
+#endif
+
 	if (encoding == uni8Bit || encoding == uni7Bit || encoding == uniCookie)
 	{
 		CreateNWScriptStructureA(sFileContents, outParseResults);
@@ -186,12 +197,6 @@ bool NWScriptParser::FileToBuffer(const generic_string& fileName, std::string& s
 	fileReadStream.close();
 
 	return true;
-
-#ifdef USEENCODINGDETECTION
-		// Cannot determine UTF-8 encoding.. try other method
-		if (encoding == -1)
-			encoding = detectCodepage(data, lenFile);
-#endif
 }
 
 void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, ScriptParseResults& outParseResults)
@@ -375,7 +380,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 }
 
 
-#ifdef USEENCODINGDETECTION
+#ifdef USEADVANCEDENCODINGDETECTION
 
 /*
 Requires uchardet library.
