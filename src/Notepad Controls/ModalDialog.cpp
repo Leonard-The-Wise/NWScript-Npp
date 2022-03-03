@@ -5,19 +5,21 @@
  // Copyright 2022 by Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-
+#include <stdexcept>
 #include <stdio.h>
 
 #include "ModalDialog.h"
 
-HGLOBAL ModalDialog::makeRTLResource(HINSTANCE hInst, int dialogID, DLGTEMPLATE** ppMyDlgTemplate)
+#pragma warning(disable : 6011 28183)
+
+HGLOBAL ModalDialog::makeRTLResource(int dialogID, DLGTEMPLATE** ppMyDlgTemplate)
 {
 	// Get Dlg Template resource
-	HRSRC  hDialogRC = ::FindResource(hInst, MAKEINTRESOURCE(dialogID), RT_DIALOG);
+	HRSRC  hDialogRC = ::FindResource(_hInst, MAKEINTRESOURCE(dialogID), RT_DIALOG);
 	if (!hDialogRC)
 		return NULL;
 
-	HGLOBAL  hDlgTemplate = ::LoadResource(hInst, hDialogRC);
+	HGLOBAL  hDlgTemplate = ::LoadResource(_hInst, hDialogRC);
 	if (!hDlgTemplate)
 		return NULL;
 
@@ -26,7 +28,7 @@ HGLOBAL ModalDialog::makeRTLResource(HINSTANCE hInst, int dialogID, DLGTEMPLATE*
 		return NULL;
 
 	// Duplicate Dlg Template resource
-	unsigned long sizeDlg = ::SizeofResource(hInst, hDialogRC);
+	unsigned long sizeDlg = ::SizeofResource(_hInst, hDialogRC);
 	HGLOBAL hMyDlgTemplate = ::GlobalAlloc(GPTR, sizeDlg);
 	*ppMyDlgTemplate = reinterpret_cast<DLGTEMPLATE*>(::GlobalLock(hMyDlgTemplate));
 
@@ -41,20 +43,25 @@ HGLOBAL ModalDialog::makeRTLResource(HINSTANCE hInst, int dialogID, DLGTEMPLATE*
 	return hMyDlgTemplate;
 }
 
-INT_PTR ModalDialog::ShowModal(HINSTANCE hInst, HWND hParent, int dialogID, bool isRTL)
+INT_PTR ModalDialog::ShowModal(int dialogID, bool isRTL)
 {
+	if (!isInitialized())
+	{
+		throw std::runtime_error("Class not initialized!");
+		return 0;
+	}
+
 	INT_PTR rValue;
-	_hParent = hParent;
 
 	if (isRTL)
 	{
 		DLGTEMPLATE* pMyDlgTemplate = NULL;
-		HGLOBAL hMyDlgTemplate = makeRTLResource(hInst, dialogID, &pMyDlgTemplate);
-		rValue = ::DialogBoxIndirectParam(hInst, pMyDlgTemplate, hParent, dlgProc, reinterpret_cast<LPARAM>(this));
+		HGLOBAL hMyDlgTemplate = makeRTLResource(dialogID, &pMyDlgTemplate);
+		rValue = ::DialogBoxIndirectParam(_hInst, pMyDlgTemplate, _hParent, dlgProc, reinterpret_cast<LPARAM>(this));
 		::GlobalFree(hMyDlgTemplate);
 	}
 	else
-		rValue = ::DialogBoxParam(hInst, MAKEINTRESOURCE(dialogID), hParent, dlgProc, reinterpret_cast<LPARAM>(this));
+		rValue = ::DialogBoxParam(_hInst, MAKEINTRESOURCE(dialogID), _hParent, dlgProc, reinterpret_cast<LPARAM>(this));
 
 	if (rValue < 1)
 	{

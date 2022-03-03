@@ -6,7 +6,7 @@
 #define IDD_ABOUT                       102
 #define IDB_HEREBEDRAGONS               103
 #define IDD_HEREBEDRAGONS               104
-#define IDD_REQUIREPRIVILEGE            106
+#define IDD_FILEACCESSDIALOG            106
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -21,6 +21,8 @@
 #define IDC_LBLWARNING                  1011
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
+#define IDC_LBLACTIONS                  -1
+#define IDC_LBLSOLUTION                 -1
 
 // Next default values for new objects
 // 

@@ -38,8 +38,8 @@ enum LangType {
 	// The end of enumated language type, so it should be always at the end
 	L_EXTERNAL
 };
-enum class LangAutoIndentType { Standard = 1, Extended, Custom };
-enum class MacroStatus { Idle, RecordInProgress, RecordStop, PlayingBack };
+enum class LangAutoIndentMode { Standard, Extended, Custom };
+enum class MacroStatus { Idle, RecordInProgress, RecordingStopped, PlayingBack };
 
 enum winVer { WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV_S2003, WV_XPX64, WV_VISTA, WV_WIN7, WV_WIN8, WV_WIN81, WV_WIN10 };
 enum Platform { PF_UNKNOWN, PF_X86, PF_X64, PF_IA64, PF_ARM64 };
@@ -458,23 +458,29 @@ struct toolbarIconsWithDarkMode {
 	HICON	hToolbarIconDarkMode;
 };
 
-#define NPPM_GETLANGUAGEAUTOINDENTATION  (NPPMSG + 103)
-// INT NPPM_GETLANGUAGEAUTOINDENTATION(const TCHAR *languageName, LangAutoIndentType &autoIndentType)
-// Get LangAutoIndentType for an installed external programming language.
+#define NPPM_GETEXTERNALLANGAUTOINDENTMODE  (NPPMSG + 103)
+// BOOL NPPM_GETEXTERNALLANGAUTOINDENTMODE(const TCHAR *languageName, LangAutoIndentMode &autoIndentMode)
+// Get LangAutoIndentMode for an installed external programming language.
+// - Standard means Notepad++ will keep the same TAB indentation between lines;
+// - Extended means Notepad++ will perform a C-Language style indentation for the selected external language;
+// - Custom means a Plugin will be controlling auto-indentation for the current language.
 // returned values: TRUE for successful searches, otherwise FALSE.
 
-#define NPPM_SETLANGUAGEAUTOINDENTATION  (NPPMSG + 104)
-// BOOL NPPM_SETLANGUAGEAUTOINDENTATION(const TCHAR *languageName, LangAutoIndentType autoIndentType)
-// Set LangAutoIndentType for an installed external programming language.
+#define NPPM_SETEXTERNALLANGAUTOINDENTMODE  (NPPMSG + 104)
+// BOOL NPPM_SETEXTERNALLANGAUTOINDENTMODE(const TCHAR *languageName, LangAutoIndentMode autoIndentMode)
+// Set LangAutoIndentMode for an installed external programming language.
+// - Standard means Notepad++ will keep the same TAB indentation between lines;
+// - Extended means Notepad++ will perform a C-Language style indentation for the selected external language;
+// - Custom means a Plugin will be controlling auto-indentation for the current language.
 // returned value: TRUE if function call was successful, otherwise FALSE.
 
-#define NPPM_GETUSEAUTOINDENTATIONSETTING  (NPPMSG + 105)
-// BOOL NPPM_GETUSEAUTOINDENTATIONSETTING(0, 0)
+#define NPPM_ISAUTOINDENTATIONON  (NPPMSG + 105)
+// BOOL NPPM_ISAUTOINDENTATIONON(0, 0)
 // Returns the current Use Auto-Indentation setting in Notepad++ Preferences.
 
 #define NPPM_GETCURRENTMACROSTATUS (NPPMSG + 106)
-// MACROSTATUS NPPM_GETCURRENTMACROSTATUS(0, 0)
-// Gets current enum class MacroStatus { Idle, RecordInProgress, RecordStop, PlayingBack }
+// MacroStatus NPPM_GETCURRENTMACROSTATUS(0, 0)
+// Gets current enum class MacroStatus { Idle, RecordInProgress, RecordingStopped, PlayingBack }
 
 
 

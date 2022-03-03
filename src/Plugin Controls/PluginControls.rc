@@ -73,17 +73,17 @@ BEGIN
     CONTROL         "",IDC_CHKOK,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,196,178,13,12,WS_EX_TRANSPARENT
 END
 
-IDD_REQUIREPRIVILEGE DIALOGEX 0, 0, 309, 139
+IDD_FILEACCESSDIALOG DIALOGEX 0, 0, 309, 139
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Privilege Elevation"
+CAPTION "File Access Denied"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Run Notepad++ in Administrator Mode",IDOK,7,118,145,14
     DEFPUSHBUTTON   "I'll provide the permissions manually",IDCANCEL,163,118,137,14
+    PUSHBUTTON      "Run Notepad++ in Administrator Mode",IDOK,7,118,145,14
     CONTROL         "",IDC_SHIELDICON,"Static",SS_BITMAP,11,21,43,39
     LTEXT           "WARNING - this action requires write permission to the following file(s):",IDC_LBLWARNING,66,15,236,21
     EDITTEXT        IDC_TXTREQUIREDFILES,63,36,239,33,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
-    LTEXT           "To solve this, you may either:\r\n  - Try to reopen Notepad++ with elevated privileges (Administrator Mode); or\r\n  - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties -> Security Tab.",IDC_STATIC,16,72,272,33
+    LTEXT           "To solve this, you may either:\r\n  - Try to reopen Notepad++ with elevated privileges (Administrator Mode); or\r\n  - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties -> Security Tab.",IDC_LBLSOLUTION,16,72,272,33
 END
 
 
@@ -107,7 +107,7 @@ BEGIN
     BEGIN
     END
 
-    IDD_REQUIREPRIVILEGE, DIALOG
+    IDD_FILEACCESSDIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 302
@@ -133,7 +133,7 @@ BEGIN
     0
 END
 
-IDD_REQUIREPRIVILEGE AFX_DIALOG_LAYOUT
+IDD_FILEACCESSDIALOG AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

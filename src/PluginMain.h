@@ -18,6 +18,7 @@
 #include "PluginMessenger.h"
 #include "LineIndentor.h"
 #include "Settings.h"
+#include "NWScriptParser.h"
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -37,12 +38,16 @@ namespace NWScriptPlugin {
 			const int langID;
 			const TCHAR* langName;
 			const bool isPluginLang;
-			const LangAutoIndentType langIndent;
+			const LangAutoIndentMode langIndent;
 
-			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const LangAutoIndentType _langIndent)
+			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const LangAutoIndentMode _langIndent)
 				: langID(_LangID), langName(_LangName), isPluginLang(_isPluginLang), langIndent(_langIndent) {}
 
 			~NotepadLexer() { delete[] langName; }
+		};
+
+		enum class FileCheckResults {
+			UnknownError = -3, BlockedByApplication, ReadOnlyFiles, RequiresAdminPrivileges, CheckSuccess
 		};
 
 	public:
@@ -118,6 +123,10 @@ namespace NWScriptPlugin {
 		HMENU GetNppMainMenu();
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupMenuIcons();
+		// Do a full file permission check and show appropriate error dialogs to the user when required.
+		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles);
+		// Import a parsed result from NWScript file definitions into our language XML file
+		void DoImportDefinitions();
 
 		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
 		void RemoveAutoIndentMenu();
@@ -135,6 +144,9 @@ namespace NWScriptPlugin {
 		std::unique_ptr<NotepadLexer> _notepadCurrentLexer;
 		std::unique_ptr<PluginMessenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
+		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
+		std::unique_ptr<generic_string> _test;
+
 		// Internal handles
 		HMODULE _dllHModule;
 		HWND _notepadHwnd;

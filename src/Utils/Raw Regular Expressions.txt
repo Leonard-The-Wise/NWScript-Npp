@@ -1,0 +1,15 @@
+To use in C++, replace \ with \, place in quotes TEXT("");
+
+PREPROCESSOR
+^[^\S\r\n]*((?:#define))\s*((?:ENGINE_STRUCTURE))_\d*\s*((\w+))
+
+FUNCTION
+^\s*?((?!(return|if|else))\w+)\s+(\w+)\s*?\(\s*(([\w\s=\-\+\*/\.\"\[\]]*,?)*)\)\s*?;
+
+FUNCTION PARAMS
+(\w+)\s*(\w+)\s*(=\s*(\[[\s\d|\w|\-\+\*\/\.\",]*\]|[\w|\d|.\"]*))?
+
+CONSTANTS)
+^(\w+)\s*?(\w+)\s*=?\s*([\w|\d|.\-]*)\s*;
+
+
