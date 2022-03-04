@@ -88,6 +88,8 @@ namespace NWScriptPlugin {
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		// Processes Raw messages from a Notepad++ window (the ones not handled by editor). Currently unused by the plugin
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
+		// Setup a restart Hook. 0 to reset; 1 to restart normally; 2 to restart in admin mode
+		void SetRestartHook(int type, int function = 0) { Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function; }
 
 		// Opens the About dialog
 		void OpenAboutDialog();
@@ -103,13 +105,13 @@ namespace NWScriptPlugin {
 		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND ImportDefinitions();
 		// Menu Command "Fix Dark Mode"
-		static PLUGINCOMMAND FixLanguageColors();
+		static PLUGINCOMMAND FixEditorColors();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _isReady(false), _needPluginAutoIndent(true), _dllHModule(dllModule), _notepadHwnd(nullptr) {}
+			: _dllHModule(dllModule), _notepadHwnd(nullptr) {}
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
@@ -123,10 +125,13 @@ namespace NWScriptPlugin {
 		HMENU GetNppMainMenu();
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupMenuIcons();
-		// Do a full file permission check and show appropriate error dialogs to the user when required.
-		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles);
-		// Import a parsed result from NWScript file definitions into our language XML file
-		void DoImportDefinitions();
+		// Do a full file permission check and show appropriate error dialogs to the user when required. Callers can set
+		// a function to be called automatically upon a possible program restart if FileCheckResults::RequiresAdminPrivileges is reached
+		// and the user selected to "Run as Administrator". If function returns FileCheckResults::RequiresAdminPrivileges, the caller should
+		// just quit the current procedure immediately.
+		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, int iFunctionToCallIfRestart = 0);
+		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
+		static void DoImportDefinitionsCallback(HRESULT decision);
 
 		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
 		void RemoveAutoIndentMenu();
@@ -137,10 +142,12 @@ namespace NWScriptPlugin {
 		static Plugin* _instance;
 
 		// Internal states
-		bool _isReady;
-		bool _needPluginAutoIndent;
+
+		bool _isReady = false;
+		bool _needPluginAutoIndent = false;
 
 		// Internal classes
+
 		std::unique_ptr<NotepadLexer> _notepadCurrentLexer;
 		std::unique_ptr<PluginMessenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
@@ -148,6 +155,7 @@ namespace NWScriptPlugin {
 		std::unique_ptr<generic_string> _test;
 
 		// Internal handles
+
 		HMODULE _dllHModule;
 		HWND _notepadHwnd;
 
@@ -171,12 +179,16 @@ namespace NWScriptPlugin {
 
 		// Notepad Installation Directory (eg: %ProgramFiles%\Notepad++\)
 		generic_string _notepadInstallDir;
-		// Notepad Plugin Installation Pathg (eg: %ProgramFiles%\Notepad++\plugins\)
+		// Notepad Executable File (eg: %ProgramFiles%\Notepad++\Notepad++.exe)
+		generic_string _notepadExecutableFile;
+		// Notepad Plugin Installation Path (eg: %ProgramFiles%\Notepad++\plugins\)
 		generic_string _notepadPluginHomePath;
 		// Notepad Themes Installation Directory (eg: %ProgramFiles%\Notepad++\themes)
 		generic_string _notepadThemesInstallDir;
 		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
 		generic_string _notepadDarkThemeFilePath;
+		// Notepad Pseudo-Batch to restart Application if needed (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
+		generic_string _notepadPseudoBatchRestartFile;
 
 		// Compilation-time information
 
@@ -186,5 +198,5 @@ namespace NWScriptPlugin {
 		static generic_string pluginName;
 	};
 
-}
+};
 

@@ -7,7 +7,7 @@
 
 #pragma once
 
-//#define USEENCODINGDETECTION
+// #define USEADVANCEDENCODINGDETECTION
 
 #include <vector>
 #include "Common.h"
@@ -41,6 +41,20 @@ namespace NWScriptPlugin {
 			int FunctionsCount = 0;
 			int ConstantsCount = 0;
 			std::vector<ScriptMember> Members;
+
+			generic_string MembersAsSpacedString(MemberID memberType) {
+				generic_string results;
+				for (ScriptMember m : Members)
+				{
+					if (m.mID == memberType) {
+						results.append(m.sName);results.append(TEXT(" "));
+					}
+				}
+				// Remove last space
+				if (!results.empty())
+					results.pop_back();
+				return results;
+			}
 		};
 
 		explicit NWScriptParser(HWND MyParent) : _hWnd(MyParent) {}
@@ -51,7 +65,7 @@ namespace NWScriptPlugin {
 	private:
 		HWND _hWnd;
 		// Converts a File Link into an actual filename
-		void resolveLinkFile(generic_string& linkFilePath);
+		void ResolveLinkFile(generic_string& linkFilePath);
 		// Converts a file to a raw char* buffer and return the actual file size
 		bool FileToBuffer(const generic_string& fileName, std::string& sContents);
 
@@ -60,12 +74,12 @@ namespace NWScriptPlugin {
 		// Transforms a raw FileContent pointer into a ScriptParseResults list (for UTF-16 and wchar_t* contents)
 		void CreateNWScriptStructureW(const std::string& sFileContents, ScriptParseResults& outParseResults);
 
-#ifdef USEENCODINGDETECTION
+#ifdef USEADVANCEDENCODINGDETECTION
 		int detectCodepage(char* buf, size_t len);
 #endif
 
 	};
 
-}
+};
 
 //#pragma warning(pop)

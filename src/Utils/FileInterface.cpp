@@ -23,6 +23,8 @@
 #include <codecvt>
 #include "FileInterface.h"
 
+// Disable anoying 'deprecated' warning
+#pragma warning(disable : 4996)
 
 Win32_IO_File::Win32_IO_File(const char* fname)
 {

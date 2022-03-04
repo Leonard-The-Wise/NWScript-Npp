@@ -20,6 +20,8 @@
 #include <errhandlingapi.h>
 #include <sstream>
 #include <tchar.h>
+#include <fstream>
+
 
 
 #ifndef GENERIC_STRING
@@ -36,12 +38,16 @@ typedef std::basic_ofstream<TCHAR> tofstream;
 typedef std::basic_ifstream<TCHAR> tifstream;
 #endif
 
+#ifdef  UNICODE
+#define to_tstring std::to_wstring;
 #ifndef UNICODE_TSTAT
 #define UNICODE_TSTAT
-#ifdef  UNICODE
 #define _tstat _wstat
 struct tstat : _stat64i32 {};
-#else 
+#endif
+#else
+#define to_tstring std::to_string;
+#ifndef UNICODE_TSTAT
 #define _tstat stat
 struct tstat : stat {};
 #endif
@@ -250,6 +256,72 @@ namespace {
         outFilePermission = FileWritePermission::WriteAllowed;
         return true;
     }
+
+    // Since codecvt is now deprecated API and no replacement is provided, we write our own.
+    std::wstring str2wstr(const std::string& string)
+    {
+        if (string.empty())
+        {
+            return L"";
+        }
+
+        const auto size_needed = MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), nullptr, 0);
+        if (size_needed < 1)
+        {
+            throw std::runtime_error("MultiByteToWideChar() failed: " + std::to_string(size_needed));
+        }
+
+        std::wstring result(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), &result.at(0), size_needed);
+        return result;
+    }
+
+    std::string wstr2str(const std::wstring& wide_string)
+    {
+        if (wide_string.empty())
+        {
+            return "";
+        }
+
+        const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), nullptr, 0, nullptr, nullptr);
+        if (size_needed < 1)
+        {
+            throw std::runtime_error("WideCharToMultiByte() failed: " + std::to_string(size_needed));
+        }
+
+        std::string result(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), &result.at(0), size_needed, nullptr, nullptr);
+        return result;
+    }
+
+    void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args = TEXT(""),
+        const generic_string& opendir = TEXT(""))
+    {
+        const TCHAR* opVerb = isElevationRequired ? TEXT("runas") : TEXT("open");
+        ::ShellExecute(NULL, opVerb, path.c_str(), args.c_str(), opendir.c_str(), SW_HIDE);
+    }
+
+    // Writes a pseudo-batch file to store Notepad++ executable to be called by ShellExecute
+    // with a delay (So it can restart seeamlessly).
+    bool writePseudoBatchExecute(const generic_string& path, const generic_string& executePath)
+    {
+        std::ofstream s;
+        std::stringstream stext;
+
+        // Use ping trick on batch to delay execution, since it's the most compatible option to add a delay
+        stext << "@echo off" << std::endl;
+        stext << "ping -n 1 -w 500 10.255.255.255 > nul" << std::endl;
+        stext << "\"" << wstr2str(executePath.c_str()) << "\"" << std::endl;
+
+        s.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
+        if (!s.is_open())
+            return false;
+
+        s  << stext.str().c_str();
+        s.close();
+        return true;
+    }
+
 
 #pragma warning(pop)
 
