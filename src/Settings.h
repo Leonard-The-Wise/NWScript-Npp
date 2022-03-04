@@ -31,9 +31,9 @@ namespace NWScriptPlugin {
 		// Warning about Auto-Indentation conflict was accepted by user?
 		bool bAutoIndentationWarningAccepted = false;
 		// Has user setup a restart hook previously?
-		int iNotepadRestartMode = 0;
+		RestartMode iNotepadRestartMode = RestartMode::None;
 		// Which function called the restart?
-		int iNotepadRestartFunction = 0;
+		RestartFunctionHook iNotepadRestartFunction = RestartFunctionHook::None;
 
 	private:
 		// Plugin config Directory (eg: %AppData%\Notepad++\plugins\config)

@@ -247,38 +247,38 @@
     <ClInclude Include="..\src\WarningDialog.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Lexers\LexerCatalogue.cxx" />
+    <ClCompile Include="..\src\Lexers\LexerCatalogue.cpp" />
     <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx" />
     <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx" />
     <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx" />
-    <ClCompile Include="..\src\Lexers\LexNWScript.cxx" />
-    <ClCompile Include="..\src\LineIndentor.cxx" />
+    <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
+    <ClCompile Include="..\src\LineIndentor.cpp" />
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
-    <ClCompile Include="..\src\NWScriptParser.cxx" />
-    <ClCompile Include="..\src\pch.cxx">
+    <ClCompile Include="..\src\NWScriptParser.cpp" />
+    <ClCompile Include="..\src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
-    <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cxx" />
-    <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cxx" />
-    <ClCompile Include="..\src\Plugin Interface\LexerInterface.cxx" />
-    <ClCompile Include="..\src\PluginMain.cxx">
+    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
+    <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Interface\PluginInterface.cxx" />
-    <ClCompile Include="..\src\PluginMessenger.cxx" />
-    <ClCompile Include="..\src\Settings.cxx" />
+    <ClCompile Include="..\src\Plugin Interface\PluginInterface.cpp" />
+    <ClCompile Include="..\src\PluginMessenger.cpp" />
+    <ClCompile Include="..\src\Settings.cpp" />
     <ClCompile Include="..\src\Utils\FileInterface.cpp" />
     <ClCompile Include="..\src\Utils\tinyxml2.cpp" />
     <ClCompile Include="..\src\Utils\Utf8_16.cpp" />
-    <ClCompile Include="..\src\WarningDialog.cxx" />
+    <ClCompile Include="..\src\WarningDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc" />

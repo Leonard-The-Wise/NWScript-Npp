@@ -19,7 +19,6 @@
 #include "LexerCatalogue.h"
 #include "tinyxml2.h"
 #include "NotepadInternalMessages.h"
-#include "menuCmdID.h"
 
 #include "PluginMain.h"
 #include "PluginControlsRC.h"
@@ -45,8 +44,9 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_IMPORTDEFINITIONS 3
 #define PLUGINMENU_SETTINGS 4
 #define PLUGINMENU_DASH2 5
-#define PLUGINMENU_FIXEDITORCOLORS 6
-#define PLUGINMENU_ABOUTME 7
+#define PLUGINMENU_RESETEDITORCOLORS 6
+#define PLUGINMENU_INSTALLDARKTHEME 7
+#define PLUGINMENU_ABOUTME 8
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use Auto-Identation"), Plugin::SwitchAutoIndent},
@@ -55,7 +55,8 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
     {TEXT("Settings..."), Plugin::OpenSettings},
     {TEXT("---")},
-    {TEXT("Fix Editor Colors and Install Dark Theme"), Plugin::FixEditorColors},
+    {TEXT("Reset Editor Colors"), Plugin::ResetEditorColors},
+    {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
     {TEXT("About Me"), Plugin::AboutMe},
 };
 
@@ -174,7 +175,7 @@ void Plugin::SetNotepadData(NppData data)
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().bEnableAutoIndentation;
 }
 
-#pragma endregion Plugin internal processing
+#pragma endregion Plugin DLL Initialization
 
 #pragma region 
 
@@ -190,120 +191,93 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 {
     switch (notifyCode->nmhdr.code)
     {
-        case NPPN_READY:
-        {
-            _isReady = true;
-            SetAutoIndentSupport();
-            LoadNotepadLexer();
-            SetupMenuIcons();
+    case NPPN_READY:
+    {
+        // Do Initialization procedures
+        SetAutoIndentSupport();
+        DetectDarkThemeInstall();
+        LoadNotepadLexer();
 
-            // Auto call a function that required restart during the previous session (because of privilege elevation)
-            // Up to now...
-            // 1 = ImportDefinitions
-            // 2 = Fix Editor's Colors
-            // Since all functions that required restart must have returned in Admin Mode, we check this
-            // to see if the user didn't cancel the UAC request.
-            if (IsUserAnAdmin())
-            {
-                if (Settings().iNotepadRestartFunction == 1)
-                    ImportDefinitions();
-                if (Settings().iNotepadRestartFunction == 2)
-                    FixEditorColors();
-            }
+        // Auto call a function that required restart during the previous session (because of privilege elevation)
+        // Up to now...
+        // 1 = ImportDefinitions
+        // 2 = Fix Editor's Colors
+        // Since all functions that required restart must have returned in Admin Mode, we check this
+        // to see if the user didn't cancel the UAC request.
+        if (IsUserAnAdmin())
+        {
+            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ImportDefinitions)
+                ImportDefinitions();
+            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1 || Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase2)
+                DoResetEditorColors(Settings().iNotepadRestartFunction);
+            if (Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1 || Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase2)
+                DoResetEditorColors(Settings().iNotepadRestartFunction);
+        }
 
-            // And then make sure to clear the hooks, temp files, etc. 
-            // Call a instant save on settings to be avoid losing it on a session crash also.
-            if (Settings().iNotepadRestartMode > 0)
-            {
-                bool bIgnore = DeleteFile(_notepadPseudoBatchRestartFile.c_str());
-                SetRestartHook(0, 0);
-                Settings().Save();
-            }
-            break;
-        }
-        case NPPN_CANCELSHUTDOWN:
+        // And then make sure to clear the hooks, temp files, etc. 
+        // Call a instant save on settings to be avoid losing it on a session crash also.
+        if (Settings().iNotepadRestartMode != RestartMode::None)
         {
-            // We're clearing any attempt to hook restarts here, have they been setup or not
-            SetRestartHook(0);
-            break;
-        }
-        case NPPN_SHUTDOWN:
-        {
-            _isReady = false;
+            bool bIgnore = DeleteFile(_notepadPseudoBatchRestartFile.c_str());
+            SetRestartHook(RestartMode::None, RestartFunctionHook::None);
             Settings().Save();
-
-            // If we have a restart hook setup, write batch file to re-execute notepad and call it from Windows Shell
-            if (Settings().iNotepadRestartMode > 0)
-            {
-                if (writePseudoBatchExecute(Instance()._notepadPseudoBatchRestartFile, Instance()._notepadExecutableFile))
-                    runProcess(Settings().iNotepadRestartMode == 2 ? true : false, _notepadPseudoBatchRestartFile);
-            }
-
-            break;
         }
-        case NPPN_LANGCHANGED:
+
+        SetupMenuIcons();
+        _isReady = true;
+
+        break;
+    }
+    case NPPN_CANCELSHUTDOWN:
+    {
+        // We're clearing any attempt to hook restarts here, have they been setup or not
+        SetRestartHook(RestartMode::None);
+        break;
+    }
+    case NPPN_SHUTDOWN:
+    {
+        _isReady = false;
+        Settings().Save();
+
+        // If we have a restart hook setup, write batch file to re-execute notepad and call it from Windows Shell
+        if (Settings().iNotepadRestartMode != RestartMode::None)
         {
+            if (writePseudoBatchExecute(Instance()._notepadPseudoBatchRestartFile, Instance()._notepadExecutableFile))
+                runProcess(Settings().iNotepadRestartMode == RestartMode::Admin ? true : false, _notepadPseudoBatchRestartFile);
+        }
+
+        break;
+    }
+    case NPPN_LANGCHANGED:
+    {
+        LoadNotepadLexer();
+        break;
+    }
+    case NPPN_BUFFERACTIVATED:
+    {
+        if (_isReady)
             LoadNotepadLexer();
-            break;
-        }
-        case NPPN_BUFFERACTIVATED:
-        {
-            if (_isReady)
-                LoadNotepadLexer();
-            break;
-        }
-        case SCN_CHARADDED:
-        {
-            // Conditions to perform the Auto-Indent:
-            // - Notepad is in Ready state;
-            // - Current Language is set to one of the plugin supported langs
-            // - Notepad version doesn't yet support Extended AutoIndent functionality
-            if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
-                && Settings().bEnableAutoIndentation)
-                Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
-            break;
-        }
-        default:
-            return;
+        break;
+    }
+    case SCN_CHARADDED:
+    {
+        // Conditions to perform the Auto-Indent:
+        // - Notepad is in Ready state;
+        // - Current Language is set to one of the plugin supported langs
+        // - Notepad version doesn't yet support Extended AutoIndent functionality
+        if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
+            && Settings().bEnableAutoIndentation)
+            Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
+        break;
+    }
+    default:
+        return;
     }
 }
 
-#pragma endregion Message Processing
-
+#pragma endregion Plugin DLL Message Processing
 
 #pragma region 
-
-// Get Current notepad lexer language;
-void Plugin::LoadNotepadLexer()
-{
-    PluginMessenger& msg = Messenger();
-    bool lexerSearch = FALSE;
-    bool isPluginLanguage = FALSE;
-    int currLang = 0;
-    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
-    msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
-
-    // First call: retrieve buffer size. Second call, fill up name (from Manual).
-    int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
-    TCHAR* lexerName = new TCHAR[buffSize+1];
-    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
-
-    // Try to get Language Auto-Indentation if it's one of the plugin installed languages
-    generic_stringstream lexerNameW;
-    for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
-    {
-        lexerNameW = {};
-        lexerNameW << LexerCatalogue::GetLexerName(i);
-        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
-
-        if (isPluginLanguage)
-            lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
-                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
-    }
-
-    // Create or Replace current lexer language.
-    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
-}
 
 // Set the Auto-Indent type for all of this Plugin's installed languages
 void Plugin::SetAutoIndentSupport()
@@ -335,7 +309,7 @@ void Plugin::SetAutoIndentSupport()
                     generic_stringstream sWarning = {};
                     sWarning << TEXT("Warning: failed to set Auto-Indentation for language [") << lexerNameW.str().c_str() << "].";
                     MessageBox(_notepadHwnd, reinterpret_cast<LPCWSTR>(sWarning.str().c_str()),
-                           pluginName.c_str(), MB_OK | MB_ICONWARNING | MB_APPLMODAL);
+                        pluginName.c_str(), MB_OK | MB_ICONWARNING | MB_APPLMODAL);
                     return;
                 }
             }
@@ -348,13 +322,36 @@ void Plugin::SetAutoIndentSupport()
         Instance()._needPluginAutoIndent = false;
 
         // Remove the "Use Auto-Indent" menu command
-        RemoveAutoIndentMenu();
+        HMENU hMenu = Instance().GetNppMainMenu();
+        if (hMenu)
+            RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
+
         // Auto-adjust the settings
         Instance().Settings().bEnableAutoIndentation = false;
     }
     else
         Instance()._needPluginAutoIndent = true;
 }
+
+// Detects if Dark Theme is already installed
+void Plugin::DetectDarkThemeInstall()
+{
+
+
+    return;
+
+    // Remove the "Install Dark Theme" menu command
+    HMENU hMenu = Instance().GetNppMainMenu();
+    if (hMenu)
+    {
+        RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
+    }
+
+    _isDarkThemeInstalled = true;
+}
+
+// Setup menu icons
+#pragma region
 
 #define NOTEPADPLUS_USER_INTERNAL  (WM_USER + 0000)
 #define NPPM_INTERNAL_GETMENU      (NOTEPADPLUS_USER_INTERNAL + 14)
@@ -375,15 +372,6 @@ HMENU Plugin::GetNppMainMenu()
         return hMenu;
 
     return ::GetMenu(Instance().NotepadHwnd());
-}
-
-void Plugin::RemoveAutoIndentMenu()
-{
-    HMENU hMenu = Instance().GetNppMainMenu();
-    if (hMenu)
-    {
-        RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
-    }
 }
 
 bool Plugin::SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
@@ -445,136 +433,55 @@ void Plugin::SetupMenuIcons()
         bErrorShown = true;
     }
 
-    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions Menu 
+    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions and Reset Colors
     if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
+    {
         SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
-    // For users without permission to _pluginLexerConfigFilePath or _notepadDarkThemeFilePath, set shield on Fix Editor Colors
-    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges)
-        SetStockMenuItemIcon(PLUGINMENU_FIXEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
+        SetStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
+
+    }
+    // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
+    if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _isDarkThemeInstalled == false)
+        SetStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
-Plugin::FileCheckResults Plugin::FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, int iFunctionToCallIfRestart)
+#pragma endregion Menu icons setup
+
+// Get Current notepad lexer language;
+void Plugin::LoadNotepadLexer()
 {
-    struct stCheckedFiles {
-        bool bExists;
-        generic_string sFile;
-        FileWritePermission fPerm;
-    };
+    PluginMessenger& msg = Messenger();
+    bool lexerSearch = FALSE;
+    bool isPluginLanguage = FALSE;
+    int currLang = 0;
+    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
+    msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
 
-    std::vector<stCheckedFiles> checkedFiles;
-    checkedFiles.reserve(sFiles.size());
+    // First call: retrieve buffer size. Second call, fill up name (from Manual).
+    int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
+    TCHAR* lexerName = new TCHAR[buffSize + 1];
+    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
 
-    // Batch check files
-    for (const generic_string& s : sFiles)
+    // Try to get Language Auto-Indentation if it's one of the plugin installed languages
+    generic_stringstream lexerNameW;
+    for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
     {
-        bool bExists = false;
-        FileWritePermission fPerm = FileWritePermission::UndeterminedError;
+        lexerNameW = {};
+        lexerNameW << LexerCatalogue::GetLexerName(i);
+        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
 
-        bExists = CheckFileWritePermission(s, fPerm);
-        checkedFiles.emplace_back(stCheckedFiles{ bExists, s, fPerm });
+        if (isPluginLanguage)
+            lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
+                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
     }
 
-    // Check for Admin privileges required first
-    std::vector<generic_string> sWhichFiles;
-    for (stCheckedFiles& st : checkedFiles)
-    {
-        if (st.fPerm == FileWritePermission::RequiresAdminPrivileges)
-            sWhichFiles.push_back(st.sFile);
-    }
-    if (sWhichFiles.size() > 0)
-    {
-        // Show File Access dialog box in Admin Mode
-        FileAccessDialog ePermission = {};
-        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
-        ePermission.SetAdminMode(true);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
-        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following file(s):"));
-        ePermission.SetFilesText(sWhichFiles);
-        ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
-- Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
-                
-        INT_PTR RunAdmin = ePermission.doDialog();
-        if (RunAdmin == 1)
-        {
-            // Set our hook flag 2 to rerun Notepad++ in admin mode and call iFunctionToCallIfRestart upon restart
-            // Then tells notepad++ to quit.
-            SetRestartHook(2, iFunctionToCallIfRestart);
-            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
-        }
-
-        return FileCheckResults::RequiresAdminPrivileges;
-    }
-
-    // Check for read-only second
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
-    {
-        if (st.fPerm == FileWritePermission::FileIsReadOnly)
-            sWhichFiles.push_back(st.sFile);
-    }
-    if (sWhichFiles.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
-        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
-        ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
-        ePermission.SetFilesText(sWhichFiles);
-        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary file permissions to use this option.\r\n \
-  Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return FileCheckResults::ReadOnlyFiles;
-    }
-
-    // Check for blocked by application third
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
-    {
-        if (st.fPerm == FileWritePermission::BlockedByApplication)
-            sWhichFiles.push_back(st.sFile);
-    }
-    if (sWhichFiles.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
-        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
-        ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
-        ePermission.SetFilesText(sWhichFiles);
-        ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return FileCheckResults::BlockedByApplication;
-    }
-
-    // Finally, check for inexistent files and/or other unknown errors
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
-    {
-        if (st.bExists == false || st.fPerm == FileWritePermission::UndeterminedError)
-            sWhichFiles.push_back(st.sFile);
-    }
-    if (sWhichFiles.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
-        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
-        ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
-        ePermission.SetFilesText(sWhichFiles);
-        ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
-you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return FileCheckResults::UnknownError;
-    }
-
-    return FileCheckResults::CheckSuccess;
+    // Create or Replace current lexer language.
+    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
 }
+
+#pragma endregion Plugin initialization functions and dynamic behavior
+
+#pragma region
 
 void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 {
@@ -715,44 +622,155 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     {
         // Setup our hook to auto-restart notepad++ normally and not run any other function on restart.
         // Then send message for notepad to close itself.
-        Instance().SetRestartHook(1, 0);
+        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
         Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
     }
 }
 
-// Opens the About dialog
-void Plugin::OpenAboutDialog()
+void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
 {
-    // Dialog boxes need to be static unless it's modal.
-    static AboutDialog aboutDialog = {};
 
-    if (!aboutDialog.isCreated())
-        aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
-
-    if (!aboutDialog.isVisible())
-        aboutDialog.doDialog();
 }
 
-void Plugin::OpenWarningDialog()
+void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
 {
-    // Dialog boxes need to be static unless it's modal.
-    static WarningDialog warningDialog = {};
 
-    if (!warningDialog.isCreated())
-        warningDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
-
-    if (!warningDialog.isVisible())
-        warningDialog.doDialog();
 }
 
-#pragma endregion Plugin Funcionality
+#pragma endregion Plugin files management
 
 
+#pragma region
+
+Plugin::FileCheckResults Plugin::FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, RestartFunctionHook iFunctionToCallIfRestart)
+{
+    struct stCheckedFiles {
+        bool bExists;
+        generic_string sFile;
+        FileWritePermission fPerm;
+    };
+
+    std::vector<stCheckedFiles> checkedFiles;
+    checkedFiles.reserve(sFiles.size());
+
+    // Batch check files
+    for (const generic_string& s : sFiles)
+    {
+        bool bExists = false;
+        FileWritePermission fPerm = FileWritePermission::UndeterminedError;
+
+        bExists = CheckFileWritePermission(s, fPerm);
+        checkedFiles.emplace_back(stCheckedFiles{ bExists, s, fPerm });
+    }
+
+    // Check for Admin privileges required first
+    std::vector<generic_string> sWhichFiles;
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::RequiresAdminPrivileges)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Admin Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(true);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
+        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following file(s):"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
+- Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
+
+        INT_PTR RunAdmin = ePermission.doDialog();
+        if (RunAdmin == 1)
+        {
+            // Set our hook flag 2 to rerun Notepad++ in admin mode and call iFunctionToCallIfRestart upon restart
+            // Then tells notepad++ to quit.
+            SetRestartHook(RestartMode::Admin, iFunctionToCallIfRestart);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        }
+
+        return FileCheckResults::RequiresAdminPrivileges;
+    }
+
+    // Check for read-only second
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::FileIsReadOnly)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary file permissions to use this option.\r\n \
+  Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::ReadOnlyFiles;
+    }
+
+    // Check for blocked by application third
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.fPerm == FileWritePermission::BlockedByApplication)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::BlockedByApplication;
+    }
+
+    // Finally, check for inexistent files and/or other unknown errors
+    sWhichFiles.clear();
+    for (stCheckedFiles& st : checkedFiles)
+    {
+        if (st.bExists == false || st.fPerm == FileWritePermission::UndeterminedError)
+            sWhichFiles.push_back(st.sFile);
+    }
+    if (sWhichFiles.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        FileAccessDialog ePermission = {};
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
+        ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
+        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
+you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return FileCheckResults::UnknownError;
+    }
+
+    return FileCheckResults::CheckSuccess;
+}
 
 // Support for Auto-Indentation for old versions of Notepad++
 PLUGINCOMMAND Plugin::SwitchAutoIndent()
 {
     static bool bAutoIndentationWarningShown = false;
+    // Dialog boxes need to be static unless it's modal.
+    static WarningDialog warningDialog = {};
 
     // Change settings
     Instance().Settings().bEnableAutoIndentation = !Instance().Settings().bEnableAutoIndentation;
@@ -772,7 +790,12 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     // Warning user of function: only once in a session (and perhaps in a lifetime if INI file doesn't change)
     if (bEnableAutoIndent && !bAutoIndentationWarningShown)
     {
-        Instance().OpenWarningDialog();
+        if (!warningDialog.isCreated())
+            warningDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+        if (!warningDialog.isVisible())
+            warningDialog.doDialog();
+
         bAutoIndentationWarningShown = true;
     }
 }
@@ -805,7 +828,7 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._pluginLexerConfigFilePath);
 
-    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, 1);
+    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::None);
     if (static_cast<int>(fResult) < 1)
         return;
 
@@ -839,26 +862,44 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
 }
 
 // Fixes the language colors to default
-PLUGINCOMMAND Plugin::FixEditorColors()
+PLUGINCOMMAND Plugin::ResetEditorColors()
 {
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
-    sFiles.reserve(2);
-    sFiles.emplace_back(Instance()._pluginLexerConfigFilePath);
-    sFiles.emplace_back(Instance()._notepadDarkThemeFilePath);
+    sFiles.push_back(Instance()._pluginLexerConfigFilePath);
 
-    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, 2);
+    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::ResetEditorColorsPhase1);
     if (static_cast<int>(fResult) < 1)
         return;
-    
 
-    // TODO: Procedures to fix editor colors
-    
+    Instance().DoResetEditorColors();
+}
+
+// Installs Dark theme
+PLUGINCOMMAND Plugin::InstallDarkTheme()
+{
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._notepadDarkThemeFilePath);
+
+    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
+    Instance().DoInstallDarkTheme();
 }
 
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    Instance().OpenAboutDialog();
+    // Dialog boxes need to be static unless it's modal.
+    static AboutDialog aboutDialog = {};
+
+    if (!aboutDialog.isCreated())
+        aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    if (!aboutDialog.isVisible())
+        aboutDialog.doDialog();
 }
 
+#pragma endregion Plugin User Interfacing

@@ -46,31 +46,39 @@ namespace NWScriptPlugin {
 			~NotepadLexer() { delete[] langName; }
 		};
 
+		// File checks results
 		enum class FileCheckResults {
 			UnknownError = -3, BlockedByApplication, ReadOnlyFiles, RequiresAdminPrivileges, CheckSuccess
 		};
 
 	public:
+
+		// ### Class Instantiation
+
 		Plugin(Plugin& other) = delete;
 		void operator =(const Plugin &) = delete;
+
+		// ### Initialization
 
 		// Initializes the Plugin Instance with a DLL or EXE handle. Called from DLL Main message DLL_ATTACH
 		static void PluginInit(HANDLE hModule);
 		// Performs the instance cleanup: Called from DLL Main message DLL_DETACH
 		static void PluginRelease();
 
-		// Setup Notepad++ and Scintilla handles and finish initializing the
-		// plugin's objects that need a Windows Handle to work
-		void SetNotepadData(NppData data);
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName.data(); }
 		// Returns the Plugin Menu Items count. Notepad++ Callback function
 		int GetFunctionCount() const; 
 		// Returns the Plugin Menu Items pointer. Notepad++ Callback function
 		FuncItem* GetFunctions() const { return pluginFunctions; }
+		// Setup Notepad++ and Scintilla handles and finish initializing the
+		// plugin's objects that need a Windows Handle to work
+		void SetNotepadData(NppData data);
 
 		// Retrieves the unique Plugin's Instance
 		static Plugin& Instance() { return *_instance; }
+
+		// ### Internal Objects
 
 		// Retrieve's Plugin's Settings Object
 		Settings& Settings() { return *_settings; }
@@ -84,17 +92,19 @@ namespace NWScriptPlugin {
 		HWND NotepadHwnd() const { return _notepadHwnd; }
 		// Retrieves the Plugin Path class
 		fs::path& PluginPath() const { return *_pluginPath; };
+
+		// ### Message Processing
+
 		// Processes Messages from a Notepad++ editor and the coupled Scintilla Text Editor
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		// Processes Raw messages from a Notepad++ window (the ones not handled by editor). Currently unused by the plugin
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
 		// Setup a restart Hook. 0 to reset; 1 to restart normally; 2 to restart in admin mode
-		void SetRestartHook(int type, int function = 0) { Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function; }
+		void SetRestartHook(RestartMode type, RestartFunctionHook function = RestartFunctionHook::None) { 
+			Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function; 
+		}
 
-		// Opens the About dialog
-		void OpenAboutDialog();
-		// Opens the Warning dialog
-		void OpenWarningDialog();
+		// ### User Interfacing
 
 		// Menu Command "Use Auto-Indentation" function handler. 
 		static PLUGINCOMMAND SwitchAutoIndent();
@@ -104,8 +114,10 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND OpenSettings();
 		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND ImportDefinitions();
-		// Menu Command "Fix Dark Mode"
-		static PLUGINCOMMAND FixEditorColors();
+		// Menu Command "Reset Editor Colors"
+		static PLUGINCOMMAND ResetEditorColors();
+		// Menu Command "Install Dark Theme"
+		static PLUGINCOMMAND InstallDarkTheme();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
@@ -115,28 +127,45 @@ namespace NWScriptPlugin {
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
-		// Load current Notepad++ Language Lexer.
-		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
-		void LoadNotepadLexer();
+
+		// ### Initialization
+
 		// Setup plugin and Notepad++ Auto-Indentation Support.
 		// If it's a newer version of notepad++, we use the built-in auto-indentation, or else, we use our customized one
 		void SetAutoIndentSupport();
+		// Detects Dark Theme installation and setup the menu option for that action accordingly
+		void DetectDarkThemeInstall();
+		// Load current Notepad++ Language Lexer when language changed.
+		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
+		void LoadNotepadLexer();
+
+		// ### Initialization -> Setup bitmaps
+		
 		// Returns tha handle of Notepad++ Main Menu
 		HMENU GetNppMainMenu();
+		// Set a plugin menu Icon to a given stock Shell Icon
+		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupMenuIcons();
+
+		// ### Config files management
+
+		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
+		static void DoImportDefinitionsCallback(HRESULT decision);
+		// Resets the Editor Colors
+		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Install Dark Theme
+		void DoInstallDarkTheme(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+
+		// ### User interfacing
+
 		// Do a full file permission check and show appropriate error dialogs to the user when required. Callers can set
 		// a function to be called automatically upon a possible program restart if FileCheckResults::RequiresAdminPrivileges is reached
 		// and the user selected to "Run as Administrator". If function returns FileCheckResults::RequiresAdminPrivileges, the caller should
 		// just quit the current procedure immediately.
-		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, int iFunctionToCallIfRestart = 0);
-		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
-		static void DoImportDefinitionsCallback(HRESULT decision);
+		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, RestartFunctionHook iFunctionToCallIfRestart);
 
-		// Removes Plugin's Auto-Indentation menu command (for newer versions of Notepad++)
-		void RemoveAutoIndentMenu();
-		// Set a plugin menu Icon to a given stock Shell Icon
-		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
+		// ### Internal states and variables
 
 		// Unique plugin Instance
 		static Plugin* _instance;
@@ -145,6 +174,7 @@ namespace NWScriptPlugin {
 
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
+		bool _isDarkThemeInstalled = false;
 
 		// Internal classes
 
@@ -152,7 +182,6 @@ namespace NWScriptPlugin {
 		std::unique_ptr<PluginMessenger> _messageInstance;
 		std::unique_ptr<LineIndentor> _indentor;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
-		std::unique_ptr<generic_string> _test;
 
 		// Internal handles
 
@@ -161,7 +190,6 @@ namespace NWScriptPlugin {
 
 		// Settings instance
 		std::unique_ptr<NWScriptPlugin::Settings> _settings;
-
 
 		// Meta Information about the plugin
 
