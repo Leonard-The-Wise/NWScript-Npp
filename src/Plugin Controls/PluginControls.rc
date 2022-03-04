@@ -176,9 +176,9 @@ END
 // Bitmap
 //
 
-IDB_NWSCRIPTLOGO        BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript.bmp"
+IDB_NWSCRIPTLOGO        BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\NWScript.bmp"
 
-IDB_HEREBEDRAGONS       BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
+IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ IDB_HEREBEDRAGONS       BITMAP                  "C:\\Users\\chron\\Documents\\As
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_NWSCRIPTFILE96      ICON                    "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript-File.ico"
+IDI_NWSCRIPTFILE96      ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\NWScript-File.ico"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////
