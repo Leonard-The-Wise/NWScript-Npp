@@ -200,7 +200,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\Common.h" />
     <ClInclude Include="..\src\framework.h" />
-    <ClInclude Include="..\src\Lexers\InstalledLexers.h" />
     <ClInclude Include="..\src\Lexers\LexerCatalogue.h" />
     <ClInclude Include="..\src\Lexers\Lexlib\Accessor.h" />
     <ClInclude Include="..\src\Lexers\Lexlib\CharacterSet.h" />
@@ -227,10 +226,12 @@
     <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileAccessDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
+    <ClInclude Include="..\src\Plugin Interface\NotepadInternalMessages.h" />
     <ClInclude Include="..\src\Plugin Interface\Notepad_plus_msgs.h" />
     <ClInclude Include="..\src\Plugin Interface\PluginInterface.h" />
     <ClInclude Include="..\src\PluginMain.h" />
@@ -263,6 +264,7 @@
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cxx" />
     <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cxx" />
+    <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cxx" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cxx" />
     <ClCompile Include="..\src\PluginMain.cxx">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -293,7 +295,10 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\media\bitmap1.bmp" />
     <Image Include="..\Media\Here-be-Dragons.bmp" />
+    <Image Include="..\Media\NWScript File.bmp" />
+    <Image Include="..\Media\NWScript-File.ico" />
     <Image Include="..\Media\NWScript.bmp" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />

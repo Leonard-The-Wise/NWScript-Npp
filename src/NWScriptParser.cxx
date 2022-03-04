@@ -16,12 +16,6 @@
 #include <cctype>
 #include <iterator>
 #include <locale>
-#include <codecvt>
-
-// #define USEADVANCEDENCODINGDETECTION
-#ifdef USEADVANCEDENCODINGDETECTION
-#include "uchardet.h"
-#endif
 
 // Replacing std::regex with boost because of crappy performance (10x increase!!!!).
 //#include <regex>
@@ -30,33 +24,43 @@
 
 #include "NWScriptParser.h"
 
+
+#ifdef USEADVANCEDENCODINGDETECTION
+#include "uchardet.h"
+#endif
+
+
 #pragma warning(disable : 4996 6387)
 
 using namespace NWScriptPlugin;
+
+#define __L(x) L##x
+#define L(x) __L(x)
+
+#define ENGINESTRUCTREGEX "^\\s*?((?:#define))\\s*((?:ENGINE_STRUCTURE))_\\d*\\s*((\\w+))"
+#define FUNCTIONDEFINITIONREGEX "^\\s*?((?!(return|if|else))\\w+)\\s+(\\w+)\\s*?\\(\\s*(([\\w\\s=\\-\\+\\*/\\.\\\"\\[\\]]*,?)*)\\)\\s*?;"
+#define FUNTIONPARAMETERREGEX "(\\w+)\\s*(\\w+)\\s*(=\\s*(\\[[\\s\\d|\\w|\\-\\+\\*\\/\\.\\\",]*\\]|[\\w|\\d|.\\\"]*))?"
+#define CONSTANTREGEX "^\\s*?(\\w+)\\s*?(\\w+)\\s*?=?\\s*?([\\w|\\d|.\\-]*?)\\s*?;"
 
 using wregex = boost::basic_regex<wchar_t>;
 using wregexmatch = boost::match_results<std::wstring::const_iterator>;
 using wsregex_iterator = boost::regex_iterator<std::wstring::const_iterator>;
 using wsregex_token_iterator = boost::regex_token_iterator<std::wstring::const_iterator>;
 using wmatch = boost::match_results<std::wstring>;
-
-static const wregex sEngineStructRegExW(L"^\\s*?((?:#define))\\s*((?:ENGINE_STRUCTURE))_\\d*\\s*((\\w+))", boost::regex_constants::optimize);
-static const wregex sFunctionsDefinitionRegExW(L"^\\s*?((?!(return|if|else))\\w+)\\s+(\\w+)\\s*?\\(\\s*(([\\w\\s=\\-\\+\\*/\\.\\\"\\[\\]]*,?)*)\\)\\s*?;", boost::regex_constants::optimize);
-static const wregex sFunctionsParamRegExW(L"(\\w+)\\s*(\\w+)\\s*(=\\s*(\\[[\\s\\d|\\w|\\-\\+\\*\\/\\.\\\",]*\\]|[\\w|\\d|.\\\"]*))?", boost::regex_constants::optimize);
-static const wregex sConstantsRegExW(L"^\\s*?(\\w+)\\s*?(\\w+)\\s*?=?\\s*?([\\w|\\d|.\\-]*?)\\s*?;", boost::regex_constants::optimize);
+static const wregex sEngineStructRegExW(L(ENGINESTRUCTREGEX), boost::regex_constants::optimize);
+static const wregex sFunctionsDefinitionRegExW(L(FUNCTIONDEFINITIONREGEX), boost::regex_constants::optimize);
+static const wregex sFunctionsParamRegExW(L(FUNTIONPARAMETERREGEX), boost::regex_constants::optimize);
+static const wregex sConstantsRegExW(L(CONSTANTREGEX), boost::regex_constants::optimize);
 
 using aregex = boost::basic_regex<char>;
 using aregexmatch = boost::match_results<std::string::const_iterator>;
 using asregex_iterator = boost::regex_iterator<std::string::const_iterator>;
 using asregex_token_iterator = boost::regex_token_iterator<std::string::const_iterator>;
 using amatch = boost::match_results<std::string>;
-
-static const aregex sEngineStructRegExA("^\\s*?((?:#define))\\s*((?:ENGINE_STRUCTURE))_\\d*\\s*((\\w+))", boost::regex_constants::optimize);
-static const aregex sFunctionsDefinitionRegExA("^\\s*?((?!(return|if|else))\\w+)\\s+(\\w+)\\s*?\\(\\s*(([\\w\\s=\\-\\+\\*/\\.\\\"\\[\\]]*,?)*)\\)\\s*?;", boost::regex_constants::optimize);
-static const aregex sFunctionsParamRegExA("(\\w+)\\s*(\\w+)\\s*(=\\s*(\\[[\\s\\d|\\w|\\-\\+\\*\\/\\.\\\",]*\\]|[\\w|\\d|.\\\"]*))?", boost::regex_constants::optimize);
-static const aregex sConstantsRegExA("^\\s*?(\\w+)\\s*?(\\w+)\\s*?=?\\s*?([\\w|\\d|.\\-]*?)\\s*?;", boost::regex_constants::optimize);
-
-using wsconverter = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>;
+static const aregex sEngineStructRegExA(ENGINESTRUCTREGEX, boost::regex_constants::optimize);
+static const aregex sFunctionsDefinitionRegExA(FUNCTIONDEFINITIONREGEX, boost::regex_constants::optimize);
+static const aregex sFunctionsParamRegExA(FUNTIONPARAMETERREGEX, boost::regex_constants::optimize);
+static const aregex sConstantsRegExA(CONSTANTREGEX, boost::regex_constants::optimize);
 
 // We setup constants according to the capture groups
 constexpr const int preprocessor = 1;
@@ -85,7 +89,7 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 		return false;
 
 	generic_string targetFileName = sFileName;
-	resolveLinkFile(targetFileName);
+	ResolveLinkFile(targetFileName);
 	TCHAR longFileName[longFileNameBufferSize];
 
 	const DWORD getFullPathNameResult = ::GetFullPathName(targetFileName.c_str(), longFileNameBufferSize, longFileName, NULL);
@@ -139,7 +143,7 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 
 }
 
-void NWScriptParser::resolveLinkFile(generic_string& linkFilePath)
+void NWScriptParser::ResolveLinkFile(generic_string& linkFilePath)
 {
 	IShellLink* psl;
 	WCHAR targetFilePath[MAX_PATH];
@@ -201,9 +205,6 @@ bool NWScriptParser::FileToBuffer(const generic_string& fileName, std::string& s
 
 void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, ScriptParseResults& outParseResults)
 {
-	// Since we are reading from 8-bit ASCII/UTF-8 and expecting TCHAR (UTF-16) result, we convert things here
-	wsconverter converter;
-
 	// Reserve a good amount of space since we're not doing dynamic allocations. 1 member per line is more than enough
 	// Try standard EOL mode (\n). Then alternative (\r). Minimum to reserve is assumed to 1 member since at least 1 line 
 	// will be processed by the RegEx.
@@ -229,7 +230,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 		m = *i;
 		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
 		NWScriptParser::ScriptMember n;
-		n.mID = MemberID::EngineStruct; n.sName = converter.from_bytes(m[structName].str().c_str());
+		n.mID = MemberID::EngineStruct; n.sName = str2wstr(m[structName].str().c_str());
 		outParseResults.Members.emplace_back(n);
 		iCount++;
 	}
@@ -253,16 +254,16 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 			n = *j;
 			// Param Default value can be null
 			ScriptParamMember s;
-			s.sType = converter.from_bytes(n[paramType].str().c_str()); s.sName = converter.from_bytes(n[paramName].str().c_str());
-			s.sDefaultValue = n.size() > 4 ? converter.from_bytes(n[paramDefaultValue].str().c_str()) : nullptr;
+			s.sType = str2wstr(n[paramType].str().c_str()); s.sName = str2wstr(n[paramName].str().c_str());
+			s.sDefaultValue = n.size() > 4 ? str2wstr(n[paramDefaultValue].str().c_str()) : nullptr;
 			sParams.push_back(s);
 		}
 
 		// We are pushing back MemberID = Function, sType = <type>, sName = <name>, sValue = nullptr, sParams = { <subquery> }
 		// {<subquery>} = sType = <ptype>, sName = <pname>, sDefaultValue = <defaultvalue>
 		NWScriptParser::ScriptMember Me;
-		Me.mID = MemberID::Function; Me.sType = converter.from_bytes(m[functionType].str().c_str());
-		Me.sName = converter.from_bytes(m[functionName].str().c_str()); Me.sParams = sParams;
+		Me.mID = MemberID::Function; Me.sType = str2wstr(m[functionType].str().c_str());
+		Me.sName = str2wstr(m[functionName].str().c_str()); Me.sParams = sParams;
 		outParseResults.Members.emplace_back(Me);
 		iCount++;
 	}
@@ -278,8 +279,8 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 
 		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
 		NWScriptParser::ScriptMember n;
-		n.mID = MemberID::Constant; n.sType = converter.from_bytes(m[constantType].str().c_str()), n.sName = converter.from_bytes(m[constantName].str().c_str());
-		n.sValue = converter.from_bytes(m[constantValue].str().c_str());
+		n.mID = MemberID::Constant; n.sType = str2wstr(m[constantType].str().c_str()), n.sName = str2wstr(m[constantName].str().c_str());
+		n.sValue = str2wstr(m[constantValue].str().c_str());
 		outParseResults.Members.emplace_back(n);
 		iCount++;
 	}
@@ -385,7 +386,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 /*
 Requires uchardet library.
 https://www.freedesktop.org/wiki/Software/uchardet/
-This would be like overkill for a mere import... so left unused. :)
+This would be overkill for a mere import... so left unused. :)
 */
 
 int NWScriptParser::detectCodepage(char* buf, size_t len)

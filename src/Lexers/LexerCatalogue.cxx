@@ -15,7 +15,7 @@
 using std::size;
 using namespace LexerInterface;
 
-constexpr LexerDefinition InstalledLexers[] = {
+constexpr static LexerDefinition InstalledLexers[] = {
 	{"NWScript", TEXT("NWScript file"), SCLEX_NWSCRIPT, LexerNWScript::LexerFactoryNWScript, LangAutoIndentMode::Extended},
 	// {"NWScript NoCase", TEXT("NWScript Case Insensitive file"), SCLEX_NWSCRIPTNOCASE, LexerNWScript::LexerFactoryNWScriptInsensitive, LangAutoIndentMode::Extended},
 };

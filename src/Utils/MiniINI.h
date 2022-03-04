@@ -102,12 +102,14 @@
 typedef std::basic_string<TCHAR> generic_string;
 #endif
 
+#ifdef  UNICODE
 #ifndef UNICODE_TSTAT
 #define UNICODE_TSTAT
-#ifdef  UNICODE
 #define _tstat _wstat
 struct tstat : _stat64i32 {};
-#else 
+#endif
+#else
+#ifndef UNICODE_TSTAT
 #define _tstat stat
 struct tstat : stat {};
 #endif

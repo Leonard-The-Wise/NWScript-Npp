@@ -126,9 +126,6 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Settings.h" />
-    <ClInclude Include="..\src\Lexers\InstalledLexers.h">
-      <Filter>Custom Lexers</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\PluginMessenger.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
     <ClInclude Include="..\src\Common.h" />
@@ -162,6 +159,12 @@
     </ClInclude>
     <ClInclude Include="..\src\Utils\boost\regex.hpp">
       <Filter>Utils\Boost Library</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Interface\NotepadInternalMessages.h">
+      <Filter>Plugin Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +221,9 @@
     <ClCompile Include="..\src\Utils\FileInterface.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cxx">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -255,6 +261,15 @@
     </Image>
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg">
       <Filter>Media</Filter>
+    </Image>
+    <Image Include="..\media\bitmap1.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScript File.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScript-File.ico">
+      <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
 </Project>

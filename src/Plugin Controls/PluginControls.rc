@@ -54,14 +54,14 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,130,222,50,14
     CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
-    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,118,18,188,8
-    CTEXT           "(C) Feb 2022, Leonardo Silva (aka: Leonard-The-Wise)",IDC_LBLCOPYRIGHT,118,46,188,8
+    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,118,12,188,8
+    CTEXT           "(C) Feb 2022, Leonardo Silva (aka: Leonard-The-Wise)",IDC_LBLCOPYRIGHT,118,39,188,8
     CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
                     "SysLink",WS_TABSTOP,71,113,204,14
-    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (NWNSC) Team",IDC_LBLSPECIALCREDITS,118,66,189,42
+    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (NWNSC) Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,118,56,189,54
     EDITTEXT        IDC_TXTABOUT,7,126,295,89,ES_MULTILINE | ES_READONLY | WS_VSCROLL,WS_EX_STATICEDGE
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,8
-    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,118,27,189,8
+    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,118,23,189,8
 END
 
 IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208
@@ -79,11 +79,30 @@ CAPTION "File Access Denied"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "I'll provide the permissions manually",IDCANCEL,163,118,137,14
-    PUSHBUTTON      "Run Notepad++ in Administrator Mode",IDOK,7,118,145,14
+    PUSHBUTTON      "  Run Notepad++ as an Administrator",IDOK,7,118,145,14
     CONTROL         "",IDC_SHIELDICON,"Static",SS_BITMAP,11,21,43,39
     LTEXT           "WARNING - this action requires write permission to the following file(s):",IDC_LBLWARNING,66,15,236,21
     EDITTEXT        IDC_TXTREQUIREDFILES,63,36,239,33,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
     LTEXT           "To solve this, you may either:\r\n  - Try to reopen Notepad++ with elevated privileges (Administrator Mode); or\r\n  - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties -> Security Tab.",IDC_LBLSOLUTION,16,72,272,33
+END
+
+IDD_PARSERESULTS DIALOGEX 0, 0, 309, 147
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NWScript file parsing results"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,83,126,50,14
+    PUSHBUTTON      "&No",IDNO,177,126,50,14
+    LTEXT           "After analyzing this file, we found the following results...",IDC_STATIC,80,37,221,19
+    LTEXT           "NWScript File Summary",IDC_LBLFILESUMARY,80,16,221,19
+    CONTROL         "",IDC_PCTNWSCRIPTFILE,"Static",SS_BITMAP,7,39,15,13
+    LTEXT           "Engine Structures:",IDC_STATIC,80,56,60,8
+    LTEXT           "Function Definitions:",IDC_STATIC,80,70,66,8
+    LTEXT           "Global Constants:",IDC_STATIC,80,84,58,8
+    RTEXT           "000000",IDC_LBLENGINESTRUCTS,159,56,25,8
+    RTEXT           "000000",IDC_LBLFUNCTIONDEFINITIONS,159,71,25,8
+    RTEXT           "000000",IDC_LBLGLOBALCONSTANTS,159,84,25,8
+    LTEXT           "Do you want to keep them?",IDC_LBLKEEPRESULTS,80,105,127,13
 END
 
 
@@ -114,6 +133,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 132
     END
+
+    IDD_PARSERESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 302
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 140
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -138,6 +165,11 @@ BEGIN
     0
 END
 
+IDD_PARSERESULTS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -147,6 +179,16 @@ END
 IDB_NWSCRIPTLOGO        BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript.bmp"
 
 IDB_HEREBEDRAGONS       BITMAP                  "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_NWSCRIPTFILE96      ICON                    "C:\\Users\\chron\\Documents\\Astral Soujorner\\SpellScripts\\Notepad++ Integration\\NWScript Plugin\\Media\\NWScript-File.ico"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////
