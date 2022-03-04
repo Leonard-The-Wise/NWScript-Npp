@@ -23,8 +23,8 @@ void Settings::Load()
 	// TODO: Load all settings variables from INI here
 	bEnableAutoIndentation = GetBoolean(TEXT("Plugin Functions"), TEXT("bEnableAutoIndentation"));
 	bAutoIndentationWarningAccepted = GetBoolean(TEXT("Plugin Functions"), TEXT("bAutoIndentationWarningAccepted"));
-	iNotepadRestartMode = GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode"));
-	iNotepadRestartFunction = GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction"));
+	iNotepadRestartMode = static_cast<RestartMode>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode")));
+	iNotepadRestartFunction = static_cast<RestartFunctionHook>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction")));
 }
 
 void Settings::Save()
@@ -32,8 +32,8 @@ void Settings::Save()
 	// TODO: Set all settings variables to INI here
 	SetBoolean(TEXT("Plugin Functions"), TEXT("bEnableAutoIndentation"), bEnableAutoIndentation);
 	SetBoolean(TEXT("Plugin Functions"), TEXT("bAutoIndentationWarningAccepted"), bAutoIndentationWarningAccepted);
-	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode"), iNotepadRestartMode);
-	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction"), iNotepadRestartFunction);
+	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode"), static_cast<int>(iNotepadRestartMode));
+	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction"), static_cast<int>(iNotepadRestartFunction));
 
 	iniFilePath->write(*iniFile);
 }

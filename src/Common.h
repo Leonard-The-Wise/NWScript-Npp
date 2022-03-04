@@ -327,3 +327,13 @@ namespace {
 
 }
 
+
+namespace NWScriptPlugin {
+    enum class RestartMode {
+        None, Normal, Admin
+    };
+
+    enum class RestartFunctionHook {
+        None, ImportDefinitions, ResetEditorColorsPhase1, ResetEditorColorsPhase2, InstallDarkModePhase1, InstallDarkModePhase2
+    };
+}
