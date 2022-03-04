@@ -1,6 +1,6 @@
-/** @file DllMain.cxx
+/** @file PluginInterface.cpp
  * The main DLL entry point and basic plugin setup. 
- * All message handles are processed in PluginMain.cxx
+ * All message handles are processed in PluginMain.cpp
  * 
  **/
  // Copyright 2022 by Leonardo Silva 

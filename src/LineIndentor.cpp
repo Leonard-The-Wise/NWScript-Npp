@@ -1,4 +1,4 @@
-/** @file LineIndentor.cxx
+/** @file LineIndentor.cpp
  * Implements Base LineIndentor class.
  * Code extracted and adapted from Notepad++ Auto Indentation features
  * (original source: @Notepad_plus.cpp)

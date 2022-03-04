@@ -1,4 +1,4 @@
-/** @file WarningDialog.cxx
+/** @file WarningDialog.cpp
  * Kind of a easter egg box...
  *
  **/

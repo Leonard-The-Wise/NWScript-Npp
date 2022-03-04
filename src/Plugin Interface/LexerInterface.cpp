@@ -1,5 +1,5 @@
 // Lexer Interface module
-/** @file LexerInterface.cxx
+/** @file LexerInterface.cpp
  **
  ** This is where the Interface between Notepad++ and all avaliable Lexers is made.
  ** 

@@ -1,4 +1,4 @@
-/** @file LexerCatalogue.cxx
+/** @file LexerCatalogue.cpp
  ** A simple Lexer catalogue
  **/
  // Copyright 2022 by Leonardo Silva 

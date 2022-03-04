@@ -1,6 +1,6 @@
 // Scintila NWScript custom Lexer
-/** @file LexNWScript.cxx
- ** previous filename LexCPP.cxx
+/** @file LexNWScript.cpp
+ ** previous filename LexCPP.cpp
  ** Modified C++ Lexer NWScript.
  ** Further folding features and configuration properties added by "Udo Lechner" <dlchnr(at)gmx(dot)net>
  ** Added extensions of NWScript language, changed name and class by "Leonardo Silva"

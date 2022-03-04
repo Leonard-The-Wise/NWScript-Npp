@@ -1,4 +1,4 @@
-/** @file FileParseSummaryDialog.cxx
+/** @file FileParseSummaryDialog.cpp
  * NWScript File Parsing Summary
  *
  **/

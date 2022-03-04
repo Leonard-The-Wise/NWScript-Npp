@@ -1,4 +1,4 @@
-/** @file AboutDialog.cxx
+/** @file AboutDialog.cpp
  * About Dialog Box
  *
  **/
