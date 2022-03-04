@@ -1,4 +1,4 @@
-/** @file PluginMain.cxx
+/** @file PluginMain.cpp
  * Controls the Plugin settings
  *
  **/

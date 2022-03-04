@@ -1,7 +1,7 @@
-/** @file PluginMain.cxx
+/** @file PluginMain.cpp
  * Controls the Plugin functions, processes all Plugin messages
  * 
- * The ACTUAL DLL Entry point is defined in PluginInterface.cxx
+ * The ACTUAL DLL Entry point is defined in PluginInterface.cpp
  * 
  **/
  // Copyright 2022 by Leonardo Silva 

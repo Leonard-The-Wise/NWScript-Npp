@@ -48,7 +48,7 @@ This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugi
 
 This plugin was a test to check my C++ skills, also an example on how to write a REAL plugin since neither of Notepad++ or Scintilla documentation provide much information on how to create a [lexer plugin](https://npp-user-manual.org/docs/plugin-communication/) - let alone an external one!
 
-I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.Cxx file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cxx)
+I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.cpp file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cpp)
 
 All files under this project are provided under the [GPL v3.0 License](license.txt).
 
@@ -59,7 +59,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
 	* Also contains a [.targets](Publish.Dll.To.Notepad.targets) file that is imported inside the [vcxproj](NWScript-Npp/NWScript-Npp.vcxproj) to automate deployment of the plugin DLL and associated XML to Notepad++ to help debugging. Make sure Notepad++ isn't running while you build your code.
 - **Utils**: Contains utilitary headers and code to help dealing with settings, INI files, etc.
 
-- **Custom Lexers**: Here you'll write your new custom Lexer file (example: [LexNWScript.cxx](src/Lexers/LexNWScript.cxx) and edit [LexerCatalogue.cxx](src/Lexers/LexerCatalogue.cxx) for the code to auto-initialize it upon plugin load.
+- **Custom Lexers**: Here you'll write your new custom Lexer file (example: [LexNWScript.cpp](src/Lexers/LexNWScript.cpp) and edit [LexerCatalogue.cpp](src/Lexers/LexerCatalogue.cpp) for the code to auto-initialize it upon plugin load.
 - **PluginMain**: This is where your Plugin code begins. I created a base class to setup Plugin Menu Commands, to deal with message processing, etc. here. Change this and add more code as suitable.
 
 ### Remarks

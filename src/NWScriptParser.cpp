@@ -1,4 +1,4 @@
-/** @file NWScriptParser.cxx
+/** @file NWScriptParser.cpp
  * Parser for a NWScript.nss file
  *
  **/
