@@ -1,0 +1,69 @@
+################################################################################################
+#
+#    Regular expression definitions for NWScript file parsing.
+#    Copyright (C) 2022 - Leonardo Silva
+#    
+#    The License.txt file describes the conditions under which this software may be distributed.
+#    Built and tested with: https://regex101.com/
+#
+################################################################################################
+
+Usage:
+- Paste the REGEX DEFINITIONS in your parser before pasting the actual Regex, or else the function
+  will break.
+
+Example: the FULL Function declaration Regex will become like this:
+
+(?(DEFINE)(?'commentLine'(?>\/\/(?>\n|.*)))(?'comment'(?>\/\*(?>.|\n)*?\*\/))(?'c'(?>\s*+(?>\g<comment>|\g<commentLine>)?\s*+)*+)(?<token>(?>(?!(\/\/|\/\*))("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(?>\[\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\]))(?<object>(?>\{\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\}))(?'param'(?>\g<c>(?>const)?\g<c>(?>(?#paramType)\w+)\g<c>(?>(?#paramName)\w+)\g<c>(?>=\g<c>(?>(?#paramDefaultValue)\g<token>|\g<tokenVector>|\g<object>)){0,1})\g<c>))\g<c>(?>const){0,1}\g<c>(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>(?>=\g<c>(?<defaultValue>(?>\g<token>|\g<tokenVector>|\g<object>)))?\g<c>(?!,)?
+  
+==================================================================================================
+
+NEW Functions are a more robust version of the regular expressions. They can handle object nesting,
+inline comments and will assure function parameters integrity.
+
+--------------
+NEW Functions
+--------------
+
+REGEX DEFINITIONS (Used in Function Declaration, Function Parameters and Constants)
+(?(DEFINE)(?'commentLine'(?>\/\/(?>\n|.*)))(?'comment'(?>\/\*(?>.|\n)*?\*\/))(?'c'(?>\s*+(?>\g<comment>|\g<commentLine>)?\s*+)*+)(?<token>(?>(?!(\/\/|\/\*))("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(?>\[\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\]))(?<object>(?>\{\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\}))(?'param'(?>\g<c>(?>const)?\g<c>(?>(?#paramType)\w+)\g<c>(?>(?#paramName)\w+)\g<c>(?>=\g<c>(?>(?#paramDefaultValue)\g<token>|\g<tokenVector>|\g<object>)){0,1})\g<c>))
+
+ENGINE STRUCTURES
+^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++)
+
+FUNCTION DECLARATION
+^\g<comment>*+\K(?<type>(?>(?!(return|if|else|switch))\w+))\g<c>(?<name>(?>\w+))\g<c>\((?<parametersString>(?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+)\)\g<c>;
+
+FUNCTION PARAMETERS (FOR PARSING <parametersString>)
+\g<c>(?>const){0,1}\g<c>(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>(?>=\g<c>(?<defaultValue>(?>\g<token>|\g<tokenVector>|\g<object>)))?\g<c>(?!,)?
+
+CONSTANTS - 
+^\g<comment>*+(?>(?>const)?\g<c>^\K(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>=\g<c>(?<value>\g<token>|\g<tokenVector>|\g<object>))\g<c>;
+
+
+===========================================================
+
+--------------
+OLD Functions
+--------------
+
+REGEX DEFINITIONS (Used in Function Parameters and Constants)
+(?(DEFINE)(?<token>(?>("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(\[(?>\s*+(?>\g<token>|\g<object>)\s*+,?)*+\s*+\]))(?<object>(\{(?>\s*+(?>\g<token>|\g<tokenVector>)\s*+,?)*+\s*+\})))
+
+ENGINE STRUCTURES
+^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++)
+
+FUNCTION DECLARATIONS
+^\s*+(?<type>(?!(?>return|if|else))\w++)\s++(?<name>\w+)\s*+\(\s*+(?<parametersString>(?>[\w\s=\-\.\[\]\,\{\}]|(?>"(?>\\.|[^"\\])*+")*+)*+)\)\s*+;
+
+FUNCTION PARAMETERS (FOR PARSING <parametersString>)
+(?<type>\w++)\s*+(?<name>\w++)\s*+(?>=\s*+(?<defaultValue>(?>(?>\g<token>|\g<tokenVector>|\g<object>))))?,?
+
+CONSTANTS
+^\s*+(?>const)?\s*+(?<type>\w++)\s++(?<name>\w++)\s*+=?\s*+(?<value>\g<token>|\g<tokenVector>|\g<object>)\s*+;
+
+
+
+================
+:: END OF FILE
+================
