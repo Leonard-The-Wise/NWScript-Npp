@@ -5,9 +5,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Precompiled Header Files">
-      <UniqueIdentifier>{4a737d6f-3737-4407-a782-b7ad75e19fe4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Plugin Interface">
       <UniqueIdentifier>{317db69f-b0d1-4a41-9b3d-8714f6ea043f}</UniqueIdentifier>
     </Filter>
@@ -38,12 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
-    <ClInclude Include="..\src\framework.h">
-      <Filter>Precompiled Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\pch.h">
-      <Filter>Precompiled Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Lexers\Scintilla\ILexer.h">
       <Filter>Custom Lexers\Scintilla</Filter>
     </ClInclude>
@@ -166,12 +157,12 @@
     <ClInclude Include="..\src\Plugin Interface\NotepadInternalMessages.h">
       <Filter>Plugin Interface</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Utils\jpcre2.hpp">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
-    <ClCompile Include="..\src\pch.cpp">
-      <Filter>Precompiled Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx">
       <Filter>Custom Lexers\Lexlib</Filter>
     </ClCompile>

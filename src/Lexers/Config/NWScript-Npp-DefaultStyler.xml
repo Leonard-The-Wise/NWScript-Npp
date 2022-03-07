@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>  
 <NotepadPlus>
-	<Languages>
-        <Language name="NWScript" ext="nss" commentLine="//" commentStart="/*" commentEnd="*/">
-            <Keywords name="instre1">break case continue default do else FALSE for if return switch TRUE while</Keywords>
-            <Keywords name="type1">action command const float int string struct vector void</Keywords>
-            <Keywords name="type2"/>
-            <Keywords name="type3">object OBJECT_INVALID OBJECT_SELF</Keywords>
-            <Keywords name="type4"/>
-            <Keywords name="type5"/>
-            <Keywords name="type6"/>
-            <Keywords name="type7"/>
-        </Language>	
-	</Languages>
 	<LexerStyles>
         <LexerType name="NWScript" desc="NWScript files" ext="">
             <WordsStyle name="PREPROCESSOR" styleID="9" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />

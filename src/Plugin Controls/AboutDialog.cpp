@@ -27,7 +27,6 @@ TEXT("\
 USAGE:\r\n\
   - Select NWScript Language from Languages menu.\r\n\
   - You may import a new NWScript.nss and define your own Functions and Constants to the color syntax.\r\n\
-  - To customize colors go to Settings -> Style Configurator -> NWScript files.\r\n\
   - To be able to compile .nss files you first need to setup the environment and point to the proper Neverwinter folders where the include files are present (tip: map shortcuts to the compilation menu to facilitate the process). \
 \r\n\r\n")
 

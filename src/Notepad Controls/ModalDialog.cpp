@@ -67,7 +67,7 @@ INT_PTR ModalDialog::ShowModal(int dialogID, bool isRTL)
 	{
 		DWORD err = ::GetLastError();
 		char errMsg[256];
-		sprintf(errMsg, "DialogBoxParam() failed to create window.\rGetLastError() == %u", err);
+		sprintf_s(errMsg, "DialogBoxParam() failed to create window.\rGetLastError() == %u", err);
 		::MessageBoxA(NULL, errMsg, "In ModalDialog::ShowModal()", MB_OK | MB_ICONERROR);
 		return rValue;
 	}
