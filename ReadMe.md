@@ -186,7 +186,7 @@ What I did know then is that now I was able to finally close this `#issue` and g
 	
 ## A Final Word
 
-If you read up to here - also passing though the collapsed sections, congrats, you got patience, and that's a virtue!<br><i>(not one of the 8 \*[officially defined virtues](https://wiki.ultimacodex.com/wiki/Eight_Virtues)\*, but anyway)</i>... :prince::lotus_position:
+If you read up to here - also passing though the collapsed sections, congrats, you got patience, and that's a virtue!<br><i>(Not one of the 8 \*[officially defined virtues](https://wiki.ultimacodex.com/wiki/Eight_Virtues)\*, but anyway)</i>... :prince::lotus_position:
 
 If you're reading this, I just wish you the best luck in your Neverwinter project (since this plugin is just a helper to Neverwinter content creators, nothing more). As NWN player myself, I always found that the community provided such an amazing ammount of good content and spent years doing so... so that community creators deserved some of my weeks to do a work for them and provide more support and better tools to help them in developing their inventions for the community. Sorry for the timming though... I know the game is out there for a **looong** time, and this plugin just came out now, in 2022. But well, that was because I just “rediscovered” Enhanced Edition and learned all about the [`Vault Community`](https://neverwintervault.org/) a couple of months ago. I never thought a [2002 game](https://en.wikipedia.org/wiki/Neverwinter_Nights) would have so much untapped potential before. So, I think it's better later than never anyway, hehe.
 
