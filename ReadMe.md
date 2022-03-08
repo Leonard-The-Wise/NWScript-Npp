@@ -44,7 +44,7 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 
 ***`From Notepad++ version 8.3.3 and beyond`***
 
-- Those issues were fixed (thanks @DonHo for accepting my pull request) and no longer a concern, the option to select the plugin built-in auto-indentation won't even show up anymore. So I suggest you to always keep your Notepad++ version up-to-date.
+- Those issues were fixed *(thanks [@DonHo](https://github.com/donho) for accepting my pull request)* and no longer a concern, the option to select the plugin built-in auto-indentation won't even show up anymore. So I suggest you to always keep your Notepad++ version up-to-date.
 (if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite too)
 
 ## For Plugin Developers
@@ -91,7 +91,7 @@ So, I thanks the community for sharing some amazing piece of code! Not to mentio
 
 A special mention to [The Cherno C++ series](https://www.youtube.com/watch?v=18c3MTX0PK0&list=PLlrATfBNZ98dudnM48yfGUldqGD0S4FFb&ab_channel=TheCherno) which helped an old developer a lot, that alghough had many years of IT experience (I'm actually a professional database architect), would never have touched a C++ code since about the early 2000s *(yeah, I tried to use C# syntax here and sooner than later you can presume I was screwing things up really fast - like, using **new** keyword to "instantiate" classes... lol 😅)*. Then I decided to scratch all I presumed I knew about C++ language and started all over with his series. Yeah, that changed things really fast!
 
-- Also, while dealing with regular expressions - something I needed to use to [parse NWScript files](src/NWScriptParser.cpp) for Notepad++ auto-complete integration, I was severally struggling with [backtracking](https://www.regular-expressions.info/catastrophic.html) up until I learned about possessive operators (\*+, ++, ?+) and atomic groups (?>). That was a life-changing experience... So I advise you before trying to write regexes, I REALLY recommend to study the subject first, instead of just copy-pasting code from google searches like I was doing my entire life up to that day... (yeah, never bothered in really learning regex for a long time :/).
+- Also, while dealing with regular expressions - something I needed to use to [parse NWScript files](src/NWScriptParser.cpp) for Notepad++ auto-complete integration, I was severally struggling with [backtracking](https://www.regular-expressions.info/catastrophic.html) up until I learned about possessive operators (\*+, ++, ?+) and atomic groups (?>). That was a life-changing experience... So I advise you before trying to write regexes, I REALLY recommend to study the subject first, instead of just copy-pasting code from google searches like I was doing my entire life up to that day... (yeah, never bothered in really learning regex for a long time :/). And that lead me up to...
 
 ### The PCRE2 regex engine saga...
 
