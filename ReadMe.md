@@ -135,3 +135,4 @@ Best regards,
 Leonardo Silva
 *(aka: Leonard-The-Wise, my [D&D](https://dnd.wizards.com/) chosen [DM](https://en.wikipedia.org/wiki/Dungeon_Master) name)*
 
+::END-OF-FILE::
