@@ -45,7 +45,7 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 ***`From Notepad++ version 8.3.3 and beyond`***
 
 - Those issues were fixed *(thanks [@DonHo](https://github.com/donho) for accepting my pull request)* and no longer a concern, the option to select the plugin built-in auto-indentation won't even show up anymore. So I suggest you to always keep your Notepad++ version up-to-date.
-(if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite too)
+*(if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite too)*.
 
 ## For Plugin Developers
 <details><summary>Click me to expand</summary>
