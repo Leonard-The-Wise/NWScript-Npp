@@ -27,8 +27,11 @@ TEXT("\
 USAGE:\r\n\
   - Select NWScript Language from Languages menu.\r\n\
   - You may import a new NWScript.nss and define your own Functions and Constants to the color syntax.\r\n\
-  - To be able to compile .nss files you first need to setup the environment and point to the proper Neverwinter folders where the include files are present (tip: map shortcuts to the compilation menu to facilitate the process). \
-\r\n\r\n")
+  - To be able to compile .nss files you first need to setup \
+the environment and point to the proper Neverwinter folders where the include files are present \
+(tip: map shortcuts to the compilation menu to facilitate the process).\r\n \
+  - If you want to change the Styles for NWScript in Notepad++ preferences, don't forget to first give write permissions on $FILE$, or else \
+your changes won't be saved to the next session.\r\n")
 
 
 using namespace NWScriptPlugin;
@@ -44,7 +47,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			generic_stringstream sVersion = {};
 			sVersion << "Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
 				versionInfo.dwSecondRight << " (build " << versionInfo.dwRightMost << ")";
-
+			generic_string usageText = ABOUT_TEXT;
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_TXTABOUT, ABOUT_TEXT);
 
