@@ -152,7 +152,7 @@ Then I decided to scratch all I assumed I knew about `C` language and started al
 
 Also, while dealing with `regular expressions` - something I needed to use to [parse NWScript files](src/NWScriptParser.cpp) for `Notepad++` auto-complete integration, I was severally struggling with [`backtracking`](https://www.regular-expressions.info/catastrophic.html) up until I learned about possessive operators ( <code>\*+</code>, <code>++</code>, <code>?+</code> ), atomic groups ( <code>?></code> ) and many other juicy concepts. That was a life-changing experience... So I REALLY advise you before trying to write `regexes`, to do a pause and study the subject deeper first, instead of just copy-pasting code from google searches like I was doing my entire life up to that day... (yeah, never bothered in really learning regex for a long, long time :pensive:). And that lead me up to...
 
-### The PCRE2 engine saga...
+### The PCRE2 Engine Saga...
 
 During the `regex` development phase, I first started with [`std::regex`](https://en.cppreference.com/w/cpp/regex) library to parse my strings, since it is in fact THE international `STANDARD` library for doing this; so it **must** be a good, reliable and fast code to build your project upon... right? Until I found out that this engine had severe restrictions and wasn't even compiling expressions with [`named capture groups`](https://www.regular-expressions.info/named.html)... maybe not a big deal for simple `regular expressions` out there but for me, a nuisance to keep changing `matching indexes` everytime an expression was updated to fix a bug or another. Also, I found the execution really slow - it took aprox. **80 seconds** to fully parse a [nwscript.nss definitions file](https://jadeempire-modding.fandom.com/wiki/Nwscript.nss) in `debug mode`. In `release mode` that dropped to **8 seconds**, so even getting rid of every compiler debbuging overhead wasn't helping that much. All of this running in a pretty recent and fast machine setup (won't be spec'ing my setup here, for the sake story simplification).
 
@@ -184,7 +184,7 @@ What I did know then is that now I was able to finally close this `#issue` and g
 	
 </details>
 	
-## A final word
+## A Final Word
 
 If you read up to here - also passing though the collapsed sections, congrats, you got patience, and that's a virtue!<br><i>(not one of the 8 \*officially defined [virtues](https://wiki.ultimacodex.com/wiki/Eight_Virtues)\*, but anyway)</i>... :prince::lotus_position:
 
