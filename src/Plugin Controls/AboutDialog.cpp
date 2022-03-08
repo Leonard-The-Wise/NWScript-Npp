@@ -43,10 +43,10 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 		{
 			// Get version from module's binary file
-			DllVersionInfo versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
+			DllVersion versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
 			generic_stringstream sVersion = {};
-			sVersion << "Version " << versionInfo.dwLeftMost << "." << versionInfo.dwSecondLeft << "." <<
-				versionInfo.dwSecondRight << " (build " << versionInfo.dwRightMost << ")";
+			sVersion << "Version " << versionInfo.wLeftMost << "." << versionInfo.wSecondLeft << "." <<
+				versionInfo.wSecondRight << " (build " << versionInfo.wRightMost << ")";
 			generic_string usageText = ABOUT_TEXT;
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_TXTABOUT, ABOUT_TEXT);
