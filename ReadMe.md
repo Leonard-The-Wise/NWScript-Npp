@@ -4,7 +4,7 @@
 
 ![GPL-3.0 License](https://img.shields.io/badge/License-GPL%20v3-green)
  
- # NWScript Tools for Notepad++
+ # NWScript Tools Plugin for Notepad++
 
 Since there's not much functionality to User-Defined Languages in [`Notepad++`](https://notepad-plus-plus.org/) I decided to create a custom `Lexer` to support [`Bioware's NWScript language`](https://en.wikipedia.org/wiki/NWScript). A [`Lexer`](https://en.wikipedia.org/wiki/Lexical_analysis) is just a program that can read, interpret and highlight programming code syntax. 
 
