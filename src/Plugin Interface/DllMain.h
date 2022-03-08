@@ -8,9 +8,13 @@
 
 #pragma once
 
-#ifdef DLL_EXPORTS
+#if (defined(_USRDLL) || defined(DLL_EXPORTS)) && defined(_LIB)
+#error You cannot compile this code defining it both as a static and dynamic library simultaneously!
+#endif
+
+#if defined(_USRDLL) || defined(DLL_EXPORTS)
 #define DLLAPI __declspec(dllexport)
-#else
+#elif !defined(_LIB)
 #define DLLAPI __declspec(dllimport)
 #endif
 

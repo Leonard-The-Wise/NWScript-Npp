@@ -25,7 +25,7 @@ namespace LexerInterface {
 		const TCHAR lexerStatusText[MAX_LEXERDESCLENGHT] = {};
 		const int LexerID = 0;
 		const MyLexerFactoryFunction ptrFactoryFunction = nullptr;
-		const LangAutoIndentMode langAutoIndent = LangAutoIndentMode::Standard;
+		const ExternalLexerAutoIndentMode langAutoIndent = ExternalLexerAutoIndentMode::Standard;
 	};
 
 	class LexerCatalogue final {
@@ -35,7 +35,7 @@ namespace LexerInterface {
 		static void GetLexerName(unsigned int index, char* name, int buflength);
 		static const char* GetLexerName(unsigned int index);
 		static void GetLexerStatusText(unsigned int index, WCHAR* desc, int buflength);
-		static LangAutoIndentMode GetLexerIndentType(unsigned int index);
+		static ExternalLexerAutoIndentMode GetLexerIndentType(unsigned int index);
 		static MyLexerFactoryFunction GetLexerFactory(unsigned int index);
 	};
 }

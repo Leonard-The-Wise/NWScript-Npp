@@ -253,9 +253,6 @@
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="..\media\bitmap1.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\NWScript File.bmp">
       <Filter>Resource Files</Filter>
     </Image>

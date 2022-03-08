@@ -38,9 +38,9 @@ namespace NWScriptPlugin {
 			const int langID;
 			const TCHAR* langName;
 			const bool isPluginLang;
-			const LangAutoIndentMode langIndent;
+			const ExternalLexerAutoIndentMode langIndent;
 
-			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const LangAutoIndentMode _langIndent)
+			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const ExternalLexerAutoIndentMode _langIndent)
 				: langID(_LangID), langName(_LangName), isPluginLang(_isPluginLang), langIndent(_langIndent) {}
 
 			~NotepadLexer() { delete[] langName; }
