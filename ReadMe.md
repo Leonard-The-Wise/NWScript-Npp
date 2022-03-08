@@ -48,6 +48,7 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 *(if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite too)*.
 
 ## For Plugin Developers
+</details></summary>Click here to expand</summary>
 
 This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugins/plugintemplate) and the official [Scintilla](https://www.scintilla.org/) C++ Lexer. I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.cpp file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cpp)
 
@@ -82,8 +83,10 @@ Interface functions required for NPP to use the lexer are declared with...
 `src\Lexers\Config\NWScript-Npp.xml` defines the language keywords & styles. Required for the plugin and will be published on project build.
 
 The Debugger is already set to autorun Notepad++.exe for all plataforms.
+</details>
 
 ## <a name="trivia"></a>Some development trivia
+</details></summary>Click here to expand</summary>
 
 - This plugin was actually a self-imposed test, to write a nice piece of software in C++, something I've never done before. So far, I enjoyable experience, although with some severe caveats and dreadful cryptical errors - like linkage missing symbols, a LOT of different compiling warnings, unexpected code behavior, the mind-boggling pointer and reference usage that can get really complex and really messed up really fast... and a world of language differences and different standards and issues that other more "high level" syntax-siblings like Java, Javscript and even C# wouldn't experience. But aside from this, C++ gave me a view of internal machine workings that no other language ever gave me before... and I'm glad for that.
 
@@ -118,8 +121,7 @@ But ALL of that work paid off when I put my new robust regexes to run inside PCR
 What I did know was that now I was able to close this issue and go back to adding features to my plugin again.
 
 *(and here ends the PCRE2 engine saga)*
-
-
+</details>
 ## A final word
 
 Well, if you read up to here - also passing though the collapsed sections, congrats, you got patience, and that's a virtue. :)
