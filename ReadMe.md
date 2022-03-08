@@ -192,7 +192,7 @@ If you're reading this, I just wish you the best luck in your Neverwinter projec
 
 So, to all content developers, this piece of software is made for you, and especially for you. Use it as it best suits you!
 
-As for any *#issues* found, please report them back [here](https://github.com/Leonard-The-Wise/NWScript-Npp/issues) on github. I intend to support this project for at least the next couple years ahead of this date *(Mar-2022)*, and while `Notepad++` still keeps it compatible without having to rewrite large portions of code (unlikely).
+As for any *#issues* found, please report them back [`here`](https://github.com/Leonard-The-Wise/NWScript-Npp/issues) on `github`. I intend to support this project for at least the next couple years ahead of this date *(Mar-2022)*, and while `Notepad++` still keeps it compatible without having to rewrite large portions of code (unlikely).
 
 Best regards,
 
