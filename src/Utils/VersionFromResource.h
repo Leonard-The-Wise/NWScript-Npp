@@ -21,14 +21,19 @@
 #endif
 
 
-struct DllVersionInfo {
+struct DllVersion {
 	DWORD dwFileVersionMS = 0;
 	DWORD dwFileVersionLS = 0;
 
-	DWORD dwLeftMost = 0;
-	DWORD dwSecondLeft = 0;
-	DWORD dwSecondRight = 0;
-	DWORD dwRightMost = 0;
+	WORD wLeftMost = 0;
+	WORD wSecondLeft = 0;
+	WORD wSecondRight = 0;
+	WORD wRightMost = 0;
+	DllVersion() {}
+	DllVersion(DWORD _ms, DWORD _ls, WORD _lm, WORD _sl, WORD _sr, WORD _rm) :
+		dwFileVersionMS(_ms), dwFileVersionLS(_ls), wLeftMost(_lm), wSecondLeft(_sl),
+		wSecondRight(_sr), wRightMost(_rm)
+	{}
 };
 
 // In case you don't know which module to load
@@ -43,7 +48,7 @@ HMODULE getThisModuleHandle()
 	return hModule;
 }
 
-DllVersionInfo GetVersionFromResource(HMODULE hModule)
+DllVersion GetVersionFromResource(HMODULE hModule)
 {
 	HRSRC hResInfo;
 	DWORD dwSize;
@@ -52,7 +57,7 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 	UINT uLen = 0;
 	VS_FIXEDFILEINFO* lpFfi = NULL;
 	HINSTANCE hInst = hModule; 
-	DllVersionInfo VersionInfo;
+	DllVersion VersionInfo;
 
 	hResInfo = FindResource(hInst, reinterpret_cast<LPCWSTR>(MAKEINTRESOURCE(VERSION_POINTER)), RT_VERSION);
 	if (hResInfo)
@@ -73,8 +78,8 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 					{
 						if (lpFfi != NULL)
 						{
-							VersionInfo = DllVersionInfo(lpFfi->dwFileVersionMS, lpFfi->dwFileVersionLS,
-								HIWORD(lpFfi->dwFileVersionMS), LOWORD(lpFfi->dwFileVersionMS), 
+							VersionInfo = DllVersion(lpFfi->dwFileVersionMS, lpFfi->dwFileVersionLS,
+								HIWORD(lpFfi->dwFileVersionMS), LOWORD(lpFfi->dwFileVersionMS),
 								HIWORD(lpFfi->dwFileVersionLS), LOWORD(lpFfi->dwFileVersionLS));
 						}
 					}
@@ -87,7 +92,7 @@ DllVersionInfo GetVersionFromResource(HMODULE hModule)
 	return VersionInfo;
 }
 
-DllVersionInfo GetVersionFromLocalResource()
+DllVersion GetVersionFromLocalResource()
 {
 	HMODULE hModule = getThisModuleHandle();
 	return GetVersionFromResource(hModule);
