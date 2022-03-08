@@ -294,7 +294,6 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\media\bitmap1.bmp" />
     <Image Include="..\Media\Here-be-Dragons.bmp" />
     <Image Include="..\Media\NWScript File.bmp" />
     <Image Include="..\Media\NWScript-File.ico" />

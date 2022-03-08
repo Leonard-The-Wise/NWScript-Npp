@@ -284,7 +284,7 @@ void Plugin::SetAutoIndentSupport()
 {
     PluginMessenger& msg = Instance().Messenger();
     bool lexerSearch = false;
-    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
+    ExternalLexerAutoIndentMode langIndent = ExternalLexerAutoIndentMode::Standard;
 
     // Try to set Plugin's Lexers Auto-Indentation. Older versions of NPP will return langSearch=FALSE (cause this message won't exist).
     generic_stringstream lexerNameW;
@@ -293,15 +293,15 @@ void Plugin::SetAutoIndentSupport()
         lexerNameW = {};
         lexerNameW << LexerCatalogue::GetLexerName(i);
 
-        lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
+        lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLEXERAUTOINDENTMODE,
             reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
 
         if (lexerSearch)
         {
-            if (langIndent != LangAutoIndentMode::Extended)
+            if (langIndent != ExternalLexerAutoIndentMode::C_Like)
             {
-                bool success = msg.SendNppMessage<bool>(NPPM_SETEXTERNALLANGAUTOINDENTMODE,
-                    reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), static_cast<LPARAM>(LangAutoIndentMode::Extended));
+                bool success = msg.SendNppMessage<bool>(NPPM_SETEXTERNALLEXERAUTOINDENTMODE,
+                    reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), static_cast<LPARAM>(ExternalLexerAutoIndentMode::C_Like));
 
                 // We got a problem here. Our procedure SHOULD succeed in setting this.
                 if (!success)
@@ -316,7 +316,7 @@ void Plugin::SetAutoIndentSupport()
         }
     }
 
-    // lexerSearch will be TRUE if Notepad++ support NPPM_GETEXTERNALLANGAUTOINDENTMODE message
+    // lexerSearch will be TRUE if Notepad++ support NPPM_GETEXTERNALExternalLexerAutoIndentMode message
     if (lexerSearch)
     {
         Instance()._needPluginAutoIndent = false;
@@ -331,6 +331,38 @@ void Plugin::SetAutoIndentSupport()
     }
     else
         Instance()._needPluginAutoIndent = true;
+}
+
+// Get Current notepad lexer language;
+void Plugin::LoadNotepadLexer()
+{
+    PluginMessenger& msg = Messenger();
+    bool lexerSearch = FALSE;
+    bool isPluginLanguage = FALSE;
+    int currLang = 0;
+    ExternalLexerAutoIndentMode langIndent = ExternalLexerAutoIndentMode::Standard;
+    msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
+
+    // First call: retrieve buffer size. Second call, fill up name (from Manual).
+    int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
+    TCHAR* lexerName = new TCHAR[buffSize + 1];
+    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
+
+    // Try to get Language Auto-Indentation if it's one of the plugin installed languages
+    generic_stringstream lexerNameW;
+    for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
+    {
+        lexerNameW = {};
+        lexerNameW << LexerCatalogue::GetLexerName(i);
+        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
+
+        if (isPluginLanguage)
+            lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLEXERAUTOINDENTMODE,
+                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
+    }
+
+    // Create or Replace current lexer language.
+    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
 // Detects if Dark Theme is already installed
@@ -446,38 +478,6 @@ void Plugin::SetupMenuIcons()
 }
 
 #pragma endregion Menu icons setup
-
-// Get Current notepad lexer language;
-void Plugin::LoadNotepadLexer()
-{
-    PluginMessenger& msg = Messenger();
-    bool lexerSearch = FALSE;
-    bool isPluginLanguage = FALSE;
-    int currLang = 0;
-    LangAutoIndentMode langIndent = LangAutoIndentMode::Standard;
-    msg.SendNppMessage<>(NPPM_GETCURRENTLANGTYPE, 0, (LPARAM)&currLang);
-
-    // First call: retrieve buffer size. Second call, fill up name (from Manual).
-    int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
-    TCHAR* lexerName = new TCHAR[buffSize + 1];
-    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
-
-    // Try to get Language Auto-Indentation if it's one of the plugin installed languages
-    generic_stringstream lexerNameW;
-    for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
-    {
-        lexerNameW = {};
-        lexerNameW << LexerCatalogue::GetLexerName(i);
-        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
-
-        if (isPluginLanguage)
-            lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLANGAUTOINDENTMODE,
-                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
-    }
-
-    // Create or Replace current lexer language.
-    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
-}
 
 #pragma endregion Plugin initialization functions and dynamic behavior
 

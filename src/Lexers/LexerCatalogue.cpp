@@ -16,8 +16,8 @@ using std::size;
 using namespace LexerInterface;
 
 constexpr static LexerDefinition InstalledLexers[] = {
-	{"NWScript", TEXT("NWScript file"), SCLEX_NWSCRIPT, LexerNWScript::LexerFactoryNWScript, LangAutoIndentMode::Extended},
-	// {"NWScript NoCase", TEXT("NWScript Case Insensitive file"), SCLEX_NWSCRIPTNOCASE, LexerNWScript::LexerFactoryNWScriptInsensitive, LangAutoIndentMode::Extended},
+	{"NWScript", TEXT("NWScript file"), SCLEX_NWSCRIPT, LexerNWScript::LexerFactoryNWScript, ExternalLexerAutoIndentMode::C_Like},
+	// {"NWScript NoCase", TEXT("NWScript Case Insensitive file"), SCLEX_NWSCRIPTNOCASE, LexerNWScript::LexerFactoryNWScriptInsensitive, ExternalLexerAutoIndentMode::Extended},
 };
 
 
@@ -71,7 +71,7 @@ MyLexerFactoryFunction LexerCatalogue::GetLexerFactory(unsigned int index)
 		throw std::out_of_range("index out of bounds");
 }
 
-LangAutoIndentMode LexerCatalogue::GetLexerIndentType(unsigned int index)
+ExternalLexerAutoIndentMode LexerCatalogue::GetLexerIndentType(unsigned int index)
 {
 	if (index < InstalledLexersCount)
 		return InstalledLexers[index].langAutoIndent;
