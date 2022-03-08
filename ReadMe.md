@@ -49,9 +49,10 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 
 ## For Plugin Developers
 <details><summary>Click here to expand</summary>
-This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugins/plugintemplate) and the official [Scintilla](https://www.scintilla.org/) C++ Lexer. I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.cpp file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cpp)
+	
+This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugins/plugintemplate) and the official [Scintilla](https://www.scintilla.org/) C++ Lexer. I managed to rewrite much of the code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.cpp file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cpp) and export it as a DLL.
 
-Also, for the NWScript compilation, I *“borrowed”* the [nwnsc code](https://github.com/Leonard-The-Wise/nwnsc), since trying to write a compiler from scratch would a monstrous task.
+Also, for the NWScript compilation, I *“borrowed”* the [`nwnsc` code](https://github.com/Leonard-The-Wise/nwnsc), since trying to write a compiler from scratch would a monstrous task.
 
 As for the [`PCRE2`](PCRE/) folder up there... this is because during development and testing, I found out that this is the best regex engine out there, far superseding `std::regex` library, and (even the boost version). At least for the purpose of this project. See the [`development trivia`](#trivia) section down bellow for more info.
 
@@ -59,14 +60,31 @@ All files under this project are provided under the [GPL v3.0 License](license.t
 
 For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the following way:
 
-- **Plugin Interface**: Contains all code necessary to initialize the DLL and communicate with `Notepad++` Plugins interface, including the Lexer part. You Probably won't need to change this code.
-- **Resource Files**: Contains the [XML](src/Lexers/Config/NWScript-Npp.xml) necessary for the Lexer to work with `Notepad++` (without it, `Notepad++` will just mark your plugin as incompatible). It will be copied to the notepad/plugin/Config folder.
-	* Also contains a [.targets](Publish.Dll.To.Notepad.targets) file that is imported inside the [vcxproj](NWScript-Npp/NWScript-Npp.vcxproj) to automate deployment of the plugin DLL and associated XML to `Notepad++` to help debugging. Make sure `Notepad++` isn't running while you build your code.
-- **Utils**: Contains utilitary headers and code to help dealing with settings, INI files, etc.
+- **`Custom Lexers`**: Here you'll write your new custom Lexers (example: [LexNWScript.cpp](src/Lexers/LexNWScript.cpp) and edit [LexerCatalogue.cpp](src/Lexers/LexerCatalogue.cpp) for the code to auto-initialize it upon plugin load.
 
-- **Custom Lexers**: Here you'll write your new custom Lexer file (example: [LexNWScript.cpp](src/Lexers/LexNWScript.cpp) and edit [LexerCatalogue.cpp](src/Lexers/LexerCatalogue.cpp) for the code to auto-initialize it upon plugin load.
-- **PluginMain**: This is where your Plugin code begins. I created a base class to setup Plugin Menu Commands, to deal with message processing, etc. here. Change this and add more code as suitable.
+- **`Notepad Controls`**: Contains some class templates to display dialog boxes: versions of Static, Modal and Dockable dialogs are avaliable.
 
+- **`Plugin Interface`**: Contains all code necessary to initialize the DLL and communicate with `Notepad++` Plugins interface, including the Lexer part. You Probably won't need to change much of this code, **EXCEPT** to make it point to YOUR plugin main class instead of mine's.
+
+- **`Resource Files`**: Contains the [XML](src/Lexers/Config/NWScript-Npp.xml) necessary for the Lexer to work with `Notepad++` (without it, `Notepad++` will just mark your plugin as incompatible). It will be copied to the notepad/plugin/Config folder.
+     * Also contains a [.targets](Publish.Dll.To.Notepad.targets) file that is imported inside the [vcxproj](NWScript-Npp/NWScript-Npp.vcxproj) to automate deployment of the plugin DLL and associated XML to `Notepad++` to help with plugin debugging. Make sure `Notepad++` isn't running when you build your code. Also make sure to give yourself **write permissions** to the Notepad/plugin installation folder and subfolders, so the compiler can copy the output DLL and the anexed XML styler to that path. You'll be notified if it cannot and also the build will fail and the debugger will not run if it can't copy at least the DLL there (the XML deploying is optional and only emmits warnings).
+     * Also, I've setup a [`ProjectVersion.rc`](src/ProjectVersion.rc) file along with a header called [`ProjectVersion.h`](src/ProjectVersion.h) to perform auto-increments  on the `VS_VERSION_INFO` associated resource. This works as following:
+         * Every time you hit `build` command, a [pre-build event](https://docs.microsoft.com/en-us/visualstudio/ide/specifying-custom-build-events-in-visual-studio?view=vs-2022) occurs, which calls [this](IncrementBuild.ps1) `PowerShell` script on the project root that will edit `ProjectVersion.h` and increment the `VERSION_BUILD` macro inside that file.
+         * Then the pre-compiler will read that macro and since VS_VERSION_INFO is setup to use macros for replacing version information, it will compile with whichever version is printed on ProjectVersion.h at the time of compilation.
+         * Hence I advise you to ***`NEVER`*** touch or edit `ProjectVersion.rc` inside the Resource Editor, or it will overwrite the macros inside and cause you to lose the auto-increment funcionality. Edit it manually (inside any raw notepad app) only to change other info, like DLL name, company name, copyright info, etc and leave all the macros there about versioning untouched.
+         * To increment major, minor or patch numbers, edit the `ProjectVersion.h` file instead. Only build numbers are setup to auto-increment on my script, so if you want your major, minor or patch versions to change, you'll have do it manually. I designed this intentionally, since every person or team have its own standards for managing project versions.
+	
+- **`Utils`**: Contains utilitary headers and code to help dealing with settings, `.ini` files, `regular expressions`, etc.
+
+- **`Root Directory`**: This is where the Plugin code really begins. I created a base class called [`PluginMain`](src/PluginMain.h) to setup the Menu Commands, to deal with message processing, and all of the main plugin funcions. You'll need to change this as suitable. Perhaps in the future I'll clean up the code from my specific usage and leave a framework for others to developed upon. No promises made, though **(and hey, it's easy to delete a `PluginMain.cpp` and add your own class... just don't forget to update `PluginInterface.cpp` to point to your own classes instead of mine for handling plugin initialization, message parsing, etc)**.
+   * Also, since many plugins use `.ini` files to store their settings, I already provided a `Settings.cpp` class that will do that (almost) automatically for you. Just replace my variables with yours, update the `Save()` and `Load()` functions to save/load your variables instead and you're done. The Settings class uses a modified version of [`MiniINI`](https://github.com/pulzed/mINI/blob/master/src/mini/ini.h) code to handle file reading, writting, etc., so it's really simple to use instead of writting your own version. It supports ASCII and UNICODE files and filenames, being them ANSI or UTF-8/16 codified.
+	
+- **Last** but not least: `Plugin Dialogs` are just the instanced versions of `Notepad Controls` classes, to manage MY specific dialog boxes, etc. You really don't need these, except if you want to use them as examples.
+	
+```
+All other files on this project are just internal workings and the main plugin funcionality, and so I will not be providing too much information on them here. I consider the code reasonably documented already anyway, so feel free to explore it.
+```
+	
 ### Remarks
 `NWScript-Npp.vcxproj` file sets  `<PlatformToolset>` = v143 for Visual Studio 2022.
 
@@ -75,13 +93,14 @@ Also, we target ISO C++ 20 Language Standard.
 Interface functions required for NPP to use the lexer are declared with...
 `extern "C" __declspec(dllexport) ... __stdcall`.
 
-`src\Lexers\Scintilla` is unmodified files copied from [NPP\Scintilla\include](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/scintilla/include)
+`src\Lexers\Scintilla` is unmodified files copied from [NPP\Scintilla\include](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/scintilla/include), so you can overwrite those with more up-to-date versions in your own taste.
 
 `src\Lexlib` contains required files copied from [NPP\Scintilla\lexlib](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/scintilla/lexlib) - unchanged other than ripping out some headers that were not required. You can add more if your project needs.
 
-`src\Lexers\Config\NWScript-Npp.xml` defines the language keywords & styles. Required for the plugin and will be published on project build.
+`src\Lexers\Config\NWScript-Npp.xml` defines the language keywords & styles. Required for the plugin and will be published on project build. When changing the DLL name, you also MUST change this to the exact name your DLL gets, or else Notepad++ will not recognize it.
 
-The Debugger is already set to autorun `Notepad++.exe` for all plataforms.
+The Debugger is already set to autorun `Notepad++.exe` for all supported plataforms (x86 or x64).
+	
 </details>
 	
 ## <a name="trivia"></a>Some development trivia
@@ -120,6 +139,7 @@ But ALL of that work paid off when I put my new robust regexes to run inside `PC
 What I did know thera was that now I was able to close this issue and go back to adding features to my plugin again.
 
 *(and here ends the PCRE2 engine saga)*
+	
 </details>
 	
 ## A final word
