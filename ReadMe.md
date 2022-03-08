@@ -48,12 +48,12 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 (if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite too)
 
 ## For Plugin Developers
-
+<details><summary>Click me to expand</summary>
 This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugins/plugintemplate) and the official [Scintilla](https://www.scintilla.org/) C++ Lexer. I managed to rewrite much of the plugin code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your LexXXX.cpp file on the project and add it to the [Lexer Catalogue](src/Lexers/LexerCatalogue.cpp)
 
 Also, for the NWScript compilation, I *"borrowed"* the [nwnsc code](https://github.com/Leonard-The-Wise/nwnsc), since trying to write a compiler from scratch would a monstrous task.
 
-As for the [`PCRE2`](PCRE/) folder up there... this is because during development and testing, I found out that this is the best regex engine out there, far superseding `std::regex` library, and (even the boost version). At least for the purpose of this project. See the [`trivia`] section down bellow for more info.
+As for the [`PCRE2`](PCRE/) folder up there... this is because during development and testing, I found out that this is the best regex engine out there, far superseding `std::regex` library, and (even the boost version). At least for the purpose of this project. See the [`development trivia`](#trivia) section down bellow for more info.
 
 All files under this project are provided under the [GPL v3.0 License](license.txt).
 
@@ -82,8 +82,10 @@ Interface functions required for NPP to use the lexer are declared with...
 `src\Lexers\Config\NWScript-Npp.xml` defines the language keywords & styles. Required for the plugin and will be published on project build.
 
 The Debugger is already set to autorun Notepad++.exe for all plataforms.
+	</details>
+## <a name="trivia"></a>Some development trivia
 
-## Some development trivia
+<details><summary>Click me to expand</summary>
 
 - This plugin was actually a self-imposed test, to write a nice piece of software in C++, something I've never done before. So far, I enjoyable experience, although with some severe caveats and dreadful cryptical errors - like linkage missing symbols, a LOT of different compiling warnings, unexpected code behavior, the mind-boggling pointer and reference usage that can get really complex and really messed up really fast... and a world of language differences and different standards and issues that other more "high level" syntax-siblings like Java, Javscript and even C# wouldn't experience. But aside from this, C++ gave me a view of internal machine workings that no other language ever gave me before... and I'm glad for that.
 
@@ -119,11 +121,11 @@ What I did know was that now I was able to close this issue and go back to addin
 
 *(and here ends the PCRE2 engine saga)*
 
----
+</details>
 
 ## A final word
 
-Well, if you read up to here, congrats, you got patience, and that's a virtue. :)
+Well, if you read up to here - also passing though the collapsed sections, congrats, you got patience, and that's a virtue. :)
 
 But anyway, if you're reading this, I just wish you the best luck in your Neverwinter project (since this plugin is just a helper to Neverwinter content creators, nothing more). As a Neverwinter Nights player and a GM myself, I always found that the community provided such an amazing ammount of good content, so that community creators deserved even more support and better tools to help them in developing their inventions for the community. 
 
@@ -134,5 +136,5 @@ As for any #issue found, please report it back [here](https://github.com/Leonard
 
 Best regards,
 
-Leonardo Silva 
-(aka: Leonard-The-Wise, my [D&D](https://dnd.wizards.com/) chosen [DM](https://en.wikipedia.org/wiki/Dungeon_Master) name)
+Leonardo Silva
+*(aka: Leonard-The-Wise, my [D&D](https://dnd.wizards.com/) chosen [DM](https://en.wikipedia.org/wiki/Dungeon_Master) name)*
