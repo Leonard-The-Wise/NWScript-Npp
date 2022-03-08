@@ -51,6 +51,10 @@ namespace NWScriptPlugin {
 			UnknownError = -3, BlockedByApplication, ReadOnlyFiles, RequiresAdminPrivileges, CheckSuccess
 		};
 
+		enum class DarkThemeStatus {
+			Uninstalled, Installed, Unsupported
+		};
+
 	public:
 
 		// ### Class Instantiation
@@ -92,6 +96,8 @@ namespace NWScriptPlugin {
 		HWND NotepadHwnd() const { return _notepadHwnd; }
 		// Retrieves the Plugin Path class
 		fs::path& PluginPath() const { return *_pluginPath; };
+		// Returns tha handle of Notepad++ Main Menu
+		HMENU GetNppMainMenu();
 
 		// ### Message Processing
 
@@ -141,8 +147,6 @@ namespace NWScriptPlugin {
 
 		// ### Initialization -> Setup bitmaps
 		
-		// Returns tha handle of Notepad++ Main Menu
-		HMENU GetNppMainMenu();
 		// Set a plugin menu Icon to a given stock Shell Icon
 		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
@@ -174,7 +178,7 @@ namespace NWScriptPlugin {
 
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
-		bool _isDarkThemeInstalled = false;
+		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 
 		// Internal classes
 
@@ -218,6 +222,7 @@ namespace NWScriptPlugin {
 		// Notepad Pseudo-Batch to restart Application if needed (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
 		generic_string _notepadPseudoBatchRestartFile;
 
+	public:
 		// Compilation-time information
 
 		// We are defining this on code and dynamic allocated, hence made it static.
