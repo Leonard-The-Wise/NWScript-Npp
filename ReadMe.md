@@ -117,9 +117,11 @@ But ALL of that work paid off when I put my new robust regexes to run inside PCR
 
 What I did know was that now I was able to close this issue and go back to adding features to my plugin again.
 
-(and here ends the PCRE2 engine saga)
+*(and here ends the PCRE2 engine saga)*
 
 ---
+
+## A final word
 
 Well, if you read up to here, congrats, you got patience, and that's a virtue. :)
 
