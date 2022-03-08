@@ -365,21 +365,78 @@ void Plugin::LoadNotepadLexer()
     _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
+// A helper routine to remove Dark Theme menu item
+void RemoveDarkThemeInstallMenu()
+{
+    HMENU hMenu = Plugin::Instance().GetNppMainMenu();
+    if (hMenu)
+    {
+        RemoveMenu(hMenu, Plugin::pluginFunctions[PLUGINMENU_INSTALLDARKTHEME]._cmdID, MF_BYCOMMAND);
+    }
+}
+
 // Detects if Dark Theme is already installed
 void Plugin::DetectDarkThemeInstall()
 {
+    // Here we are parsing the file silently
+    tinyxml2::XMLDocument darkThemeDoc;
+    errno_t error = darkThemeDoc.LoadFile(wstr2str(Instance()._notepadDarkThemeFilePath).c_str());
+    _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 
-
-    return;
-
-    // Remove the "Install Dark Theme" menu command
-    HMENU hMenu = Instance().GetNppMainMenu();
-    if (hMenu)
+    // Dark theme is incompatible or file is corrupted...
+    if (error)
     {
-        RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
+        RemoveDarkThemeInstallMenu();
+        return;
     }
 
-    _isDarkThemeInstalled = true;
+    // Safely navigate the XML nodes to avoid crashes
+    tinyxml2::XMLElement* rootNode = darkThemeDoc.RootElement();
+    tinyxml2::XMLElement* LexerStyles;
+    tinyxml2::XMLElement* lexerType;
+
+    if (rootNode)
+    {
+        LexerStyles = rootNode->FirstChildElement("LexerStyles");
+        if (LexerStyles)
+            lexerType = LexerStyles->FirstChildElement("LexerType");
+        else
+        {
+            RemoveDarkThemeInstallMenu();
+            return;
+        }
+    }
+    else
+    {
+        RemoveDarkThemeInstallMenu();
+        return;
+    }
+
+    //Again, if this is empty is because the file must be corrupted
+    if (!lexerType)
+    {
+        RemoveDarkThemeInstallMenu();
+        return;
+    }
+
+    // Search for lexer name inside. We're only supporting the first installed lexer here
+    bool bFound = false;
+    do
+    {
+        if (lexerType->Attribute("name", LexerCatalogue::GetLexerName(0)))
+            bFound = true;
+        lexerType = lexerType->NextSiblingElement("LexerType");
+    } while (!bFound && lexerType);
+
+    if (!bFound)
+    {
+        _pluginDarkThemeIs = DarkThemeStatus::Uninstalled;
+        return;
+    }
+
+    //Dark theme installed, mark it here.
+    RemoveDarkThemeInstallMenu();
+    _pluginDarkThemeIs = DarkThemeStatus::Installed;
 }
 
 // Setup menu icons
@@ -428,53 +485,39 @@ bool Plugin::SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool
 
 void Plugin::SetupMenuIcons()
 {
-    // Only show error messages once per session.
-    static bool bErrorShown = false;
-
-    // Only do file operations once per session.
-    static bool bFilesCheched = false;
-    static bool bSuccessLexer = false;
-    static bool bSuccessDark = false;
-    static FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
-    static FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
+    bool bSuccessLexer = false;
+    bool bSuccessDark = false;
+    FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
+    FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
 
     // Don't use the shield icons when user runs in Administrator mode
     if (IsUserAnAdmin())
         return;
 
-    if (!bFilesCheched)
-    {
-        // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
-        bSuccessLexer = CheckFileWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
-        bSuccessDark = CheckFileWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
-    }
+    // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
+    bSuccessLexer = CheckFileWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
+    bSuccessDark = CheckFileWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
 
-    if ((!bSuccessLexer || !bSuccessDark) && !bErrorShown)
+    if (!bSuccessLexer)
     {
         generic_stringstream sError;
-        sError << TEXT("Unable to read information for file(s) bellow: ") << "\r\n";
-        if (!bSuccessLexer)
-            sError << _pluginLexerConfigFilePath << "\r\n";
-        if (!bSuccessDark)
-            sError << _notepadDarkThemeFilePath << "\r\n";
+        sError << TEXT("Unable to read information for file bellow: ") << "\r\n";
+        sError << _pluginLexerConfigFilePath << "\r\n";
         sError << "\r\n";
         sError << "NWScript Plugin may not work properly, please check your installation!";
 
         ::MessageBox(_notepadHwnd, sError.str().c_str(), pluginName.c_str(), MB_ICONERROR | MB_APPLMODAL | MB_OK);
-
-        bErrorShown = true;
     }
 
-    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions and Reset Colors
+    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions
     if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
-    {
         SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
-        SetStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
-
-    }
     // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
-    if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _isDarkThemeInstalled == false)
+    if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
         SetStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
+    // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
+    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
+        SetStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
 #pragma endregion Menu icons setup
@@ -851,7 +894,7 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
             return;
         }
 
-        // Show File Parsing dialog message and since we don't want it to be modal, wait for callback in DoImportDefinitionsCallback.
+        // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in DoImportDefinitionsCallback.
         parseDialog.setEngineStructuresCount(myResults.EngineStructuresCount);
         parseDialog.setFunctionDefinitionsCount(myResults.FunctionsCount);
         parseDialog.setConstantsCount(myResults.ConstantsCount);
