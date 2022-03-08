@@ -138,7 +138,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
 	
 </details>
 	
-## <a name="trivia"></a>Some development trivia
+## <a name="trivia"></a>Some More Development Trivia
 <details><summary>Click here to expand</summary><br>
 
 
