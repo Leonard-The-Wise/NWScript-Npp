@@ -36,7 +36,7 @@ bool LineIndentor::isConditionExprLine(intptr_t lineNumber)
 	return false;
 }
 
-// Returns TRUE if there is a conditional (if | else | for | while) expression on lineNumber inside a Scintilla Text Editor window.
+// Look backwards to find targetSymbol
 intptr_t LineIndentor::findMachedBracePos(size_t startPos, size_t endPos, char targetSymbol, char matchedSymbol)
 {
 	if (startPos == endPos)
@@ -60,9 +60,7 @@ intptr_t LineIndentor::findMachedBracePos(size_t startPos, size_t endPos, char t
 			}
 		}
 	}
-	else // forward
-	{
-	}
+
 	return -1;
 }
 
