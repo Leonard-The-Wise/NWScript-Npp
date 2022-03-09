@@ -65,7 +65,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
     ``` C++
     constexpr static LexerDefinition InstalledLexers[] = {
 	{"YourLexerName", TEXT("Your Lexer Status Text"), ANY_NUMBER, 
-	   LexerScript::LexerFactoryFunction, ExternalLexerAutoIndentMode::XXX},
+	   LexerScript::LexerFactoryFunction, ExternalLexerAutoIndentMode::XXX},}
     };
     ```
 	
