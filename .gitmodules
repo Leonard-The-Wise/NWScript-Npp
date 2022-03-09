@@ -1,0 +1,3 @@
+[submodule "PCRE2"]
+	path = PCRE2
+	url = https://github.com/Leonard-The-Wise/pcre2
