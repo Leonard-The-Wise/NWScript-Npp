@@ -70,12 +70,13 @@
 
 #define ROBUSTREGEXDEFINITIONS
 #ifdef ROBUSTREGEXDEFINITIONS
-const std::string BASEREGEX(R"((?(DEFINE)(?<token>(?>([\w\d.\-]+|"(?:\\.|[^"\\])*")))(?<tokenVector>(?>\[(?>\g<validValue>(?=\])|\g<validValue>,(?=\g<validValue>))*+\]))(?<object>(?>\{(?>\g<validValue>(?=\})|\g<validValue>,(?=\g<validValue>))*+\}))(?<validValue>\s*+(?>\g<token>|\g<tokenVector>|\g<object>)\s*+)(?'param'(?>\s*+(?>const)?\s*+(?>(?#paramType)\w+)\s*+(?>(?#paramName)\w+)\s*+(?>=\s*+(?>(?#paramDefaultValue)\g<validValue>)){0,1})\s*+)))");
-const std::string COMMENTSREGEX(R"((?(DEFINE)(?'commentLine'(?>\/\/(?>.*+|\n)))(?'comment'(?>\/\*(?>\*\/|(?>(?>.|\n)(?!\*\/))*+)(?>(?>.|\n)(?=\*\/)(?>\*\/))?))(?'cnotnull'(?>\g<comment>|\g<commentLine>)++)(?'c'\g<cnotnull>?))\g<cnotnull>)");
-const std::string ENGINESTRUCTREGEX(R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))");
-const std::string FUNCTIONDECLARATIONREGEX = BASEREGEX + R"(^\s*+\K(?<type>(?>(?!(return|if|else|switch))\w+))\s*+(?<name>(?>\w+))\s*+\((?<parametersString>(?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+)\)\s*+;)";
-const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"(\s*+(?>const){0,1}\s*+(?<type>(?>\w+))\s*+(?<name>(?>\w+))\s*+(?>=\s*+(?<defaultValue>(?>\g<validValue>)))?\s*+,?)";
-const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>(?>const)?\s*+^\K(?<type>(?>\w+))\s*+(?<name>(?>\w+))\s*+=\s*+(?<value>\g<validValue>))\s*+;)";
+const std::string BASEREGEX = R"((?(DEFINE)(?<word>[\w\d.\-]++)(?<string>"(?>\\.|[^"\\]*+)*+")(?<token>\g<word>|\g<string>)(?<tokenVector>\[\s*+(?>\g<validValue>(?=\])|\g<validValue>,(?=\g<validValue>))*+\])(?<object>\{\s*+(?>\g<validValue>(?=\})|\g<validValue>,(?=\g<validValue>))*+\})(?<validValue>\s*+(?>\g<token>|\g<tokenVector>|\g<object>)\s*+)(?'param'\s*+(?>const)?\s*+(?#paramType)\w+\s*+(?#paramName)\w+\s*+(?>=\s*+(?#paramDefaultValue)\g<validValue>)?\s*+)(?<fnContents>{(?:[^{"}]*+|\g<string>|\g<fnContents>)*})))";
+const std::string COMMENTSREGEX = R"((?(DEFINE)(?'commentLine'\/\/.*+)(?'comment'\/\*(?>\*\/|(?>(?>.|\n)(?!\*\/))*+)(?>(?>.|\n)(?=\*\/)\*\/)?)(?'cnotnull'(?>\g<commentLine>|\g<comment>)++)(?'c'\g<cnotnull>?))\g<cnotnull>)";
+const std::string ENGINESTRUCTREGEX = R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))";
+const std::string FUNCTIONDECLARATIONREGEX = BASEREGEX + R"(^\s*+\K(?<type>\w+)\s*+(?<name>\w+)\s*+\((?<parametersString>(?>\g<param>(?=\))|\g<param>,(?=\g<param>))*+)\)\s*+;)";
+const std::string FUNCTIONSDEFINITIONREGEX = BASEREGEX + R"(^\s*+\K(?>\w+)\s*+(?>\w+)\s*+\((?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+\)\s*+\g<fnContents>)";
+const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"(\s*+(?>const)?\s*+(?'type'\w+)\s*+(?'name'\w+)\s*+(?>=\s*+(?'defaultValue'\g<validValue>))?\s*+,?)";
+const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>const)?\s*+\K(?<type>\w+)\s*+(?<name>\w+)\s*+=\s*+(?<value>\g<validValue>)\s*+;)";
 #else
 const std::string BASEREGEX(R"((?(DEFINE)(?<token>(?>("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(\[(?>\s*+(?>\g<token>|\g{5})\s*+,?)*+\s*+\]))(?<object>(\{(?>\s*+(?>\g<token>|\g<tokenVector>)\s*+,?)*+\s*+\}))))");
 const std::string ENGINESTRUCTREGEX(R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))");
@@ -216,8 +217,10 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	typedef jpcre2::select<char> pcre2;
 
 	// We create and compile regexes only once
+	static const pcre2::Regex commentsRegEx(COMMENTSREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex engineStructRegEx(ENGINESTRUCTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex functionsDeclarationRegEx(FUNCTIONDECLARATIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+	static const pcre2::Regex functionsDefinitionRegEx(FUNCTIONSDEFINITIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex functionsParamRegEx(FUNTIONPARAMETERREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex constantsRegEx(CONSTANTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
@@ -230,8 +233,10 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 
 	outParseResults.Members.reserve(1 + lineCount);
 
-	// First we strip file from all comments - even malformed ones, so we can use faster regexes for the rest
-	std::string cleanFile = pcre2::Regex(COMMENTSREGEX).replace(sFileContents, "", "gm");
+	// First we strip all comments - even malformed ones, so we can use faster regexes for the rest
+	std::string cleanFile = pcre2::Regex(commentsRegEx).replace(sFileContents, "", "gm");
+	// And then we strip function definitions - so we don't catch any scoped variable.
+	cleanFile = pcre2::Regex(functionsDefinitionRegEx).replace(cleanFile, "", "gm");
 
 	// Then we create the capture groups and first step: engine structs.
 	pcre2::VecNas captureGroup;
@@ -303,6 +308,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	static const pcre2::Regex commentsRegEx(str2wstr(COMMENTSREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex engineStructRegEx(str2wstr(ENGINESTRUCTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex functionsDeclarationRegEx(str2wstr(FUNCTIONDECLARATIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+	static const pcre2::Regex functionsDefinitionRegEx(str2wstr(FUNCTIONSDEFINITIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex functionsParamRegEx(str2wstr(FUNTIONPARAMETERREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 	static const pcre2::Regex constantsRegEx(str2wstr(CONSTANTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
@@ -320,12 +326,14 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	outParseResults.Members.reserve(1 + lineCount);
 
 	// First we strip file from all comments - even malformed ones, so we can use faster regexes for the rest
-	generic_string cleanFile = pcre2::Regex(str2wstr(COMMENTSREGEX)).replace(sNewFile, TEXT(""), "gm");
+	sNewFile = pcre2::Regex(commentsRegEx).replace(sNewFile, TEXT(""), "gm");
+	// And then we strip function definitions - so we don't catch any scoped variable.
+	sNewFile = pcre2::Regex(functionsDefinitionRegEx).replace(sNewFile, TEXT(""), "gm");
 
 	// Create our Match object and a named capture substring vector
 	pcre2::VecNas captureGroup;
 	pcre2::RegexMatch regexMatch(&engineStructRegEx);
-	regexMatch.setSubject(cleanFile);
+	regexMatch.setSubject(sNewFile);
 	regexMatch.addModifier("gm");
 	regexMatch.setNamedSubstringVector(&captureGroup);
 	size_t count = regexMatch.match();
