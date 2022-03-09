@@ -42,7 +42,7 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 ```
 - Also while playing back a macro, especially the type-in ones, you'll want to disable the Plugin's auto-indent feature, as the plugin will not be able to detect a macro playback and will end messing-up any text typed within that macro.
 
-***`From Notepad++ version 8.3.3 and beyond`***
+***`From Notepad++ version 8.3.3 and beyond`***:
 
 - Those issues were fixed *(thanks [`@DonHo`](https://github.com/donho) for accepting my pull request)* and no longer a concern, the option to select the plugin built-in auto-indentation won't even show up as an option to it's users anymore. So I suggest you to always keep your `Notepad++` version up-to-date.
 *(if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite, I promise)*.
@@ -65,7 +65,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
     ``` C++
     constexpr static LexerDefinition InstalledLexers[] = {
 	{"YourLexerName", TEXT("Your Lexer Status Text"), ANY_NUMBER, 
-	   LexerScript::LexerFactoryFunction, ExternalLexerAutoIndentMode::XXX},
+	   LexerScript::LexerFactoryFunction, ExternalLexerAutoIndentMode::XXX},}
     };
     ```
 	
