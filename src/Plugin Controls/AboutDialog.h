@@ -18,8 +18,6 @@ public:
 	};
 	void doDialog();
 
-	virtual void destroy() {};
-
 protected:
 	virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 private:

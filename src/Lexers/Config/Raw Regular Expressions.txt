@@ -12,56 +12,77 @@ Usage:
 - Paste the REGEX DEFINITIONS in your parser before pasting the actual Regex, or else the function
   will break.
 
-Example: the FULL Function declaration Regex will become like this:
-
-(?(DEFINE)(?'commentLine'(?>\/\/(?>\n|.*)))(?'comment'(?>\/\*(?>.|\n)*?\*\/))(?'c'(?>\s*+(?>\g<comment>|\g<commentLine>)?\s*+)*+)(?<token>(?>(?!(\/\/|\/\*))("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(?>\[\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\]))(?<object>(?>\{\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\}))(?'param'(?>\g<c>(?>const)?\g<c>(?>(?#paramType)\w+)\g<c>(?>(?#paramName)\w+)\g<c>(?>=\g<c>(?>(?#paramDefaultValue)\g<token>|\g<tokenVector>|\g<object>)){0,1})\g<c>))\g<c>(?>const){0,1}\g<c>(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>(?>=\g<c>(?<defaultValue>(?>\g<token>|\g<tokenVector>|\g<object>)))?\g<c>(?!,)?
-  
 ==================================================================================================
 
 NEW Functions are a more robust version of the regular expressions. They can handle object nesting,
 inline comments and will assure function parameters integrity.
 
---------------
+=================
 NEW Functions
---------------
+=================
 
-REGEX DEFINITIONS (Used in Function Declaration, Function Parameters and Constants)
-(?(DEFINE)(?'commentLine'(?>\/\/(?>\n|.*)))(?'comment'(?>\/\*(?>.|\n)*?\*\/))(?'c'(?>\s*+(?>\g<comment>|\g<commentLine>)?\s*+)*+)(?<token>(?>(?!(\/\/|\/\*))("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(?>\[\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\]))(?<object>(?>\{\g<c>(?>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>,?\g<c>)*?\g<c>\}))(?'param'(?>\g<c>(?>const)?\g<c>(?>(?#paramType)\w+)\g<c>(?>(?#paramName)\w+)\g<c>(?>=\g<c>(?>(?#paramDefaultValue)\g<token>|\g<tokenVector>|\g<object>)){0,1})\g<c>))
+A) REGEX DEFINITIONS
+---------------------------------------------------------------------------
 
-ENGINE STRUCTURES
+1) Version of definitions WITHOUT support for inline comments (NEW) - IN USE
+
+(?(DEFINE)(?<token>(?>([\w\d.\-]+|"(?:\\.|[^"\\])*")))(?<tokenVector>(?>\[(?>\g<validValue>(?=\])|\g<validValue>,(?=\g<validValue>))*+\]))(?<object>(?>\{(?>\g<validValue>(?=\})|\g<validValue>,(?=\g<validValue>))*+\}))(?<validValue>\s*+(?>\g<token>|\g<tokenVector>|\g<object>)\s*+)(?'param'(?>\s*+(?>const)?\s*+(?>(?#paramType)\w+)\s*+(?>(?#paramName)\w+)\s*+(?>=\s*+(?>(?#paramDefaultValue)\g<validValue>)){0,1})\s*+))
+
+2) Version of definitions WITH support for inline comments (OLD)
+
+(?(DEFINE)(?'commentLine'(?>\/\/(?>.*+|\n)))(?'comment'(?>\/\*(?>\*\/|(?>(?>.|\n)(?!\*\/))*+)(?>(?>.|\n)(?=\*\/)(?>\*\/))?))(?'cnotnull'(?>(?>\s*+\g<comment>\s*+)|(?>\s*+\g<commentLine>\s*+))++)(?'c'\g<cnotnull>|\s*+)(?<token>(?>([\w\d.\-]+|"(?:\\.|[^"\\])*")))(?<tokenVector>(?>\[(?>\g<validValue>(?=\])|\g<validValue>,(?=\g<validValue>))*+\]))(?<object>(?>\{(?>\g<validValue>(?=\})|\g<validValue>,(?=\g<validValue>))*+\}))(?<validValue>\g<c>(?>\g<token>|\g<tokenVector>|\g<object>)\g<c>)(?'param'(?>\g<c>(?>const)?\g<c>(?>(?#paramType)\w+)\g<c>(?>(?#paramName)\w+)\g<c>(?>=\g<c>(?>(?#paramDefaultValue)\g<validValue>)){0,1})\g<c>))
+
+B) COMMENTS
+---------------------------------------------------------------------------
+
+1) Used to strip file from comments first - even malformed multilined ones. - IN USE - fast
+(?(DEFINE)(?'commentLine'(?>\/\/(?>.*+|\n)))(?'comment'(?>\/\*(?>\*\/|(?>(?>.|\n)(?!\*\/))*+)(?>(?>.|\n)(?=\*\/)(?>\*\/))?))(?'cnotnull'(?>\g<comment>|\g<commentLine>)++)(?'c'\g<cnotnull>?))\g<cnotnull>
+
+C) ENGINE STRUCTURES
+---------------------------------------------------------------------------
+1) Capture Engine Structures - IN USE - fast
 ^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++)
 
-FUNCTION DECLARATION
+
+D) FUNCTION DECLARATION
+---------------------------------------------------------------------------
+1) These don't support scoping
+
+1.1) Version WITHOUT inline comments (NEW) - IN USE - fast
+^\s*+\K(?<type>(?>(?!(return|if|else|switch))\w+))\s*+(?<name>(?>\w+))\s*+\((?<parametersString>(?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+)\)\s*+;
+
+1.2) Version WITH inline comments (OLD) - slow
 ^\g<comment>*+\K(?<type>(?>(?!(return|if|else|switch))\w+))\g<c>(?<name>(?>\w+))\g<c>\((?<parametersString>(?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+)\)\g<c>;
 
-FUNCTION PARAMETERS (FOR PARSING <parametersString>)
-\g<c>(?>const){0,1}\g<c>(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>(?>=\g<c>(?<defaultValue>(?>\g<token>|\g<tokenVector>|\g<object>)))?\g<c>(?!,)?
+2) This one support scoping
 
-CONSTANTS - 
+2.1) Version WITH inline comments (OLD) - slowest
+\g<c>*+\K^\g<comment>*+(?<type>(?>(?!(return|if|else|switch))\w+))\g<c>(?<name>(?>\w+))\g<c>\((?<parametersString>(?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+)\)\g<c>;
+
+E) FUNCTION PARAMETERS (FOR PARSING <parametersString>)
+---------------------------------------------------------------------------
+
+1) Version WITHOUT inline comments (NEW) - IN USE - fast
+\s*+(?>const){0,1}\s*+(?<type>(?>\w+))\s*+(?<name>(?>\w+))\s*+(?>=\s*+(?<defaultValue>(?>\g<validValue>)))?\s*+,?
+
+2) Version WITH inline comments (OLD) - slow
+\g<c>(?>const){0,1}\g<c>(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>(?>=\g<c>(?<defaultValue>(?>\g<validValue>)))?\g<c>,?
+
+
+F) CONSTANTS
+---------------------------------------------------------------------------
+1) These don't support scoping
+
+1.2) Version WITHOUT inline comments (NEW) - IN USE - fast
+^\s*+(?>(?>const)?\s*+^\K(?<type>(?>\w+))\s*+(?<name>(?>\w+))\s*+=\s*+(?<value>\g<validValue>))\s*+;
+
+1.1) Version WITH inline comments (OLD) - slow
 ^\g<comment>*+(?>(?>const)?\g<c>^\K(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>=\g<c>(?<value>\g<token>|\g<tokenVector>|\g<object>))\g<c>;
 
+2) This one support scoping
 
-===========================================================
-
---------------
-OLD Functions
---------------
-
-REGEX DEFINITIONS (Used in Function Parameters and Constants)
-(?(DEFINE)(?<token>(?>("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(\[(?>\s*+(?>\g<token>|\g<object>)\s*+,?)*+\s*+\]))(?<object>(\{(?>\s*+(?>\g<token>|\g<tokenVector>)\s*+,?)*+\s*+\})))
-
-ENGINE STRUCTURES
-^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++)
-
-FUNCTION DECLARATIONS
-^\s*+(?<type>(?!(?>return|if|else))\w++)\s++(?<name>\w+)\s*+\(\s*+(?<parametersString>(?>[\w\s=\-\.\[\]\,\{\}]|(?>"(?>\\.|[^"\\])*+")*+)*+)\)\s*+;
-
-FUNCTION PARAMETERS (FOR PARSING <parametersString>)
-(?<type>\w++)\s*+(?<name>\w++)\s*+(?>=\s*+(?<defaultValue>(?>(?>\g<token>|\g<tokenVector>|\g<object>))))?,?
-
-CONSTANTS
-^\s*+(?>const)?\s*+(?<type>\w++)\s++(?<name>\w++)\s*+=?\s*+(?<value>\g<token>|\g<tokenVector>|\g<object>)\s*+;
-
+2.1) Version WITH inline comments (OLD) - slowest
+\g<c>*+\K^\g<comment>*+(?>(?>const)?\g<c>^\K(?<type>(?>\w+))\g<c>(?<name>(?>\w+))\g<c>=\g<c>(?<value>\g<token>|\g<tokenVector>|\g<object>))\g<c>;
 
 
 ================

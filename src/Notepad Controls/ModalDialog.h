@@ -32,6 +32,11 @@ public:
 	// Derived classes should implement this
 	virtual INT_PTR doDialog() = 0;
 
+	virtual void destroy() {
+		::DestroyWindow(_hSelf);
+		_hSelf = nullptr;
+	};
+
 protected:
 	// Derived classes should implement this
 	virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;

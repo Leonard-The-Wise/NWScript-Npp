@@ -312,6 +312,9 @@
       <Project>{1df4d158-6062-478b-aea1-84c235593f3d}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -876,7 +876,7 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
         return;
 
     generic_string nFileName;
-    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName))
+    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript*.nss\0All Files (*.*)\0*.*"), nFileName))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
         NWScriptParser nParser(Instance().NotepadHwnd());
