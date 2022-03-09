@@ -47,6 +47,7 @@ public :
     virtual void destroy() {
 		::SendMessage(_hParent, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, (WPARAM)_hSelf);
 		::DestroyWindow(_hSelf);
+		_hSelf = nullptr;
 	};
 
 protected :
