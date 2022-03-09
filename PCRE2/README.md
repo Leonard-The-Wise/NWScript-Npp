@@ -5,7 +5,7 @@ every it changes to suit my projects. But if you have any difficulties setting u
 usage of this library for yourself, feel free to copy one of the projects, because
 I've done all the config necessary to compile this on Visual Studio 2022.
 
-For information of what this library does, check the original [README.md](README-ORIGINAL.md) file.
+For information of what this library does, check the project's original [README.md](https://github.com/PhilipHazel/pcre2/blob/master/README.md) file.
 
 Cheers.
 
