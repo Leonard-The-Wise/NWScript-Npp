@@ -123,12 +123,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>PCRE2_STATIC;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AssemblerOutput>NoListing</AssemblerOutput>
@@ -178,12 +176,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>PCRE2_STATIC;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
