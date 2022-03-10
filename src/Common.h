@@ -206,13 +206,14 @@ namespace {
         return IconToBitmap(GetStockIcon(stockIconID, iconSize));
     }
 
-    enum class FileWritePermission {
+    enum class PathWritePermission {
         FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
     };
 
-    // Checks for a file's write permission.
-    // returns false if not successful (eg: file doesn't exist), else returns true and fills outFilePermission enums
-    bool CheckFileWritePermission(const generic_string& sFilePath, FileWritePermission& outFilePermission)
+
+    // Checks for a path's write permission.
+    // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums
+    bool CheckWritePermission(const generic_string& sFilePath, PathWritePermission& outFilePermission)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes = {};
         
@@ -224,7 +225,23 @@ namespace {
 
         if (attributes.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
         {
-            outFilePermission = FileWritePermission::FileIsReadOnly;
+            outFilePermission = PathWritePermission::FileIsReadOnly;
+            return true;
+        }
+
+        // On directories we try to write a temporary file to test permissions.
+        if (attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            TCHAR buffer[MAX_PATH];
+            UINT retval = GetTempFileName(sFilePath.c_str(), TEXT("nws"), 0, buffer);
+            if (retval == 0)
+            {
+               outFilePermission = PathWritePermission::RequiresAdminPrivileges;
+                return true;
+            }
+
+            DeleteFile(buffer);
+            outFilePermission = PathWritePermission::WriteAllowed;
             return true;
         }
 
@@ -240,20 +257,20 @@ namespace {
             switch (GetLastError())
             {
             case ERROR_ACCESS_DENIED:
-                outFilePermission = FileWritePermission::RequiresAdminPrivileges;
+                outFilePermission = PathWritePermission::RequiresAdminPrivileges;
                 break;
             case ERROR_SHARING_VIOLATION:
-                outFilePermission = FileWritePermission::BlockedByApplication;
+                outFilePermission = PathWritePermission::BlockedByApplication;
                 break;
             default:
-                outFilePermission = FileWritePermission::UndeterminedError;
+                outFilePermission = PathWritePermission::UndeterminedError;
             }
 
             return true;
         }
 
         CloseHandle(f);
-        outFilePermission = FileWritePermission::WriteAllowed;
+        outFilePermission = PathWritePermission::WriteAllowed;
         return true;
     }
 
@@ -327,7 +344,7 @@ namespace {
 
 }
 
-
+// Some common namespace uses across modules.
 namespace NWScriptPlugin {
     enum class RestartMode {
         None, Normal, Admin

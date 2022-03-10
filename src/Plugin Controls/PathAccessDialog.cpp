@@ -9,12 +9,12 @@
 #include <Commctrl.h>
 #include "Common.h"
 
-#include "FileAccessDialog.h"
+#include "PathAccessDialog.h"
 
 #include "PluginControlsRC.h"
 
 
-INT_PTR CALLBACK FileAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -33,7 +33,7 @@ INT_PTR CALLBACK FileAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 
 		// Set the text for accessed files.
 		::SetDlgItemText(_hSelf, IDC_LBLWARNING, _sWarning.c_str());
-		::SetDlgItemText(_hSelf, IDC_TXTREQUIREDFILES, _sFiles.str().c_str());
+		::SetDlgItemText(_hSelf, IDC_TXTREQUIREDFILES, _sPaths.str().c_str());
 		::SetDlgItemText(_hSelf, IDC_LBLSOLUTION, _sSolution.c_str());
 
 		// Set visibility and mode for admin
@@ -71,8 +71,8 @@ INT_PTR CALLBACK FileAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 	return FALSE;
 }
 
-INT_PTR FileAccessDialog::doDialog()
+INT_PTR PathAccessDialog::doDialog()
 {
-	return ShowModal(IDD_FILEACCESSDIALOG);
+	return ShowModal(IDD_PATHACCESSDIALOG);
 }
 

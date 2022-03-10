@@ -47,8 +47,8 @@ namespace NWScriptPlugin {
 		};
 
 		// File checks results
-		enum class FileCheckResults {
-			UnknownError = -3, BlockedByApplication, ReadOnlyFiles, RequiresAdminPrivileges, CheckSuccess
+		enum class PathCheckResults {
+			UnknownError = -3, BlockedByApplication, ReadOnly, RequiresAdminPrivileges, CheckSuccess
 		};
 
 		enum class DarkThemeStatus {
@@ -164,10 +164,10 @@ namespace NWScriptPlugin {
 		// ### User interfacing
 
 		// Do a full file permission check and show appropriate error dialogs to the user when required. Callers can set
-		// a function to be called automatically upon a possible program restart if FileCheckResults::RequiresAdminPrivileges is reached
-		// and the user selected to "Run as Administrator". If function returns FileCheckResults::RequiresAdminPrivileges, the caller should
+		// a function to be called automatically upon a possible program restart if PathCheckResults::RequiresAdminPrivileges is reached
+		// and the user selected to "Run as Administrator". If function returns PathCheckResults::RequiresAdminPrivileges, the caller should
 		// just quit the current procedure immediately.
-		FileCheckResults FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, RestartFunctionHook iFunctionToCallIfRestart);
+		PathCheckResults WritePermissionCheckup(const std::vector<generic_string>& sPaths, RestartFunctionHook iFunctionToCallIfRestart);
 
 		// ### Internal states and variables
 
@@ -220,6 +220,8 @@ namespace NWScriptPlugin {
 		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
 		generic_string _notepadDarkThemeFilePath;
 		// Notepad Functions AutoComplete Directory (eg: %ProgramFiles%\Notepad++\autoCompletion)
+		generic_string _notepadAutoCompleteInstallDir;
+		// Notepad Functions AutoComplete Directory (eg: %ProgramFiles%\Notepad++\autoCompletion\nwscript.xml)
 		generic_string _notepadAutoCompleteInstallPath;
 		// Notepad Pseudo-Batch to restart Application if needed (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
 		generic_string _notepadPseudoBatchRestartFile;
