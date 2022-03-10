@@ -13,7 +13,7 @@
  * Again, don't edit ProjectVersion.rc inside Visual Studio EVER... I warned you.
  * 
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
@@ -22,9 +22,9 @@
 #define stringify(a) stringify_(a)
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 4
-#define VERSION_PATCH 5
-#define VERSION_BUILD 762
+#define VERSION_MINOR 6
+#define VERSION_PATCH 2
+#define VERSION_BUILD 811
 
 #define VERSION_STRING stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." \
 	stringify(VERSION_PATCH) "." stringify(VERSION_BUILD)

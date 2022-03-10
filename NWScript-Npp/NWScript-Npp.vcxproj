@@ -250,6 +250,7 @@
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
     <ClInclude Include="..\src\Utils\VersionFromResource.h" />
     <ClInclude Include="..\src\WarningDialog.h" />
+    <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Lexers\LexerCatalogue.cpp" />

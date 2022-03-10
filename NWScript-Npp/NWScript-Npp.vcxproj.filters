@@ -160,6 +160,7 @@
     <ClInclude Include="..\src\Utils\jpcre2.hpp">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />

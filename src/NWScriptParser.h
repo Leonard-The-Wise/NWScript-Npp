@@ -2,13 +2,14 @@
  * Parser for a NWScript.nss file
  *
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
 
 // #define USEADVANCEDENCODINGDETECTION
 
+#include <iostream>
 #include <vector>
 #include "Common.h"
 
@@ -19,7 +20,7 @@ namespace NWScriptPlugin {
 
 	class NWScriptParser {
 	public:
-		enum class MemberID { Unknown, EngineStruct, Constant, Function };
+		enum class MemberID { Unknown, EngineStruct, Constant, Function, Keyword };
 
 		struct ScriptParamMember {
 			generic_string sType;
@@ -32,7 +33,7 @@ namespace NWScriptPlugin {
 			generic_string sType;
 			generic_string sName;
 			generic_string sValue;
-			std::vector<ScriptParamMember> sParams;
+			std::vector<ScriptParamMember> params;
 		};
 
 		struct ScriptParseResults
@@ -40,6 +41,7 @@ namespace NWScriptPlugin {
 			int EngineStructuresCount = 0;
 			int FunctionsCount = 0;
 			int ConstantsCount = 0;
+			int KeywordCount = 0;
 			std::vector<ScriptMember> Members;
 
 			generic_string MembersAsSpacedString(MemberID memberType) {
@@ -54,6 +56,13 @@ namespace NWScriptPlugin {
 				if (!results.empty())
 					results.pop_back();
 				return results;
+			}
+
+			void AddSpacedStringAsKeywords(const generic_string& sKWArray);
+
+			void Sort() {
+				std::sort(Members.begin(), Members.end(),
+					[](ScriptMember a, ScriptMember b) {  return a.sName < b.sName;});
 			}
 		};
 

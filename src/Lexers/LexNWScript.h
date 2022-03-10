@@ -1,16 +1,25 @@
-/** @file LexNWScript.h
- ** constants and classes required to interface LexNWScript class to plugin
+//:://////////////////////////////////////////////////////////////////////////////////////////////////////
+/** NWScript custom Lexer
+ ** @file LexNWScript.h
+ ** previous filename: LexCPP.h
+ ** 
+ ** Further folding features and configuration properties added by "Udo Lechner" <dlchnr(at)gmx(dot)net>
+ ** Added extensions of NWScript language, changed name and class by "Leonardo Silva"
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright 1998-2005 by Neil Hodgson <neilh@scintilla.org>
  // The License.txt file describes the conditions under which this software may be distributed.
+ //:://///////////////////////////////////////////////////////////////////////////////////////////////////
+ //:: Patched by Leonardo Silva
+ //:: File patched in Feb-2022 to adapt lexer for NWScript language
+ //:://///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#ifndef NOMINMAX              // When not defined, causes conflicts with std::max function used in NWScript Lexer
+ // When not defined, causes conflicts with std::max function used in NWScript Lexer
+#ifndef NOMINMAX             
 #undef max
 #define NOMINMAX              
 #endif
-
 
 #include <cstdlib>
 #include <cassert>

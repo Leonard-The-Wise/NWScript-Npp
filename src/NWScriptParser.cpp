@@ -2,7 +2,7 @@
  * Parser for a NWScript.nss file
  *
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <memory>
@@ -77,6 +77,7 @@ const std::string FUNCTIONDECLARATIONREGEX = BASEREGEX + R"(^\s*+\K(?<type>\w+)\
 const std::string FUNCTIONSDEFINITIONREGEX = BASEREGEX + R"(^\s*+\K(?>\w+)\s*+(?>\w+)\s*+\((?>(?>\g<param>,(?=\g<param>)|\g<param>(?=\))))*+\)\s*+\g<fnContents>)";
 const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"(\s*+(?>const)?\s*+(?'type'\w+)\s*+(?'name'\w+)\s*+(?>=\s*+(?'defaultValue'\g<validValue>))?\s*+,?)";
 const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>const)?\s*+\K(?<type>\w+)\s*+(?<name>\w+)\s*+=\s*+(?<value>\g<validValue>)\s*+;)";
+const std::string KEYWORDREGEX = R"(#?\w+)";
 #else
 const std::string BASEREGEX(R"((?(DEFINE)(?<token>(?>("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(\[(?>\s*+(?>\g<token>|\g{5})\s*+,?)*+\s*+\]))(?<object>(\{(?>\s*+(?>\g<token>|\g<tokenVector>)\s*+,?)*+\s*+\}))))");
 const std::string ENGINESTRUCTREGEX(R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))");
@@ -84,6 +85,23 @@ const std::string FUNCTIONDECLARATIONREGEX(R"(^\s*+(?<type>(?!(?>return|if|else)
 const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"((?>const){0,1}\s*+(?<type>\w++)\s++(?<name>\w++)\s*+(?>=\s*+(?<defaultValue>(?>(?>\g<token>|\g<tokenVector>|\g<object>))))?,?)";
 const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>const)?\s*+(?<type>\w++)\s++(?<name>\w++)\s*+=?\s*+(?<value>\g<token>|\g<tokenVector>|\g<object>)\s*+;)";
 #endif
+
+// We create and compile regexes only once during code initialization
+static const jpcre2::select<char>::Regex commentsRegEx(COMMENTSREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex engineStructRegEx(ENGINESTRUCTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex functionsDeclarationRegEx(FUNCTIONDECLARATIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex functionsDefinitionRegEx(FUNCTIONSDEFINITIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex functionsParamRegEx(FUNTIONPARAMETERREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex constantsRegEx(CONSTANTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+
+static const jpcre2::select<wchar_t>::Regex commentsRegExW(str2wstr(COMMENTSREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex engineStructRegExW(str2wstr(ENGINESTRUCTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex functionsDeclarationRegExW(str2wstr(FUNCTIONDECLARATIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex functionsDefinitionRegExW(str2wstr(FUNCTIONSDEFINITIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex functionsParamRegExW(str2wstr(FUNTIONPARAMETERREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex constantsRegExW(str2wstr(CONSTANTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+
+static const jpcre2::select<wchar_t>::Regex keywordImportW(str2wstr(KEYWORDREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
 constexpr const int blockSize = 128 * 1024 + 4;
 
@@ -141,10 +159,6 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 	{
 		CreateNWScriptStructureW(sFileContents, outParseResults);
 	}
-
-	// Before returning to the caller, we sort the structure to better presentation and so AutoComplete can work properly.
-	std::sort(outParseResults.Members.begin(), outParseResults.Members.end(), 
-		[](ScriptMember a, ScriptMember b)	{  return a.sName < b.sName;});
 
 	return true;
 
@@ -210,19 +224,32 @@ bool NWScriptParser::FileToBuffer(const generic_string& fileName, std::string& s
 	return true;
 }
 
+void NWScriptParser::ScriptParseResults::AddSpacedStringAsKeywords(const generic_string& sKWArray)
+{
+	typedef jpcre2::select<wchar_t> pcre2;
+
+	pcre2::RegexMatch regexMatch(&keywordImportW);
+	pcre2::VecNum matches;
+	regexMatch.setSubject(sKWArray);
+	regexMatch.addModifier("gm");
+	regexMatch.setNumberedSubstringVector(&matches);
+
+	size_t count = regexMatch.match();
+
+	Members.reserve(Members.size() + count);
+	for (size_t i = 0; i < count; i++)
+	{
+		ScriptMember m;
+		m.mID = MemberID::Keyword; m.sName = matches[i][0];
+		Members.emplace_back(m);
+	}
+}
+
 // Switched to PCRE2
 #ifndef USEBOOSTREGEX
 void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, ScriptParseResults& outParseResults)
 {
 	typedef jpcre2::select<char> pcre2;
-
-	// We create and compile regexes only once
-	static const pcre2::Regex commentsRegEx(COMMENTSREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex engineStructRegEx(ENGINESTRUCTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsDeclarationRegEx(FUNCTIONDECLARATIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsDefinitionRegEx(FUNCTIONSDEFINITIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsParamRegEx(FUNTIONPARAMETERREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex constantsRegEx(CONSTANTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
 	// Reserve a good amount of space since we're not doing dynamic reallocations. 1 member per line is more than enough
 	// Try standard EOL mode (\n). Then alternative (\r). Minimum to reserve is assumed to 1 member since at least 1 line 
@@ -249,7 +276,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	// Iterate through results. Since we're expecting generic_strings here
 	// we also do character conversion.
 	outParseResults.EngineStructuresCount = count;
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::EngineStruct; n.sName = str2wstr(captureGroup[i]["name"]);
@@ -265,23 +292,23 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	regexMatchSubString.addModifier("gm");
 	pcre2::VecNas captureSubGroup;
 	regexMatchSubString.setNamedSubstringVector(&captureSubGroup);
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
-		std::vector<ScriptParamMember> sParams;
+		std::vector<ScriptParamMember> params;
 
 		regexMatchSubString.setSubject(captureGroup[i]["parametersString"]);
-		size_t params = regexMatchSubString.match();
-		for (size_t j = 0; j < params; j++)
+		size_t nParams = regexMatchSubString.match();
+		for (size_t j = 0; j < nParams; j++)
 		{
 			ScriptParamMember s;
 			s.sType = str2wstr(captureSubGroup[j]["type"]); s.sName = str2wstr(captureSubGroup[j]["name"]);
 			s.sDefaultValue = str2wstr(captureSubGroup[j]["defaultValue"]);
-			sParams.push_back(s);
+			params.push_back(s);
 		}
 
 		NWScriptParser::ScriptMember Me;
 		Me.mID = MemberID::Function; Me.sType = str2wstr(captureGroup[i]["type"]);
-		Me.sName = str2wstr(captureGroup[i]["name"]); Me.sParams = sParams;
+		Me.sName = str2wstr(captureGroup[i]["name"]); Me.params = params;
 		outParseResults.Members.emplace_back(Me);
 	}
 
@@ -289,7 +316,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	count = regexMatch.match();
 
 	outParseResults.ConstantsCount = count;
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::Constant; n.sType = str2wstr(captureGroup[i]["type"]); n.sName = str2wstr(captureGroup[i]["name"]);
@@ -303,14 +330,6 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, ScriptParseResults& outParseResults)
 {
 	typedef jpcre2::select<wchar_t> pcre2;
-
-	// We create and compile regexes only once
-	static const pcre2::Regex commentsRegEx(str2wstr(COMMENTSREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex engineStructRegEx(str2wstr(ENGINESTRUCTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsDeclarationRegEx(str2wstr(FUNCTIONDECLARATIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsDefinitionRegEx(str2wstr(FUNCTIONSDEFINITIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex functionsParamRegEx(str2wstr(FUNTIONPARAMETERREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-	static const pcre2::Regex constantsRegEx(str2wstr(CONSTANTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
 	// Since we're not re-encoding the file, we just assign pointers. Hopefully our encoding detector was right...
 	std::wstring sNewFile;
@@ -326,13 +345,13 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	outParseResults.Members.reserve(1 + lineCount);
 
 	// First we strip file from all comments - even malformed ones, so we can use faster regexes for the rest
-	sNewFile = pcre2::Regex(commentsRegEx).replace(sNewFile, TEXT(""), "gm");
+	sNewFile = pcre2::Regex(commentsRegExW).replace(sNewFile, TEXT(""), "gm");
 	// And then we strip function definitions - so we don't catch any scoped variable.
-	sNewFile = pcre2::Regex(functionsDefinitionRegEx).replace(sNewFile, TEXT(""), "gm");
+	sNewFile = pcre2::Regex(functionsDefinitionRegExW).replace(sNewFile, TEXT(""), "gm");
 
 	// Create our Match object and a named capture substring vector
 	pcre2::VecNas captureGroup;
-	pcre2::RegexMatch regexMatch(&engineStructRegEx);
+	pcre2::RegexMatch regexMatch(&engineStructRegExW);
 	regexMatch.setSubject(sNewFile);
 	regexMatch.addModifier("gm");
 	regexMatch.setNamedSubstringVector(&captureGroup);
@@ -341,47 +360,47 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	// Iterate through results. Since we're expecting generic_strings here
 	// we also do character conversion.
 	outParseResults.EngineStructuresCount = count;
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::EngineStruct; n.sName = captureGroup[i][L"name"];
 		outParseResults.Members.emplace_back(n);
 	}
 
-	regexMatch.setRegexObject(&functionsDeclarationRegEx);
+	regexMatch.setRegexObject(&functionsDeclarationRegExW);
 	count = regexMatch.match();
 
 	outParseResults.FunctionsCount = count;
 
-	pcre2::RegexMatch regexMatchSubString(&functionsParamRegEx);
+	pcre2::RegexMatch regexMatchSubString(&functionsParamRegExW);
 	regexMatchSubString.addModifier("gm");
 	pcre2::VecNas captureSubGroup;
 	regexMatchSubString.setNamedSubstringVector(&captureSubGroup);
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
-		std::vector<ScriptParamMember> sParams;
+		std::vector<ScriptParamMember> params;
 
 		regexMatchSubString.setSubject(captureGroup[i][L"parametersString"]);
-		size_t params = regexMatchSubString.match();
-		for (size_t j = 0; j < params; j++)
+		size_t nParams = regexMatchSubString.match();
+		for (size_t j = 0; j < nParams; j++)
 		{
 			ScriptParamMember s;
 			s.sType = captureSubGroup[j][L"type"]; s.sName = captureSubGroup[j][L"name"];
 			s.sDefaultValue = captureSubGroup[j][L"defaultValue"];
-			sParams.push_back(s);
+			params.push_back(s);
 		}
 
 		NWScriptParser::ScriptMember Me;
 		Me.mID = MemberID::Function; Me.sType = captureGroup[i][L"type"];
-		Me.sName = captureGroup[i][L"name"]; Me.sParams = sParams;
+		Me.sName = captureGroup[i][L"name"]; Me.params = params;
 		outParseResults.Members.emplace_back(Me);
 	}
 
-	regexMatch.setRegexObject(&constantsRegEx);
+	regexMatch.setRegexObject(&constantsRegExW);
 	count = regexMatch.match();
 
 	outParseResults.ConstantsCount = count;
-	for (size_t i = 0; i < count;i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::Constant; n.sType = captureGroup[i][L"type"]; n.sName = captureGroup[i][L"name"];
@@ -428,7 +447,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	for (asregex_iterator i = sBegin; i != sEnd; i++)
 	{
 		m = *i;
-		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
+		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, params = {empty}
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::EngineStruct; n.sName = str2wstr(m["name"].str().c_str());
 		outParseResults.Members.emplace_back(n);
@@ -444,7 +463,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	for (asregex_iterator i = sBegin; i != sEnd; i++)
 	{
 		m = *i;
-		std::vector<ScriptParamMember> sParams;
+		std::vector<ScriptParamMember> params;
 
 		std::string eMatch = m["parametersString"].str().c_str();
 		auto sBegin2 = asregex_iterator(eMatch.begin(), eMatch.end(), sFunctionsParamRegExA);
@@ -456,14 +475,14 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 			ScriptParamMember s;
 			s.sType = str2wstr(n["type"].str().c_str()); s.sName = str2wstr(n["name"].str().c_str());
 			s.sDefaultValue = n.size() > 4 ? str2wstr(n["defaultValue"].str().c_str()) : nullptr;
-			sParams.push_back(s);
+			params.push_back(s);
 		}
 
-		// We are pushing back MemberID = Function, sType = <type>, sName = <name>, sValue = nullptr, sParams = { <subquery> }
+		// We are pushing back MemberID = Function, sType = <type>, sName = <name>, sValue = nullptr, params = { <subquery> }
 		// {<subquery>} = sType = <ptype>, sName = <pname>, sDefaultValue = <defaultvalue>
 		NWScriptParser::ScriptMember Me;
 		Me.mID = MemberID::Function; Me.sType = str2wstr(m["type"].str().c_str());
-		Me.sName = str2wstr(m["name"].str().c_str()); Me.sParams = sParams;
+		Me.sName = str2wstr(m["name"].str().c_str()); Me.params = params;
 		outParseResults.Members.emplace_back(Me);
 		iCount++;
 	}
@@ -477,7 +496,7 @@ void NWScriptParser::CreateNWScriptStructureA(const std::string& sFileContents, 
 	{
 		m = *i;
 
-		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
+		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, params = {empty}
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::Constant; n.sType = str2wstr(m["type"].str().c_str()), n.sName = str2wstr(m["name"].str().c_str());
 		n.sValue = str2wstr(m["value"].str().c_str());
@@ -527,7 +546,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	for (wsregex_iterator i = sBegin; i != sEnd; i++)
 	{
 		m = *i;
-		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
+		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, params = {empty}
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::EngineStruct; n.sName = m["name"].str().c_str();
 		outParseResults.Members.emplace_back(n);
@@ -543,7 +562,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	for (wsregex_iterator i = sBegin; i != sEnd; i++)
 	{
 		m = *i;
-		std::vector<ScriptParamMember> sParams;
+		std::vector<ScriptParamMember> params;
 
 		std::wstring eMatch = m["parametersString"].str().c_str();
 		auto sBegin2 = wsregex_iterator(eMatch.begin(), eMatch.end(), sFunctionsParamRegExW);
@@ -555,14 +574,14 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 			ScriptParamMember s;
 			s.sType = n["type"].str().c_str(); s.sName = n["name"].str().c_str();
 			s.sDefaultValue = n.size() > 4 ? n["defaultValue"].str().c_str() : nullptr;
-			sParams.push_back(s);
+			params.push_back(s);
 		}
 
-		// We are pushing back MemberID = Function, sType = <type>, sName = <name>, sValue = nullptr, sParams = { <subquery> }
+		// We are pushing back MemberID = Function, sType = <type>, sName = <name>, sValue = nullptr, params = { <subquery> }
 		// {<subquery>} = sType = <ptype>, sName = <pname>, sDefaultValue = <defaultvalue>
 		NWScriptParser::ScriptMember Me;
 		Me.mID = MemberID::Function; Me.sType = m["type"].str().c_str();
-		Me.sName = m["name"].str().c_str(); Me.sParams = sParams;
+		Me.sName = m["name"].str().c_str(); Me.params = params;
 		outParseResults.Members.emplace_back(Me);
 		iCount++;
 	}
@@ -576,7 +595,7 @@ void NWScriptParser::CreateNWScriptStructureW(const std::string& sFileContents, 
 	{
 		m = *i;
 
-		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, sParams = {empty}
+		// We are emplacing back MemberID = EngineStruct, sType = null, sName = <name>, sValue = nullptr, params = {empty}
 		NWScriptParser::ScriptMember n;
 		n.mID = MemberID::Constant; n.sType = m["type"].str().c_str(), n.sName = m["name"].str().c_str();
 		n.sValue = m["value"].str().c_str();

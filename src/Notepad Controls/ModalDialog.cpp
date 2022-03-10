@@ -2,7 +2,7 @@
  * Tweaks for StaticDialog to show a Modal Dialog instead.
  *
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <stdexcept>

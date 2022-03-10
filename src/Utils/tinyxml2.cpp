@@ -1210,6 +1210,7 @@ namespace tinyxml2
             return p;
         }
         else {
+#pragma warning (disable: 26812)
             int flags = _document->ProcessEntities() ? StrPair::TEXT_ELEMENT : StrPair::TEXT_ELEMENT_LEAVE_ENTITIES;
             if (_document->WhitespaceMode() == COLLAPSE_WHITESPACE) {
                 flags |= StrPair::NEEDS_WHITESPACE_COLLAPSING;
