@@ -25,7 +25,7 @@
 
 #include "AboutDialog.h"
 #include "WarningDialog.h"
-#include "FileAccessDialog.h"
+#include "PathAccessDialog.h"
 #include "FileParseSummaryDialog.h"
 
 #include "XMLGenStrings.h"
@@ -35,7 +35,6 @@
 
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
-
 
 // Static members definition
 generic_string Plugin::pluginName = TEXT("NWScript Tools");
@@ -82,9 +81,6 @@ const generic_string fixedPreProcInstructionSet = TEXT("#define #include");
 const generic_string fixedInstructionSet = TEXT("break case continue default do else FALSE for if return switch TRUE while");
 const generic_string fixedKeywordSet = TEXT("action command const float int string struct vector void");
 const generic_string fixedObjKeywordSet = TEXT("object OBJECT_INVALID OBJECT_SELF");
-
-// Some comments on XML generation
-
 
 #pragma region
 
@@ -159,6 +155,7 @@ void Plugin::SetNotepadData(NppData data)
     _notepadAutoCompleteInstallPath = _notepadInstallDir;
     _notepadAutoCompleteInstallPath.append(TEXT("\\"));
     _notepadAutoCompleteInstallPath.append(NotepadAutoCompleteRootDir);
+    _notepadAutoCompleteInstallDir = _notepadAutoCompleteInstallPath;
     generic_string lexerNameLower = str2wstr(LexerCatalogue::GetLexerName(0)); // lexer names on auto complete folder are lowercase
     std::transform(lexerNameLower.begin(), lexerNameLower.end(), lexerNameLower.begin(), ::tolower);
     _notepadAutoCompleteInstallPath.append(lexerNameLower);  // supporting only 1 lexer here
@@ -510,18 +507,22 @@ void Plugin::SetupMenuIcons()
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
     bool bAutoComplete = false;
-    FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
-    FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
-    FileWritePermission fAutoCompletePerm = FileWritePermission::UndeterminedError;
+    PathWritePermission fLexerPerm = PathWritePermission::UndeterminedError;
+    PathWritePermission fDarkThemePerm = PathWritePermission::UndeterminedError;
+    PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
     // Don't use the shield icons when user runs in Administrator mode
     if (IsUserAnAdmin())
         return;
 
     // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
-    bSuccessLexer = CheckFileWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
-    bSuccessDark = CheckFileWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
-    bAutoComplete = CheckFileWritePermission(_notepadAutoCompleteInstallPath, fAutoCompletePerm);
+    bSuccessLexer = CheckWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
+    bSuccessDark = CheckWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
+    bAutoComplete = CheckWritePermission(_notepadAutoCompleteInstallPath, fAutoCompletePerm);
+
+    // If this file do not exist, we test the directory instead
+    if (!bAutoComplete)
+        bAutoComplete = CheckWritePermission(_notepadAutoCompleteInstallDir, fAutoCompletePerm);
 
     if (!bSuccessLexer)
     {
@@ -535,13 +536,13 @@ void Plugin::SetupMenuIcons()
     }
 
     // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
-    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == FileWritePermission::RequiresAdminPrivileges)
+    if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
         SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
     // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
-    if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
+    if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
         SetStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
     // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
-    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
+    if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
         SetStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
@@ -851,43 +852,43 @@ void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
 
 #pragma region
 
-Plugin::FileCheckResults Plugin::FilesWritePermissionCheckup(const std::vector<generic_string>& sFiles, RestartFunctionHook iFunctionToCallIfRestart)
+Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generic_string>& paths, RestartFunctionHook iFunctionToCallIfRestart)
 {
-    struct stCheckedFiles {
+    struct stCheckedPaths {
         bool bExists;
-        generic_string sFile;
-        FileWritePermission fPerm;
+        generic_string path;
+        PathWritePermission fPerm;
     };
 
-    std::vector<stCheckedFiles> checkedFiles;
-    checkedFiles.reserve(sFiles.size());
+    std::vector<stCheckedPaths> checkedPaths;
+    checkedPaths.reserve(paths.size());
 
     // Batch check files
-    for (const generic_string& s : sFiles)
+    for (const generic_string& s : paths)
     {
         bool bExists = false;
-        FileWritePermission fPerm = FileWritePermission::UndeterminedError;
+        PathWritePermission fPerm = PathWritePermission::UndeterminedError;
 
-        bExists = CheckFileWritePermission(s, fPerm);
-        checkedFiles.emplace_back(stCheckedFiles{ bExists, s, fPerm });
+        bExists = CheckWritePermission(s, fPerm);
+        checkedPaths.emplace_back(stCheckedPaths{ bExists, s, fPerm });
     }
 
     // Check for Admin privileges required first
-    std::vector<generic_string> sWhichFiles;
-    for (stCheckedFiles& st : checkedFiles)
+    std::vector<generic_string> sWhichPaths;
+    for (stCheckedPaths& st : checkedPaths)
     {
-        if (st.fPerm == FileWritePermission::RequiresAdminPrivileges)
-            sWhichFiles.push_back(st.sFile);
+        if (st.fPerm == PathWritePermission::RequiresAdminPrivileges)
+            sWhichPaths.push_back(st.path);
     }
-    if (sWhichFiles.size() > 0)
+    if (sWhichPaths.size() > 0)
     {
         // Show File Access dialog box in Admin Mode
-        FileAccessDialog ePermission = {};
+        PathAccessDialog ePermission = {};
         ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(true);
         ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
-        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following file(s):"));
-        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following files/directories:"));
+        ePermission.SetPathsText(sWhichPaths);
         ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
 - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
 
@@ -900,78 +901,78 @@ Plugin::FileCheckResults Plugin::FilesWritePermissionCheckup(const std::vector<g
             Messenger().SendNppMessage(WM_CLOSE, 0, 0);
         }
 
-        return FileCheckResults::RequiresAdminPrivileges;
+        return PathCheckResults::RequiresAdminPrivileges;
     }
 
     // Check for read-only second
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
     {
-        if (st.fPerm == FileWritePermission::FileIsReadOnly)
-            sWhichFiles.push_back(st.sFile);
+        if (st.fPerm == PathWritePermission::FileIsReadOnly)
+            sWhichPaths.push_back(st.path);
     }
-    if (sWhichFiles.size() > 0)
+    if (sWhichPaths.size() > 0)
     {
         // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
+        PathAccessDialog ePermission = {};
         ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
         ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
-        ePermission.SetFilesText(sWhichFiles);
-        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary file permissions to use this option.\r\n \
+        ePermission.SetPathsText(sWhichPaths);
+        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary permissions to use this option.\r\n \
   Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
         INT_PTR ignore = ePermission.doDialog();
 
-        return FileCheckResults::ReadOnlyFiles;
+        return PathCheckResults::ReadOnly;
     }
 
     // Check for blocked by application third
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
     {
-        if (st.fPerm == FileWritePermission::BlockedByApplication)
-            sWhichFiles.push_back(st.sFile);
+        if (st.fPerm == PathWritePermission::BlockedByApplication)
+            sWhichPaths.push_back(st.path);
     }
-    if (sWhichFiles.size() > 0)
+    if (sWhichPaths.size() > 0)
     {
         // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
+        PathAccessDialog ePermission = {};
         ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
         ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
-        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetPathsText(sWhichPaths);
         ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
         INT_PTR ignore = ePermission.doDialog();
 
-        return FileCheckResults::BlockedByApplication;
+        return PathCheckResults::BlockedByApplication;
     }
 
     // Finally, check for inexistent files and/or other unknown errors
-    sWhichFiles.clear();
-    for (stCheckedFiles& st : checkedFiles)
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
     {
-        if (st.bExists == false || st.fPerm == FileWritePermission::UndeterminedError)
-            sWhichFiles.push_back(st.sFile);
+        if (st.bExists == false || st.fPerm == PathWritePermission::UndeterminedError)
+            sWhichPaths.push_back(st.path);
     }
-    if (sWhichFiles.size() > 0)
+    if (sWhichPaths.size() > 0)
     {
         // Show File Access dialog box in Normal Mode
-        FileAccessDialog ePermission = {};
+        PathAccessDialog ePermission = {};
         ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
         ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
-        ePermission.SetFilesText(sWhichFiles);
+        ePermission.SetPathsText(sWhichPaths);
         ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
 you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
         INT_PTR ignore = ePermission.doDialog();
 
-        return FileCheckResults::UnknownError;
+        return PathCheckResults::UnknownError;
     }
 
-    return FileCheckResults::CheckSuccess;
+    return PathCheckResults::CheckSuccess;
 }
 
 // Support for Auto-Indentation for old versions of Notepad++
@@ -1036,9 +1037,13 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._pluginLexerConfigFilePath);
-    sFiles.push_back(Instance()._notepadAutoCompleteInstallPath);
+    // The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
+    if (PathFileExists(Instance()._notepadAutoCompleteInstallPath.c_str()))
+        sFiles.push_back(Instance()._notepadAutoCompleteInstallPath);
+    else
+        sFiles.push_back(Instance()._notepadAutoCompleteInstallDir);    
 
-    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::None);
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
     if (static_cast<int>(fResult) < 1)
         return;
 
@@ -1078,7 +1083,7 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._pluginLexerConfigFilePath);
 
-    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::ResetEditorColorsPhase1);
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::ResetEditorColorsPhase1);
     if (static_cast<int>(fResult) < 1)
         return;
 
@@ -1092,7 +1097,7 @@ PLUGINCOMMAND Plugin::InstallDarkTheme()
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._notepadDarkThemeFilePath);
 
-    FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
     if (static_cast<int>(fResult) < 1)
         return;
 

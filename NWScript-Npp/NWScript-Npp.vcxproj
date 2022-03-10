@@ -225,7 +225,7 @@
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\FileAccessDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
@@ -259,7 +259,7 @@
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\NWScriptParser.cpp" />
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">

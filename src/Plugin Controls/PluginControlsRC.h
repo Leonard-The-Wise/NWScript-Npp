@@ -9,6 +9,7 @@
 #define IDB_HEREBEDRAGONS               103
 #define IDD_HEREBEDRAGONS               104
 #define IDD_FILEACCESSDIALOG            106
+#define IDD_PATHACCESSDIALOG            106
 #define IDD_PARSERESULTS                108
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001

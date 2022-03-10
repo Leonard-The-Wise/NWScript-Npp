@@ -132,7 +132,7 @@
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\FileAccessDialog.h">
+    <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h">
@@ -200,7 +200,7 @@
     <ClCompile Include="..\src\WarningDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\FileAccessDialog.cpp">
+    <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp">
