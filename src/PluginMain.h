@@ -2,7 +2,7 @@
  * Definitions for the plugin class
  * 
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
@@ -219,6 +219,8 @@ namespace NWScriptPlugin {
 		generic_string _notepadThemesInstallDir;
 		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
 		generic_string _notepadDarkThemeFilePath;
+		// Notepad Functions AutoComplete Directory (eg: %ProgramFiles%\Notepad++\autoCompletion)
+		generic_string _notepadAutoCompleteInstallPath;
 		// Notepad Pseudo-Batch to restart Application if needed (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
 		generic_string _notepadPseudoBatchRestartFile;
 

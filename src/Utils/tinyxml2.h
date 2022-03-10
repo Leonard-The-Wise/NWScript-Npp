@@ -206,6 +206,7 @@ namespace tinyxml2
     class DynArray
     {
     public:
+#pragma warning (disable: 26495)
         DynArray() :
             _mem(_pool),
             _allocated(INITIAL_SIZE),

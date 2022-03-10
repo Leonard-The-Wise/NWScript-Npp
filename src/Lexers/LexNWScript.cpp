@@ -1,13 +1,17 @@
-// Scintila NWScript custom Lexer
-/** @file LexNWScript.cpp
- ** previous filename LexCPP.cpp
- ** Modified C++ Lexer NWScript.
+//:://////////////////////////////////////////////////////////////////////////////////////////////////////
+/** NWScript custom Lexer
+ ** @file LexNWScript.cpp
+ ** previous filename: LexCPP.cpp
+ **
  ** Further folding features and configuration properties added by "Udo Lechner" <dlchnr(at)gmx(dot)net>
  ** Added extensions of NWScript language, changed name and class by "Leonardo Silva"
  **/
-// Copyright 1998-2005 by Neil Hodgson <neilh@scintilla.org>
-// The License.txt file describes the conditions under which this software may be distributed.
-
+ // Copyright 1998-2005 by Neil Hodgson <neilh@scintilla.org>
+ // The License.txt file describes the conditions under which this software may be distributed.
+ //:://///////////////////////////////////////////////////////////////////////////////////////////////////
+ //:: Patched by Leonardo Silva
+ //:: File patched in Feb-2022 to adapt lexer for NWScript language
+ //:://///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "LexNWScript.h"
 
@@ -16,7 +20,6 @@
 * Implementations of LexNWScript class
 *
 */
- 
 
 Sci_Position SCI_METHOD LexerNWScript::PropertySet(const char *key, const char *val) {
 	if (osNWScript.PropertySet(&options, key, val)) {

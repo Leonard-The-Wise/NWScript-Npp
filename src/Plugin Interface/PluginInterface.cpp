@@ -3,7 +3,7 @@
  * All message handles are processed in PluginMain.cpp
  * 
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #include "PluginInterface.h"

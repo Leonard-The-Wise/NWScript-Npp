@@ -4,7 +4,7 @@
  * The ACTUAL DLL Entry point is defined in PluginInterface.cpp
  * 
  **/
- // Copyright 2022 by Leonardo Silva 
+ // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <Windows.h>
@@ -14,11 +14,11 @@
 #include <ShlObj.h>
 #include <codecvt>
 #include <locale>
+#include <cwchar>
 
 #include "Common.h"
 #include "LexerCatalogue.h"
 #include "tinyxml2.h"
-#include "NotepadInternalMessages.h"
 
 #include "PluginMain.h"
 #include "PluginControlsRC.h"
@@ -27,6 +27,9 @@
 #include "WarningDialog.h"
 #include "FileAccessDialog.h"
 #include "FileParseSummaryDialog.h"
+
+#include "XMLGenStrings.h"
+
 
 #pragma warning (disable : 6387)
 
@@ -68,8 +71,20 @@ const generic_string NotepadPluginConfigRootDir = TEXT("config\\");
 const generic_string NotepadDefaultThemesRootDir = TEXT("themes\\");
 // Notepad Default Dark Theme file. We made it const, since we're not retrieving this outside a plugin build
 const generic_string NotepadDefaultDarkThemeFile = TEXT("DarkModeDefault.xml");
+// Notepad Default Auto Completion directory.
+const generic_string NotepadAutoCompleteRootDir = TEXT("autoCompletion\\");
 // Default pseudo-batch file to create in case we need to restart notepad++
 const generic_string NotepadPseudoBatchRestartFile = TEXT("~doNWScriptNotepadRestart.bat");
+
+// Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
+// this will ever change, so we made them constants here.
+const generic_string fixedPreProcInstructionSet = TEXT("#define #include");
+const generic_string fixedInstructionSet = TEXT("break case continue default do else FALSE for if return switch TRUE while");
+const generic_string fixedKeywordSet = TEXT("action command const float int string struct vector void");
+const generic_string fixedObjKeywordSet = TEXT("object OBJECT_INVALID OBJECT_SELF");
+
+// Some comments on XML generation
+
 
 #pragma region
 
@@ -141,6 +156,13 @@ void Plugin::SetNotepadData(NppData data)
     _notepadThemesInstallDir.append(NotepadDefaultThemesRootDir);
     _notepadDarkThemeFilePath = _notepadThemesInstallDir;
     _notepadDarkThemeFilePath.append(NotepadDefaultDarkThemeFile);
+    _notepadAutoCompleteInstallPath = _notepadInstallDir;
+    _notepadAutoCompleteInstallPath.append(TEXT("\\"));
+    _notepadAutoCompleteInstallPath.append(NotepadAutoCompleteRootDir);
+    generic_string lexerNameLower = str2wstr(LexerCatalogue::GetLexerName(0)); // lexer names on auto complete folder are lowercase
+    std::transform(lexerNameLower.begin(), lexerNameLower.end(), lexerNameLower.begin(), ::tolower);
+    _notepadAutoCompleteInstallPath.append(lexerNameLower);  // supporting only 1 lexer here
+    _notepadAutoCompleteInstallPath.append(TEXT(".xml"));
 
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETNPPFULLFILEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
@@ -487,8 +509,10 @@ void Plugin::SetupMenuIcons()
 {
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
+    bool bAutoComplete = false;
     FileWritePermission fLexerPerm = FileWritePermission::UndeterminedError;
     FileWritePermission fDarkThemePerm = FileWritePermission::UndeterminedError;
+    FileWritePermission fAutoCompletePerm = FileWritePermission::UndeterminedError;
 
     // Don't use the shield icons when user runs in Administrator mode
     if (IsUserAnAdmin())
@@ -497,6 +521,7 @@ void Plugin::SetupMenuIcons()
     // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
     bSuccessLexer = CheckFileWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
     bSuccessDark = CheckFileWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
+    bAutoComplete = CheckFileWritePermission(_notepadAutoCompleteInstallPath, fAutoCompletePerm);
 
     if (!bSuccessLexer)
     {
@@ -509,8 +534,8 @@ void Plugin::SetupMenuIcons()
         ::MessageBox(_notepadHwnd, sError.str().c_str(), pluginName.c_str(), MB_ICONERROR | MB_APPLMODAL | MB_OK);
     }
 
-    // For users without permission to _pluginLexerConfigFilePath, set shield on Import Definitions
-    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges)
+    // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
+    if (fLexerPerm == FileWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == FileWritePermission::RequiresAdminPrivileges)
         SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
     // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
     if (fDarkThemePerm == FileWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
@@ -526,6 +551,41 @@ void Plugin::SetupMenuIcons()
 
 #pragma region
 
+// Navigate recursively on XML nodes and get rid of all comment tags.
+// Bonus: also deletes the declaration headers now, since we need to rebuild it.
+void StripXMLInfo(tinyxml2::XMLNode* node)
+{
+    // All XML nodes may have children and siblings. So for each valid node, first we
+    // iterate on it's (possible) children, and then we proceed to clear the node itself and jump 
+    // to the next sibling
+    while (node)
+    {
+        if (node->FirstChild() != NULL)
+            StripXMLInfo(node->FirstChild());
+
+        //Check to see if current node is a comment
+        auto comment = dynamic_cast<tinyxml2::XMLComment*>(node);
+        if (comment)
+        {
+            // If it is, we ask the parent to delete this, but first move pointer to next member so we don't get lost in a NULL reference
+            node = node->NextSibling();
+            comment->Parent()->DeleteChild(comment);
+        }
+        // We also remove XML declarations here
+        else
+        {
+            auto declare = dynamic_cast<tinyxml2::XMLDeclaration*>(node);
+            if (declare)
+            {
+                node = node->NextSibling();
+                declare->Parent()->DeleteChild(declare);
+            }
+            else
+                node = node->NextSibling();
+        }
+    }
+}
+
 void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 {
     // Trash results for memory space in a cancel.
@@ -538,10 +598,25 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
     tinyxml2::XMLDocument nwscriptDoc;
 
-    // Since TinyXML only accepts ASCII filenames, we do a crude conversion here... hopefully noone is using
-    // chinese filenames.. :P
-    std::string asciiFile = wstr2str(Instance()._pluginLexerConfigFilePath);
-    errno_t error = nwscriptDoc.LoadFile(asciiFile.c_str());
+    // We retrieve all fixed keywords and emplace them on results, so we can sort everything out
+    // because unsorted results won't work for auto-complete
+    generic_string kw = fixedPreProcInstructionSet;
+    kw.append(TEXT(" ")).append(fixedInstructionSet).append(TEXT(" ")).append(fixedKeywordSet).append(TEXT(" ")).append(fixedObjKeywordSet);
+    myResults.AddSpacedStringAsKeywords(kw);
+    myResults.Sort();
+
+    // Set some Timestamp headers
+    char timestamp[128]; time_t currTime;  struct tm currTimeP;
+    time(&currTime);
+    errno_t error = localtime_s(&currTimeP, &currTime);
+    strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
+    std::string xmlHeaderComment = XMLDOCHEADER;
+    xmlHeaderComment.append(timestamp).append(".\n");
+
+    // Since TinyXML only accepts ASCII filenames, we do a crude conversion here... hopefully we won't have any
+    // intermediary directory using chinese characters here... :P
+    std::string asciiFileStyler = wstr2str(Instance()._pluginLexerConfigFilePath);
+    error = nwscriptDoc.LoadFile(asciiFileStyler.c_str());
     generic_stringstream errorStream;
     if (error)
     {
@@ -549,8 +624,14 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("File might be corrupted!\r\n");
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
+
+    // Call helper function to strip all comments from document, since we're merging the file, not recreating it.
+    // We don't use nwscriptDoc.rootNode() here, since it will jump straight to the first ELEMENT node - ignoring
+    // comments and other possible pieces of information.
+    StripXMLInfo(nwscriptDoc.FirstChild());
 
     tinyxml2::XMLElement* notepadPlus = nwscriptDoc.RootElement();
     if (notepadPlus == NULL)
@@ -559,8 +640,13 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("Cannot find root XML node 'NotepadPlus'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
+
+    // Add new declaration and header
+    nwscriptDoc.InsertFirstChild(nwscriptDoc.NewDeclaration());
+    nwscriptDoc.InsertAfterChild(nwscriptDoc.FirstChild(), nwscriptDoc.NewComment(xmlHeaderComment.c_str()));
 
     tinyxml2::XMLElement* languages = notepadPlus->FirstChildElement("Languages");
     if (languages == NULL)
@@ -569,8 +655,11 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("Cannot find XML node 'Languages'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
+    // Add info on Languages
+    languages->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLANGUAGECOMMENT));
 
     tinyxml2::XMLElement* language = languages->FirstChildElement("Language");
     if (language == NULL)
@@ -579,6 +668,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("Cannot find root XML node 'Language'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
 
@@ -589,8 +679,11 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("Language name for ") << LexerCatalogue::GetLexerName(0) << TEXT(" not found!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
+    // Add info on Keywords
+    language->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINKEYWORDCOMMENT));
 
     // Now we want just the Keywords for "type2" (Engine Structures), "type4  (Engine Constants) and "type6" (Function Names)
     // Look for at least 1 keyword element
@@ -601,12 +694,13 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
         errorStream << TEXT("Cannot find root XML node 'Keywords'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
 
     // Need to convert from wchar_t to char here...
-    // We use a post-check to see whether all tags where updated. Also useful to avoid processing same tag twice (only happens if user tampered)
-    // with the file.
+    // We use a post-check to see whether all tags where updated. Also useful to avoid processing same tag twice 
+    // (only happens if user tampered) with the file.
     bool bType2 = false, bType4 = false, bType6 = false;
     while (Keywords)
     {
@@ -643,16 +737,88 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
             << (!bType6 ? TEXT(" type6") : TEXT("")) << TEXT(" ]");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
         return;
     }
 
-    // Finally, save file... and LAST error handling!
-    error = nwscriptDoc.SaveFile(asciiFile.c_str());
+    //Now add comment info to LexerStyles. Here we don't manage errors since its only comments
+    tinyxml2::XMLElement* lexerStyles = notepadPlus->FirstChildElement("LexerStyles");
+    if (lexerStyles)
+    {
+        tinyxml2::XMLNode* lexerType = lexerStyles->FirstChild();
+        if (lexerType)
+            lexerType->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINWORDSTYLECOMMENT));
+        lexerStyles->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLEXERTYPECOMMENT));
+    }
+
+    // Now we overwrite autoComplete XML. We're doing this before saving the other
+    // so we do a more or less of a transactioned modification - if one fails, the other isn't saved.
+    std::string asciiFileAutoC = wstr2str(Instance()._notepadAutoCompleteInstallPath);
+    tinyxml2::XMLDocument nwscriptAutoc;
+    nwscriptAutoc.InsertFirstChild(nwscriptAutoc.NewDeclaration());
+    nwscriptAutoc.InsertEndChild(nwscriptAutoc.NewComment(xmlHeaderComment.c_str()));
+
+    tinyxml2::XMLNode* autocRoot = nwscriptAutoc.NewElement("NotepadPlus");
+    nwscriptAutoc.InsertEndChild(autocRoot);
+
+    autocRoot->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCLANGCOMMENT));
+    tinyxml2::XMLElement* autocNode = nwscriptAutoc.NewElement("AutoComplete");
+    autocNode->SetAttribute("language", LexerCatalogue::GetLexerName(0));
+    autocRoot->InsertEndChild(autocNode);
+
+    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCENVCOMMENT));
+    tinyxml2::XMLElement* environmentNode = nwscriptAutoc.NewElement("Environment");
+    environmentNode->SetAttribute("ignoreCase", "no"); environmentNode->SetAttribute("startFunc", "("); environmentNode->SetAttribute("stopFunc", ")");
+    environmentNode->SetAttribute("paramSeparator", ","); environmentNode->SetAttribute("terminal", ";"); environmentNode->SetAttribute("additionalWordChar", "");
+    autocNode->InsertEndChild(environmentNode);
+
+    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCSORTNOTICE));
+
+    // Now, we iterate through all parsing results and add their nodes to autocNode
+    for (NWScriptParser::ScriptMember m : myResults.Members)
+    {
+        tinyxml2::XMLElement* keyword = nwscriptAutoc.NewElement("KeyWord");
+        keyword->SetAttribute("name", wstr2str(m.sName).c_str());
+        if (m.mID == NWScriptParser::MemberID::Function)
+        {
+            keyword->SetAttribute("func", "yes");
+            tinyxml2::XMLElement* overload = nwscriptAutoc.NewElement("Overload");
+            overload->SetAttribute("retVal", wstr2str(m.sType).c_str());
+
+            for (NWScriptParser::ScriptParamMember p : m.params)
+            {
+                tinyxml2::XMLElement* param = nwscriptAutoc.NewElement("Param");
+                generic_string paramName = p.sType.c_str();
+                paramName.append(TEXT(" ")).append(p.sName);
+                if (!p.sDefaultValue.empty())
+                    paramName.append(TEXT("=")).append(p.sDefaultValue);
+                param->SetAttribute("name", wstr2str(paramName).c_str());
+
+                overload->InsertEndChild(param);
+            }
+            keyword->InsertEndChild(overload);
+        }
+        autocNode->InsertEndChild(keyword);
+    }
+
+    // Finally, save files...
+    error = nwscriptAutoc.SaveFile(asciiFileAutoC.c_str());
+    if (error)
+    {
+        errorStream << TEXT("Error while saving file: ") << Instance()._notepadAutoCompleteInstallPath << "! \r\n";
+        errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
+        return;
+    }
+    error = nwscriptDoc.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
         errorStream << TEXT("Error while saving file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        Instance()._NWScriptParseResults.reset();
+        return;
     }
 
     // Close our results (for memory cleanup) and report back.
@@ -870,6 +1036,7 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._pluginLexerConfigFilePath);
+    sFiles.push_back(Instance()._notepadAutoCompleteInstallPath);
 
     FileCheckResults fResult = Instance().FilesWritePermissionCheckup(sFiles, RestartFunctionHook::None);
     if (static_cast<int>(fResult) < 1)

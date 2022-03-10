@@ -1347,6 +1347,7 @@ namespace jpcre2 {
         ///Retruns error message from PCRE2 error number
         ///@param err_num error number (negative)
         ///@return message as jpcre2::select::String.
+#pragma warning (disable : 6262)
         static String getPcre2ErrorMessage(int err_num) {
             Pcre2Uchar buffer[sizeof(Char) * CHAR_BIT * 1024];
             Pcre2Func<sizeof(Char_T)* CHAR_BIT>::get_error_message(err_num, buffer, sizeof(buffer));
@@ -1540,7 +1541,7 @@ namespace jpcre2 {
             ///The indeterminate state can be returned to normal by calling reset() on that object.
             ///@param rm rvalue reference to a RegexMatch object
             ///@return A reference to the calling RegexMatch object.
-            virtual RegexMatch& operator=(RegexMatch&& rm) {
+            virtual RegexMatch& operator=(RegexMatch&& rm) noexcept {
                 if (this == &rm) return *this;
                 deepMove(rm);
                 return *this;
@@ -3039,7 +3040,7 @@ namespace jpcre2 {
             ///It leaves the argument in a valid but indeterminate sate.
             ///The indeterminate state can be returned to normal by calling reset() on that object.
             ///@param rr rvalue reference to a RegexReplace object reference
-            RegexReplace(RegexReplace&& rr) {
+            RegexReplace(RegexReplace&& rr) noexcept {
                 init_vars();
                 deepMove(rr);
             }
