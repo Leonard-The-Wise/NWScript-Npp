@@ -18,7 +18,6 @@
 
 #include "Common.h"
 #include "LexerCatalogue.h"
-#include "tinyxml2.h"
 
 #include "PluginMain.h"
 #include "PluginControlsRC.h"
@@ -100,10 +99,10 @@ void Plugin::PluginInit(HANDLE hModule)
     // Get metainformation about this plugin
     TCHAR fTemp[MAX_PATH] = {};
     DWORD fSize = GetModuleFileName(static_cast<HMODULE>(hModule), fTemp, MAX_PATH);
-    Instance()._pluginPath = std::make_unique<fs::path>(fTemp);
-    Instance()._pluginFileName = Instance()._pluginPath.get()->stem();
-    Instance()._pluginFileExtension = Instance()._pluginPath.get()->extension();
-    Instance()._pluginLexerConfigFile = Instance()._pluginPath.get()->stem();
+    Instance()._pluginPaths.insert({ "PluginPath", fs::path(fTemp) });
+
+    Instance()._pluginFileName = Instance()._pluginPaths["PluginPath"].stem();
+    Instance()._pluginLexerConfigFile = Instance()._pluginPaths["PluginPath"].stem();
     Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
     // The rest of metainformation is get when Notepad Messenger is set...
@@ -133,45 +132,41 @@ int Plugin::GetFunctionCount() const
 // plugin's objects that need a Windows Handle to work
 void Plugin::SetNotepadData(NppData data)
 {
-    // Init Notepad-Scintilla Messenger
-	if (!_messageInstance)
-	{
-		_messageInstance = std::make_unique<PluginMessenger>(data);
-        _indentor = std::make_unique<LineIndentor>(*(_messageInstance.get()));
-	}
+    _messageInstance.SetData(data);
+    _indentor.SetMessenger(_messageInstance);
 
     //Keep a copy of Notepad HWND to easy access
     _notepadHwnd = Messenger().GetNotepadHwnd();
 
     // Finish initializing the Plugin Metainformation
-    TCHAR fName[MAX_PATH+1] = {};
-    Messenger().SendNppMessage(NPPM_GETNPPDIRECTORY, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    _notepadInstallDir = fName;
-    _notepadThemesInstallDir = _notepadInstallDir;
-    _notepadThemesInstallDir.append(TEXT("\\"));
-    _notepadThemesInstallDir.append(NotepadDefaultThemesRootDir);
-    _notepadDarkThemeFilePath = _notepadThemesInstallDir;
-    _notepadDarkThemeFilePath.append(NotepadDefaultDarkThemeFile);
-    _notepadAutoCompleteInstallPath = _notepadInstallDir;
-    _notepadAutoCompleteInstallPath.append(TEXT("\\"));
-    _notepadAutoCompleteInstallPath.append(NotepadAutoCompleteRootDir);
-    _notepadAutoCompleteInstallDir = _notepadAutoCompleteInstallPath;
-    generic_string lexerNameLower = str2wstr(LexerCatalogue::GetLexerName(0)); // lexer names on auto complete folder are lowercase
-    std::transform(lexerNameLower.begin(), lexerNameLower.end(), lexerNameLower.begin(), ::tolower);
-    _notepadAutoCompleteInstallPath.append(lexerNameLower);  // supporting only 1 lexer here
-    _notepadAutoCompleteInstallPath.append(TEXT(".xml"));
+    generic_string path;
 
+    TCHAR fName[MAX_PATH+1] = {};
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETNPPFULLFILEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    _notepadExecutableFile = fName;
+    path = fName;
+    _pluginPaths.insert({ "NotepadExecutablePath", fs::path(fName) });
+
+    path = _pluginPaths["NotepadExecutablePath"].parent_path();
+    path.append(TEXT("\\"));
+    path.append(NotepadDefaultThemesRootDir);
+    path.append(NotepadDefaultDarkThemeFile);
+    _pluginPaths.insert({ "NotepadDarkThemeFilePath", fs::path(path) });
+
+    path = _pluginPaths["NotepadExecutablePath"].parent_path();
+    path.append(TEXT("\\"));
+    path.append(NotepadAutoCompleteRootDir);
+    path.append(str2wstr(LexerCatalogue::GetLexerName(0, true)));  // Need lowercase name. Also we're only returning the first lexer
+    path.append(TEXT(".xml"));
+    _pluginPaths.insert({ "PluginAutoCompleteFilePath", fs::path(path) });
 
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETPLUGINHOMEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    _notepadPluginHomePath = fName;
-    _pluginLexerConfigFilePath = _notepadPluginHomePath;
-    _pluginLexerConfigFilePath.append(TEXT("\\"));
-    _pluginLexerConfigFilePath.append(NotepadPluginConfigRootDir);
-    _pluginLexerConfigFilePath.append(_pluginLexerConfigFile);
+    path = fName;
+    path.append(TEXT("\\"));
+    path.append(NotepadPluginConfigRootDir);
+    path.append(_pluginLexerConfigFile);
+    _pluginPaths.insert({ "PluginLexerConfigFilePath", fs::path(path) });
 
     // Settings directory is different than Plugin Install Dir.
     ZeroMemory(fName, sizeof(fName));
@@ -182,15 +177,16 @@ void Plugin::SetNotepadData(NppData data)
     sPluginConfigPath.append(TEXT(".ini"));
 
     // Temporary batch we write in case we need to restart Notepad++ by ourselves. Root is Plugin config path
-    _notepadPseudoBatchRestartFile = fName;
-    _notepadPseudoBatchRestartFile.append(TEXT("\\"));
-    _notepadPseudoBatchRestartFile.append(NotepadPseudoBatchRestartFile);
+    path = fName;
+    path.append(TEXT("\\"));
+    path.append(NotepadPseudoBatchRestartFile);
+    _pluginPaths.insert({ "NotepadPseudoBatchRestartFile", fs::path(path) });
 
     // Create settings instance and load all values
-    _settings = std::make_unique<NWScriptPlugin::Settings>(sPluginConfigPath);
+    _settings.InitSettings(sPluginConfigPath);
     Settings().Load();
 
-    // Adjust menu "Use Auto-Indentation" checked or not
+    // Adjust menu "Use Auto-Indentation" checked or not before creation
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().bEnableAutoIndentation;
 }
 
@@ -217,33 +213,33 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         DetectDarkThemeInstall();
         LoadNotepadLexer();
 
+        SetupMenuIcons();
+        _isReady = true;
+
         // Auto call a function that required restart during the previous session (because of privilege elevation)
         // Up to now...
         // 1 = ImportDefinitions
         // 2 = Fix Editor's Colors
         // Since all functions that required restart must have returned in Admin Mode, we check this
         // to see if the user didn't cancel the UAC request.
+        // Also break processing here, since those functions can call another restart
         if (IsUserAnAdmin())
         {
-            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ImportDefinitions)
-                ImportDefinitions();
-            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1 || Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase2)
+            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
+            {
                 DoResetEditorColors(Settings().iNotepadRestartFunction);
-            if (Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1 || Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase2)
-                DoResetEditorColors(Settings().iNotepadRestartFunction);
+                break;
+            }
+            if (Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
+            {
+                DoInstallDarkTheme(Settings().iNotepadRestartFunction);
+                break;
+            }
         }
 
         // And then make sure to clear the hooks, temp files, etc. 
-        // Call a instant save on settings to be avoid losing it on a session crash also.
-        if (Settings().iNotepadRestartMode != RestartMode::None)
-        {
-            bool bIgnore = DeleteFile(_notepadPseudoBatchRestartFile.c_str());
-            SetRestartHook(RestartMode::None, RestartFunctionHook::None);
-            Settings().Save();
-        }
-
-        SetupMenuIcons();
-        _isReady = true;
+        // Call as immediate to instant save on settings so we avoid losing it on a session crash also.
+        SetRestartHook(RestartMode::None, RestartFunctionHook::None);
 
         break;
     }
@@ -258,11 +254,11 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         _isReady = false;
         Settings().Save();
 
-        // If we have a restart hook setup, write batch file to re-execute notepad and call it from Windows Shell
+        // If we have a restart hook setup, call out shell to execute it.
         if (Settings().iNotepadRestartMode != RestartMode::None)
         {
-            if (writePseudoBatchExecute(Instance()._notepadPseudoBatchRestartFile, Instance()._notepadExecutableFile))
-                runProcess(Settings().iNotepadRestartMode == RestartMode::Admin ? true : false, _notepadPseudoBatchRestartFile);
+           runProcess(Settings().iNotepadRestartMode == RestartMode::Admin ? true : false, 
+              Instance()._pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
         }
 
         break;
@@ -294,6 +290,20 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     }
 }
 
+void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
+{
+    Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function;
+    if (type == RestartMode::None)
+    {
+        if (PathFileExists(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str()))
+            DeleteFile(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
+    }
+    else
+        writePseudoBatchExecute(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str(), _pluginPaths["NotepadExecutablePath"].c_str());
+
+    Settings().Save();
+}
+
 #pragma endregion Plugin DLL Message Processing
 
 #pragma region 
@@ -310,7 +320,7 @@ void Plugin::SetAutoIndentSupport()
     for (int i = 0; i < LexerCatalogue::GetLexerCount(); i++)
     {
         lexerNameW = {};
-        lexerNameW << LexerCatalogue::GetLexerName(i);
+        lexerNameW << str2wstr(LexerCatalogue::GetLexerName(i));
 
         lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLEXERAUTOINDENTMODE,
             reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
@@ -372,7 +382,7 @@ void Plugin::LoadNotepadLexer()
     for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
     {
         lexerNameW = {};
-        lexerNameW << LexerCatalogue::GetLexerName(i);
+        lexerNameW << str2wstr(LexerCatalogue::GetLexerName(i));
         isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
 
         if (isPluginLanguage)
@@ -380,8 +390,8 @@ void Plugin::LoadNotepadLexer()
                 reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
     }
 
-    // Create or Replace current lexer language.
-    _notepadCurrentLexer = std::make_unique<NotepadLexer>(currLang, lexerName, isPluginLanguage, langIndent);
+    //Update Lexer
+    _notepadCurrentLexer.SetLexer(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
 // A helper routine to remove Dark Theme menu item
@@ -399,63 +409,24 @@ void Plugin::DetectDarkThemeInstall()
 {
     // Here we are parsing the file silently
     tinyxml2::XMLDocument darkThemeDoc;
-    errno_t error = darkThemeDoc.LoadFile(wstr2str(Instance()._notepadDarkThemeFilePath).c_str());
-    _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
+    errno_t error = darkThemeDoc.LoadFile(wstr2str(Instance()._pluginPaths["NotepadDarkThemeFilePath"].c_str()).c_str());
 
-    // Dark theme is incompatible or file is corrupted...
     if (error)
     {
         RemoveDarkThemeInstallMenu();
+        _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
         return;
     }
 
-    // Safely navigate the XML nodes to avoid crashes
-    tinyxml2::XMLElement* rootNode = darkThemeDoc.RootElement();
-    tinyxml2::XMLElement* LexerStyles;
-    tinyxml2::XMLElement* lexerType;
-
-    if (rootNode)
-    {
-        LexerStyles = rootNode->FirstChildElement("LexerStyles");
-        if (LexerStyles)
-            lexerType = LexerStyles->FirstChildElement("LexerType");
-        else
-        {
-            RemoveDarkThemeInstallMenu();
-            return;
-        }
-    }
-    else
-    {
-        RemoveDarkThemeInstallMenu();
-        return;
-    }
-
-    //Again, if this is empty is because the file must be corrupted
-    if (!lexerType)
-    {
-        RemoveDarkThemeInstallMenu();
-        return;
-    }
-
-    // Search for lexer name inside. We're only supporting the first installed lexer here
-    bool bFound = false;
-    do
-    {
-        if (lexerType->Attribute("name", LexerCatalogue::GetLexerName(0)))
-            bFound = true;
-        lexerType = lexerType->NextSiblingElement("LexerType");
-    } while (!bFound && lexerType);
-
-    if (!bFound)
-    {
+    // Try to navigate to the XML node corresponding to the name of the installed language (nwscript). If not found, means uninstalled.
+    if (!SearchElement(darkThemeDoc.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0)))
         _pluginDarkThemeIs = DarkThemeStatus::Uninstalled;
-        return;
+    else
+    {    
+        //Dark theme installed, mark it here.
+        RemoveDarkThemeInstallMenu();
+        _pluginDarkThemeIs = DarkThemeStatus::Installed;
     }
-
-    //Dark theme installed, mark it here.
-    RemoveDarkThemeInstallMenu();
-    _pluginDarkThemeIs = DarkThemeStatus::Installed;
 }
 
 // Setup menu icons
@@ -516,19 +487,19 @@ void Plugin::SetupMenuIcons()
         return;
 
     // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
-    bSuccessLexer = CheckWritePermission(_pluginLexerConfigFilePath, fLexerPerm);
-    bSuccessDark = CheckWritePermission(_notepadDarkThemeFilePath, fDarkThemePerm);
-    bAutoComplete = CheckWritePermission(_notepadAutoCompleteInstallPath, fAutoCompletePerm);
+    bSuccessLexer = CheckWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
+    bSuccessDark = CheckWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
+    bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
 
     // If this file do not exist, we test the directory instead
     if (!bAutoComplete)
-        bAutoComplete = CheckWritePermission(_notepadAutoCompleteInstallDir, fAutoCompletePerm);
+        bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"].parent_path(), fAutoCompletePerm);
 
     if (!bSuccessLexer)
     {
         generic_stringstream sError;
         sError << TEXT("Unable to read information for file bellow: ") << "\r\n";
-        sError << _pluginLexerConfigFilePath << "\r\n";
+        sError << _pluginPaths["PluginLexerConfigFilePath"] << "\r\n";
         sError << "\r\n";
         sError << "NWScript Plugin may not work properly, please check your installation!";
 
@@ -551,41 +522,6 @@ void Plugin::SetupMenuIcons()
 #pragma endregion Plugin initialization functions and dynamic behavior
 
 #pragma region
-
-// Navigate recursively on XML nodes and get rid of all comment tags.
-// Bonus: also deletes the declaration headers now, since we need to rebuild it.
-void StripXMLInfo(tinyxml2::XMLNode* node)
-{
-    // All XML nodes may have children and siblings. So for each valid node, first we
-    // iterate on it's (possible) children, and then we proceed to clear the node itself and jump 
-    // to the next sibling
-    while (node)
-    {
-        if (node->FirstChild() != NULL)
-            StripXMLInfo(node->FirstChild());
-
-        //Check to see if current node is a comment
-        auto comment = dynamic_cast<tinyxml2::XMLComment*>(node);
-        if (comment)
-        {
-            // If it is, we ask the parent to delete this, but first move pointer to next member so we don't get lost in a NULL reference
-            node = node->NextSibling();
-            comment->Parent()->DeleteChild(comment);
-        }
-        // We also remove XML declarations here
-        else
-        {
-            auto declare = dynamic_cast<tinyxml2::XMLDeclaration*>(node);
-            if (declare)
-            {
-                node = node->NextSibling();
-                declare->Parent()->DeleteChild(declare);
-            }
-            else
-                node = node->NextSibling();
-        }
-    }
-}
 
 void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 {
@@ -616,12 +552,12 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
     // Since TinyXML only accepts ASCII filenames, we do a crude conversion here... hopefully we won't have any
     // intermediary directory using chinese characters here... :P
-    std::string asciiFileStyler = wstr2str(Instance()._pluginLexerConfigFilePath);
+    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
     error = nwscriptDoc.LoadFile(asciiFileStyler.c_str());
     generic_stringstream errorStream;
     if (error)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
@@ -637,7 +573,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* notepadPlus = nwscriptDoc.RootElement();
     if (notepadPlus == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'NotepadPlus'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
@@ -652,7 +588,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* languages = notepadPlus->FirstChildElement("Languages");
     if (languages == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find XML node 'Languages'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
@@ -665,7 +601,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* language = languages->FirstChildElement("Language");
     if (language == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'Language'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
@@ -674,10 +610,10 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     }
 
     // We are only supporting our default lexer here
-    if (!language->Attribute("name", LexerCatalogue::GetLexerName(0)))
+    if (!language->Attribute("name", LexerCatalogue::GetLexerName(0).c_str()))
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
-        errorStream << TEXT("Language name for ") << LexerCatalogue::GetLexerName(0) << TEXT(" not found!\r\n");
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Language name for ") << str2wstr(LexerCatalogue::GetLexerName(0)) << TEXT(" not found!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         Instance()._NWScriptParseResults.reset();
@@ -691,7 +627,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* Keywords = language->FirstChildElement("Keywords");
     if (Keywords == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'Keywords'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
@@ -732,7 +668,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     // Another error handling...
     if (!bType2 || !bType4 || !bType6)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("The following nodes could not be found!\r\n");
         errorStream << TEXT("Nodes: [") << (!bType2 ? TEXT(" type2") : TEXT("")) << (!bType4 ? TEXT(" type4") : TEXT(""))
             << (!bType6 ? TEXT(" type6") : TEXT("")) << TEXT(" ]");
@@ -754,7 +690,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
     // Now we overwrite autoComplete XML. We're doing this before saving the other
     // so we do a more or less of a transactioned modification - if one fails, the other isn't saved.
-    std::string asciiFileAutoC = wstr2str(Instance()._notepadAutoCompleteInstallPath);
+    std::string asciiFileAutoC = wstr2str(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
     tinyxml2::XMLDocument nwscriptAutoc;
     nwscriptAutoc.InsertFirstChild(nwscriptAutoc.NewDeclaration());
     nwscriptAutoc.InsertEndChild(nwscriptAutoc.NewComment(xmlHeaderComment.c_str()));
@@ -764,7 +700,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
     autocRoot->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCLANGCOMMENT));
     tinyxml2::XMLElement* autocNode = nwscriptAutoc.NewElement("AutoComplete");
-    autocNode->SetAttribute("language", LexerCatalogue::GetLexerName(0));
+    autocNode->SetAttribute("language", LexerCatalogue::GetLexerName(0).c_str());
     autocRoot->InsertEndChild(autocNode);
 
     autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCENVCOMMENT));
@@ -806,7 +742,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     error = nwscriptAutoc.SaveFile(asciiFileAutoC.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while saving file: ") << Instance()._notepadAutoCompleteInstallPath << "! \r\n";
+        errorStream << TEXT("Error while saving file: ") << Instance()._pluginPaths["PluginAutoCompleteFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         Instance()._NWScriptParseResults.reset();
@@ -815,7 +751,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     error = nwscriptDoc.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while saving file: ") << Instance()._pluginLexerConfigFilePath << "! \r\n";
+        errorStream << TEXT("Error while saving file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         Instance()._NWScriptParseResults.reset();
@@ -839,12 +775,233 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
 void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
 {
+    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
+    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
 
+    if (!PatchDarkThemeXMLFile())
+        return;
+
+    if (!PatchDefaultThemeXMLFile())
+        return;
+
+    // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
+    if (whichPhase == RestartFunctionHook::ResetEditorColorsPhase1)
+    {
+        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+    }
+    else
+    {
+        int mResult = MessageBox(Instance().NotepadHwnd(),
+            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
+            TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
+
+        if (mResult == IDYES)
+        {
+            Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        }
+    }
 }
 
 void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
 {
+    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
+    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
 
+    if (!PatchDarkThemeXMLFile())
+        return;
+
+    // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
+    if (whichPhase == RestartFunctionHook::InstallDarkModePhase1)
+    {
+        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+    }
+    else
+    {
+        int mResult = MessageBox(Instance().NotepadHwnd(),
+            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
+            TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
+
+        if (mResult == IDYES)
+        {
+            Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        }
+    }
+}
+
+bool Plugin::PatchDefaultThemeXMLFile()
+{
+    tinyxml2::XMLDocument defaultThemeXML;
+
+    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+    errno_t error = defaultThemeXML.LoadFile(asciiFileStyler.c_str());
+    generic_stringstream errorStream;
+    if (error)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        errorStream << TEXT("Error ID: ") << defaultThemeXML.ErrorID();
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Try to navigate to LexerType named "NWScript"
+    // Here we use the plugin ProperCase name.
+    std::string lexerName = LexerCatalogue::GetLexerName(0);
+    tinyxml2::XMLElement* lexerType = SearchElement(defaultThemeXML.RootElement(), "LexerType", "name", lexerName);
+    if (!lexerType)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Get first WordsStyle tag
+    tinyxml2::XMLElement* lexerWordsStyle = lexerType->FirstChildElement("WordsStyle");
+    if (!lexerWordsStyle)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Patch the document. Since here we are preserving any existing keywords, we want only attributes to be redefined.
+    // We don't check for error for our own defined XML.
+    tinyxml2::XMLDocument xmlPatch;
+    xmlPatch.Parse(XMLDEFAULTSTYLER);
+    tinyxml2::XMLNode* xmlPatchNode = SearchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&defaultThemeXML);
+    tinyxml2::XMLElement* patchTypeStart = xmlPatchNode->FirstChildElement("WordsStyle");
+    tinyxml2::XMLElement* patchTypeSeek;
+
+    bool bFound;
+    while (lexerWordsStyle)
+    {
+        bFound = false;
+        patchTypeSeek = patchTypeStart;
+
+        // Search by ID value
+        while (patchTypeSeek && !bFound)
+        {
+            // Convert to string to make comparisons less troublesome
+            std::string first = lexerWordsStyle->Attribute("styleID");
+            std::string second = patchTypeSeek->Attribute("styleID");
+            if (first == second)
+            {
+                bFound = true;
+                lexerWordsStyle->SetAttribute("fgColor",   patchTypeSeek->Attribute("fgColor"));
+                lexerWordsStyle->SetAttribute("bgColor",   patchTypeSeek->Attribute("bgColor"));
+                lexerWordsStyle->SetAttribute("fontName",  patchTypeSeek->Attribute("fontName"));
+                lexerWordsStyle->SetAttribute("fontStyle", patchTypeSeek->Attribute("fontStyle"));
+                lexerWordsStyle->SetAttribute("fontSize",  patchTypeSeek->Attribute("fontSize"));
+            }
+            patchTypeSeek = patchTypeSeek->NextSiblingElement("WordsStyle");
+        }
+        lexerWordsStyle = lexerWordsStyle->NextSiblingElement("WordsStyle");
+    }
+
+    // Save.
+    error = defaultThemeXML.SaveFile(asciiFileStyler.c_str());
+    if (error)
+    {
+        errorStream << TEXT("Error while patching file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error ID: ") << defaultThemeXML.ErrorID();
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    return true;
+}
+
+bool Plugin::PatchDarkThemeXMLFile()
+{
+    tinyxml2::XMLDocument darkThemeXML;
+
+    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
+    errno_t error = darkThemeXML.LoadFile(asciiFileStyler.c_str());
+    generic_stringstream errorStream;
+    if (error)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        errorStream << TEXT("Error ID: ") << darkThemeXML.ErrorID();
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Try to navigate to LexerStyles
+    tinyxml2::XMLElement* lexerStyles = SearchElement(darkThemeXML.RootElement(), "LexerStyles");
+    if (!lexerStyles)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Make sure we are not creating our stylesheet twice (eg: from a Reset Editor Colors call).
+    tinyxml2::XMLElement* oldLexerType = SearchElement(darkThemeXML.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0));
+    if (oldLexerType)
+        oldLexerType->Parent()->DeleteChild(oldLexerType);
+
+    // Now, find an appropriate place to put our patch. Other language names are lowercase, but strangely
+    // to external lexers, we must have a ProperCase name or else Notepad++ don't recognize it. So here
+    // we search the insert place using lowercase name, but then we patch using our Proper name.
+    std::string lexerName = LexerCatalogue::GetLexerName(0, true);
+
+    tinyxml2::XMLElement* lexerType = lexerStyles->FirstChildElement("LexerType");
+    bool bFound = false;
+    tinyxml2::XMLElement* nextLexerType;
+
+    while (lexerType)
+    {
+        // Found a possible spot?
+        if (lexerName > lexerType->Attribute("name"))
+        {
+            // We peek ahead of this node to see if our name is properly sorted into the array.
+            // Null next node mean we reached the list's end and so mark that as a usable space.
+            nextLexerType = lexerType->NextSiblingElement("LexerType");
+            if (nextLexerType)
+            {
+                if (lexerName < nextLexerType->Attribute("name"))
+                    break;
+            }
+            else
+                break;
+        }
+        lexerType = lexerType->NextSiblingElement("LexerType");
+    }
+
+    // Last check...
+    if (!lexerType)
+    {
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    // Patch file. We don't check for error for our own defined XML.
+    tinyxml2::XMLDocument xmlPatch;
+    xmlPatch.Parse(XMLDARKMODEDEFAULT);
+    tinyxml2::XMLNode* xmlPatchNode = SearchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&darkThemeXML);
+    lexerStyles->InsertAfterChild(lexerType, xmlPatchNode);
+
+    // Save.
+    error = darkThemeXML.SaveFile(asciiFileStyler.c_str());
+    if (error)
+    {
+        errorStream << TEXT("Error while patching file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("Error ID: ") << darkThemeXML.ErrorID();
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        return false;
+    }
+
+    return true;
 }
 
 #pragma endregion Plugin files management
@@ -1022,9 +1179,18 @@ PLUGINCOMMAND Plugin::OpenSettings()
     MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
+#define WARNINGMESSAGE R"(Warning: this action will replace any nwscript.nss engine definitions tags in the plugin configuration file with new ones.
+
+All user's definitions outside reserved spaces will be preserved (read the "USAGE" section in the about box for more details). 
+
+You wish to Continue?)"
+
 // Imports Lexer's functions and constants declarations from a NWScript.nss file
 PLUGINCOMMAND Plugin::ImportDefinitions()
 {
+    // Only warns the user once in a session.
+    static bool bWarnedUser = false;
+
     // Initialize our results dialog
     static FileParseSummaryDialog parseDialog = {};
     if (!parseDialog.isCreated())
@@ -1036,16 +1202,24 @@ PLUGINCOMMAND Plugin::ImportDefinitions()
 
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
-    sFiles.push_back(Instance()._pluginLexerConfigFilePath);
+    sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
     // The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
-    if (PathFileExists(Instance()._notepadAutoCompleteInstallPath.c_str()))
-        sFiles.push_back(Instance()._notepadAutoCompleteInstallPath);
+    if (PathFileExists(Instance()._pluginPaths["PluginAutoCompleteFilePath"].c_str()))
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
     else
-        sFiles.push_back(Instance()._notepadAutoCompleteInstallDir);    
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
 
     PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
     if (static_cast<int>(fResult) < 1)
         return;
+
+    // A last warning to the user
+    if (!bWarnedUser)
+    {
+        if (MessageBox(Instance().NotepadHwnd(), TEXT(WARNINGMESSAGE), TEXT("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDNO)
+            return;
+    }
+    bWarnedUser = true;
 
     generic_string nFileName;
     if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript*.nss\0All Files (*.*)\0*.*"), nFileName))
@@ -1081,7 +1255,8 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 {
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
-    sFiles.push_back(Instance()._pluginLexerConfigFilePath);
+    sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+    sFiles.push_back(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
 
     PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::ResetEditorColorsPhase1);
     if (static_cast<int>(fResult) < 1)
@@ -1095,7 +1270,7 @@ PLUGINCOMMAND Plugin::InstallDarkTheme()
 {
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
-    sFiles.push_back(Instance()._notepadDarkThemeFilePath);
+    sFiles.push_back(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
 
     PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
     if (static_cast<int>(fResult) < 1)
@@ -1107,9 +1282,33 @@ PLUGINCOMMAND Plugin::InstallDarkTheme()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    // Dialog boxes need to be static unless it's modal.
+    std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
+
+    // Dialog boxes need to be static unless modal ones.
     static AboutDialog aboutDialog = {};
 
+    // Initialize some user information
+    std::map<generic_string, generic_string> replaceStrings;
+    replaceStrings.insert({ TEXT("%PLUGINXMLFILE%"), Instance()._pluginPaths["PluginLexerConfigFilePath"] });
+    replaceStrings.insert({ TEXT("%AUTOCOMPLETEFILE%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"] });
+    replaceStrings.insert({ TEXT("%AUTOCOMPLETEDIR%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path()});
+
+    bool bIsAutoIndentOn = Instance().Messenger().SendSciMessage<bool>(NPPM_ISAUTOINDENTON);
+
+    // Diagnostic data.
+    if (Instance()._needPluginAutoIndent)
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), TEXT("Use the built-in auto-indentation.") });
+    else
+    {
+        generic_string autoindent = TEXT("Automatic. Currently set to ["); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("]"));
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
+    }
+    replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
+
+    // Set replace strings
+    aboutDialog.setReplaceStrings(replaceStrings);
+
+    // Present it
     if (!aboutDialog.isCreated())
         aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
 

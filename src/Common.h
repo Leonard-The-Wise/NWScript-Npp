@@ -22,7 +22,7 @@
 #include <tchar.h>
 #include <fstream>
 
-
+#include "tinyxml2.h"
 
 #ifndef GENERIC_STRING
 #define GENERIC_STRING
@@ -210,22 +210,21 @@ namespace {
         FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
     };
 
-
     // Checks for a path's write permission.
     // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums
-    bool CheckWritePermission(const generic_string& sFilePath, PathWritePermission& outFilePermission)
+    bool CheckWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes = {};
         
-        if (!PathFileExists(sFilePath.c_str()))
+        if (!PathFileExists(sPath.c_str()))
             return false;
 
-        if (!GetFileAttributesEx(sFilePath.c_str(), GetFileExInfoStandard, &attributes))
+        if (!GetFileAttributesEx(sPath.c_str(), GetFileExInfoStandard, &attributes))
             return false;
 
         if (attributes.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
         {
-            outFilePermission = PathWritePermission::FileIsReadOnly;
+            outPathPermission = PathWritePermission::FileIsReadOnly;
             return true;
         }
 
@@ -233,21 +232,21 @@ namespace {
         if (attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             TCHAR buffer[MAX_PATH];
-            UINT retval = GetTempFileName(sFilePath.c_str(), TEXT("nws"), 0, buffer);
+            UINT retval = GetTempFileName(sPath.c_str(), TEXT("nws"), 0, buffer);
             if (retval == 0)
             {
-               outFilePermission = PathWritePermission::RequiresAdminPrivileges;
+               outPathPermission = PathWritePermission::RequiresAdminPrivileges;
                 return true;
             }
 
             DeleteFile(buffer);
-            outFilePermission = PathWritePermission::WriteAllowed;
+            outPathPermission = PathWritePermission::WriteAllowed;
             return true;
         }
 
         // We are only touching a file, hence all shared attributes may apply
         // Also, to Open a file, we call a "CreateFile" function. Lol Windows API
-        HANDLE f = CreateFile(sFilePath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        HANDLE f = CreateFile(sPath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
             NULL, OPEN_EXISTING, attributes.dwFileAttributes, NULL);
 
         // The GetLastError codes are documented here:
@@ -257,20 +256,20 @@ namespace {
             switch (GetLastError())
             {
             case ERROR_ACCESS_DENIED:
-                outFilePermission = PathWritePermission::RequiresAdminPrivileges;
+                outPathPermission = PathWritePermission::RequiresAdminPrivileges;
                 break;
             case ERROR_SHARING_VIOLATION:
-                outFilePermission = PathWritePermission::BlockedByApplication;
+                outPathPermission = PathWritePermission::BlockedByApplication;
                 break;
             default:
-                outFilePermission = PathWritePermission::UndeterminedError;
+                outPathPermission = PathWritePermission::UndeterminedError;
             }
 
             return true;
         }
 
         CloseHandle(f);
-        outFilePermission = PathWritePermission::WriteAllowed;
+        outPathPermission = PathWritePermission::WriteAllowed;
         return true;
     }
 
@@ -327,16 +326,91 @@ namespace {
 
         // Use ping trick on batch to delay execution, since it's the most compatible option to add a delay
         stext << "@echo off" << std::endl;
-        stext << "ping -n 1 -w 500 10.255.255.255 > nul" << std::endl;
+        stext << "ping -n 1 -w 1000 10.255.255.255 > nul" << std::endl;
         stext << "\"" << wstr2str(executePath.c_str()) << "\"" << std::endl;
 
         s.open(path, std::ios::out | std::ios::binary | std::ios::trunc);
         if (!s.is_open())
+        {
             return false;
+        }
 
         s  << stext.str().c_str();
         s.close();
         return true;
+    }
+
+    // Recursively navigate on XML nodes and get rid of all comment tags.
+    // Bonus: also deletes the declaration headers now, since we need to rebuild it.
+    void StripXMLInfo(tinyxml2::XMLNode* node)
+    {
+        // All XML nodes may have children and siblings. So for each valid node, first we
+        // iterate on it's (possible) children, and then we proceed to clear the node itself and jump 
+        // to the next sibling
+        while (node)
+        {
+            if (node->FirstChild() != NULL)
+                StripXMLInfo(node->FirstChild());
+
+            //Check to see if current node is a comment
+            auto comment = dynamic_cast<tinyxml2::XMLComment*>(node);
+            if (comment)
+            {
+                // If it is, we ask the parent to delete this, but first move pointer to next member so we don't get lost in a NULL reference
+                node = node->NextSibling();
+                comment->Parent()->DeleteChild(comment);
+            }
+            // We also remove XML declarations here
+            else
+            {
+                auto declare = dynamic_cast<tinyxml2::XMLDeclaration*>(node);
+                if (declare)
+                {
+                    node = node->NextSibling();
+                    declare->Parent()->DeleteChild(declare);
+                }
+                else
+                    node = node->NextSibling();
+            }
+        }
+    }
+
+    // Recursively navigate the XML structure until a determined first occurrence of an element is found.
+    // (optional) Also checks if element has attribute checkAttribute with corresponding checkAttributeValue.
+    // Returns NULL on a failed search.
+    tinyxml2::XMLElement* SearchElement(tinyxml2::XMLElement* const from, const std::string& toName,
+        const std::string checkAttribute = "", const std::string checkAttributeValue = "")
+    {
+        tinyxml2::XMLElement* _from = from;
+        tinyxml2::XMLElement* found = NULL;
+
+        while (_from && !found)
+        {
+            if (_from->Name() == toName)
+            {
+                if (checkAttribute.empty())
+                {
+                    found = _from;
+                    break;
+                }
+                else
+                {
+                    if (_from->Attribute(checkAttribute.c_str(), checkAttributeValue.c_str()))
+                    {
+                        found = _from;
+                        break;
+                    }
+                }
+            }
+
+            if (_from->FirstChildElement() != NULL)
+                found = SearchElement(_from->FirstChildElement(), toName, checkAttribute, checkAttributeValue);
+
+            if (!found)
+                _from = _from->NextSiblingElement();
+        }
+
+        return found;
     }
 
 
@@ -351,6 +425,6 @@ namespace NWScriptPlugin {
     };
 
     enum class RestartFunctionHook {
-        None, ImportDefinitions, ResetEditorColorsPhase1, ResetEditorColorsPhase2, InstallDarkModePhase1, InstallDarkModePhase2
+        None, ResetEditorColorsPhase1, InstallDarkModePhase1
     };
 }

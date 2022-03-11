@@ -282,10 +282,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Media\UnityTest.nss" />
+    <None Include="..\media\xmlfile1.bin" />
     <None Include="..\Publish.Dll.To.Notepad.targets" />
     <None Include="..\ReadMe.md" />
   </ItemGroup>
   <ItemGroup>
+    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DarkStyler.xml" />
+    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DefaultStyler.xml" />
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
       <DeploymentContent>true</DeploymentContent>
     </Xml>

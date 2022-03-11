@@ -235,11 +235,16 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
+    <None Include="..\media\xmlfile1.bin">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
       <Filter>Resource Files</Filter>
     </Xml>
+    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DefaultStyler.xml" />
+    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DarkStyler.xml" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Media\Sample-Colorization.jpg">

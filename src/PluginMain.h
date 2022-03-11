@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <filesystem>
+#include <map>
 
 #include "Common.h"
 
@@ -35,13 +36,14 @@ namespace NWScriptPlugin {
 
 		// Holds one Notepad Lexer.
 		struct NotepadLexer {
-			const int langID;
-			const TCHAR* langName;
-			const bool isPluginLang;
-			const ExternalLexerAutoIndentMode langIndent;
-
-			explicit NotepadLexer(const int _LangID, const TCHAR* _LangName, const bool _isPluginLang, const ExternalLexerAutoIndentMode _langIndent)
-				: langID(_LangID), langName(_LangName), isPluginLang(_isPluginLang), langIndent(_langIndent) {}
+			int langID = 0;
+			TCHAR* langName{};
+			bool isPluginLang = false;
+			ExternalLexerAutoIndentMode langIndent = ExternalLexerAutoIndentMode::Standard;
+			
+			void SetLexer(const int _LangID, TCHAR* _LangName, const bool _isPluginLang, const ExternalLexerAutoIndentMode _langIndent) {
+				langID = _LangID; langName = _LangName; isPluginLang = _isPluginLang, langIndent = _langIndent;
+			};
 
 			~NotepadLexer() { delete[] langName; }
 		};
@@ -85,17 +87,15 @@ namespace NWScriptPlugin {
 		// ### Internal Objects
 
 		// Retrieve's Plugin's Settings Object
-		Settings& Settings() { return *_settings; }
+		Settings& Settings() { return _settings; }
 		// Retrieve's Plugin's Messenger Object
-		PluginMessenger& Messenger() const { return *_messageInstance; }
+		PluginMessenger& Messenger() { return _messageInstance; }
 		// Retrieve's Plugin's LineIndentor Object
-		LineIndentor& Indentor() const { return *_indentor; }
+		LineIndentor& Indentor() { return _indentor; }
 		// Retrieve's Plugin's Module Handle
 		HMODULE DllHModule() const { return _dllHModule; }
 		// Retrieves Notepad++ HWND
 		HWND NotepadHwnd() const { return _notepadHwnd; }
-		// Retrieves the Plugin Path class
-		fs::path& PluginPath() const { return *_pluginPath; };
 		// Returns tha handle of Notepad++ Main Menu
 		HMENU GetNppMainMenu();
 
@@ -105,10 +105,8 @@ namespace NWScriptPlugin {
 		void ProcessMessagesSci(SCNotification* notifyCode);
 		// Processes Raw messages from a Notepad++ window (the ones not handled by editor). Currently unused by the plugin
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
-		// Setup a restart Hook. 0 to reset; 1 to restart normally; 2 to restart in admin mode
-		void SetRestartHook(RestartMode type, RestartFunctionHook function = RestartFunctionHook::None) { 
-			Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function; 
-		}
+		// Setup a restart Hook. Normal or Admin mode. Save settings immediately after.
+		void SetRestartHook(RestartMode type, RestartFunctionHook function = RestartFunctionHook::None);
 
 		// ### User Interfacing
 
@@ -132,7 +130,7 @@ namespace NWScriptPlugin {
 			: _dllHModule(dllModule), _notepadHwnd(nullptr) {}
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
-		bool IsPluginLanguage() const { return _notepadCurrentLexer->isPluginLang; }
+		bool IsPluginLanguage() const { return _notepadCurrentLexer.isPluginLang; }
 
 		// ### Initialization
 
@@ -160,6 +158,10 @@ namespace NWScriptPlugin {
 		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
 		// Install Dark Theme
 		void DoInstallDarkTheme(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Helper to patch the Dark Theme XML Styler
+		bool PatchDarkThemeXMLFile();
+		// Helper to patch the Default XML Styler. This is different, since we must preserve user information.
+		bool PatchDefaultThemeXMLFile();
 
 		// ### User interfacing
 
@@ -182,9 +184,9 @@ namespace NWScriptPlugin {
 
 		// Internal classes
 
-		std::unique_ptr<NotepadLexer> _notepadCurrentLexer;
-		std::unique_ptr<PluginMessenger> _messageInstance;
-		std::unique_ptr<LineIndentor> _indentor;
+		NotepadLexer _notepadCurrentLexer;
+		PluginMessenger _messageInstance;
+		LineIndentor _indentor;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
 		// Internal handles
@@ -193,38 +195,21 @@ namespace NWScriptPlugin {
 		HWND _notepadHwnd;
 
 		// Settings instance
-		std::unique_ptr<NWScriptPlugin::Settings> _settings;
+		NWScriptPlugin::Settings _settings;
 
-		// Meta Information about the plugin
-
-		// Current Plugin Install Path
-		std::unique_ptr<fs::path> _pluginPath;
-
+		// Meta Information about the plugin paths
+		// Information included:
+		// - PluginPath                    (eg: %ProgramFiles%\Notepad++\plugins\Nwscript-Npp\NWScript-Npp.dll)
+		// - NotepadExecutablePath         (eg: %ProgramFiles%\Notepad++\Notepad++.exe)
+		// - NotepadDarkThemeFilePath      (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
+		// - PluginAutoCompleteFilePath    (eg: %ProgramFiles%\Notepad++\autoCompletion\nwscript.xml)
+		// - PluginLexerConfigFilePath     (eg: %ProgramFiles%\Notepad++\plugins\config\NWScript-Npp.xml)
+		// - NotepadPseudoBatchRestartFile (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
+		std::map<std::string, fs::path> _pluginPaths;
 		// Plugin module name without extension (eg: NWScript-Npp)
 		generic_string _pluginFileName;
-		// Plugin module extension (eg: .dll)
-		generic_string _pluginFileExtension;
 		// Plugin Lexer config file (eg: NWScript-Npp.xml)
 		generic_string _pluginLexerConfigFile;
-		// Plugin Lexer config file path (eg: %ProgramFiles%\Notepad++\plugins\config\NWScript-Npp.xml)
-		generic_string _pluginLexerConfigFilePath;
-
-		// Notepad Installation Directory (eg: %ProgramFiles%\Notepad++\)
-		generic_string _notepadInstallDir;
-		// Notepad Executable File (eg: %ProgramFiles%\Notepad++\Notepad++.exe)
-		generic_string _notepadExecutableFile;
-		// Notepad Plugin Installation Path (eg: %ProgramFiles%\Notepad++\plugins\)
-		generic_string _notepadPluginHomePath;
-		// Notepad Themes Installation Directory (eg: %ProgramFiles%\Notepad++\themes)
-		generic_string _notepadThemesInstallDir;
-		// Notepad Dark Theme Installation Path (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
-		generic_string _notepadDarkThemeFilePath;
-		// Notepad Functions AutoComplete Directory (eg: %ProgramFiles%\Notepad++\autoCompletion)
-		generic_string _notepadAutoCompleteInstallDir;
-		// Notepad Functions AutoComplete Directory (eg: %ProgramFiles%\Notepad++\autoCompletion\nwscript.xml)
-		generic_string _notepadAutoCompleteInstallPath;
-		// Notepad Pseudo-Batch to restart Application if needed (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
-		generic_string _notepadPseudoBatchRestartFile;
 
 	public:
 		// Compilation-time information
