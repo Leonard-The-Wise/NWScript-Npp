@@ -5,6 +5,9 @@
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <stdexcept>
+#include <algorithm>
+#include <string>
+
 #include "LexerCatalogue.h"
 
 /*
@@ -42,13 +45,18 @@ void LexerCatalogue::GetLexerName(unsigned int index, char* name, int buflength)
 		throw std::out_of_range("index out of bounds");
 }
 
-const char* LexerCatalogue::GetLexerName(unsigned int index)
+std::string LexerCatalogue::GetLexerName(unsigned int index, bool toLower)
 {
 	if (index < InstalledLexersCount)
-		return InstalledLexers[index].lexerName;
+	{
+		std::string retVal = InstalledLexers[index].lexerName;
+		if (toLower)
+			std::transform(retVal.begin(), retVal.end(), retVal.begin(), ::tolower);
+
+		return retVal;
+	}
 	else
 		throw std::out_of_range("index out of bounds");
-
 }
 
 void LexerCatalogue::GetLexerStatusText(unsigned int index, WCHAR* desc, int buflength)

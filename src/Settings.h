@@ -15,7 +15,8 @@ using namespace mINI;
 namespace NWScriptPlugin {
 
 	struct Settings {
-		explicit Settings(generic_string& sPluginConfigPath)
+
+		void InitSettings(generic_string& sPluginConfigPath)
 		{
 			iniFilePath = std::make_unique<INIFile>(sPluginConfigPath);
 			iniFile = std::make_unique<INIStructure>();

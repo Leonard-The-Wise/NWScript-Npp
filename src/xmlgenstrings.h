@@ -72,4 +72,52 @@ The License.txt file on the plugin homepage describes the conditions under which
 			The name is what Notepad++ displays to the user in the Settings -> Style Configurator box.
 			The styleID attribute is an internal number the lexer software uses to associate classes and should NEVER be changed.  )"
 
+#define XMLDARKMODEDEFAULT R"(
+<?xml version="1.0" encoding="UTF-8"?>
+<NotepadPlus>
+    <LexerStyles>
+        <LexerType name="NWScript" desc="NWScript files" ext="">
+            <WordsStyle name="PREPROCESSOR" styleID="9" fgColor="FFCFAF" bgColor="3F3F3F" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="DCDCCC" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="INSTRUCTION WORD" styleID="5" fgColor="DFC47D" bgColor="3F3F3F" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
+            <WordsStyle name="TYPE WORD" styleID="16" fgColor="CEDF99" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type1" />
+            <WordsStyle name="ENGINE TYPE" styleID="28" fgColor="FF80FF" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type2" />
+            <WordsStyle name="OBJECT TYPE" styleID="29" fgColor="CEDF99" bgColor="3F3F3F" fontName="" fontStyle="1" fontSize="" keywordClass="type3" />
+            <WordsStyle name="ENGINE CONSTANT" styleID="30" fgColor="8F9E81" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type4" />
+            <WordsStyle name="CUSTOM CONSTANT" styleID="31" fgColor="B1B163" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type5"/>
+            <WordsStyle name="ENGINE FUNCTION" styleID="32" fgColor="BE7DFF" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
+            <WordsStyle name="USER FUNCTION" styleID="36" fgColor="E28CFF" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" keywordClass="type7"/>
+            <WordsStyle name="NUMBER" styleID="4" fgColor="8CCFD2" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="STRING" styleID="6" fgColor="CC9393" bgColor="3F3F3F" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="9F9D6C" bgColor="3F3F3F" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="809F9F" bgColor="3F3F3F" fontName="" fontStyle="3" fontSize="" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="809F80" bgColor="3F3F3F" fontName="" fontStyle="3" fontSize="" />
+        </LexerType>
+    </LexerStyles>
+</NotepadPlus>
+)"
 
+#define XMLDEFAULTSTYLER R"(
+<?xml version="1.0" encoding="UTF-8"?>  
+<NotepadPlus>
+	<LexerStyles>
+        <LexerType name="NWScript" desc="NWScript files" ext="">
+            <WordsStyle name="PREPROCESSOR" styleID="9" fgColor="804000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="DEFAULT" styleID="11" fgColor="000000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="INSTRUCTION WORD" styleID="5" fgColor="0000FF" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="instre1" />
+            <WordsStyle name="TYPE WORD" styleID="16" fgColor="AA00AA" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type1" />
+            <WordsStyle name="ENGINE TYPE" styleID="28" fgColor="FF09FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type2" />
+            <WordsStyle name="OBJECT TYPE" styleID="29" fgColor="0065CA" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" keywordClass="type3" />
+            <WordsStyle name="ENGINE CONSTANT" styleID="30" fgColor="0075EA" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type4" />
+            <WordsStyle name="CUSTOM CONSTANT" styleID="31" fgColor="0057AE" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type5" />
+            <WordsStyle name="ENGINE FUNCTION" styleID="32" fgColor="8000FF" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type6" />
+            <WordsStyle name="USER FUNCTION" styleID="36" fgColor="5200A4" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" keywordClass="type7" />
+            <WordsStyle name="NUMBER" styleID="4" fgColor="FF8000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="STRING" styleID="6" fgColor="808080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="OPERATOR" styleID="10" fgColor="000080" bgColor="FFFFFF" fontName="" fontStyle="1" fontSize="" />
+            <WordsStyle name="COMMENT" styleID="1" fgColor="008080" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+            <WordsStyle name="COMMENT LINE" styleID="2" fgColor="008000" bgColor="FFFFFF" fontName="" fontStyle="0" fontSize="" />
+        </LexerType>
+	</LexerStyles>
+</NotepadPlus>
+)"

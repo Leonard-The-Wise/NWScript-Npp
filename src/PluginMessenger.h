@@ -22,8 +22,9 @@ namespace NWScriptPlugin {
 			LPARAM lParam;
 		};
 
-		explicit PluginMessenger(const NppData& data)
-			: _nppData(data) {}
+		void SetData(const NppData& data) {
+			_nppData = data;
+		};
 
 		// Send a message to current Notepad++ window and return a T = typename value.
 		template<typename T = void>
@@ -51,6 +52,6 @@ namespace NWScriptPlugin {
 
 	private:
 
-		const NppData _nppData;
+		NppData _nppData;
 	};
 }

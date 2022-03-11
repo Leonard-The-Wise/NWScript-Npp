@@ -13,14 +13,15 @@ namespace NWScriptPlugin {
 	class LineIndentor
 	{
 	public:
-		explicit LineIndentor(PluginMessenger& _pMsg)
-			: pMsg(_pMsg) {};
+		void SetMessenger(PluginMessenger& _pMsg) {
+			pMsg = _pMsg;
+		}
 
 		// Performs live Line Indentation into the Scintilla Text Editor window using the given Character as an input.
 		virtual void IndentLine(TCHAR ch);
 
 	private:
-		PluginMessenger& pMsg;
+		PluginMessenger pMsg;
 
 		// Returns the range of current selected characters inside a Scintilla Text Editor window.
 		Sci_CharacterRange getSelection();
