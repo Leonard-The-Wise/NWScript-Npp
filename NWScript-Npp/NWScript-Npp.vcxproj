@@ -314,5 +314,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+	<!-- Auto-export compiled files and resources to Notepad++ -->
   <Import Project="$(SolutionDir)\Publish.Dll.To.Notepad.targets" Condition="Exists('$(SolutionDir)\Publish.Dll.To.Notepad.targets')" />
 </Project>
