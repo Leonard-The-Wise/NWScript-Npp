@@ -282,8 +282,6 @@
     <None Include="..\ReadMe.md" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DarkStyler.xml" />
-    <Xml Include="..\src\Lexers\Config\NWScript-Npp-DefaultStyler.xml" />
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
       <DeploymentContent>true</DeploymentContent>
     </Xml>
