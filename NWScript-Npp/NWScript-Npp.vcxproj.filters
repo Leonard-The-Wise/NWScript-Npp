@@ -161,6 +161,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\XMLGenStrings.h" />
+    <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
