@@ -99,10 +99,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PCRE2_STATIC;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
@@ -125,10 +123,8 @@
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>PCRE2_STATIC;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
@@ -152,10 +148,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PCRE2_STATIC;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
     <Link>
@@ -178,7 +172,7 @@
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>PCRE2_STATIC;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)PCRE2\vstudio\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
@@ -200,6 +194,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h" />
     <ClInclude Include="..\src\Common.h" />
     <ClInclude Include="..\src\Lexers\LexerCatalogue.h" />
     <ClInclude Include="..\src\Lexers\Lexlib\Accessor.h" />
@@ -302,18 +297,21 @@
     <Image Include="..\Media\Sample-Colorization.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PCRE2\vstudio\libpcre2-16-static.vcxproj">
-      <Project>{452a0049-4b9c-40c1-b337-c551c0c9357e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\PCRE2\vstudio\libpcre2-32-static.vcxproj">
-      <Project>{e0b821ec-8168-4f7a-a40e-9acc97e77f54}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\PCRE2\vstudio\libpcre2-8-static.vcxproj">
-      <Project>{1df4d158-6062-478b-aea1-84c235593f3d}</Project>
-    </ProjectReference>
+    <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
+    <ProjectReference Include="..\lib\NscLib\NscLib.vcxproj">
+      <Project>{9d6bac40-e346-4e23-b0ea-960dd98fea37}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-16-static.vcxproj">
+      <Project>{452a0049-4b9c-40c1-b337-c551c0c9357e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-32-static.vcxproj">
+      <Project>{e0b821ec-8168-4f7a-a40e-9acc97e77f54}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-8-static.vcxproj">
+      <Project>{1df4d158-6062-478b-aea1-84c235593f3d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
