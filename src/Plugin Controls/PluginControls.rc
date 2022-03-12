@@ -56,11 +56,11 @@ BEGIN
     CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
                     "SysLink",WS_TABSTOP,71,113,204,14
     EDITTEXT        IDC_TXTABOUT,7,126,304,94,ES_MULTILINE | ES_READONLY | NOT WS_BORDER | WS_VSCROLL,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
-    LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,114,38,11
+    LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,11
     CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
     CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,121,9,188,14
     CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,119,39,195,8
-    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler (NWNSC) Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,122,56,193,54
+    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,122,56,193,54
     CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,121,23,189,8
 END
 
