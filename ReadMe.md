@@ -53,12 +53,13 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 This plugin is based on [Notepad++ plugin template](https://github.com/npp-plugins/plugintemplate) and the official [`Scintilla`](https://www.scintilla.org/) `C++ Lexer`. I managed to rewrite much of the code, clear and organize classes, so anyone desiring to write future lexers will find it much easier to integrate a new lexer inside the Plugin. Just put your `LexXXX.cpp` file on the project and add it to the [`Lexer Catalogue`](src/Lexers/LexerCatalogue.cpp) and export it as a `DLL`.
 
 Also, for the `NWScript` compilation, I *“borrowed”* the [`nwnsc`](https://github.com/Leonard-The-Wise/nwnsc) code, since trying to write a compiler from scratch would be a monstrous task.
-
-As for the [`PCRE2`](https://github.com/Leonard-The-Wise/pcre2) submodule up there... this is because during development and testing, I found out that this is the best `regex` engine out there, far superseding `std::regex` library, and even the `boost` version, at least for the purpose of this project. See the [`development trivia`](#trivia) section down bellow for more info.
+(If you care to know, my Visual Studio port of that project is right [here](https://github.com/Leonard-The-Wise/NscLib))
 
 All files under this project are provided under the [`GPL v3.0 License`](license.txt).
 
 For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the following way:
+	
+- **`lib`**: All linked library submodules found here. I got two things thre: my ***personal ports*** of [NscLib](https://github.com/Leonard-The-Wise/NscLib) and [PCRE2](https://github.com/Leonard-The-Wise/pcre2). The first is for script compilation and parsing. The second, for general regular expressions and script extraction functions.
 
 - **`Custom Lexers`**: Here you'll write your new custom Lexers (example: [`LexNWScript.cpp`](src/Lexers/LexNWScript.cpp)) and edit/place them inside [`LexerCatalogue.cpp`](src/Lexers/LexerCatalogue.cpp) `InstalledLexers[]` static object for the code to auto-initialize it upon plugin load. Something like this:
 	
