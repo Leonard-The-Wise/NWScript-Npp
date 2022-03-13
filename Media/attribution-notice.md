@@ -12,3 +12,5 @@ Icons Add and Delete used on plugin pack are extracted from:<br>
 [Ui icons created by Ilham Fitrotul Hayat - Flaticon](https://www.flaticon.com/free-icons/ui)
 
 Neverwinter Font is licensed from [Shayna Davidson](shayna@pixelsagas.com).
+
+Image to Icon convert: https://www.aconvert.com/icon/png-to-ico/
