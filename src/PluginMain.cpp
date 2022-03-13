@@ -194,7 +194,7 @@ void Plugin::SetNotepadData(NppData data)
     Settings().Load();
 
     // Adjust menu "Use Auto-Indentation" checked or not before creation
-    pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().bEnableAutoIndentation;
+    pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().enableAutoIndentation;
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -232,14 +232,14 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         // Also break processing here, since those functions can call another restart
         if (IsUserAnAdmin())
         {
-            if (Settings().iNotepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
+            if (Settings().notepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
             {
-                DoResetEditorColors(Settings().iNotepadRestartFunction);
+                DoResetEditorColors(Settings().notepadRestartFunction);
                 break;
             }
-            if (Settings().iNotepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
+            if (Settings().notepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
             {
-                DoInstallDarkTheme(Settings().iNotepadRestartFunction);
+                DoInstallDarkTheme(Settings().notepadRestartFunction);
                 break;
             }
         }
@@ -262,9 +262,9 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         Settings().Save();
 
         // If we have a restart hook setup, call out shell to execute it.
-        if (Settings().iNotepadRestartMode != RestartMode::None)
+        if (Settings().notepadRestartMode != RestartMode::None)
         {
-           runProcess(Settings().iNotepadRestartMode == RestartMode::Admin ? true : false, 
+           runProcess(Settings().notepadRestartMode == RestartMode::Admin ? true : false, 
               Instance()._pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
         }
 
@@ -288,7 +288,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         // - Current Language is set to one of the plugin supported langs
         // - Notepad version doesn't yet support Extended AutoIndent functionality
         if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
-            && Settings().bEnableAutoIndentation)
+            && Settings().enableAutoIndentation)
             Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
         break;
     }
@@ -299,7 +299,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 
 void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
 {
-    Settings().iNotepadRestartMode = type; Settings().iNotepadRestartFunction = function;
+    Settings().notepadRestartMode = type; Settings().notepadRestartFunction = function;
     if (type == RestartMode::None)
     {
         if (PathFileExists(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str()))
@@ -366,7 +366,7 @@ void Plugin::SetAutoIndentSupport()
         }
 
         // Auto-adjust the settings
-        Instance().Settings().bEnableAutoIndentation = false;
+        Instance().Settings().enableAutoIndentation = false;
     }
     else
         Instance()._needPluginAutoIndent = true;
@@ -1150,8 +1150,8 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     static WarningDialog warningDialog = {};
 
     // Change settings
-    Instance().Settings().bEnableAutoIndentation = !Instance().Settings().bEnableAutoIndentation;
-    bool bEnableAutoIndent = Instance().Settings().bEnableAutoIndentation;
+    Instance().Settings().enableAutoIndentation = !Instance().Settings().enableAutoIndentation;
+    bool bEnableAutoIndent = Instance().Settings().enableAutoIndentation;
 
     HMENU hMenu = Instance().GetNppMainMenu();
     if (hMenu)
@@ -1161,7 +1161,7 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     }
 
     // Already accepted the warning, either on this session or a previous one
-    if (Instance().Settings().bAutoIndentationWarningAccepted)
+    if (Instance().Settings().autoIndentationWarningAccepted)
         return;
 
     // Warning user of function: only once in a session (and perhaps in a lifetime if INI file doesn't change)
@@ -1199,7 +1199,10 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
     static BatchProcessingDialog batchProcessing = {};
 
     if (!batchProcessing.isCreated())
+    {
+        batchProcessing.appendSettings(&Instance()._settings);
         batchProcessing.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    }
 
     if (!batchProcessing.isVisible())
         batchProcessing.doDialog();
@@ -1211,12 +1214,9 @@ PLUGINCOMMAND Plugin::CompilerSettings()
 {
     static CompilerSettingsDialog compilerSettings = {};
 
-    if (!compilerSettings.isCreated())
-        compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
-
-    if (!compilerSettings.isVisible())
-        compilerSettings.doDialog();
-
+    compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    compilerSettings.appendSettings(&Instance()._settings);
+    compilerSettings.doDialog();
 }
 
 //-------------------------------------------------------------

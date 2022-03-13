@@ -295,6 +295,8 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\Media\add.ico" />
+    <Image Include="..\Media\delete.ico" />
     <Image Include="..\Media\Here-be-Dragons.bmp" />
     <Image Include="..\Media\NWScript File.bmp" />
     <Image Include="..\Media\NWScript-File.ico" />

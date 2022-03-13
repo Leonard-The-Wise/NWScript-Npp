@@ -117,6 +117,25 @@ namespace {
         return true;
     }
 
+    // Opens a folder selection dialog
+    bool OpenFolderDialog(HWND hOwnerWnd, generic_string& outFolderName)
+    {
+        BROWSEINFO b = { 0 };
+        b.hwndOwner = hOwnerWnd;
+        b.lpszTitle = TEXT("Select Folder");
+
+        LPITEMIDLIST pidl = SHBrowseForFolder(&b);
+        TCHAR tszPath[MAX_PATH] = TEXT("");
+
+        if (SHGetPathFromIDList(pidl, tszPath) == TRUE)
+        {
+            outFolderName = tszPath;
+            return true;
+        }
+
+        return false;
+    }
+
 // No need for warning of enum here
 #pragma warning(push)
 #pragma warning(disable : 26812)
