@@ -33,7 +33,7 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			//case IDCANCEL: disabled
 				// Check settings and fall back to IDOK
 			case IDC_CHKOK:
-				Plugin::Instance().Settings().bAutoIndentationWarningAccepted = true;
+				Plugin::Instance().Settings().autoIndentationWarningAccepted = true;
 			case IDOK:
 				display(false);
 				destroy();

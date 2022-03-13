@@ -16,11 +16,16 @@ namespace NWScriptPlugin {
 	public:
 		BatchProcessingDialog() = default;
 
+		void appendSettings(Settings* settings) {
+			_settings = settings;
+		}
+
 		void doDialog();
 
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
+		Settings* _settings = nullptr;
 	};
 
 }

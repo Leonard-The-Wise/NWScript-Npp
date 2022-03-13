@@ -12,7 +12,14 @@
 #include <sstream>
 #include <iomanip>
 
+
 #include "Settings.h"
+
+#define PATHSPLITREGEX TEXT(R"(\"?([^;"]+)\"?;?)")
+#define FILTERSREGEX TEXT(R"(([^,]+))")
+
+jpcre2::select<TCHAR>::Regex dirRegex(PATHSPLITREGEX, 0, jpcre2::FIND_ALL | jpcre2::JIT_COMPILE);
+jpcre2::select<TCHAR>::Regex filtersRegex(FILTERSREGEX, 0, jpcre2::FIND_ALL | jpcre2::JIT_COMPILE);
 
 using namespace NWScriptPlugin;
 
@@ -20,22 +27,123 @@ void Settings::Load()
 {
 	iniFilePath->read(*iniFile);
 
-	// TODO: Load all settings variables from INI here
-	bEnableAutoIndentation = GetBoolean(TEXT("Plugin Functions"), TEXT("bEnableAutoIndentation"));
-	bAutoIndentationWarningAccepted = GetBoolean(TEXT("Plugin Functions"), TEXT("bAutoIndentationWarningAccepted"));
-	iNotepadRestartMode = static_cast<RestartMode>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode")));
-	iNotepadRestartFunction = static_cast<RestartFunctionHook>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction")));
+	// Try to read if INI file was valid/existent prior to this load. If not, flush any unclear results, keep default values.
+	_bValidINI = GetBoolean(TEXT("Plugin Startup"), TEXT("_bValidINI"));
+	if (!_bValidINI)
+	{
+		iniFile->clear();
+		return;
+	}
+
+	// Load all settings variables from INI here
+	enableAutoIndentation = GetBoolean(TEXT("Plugin Functions"), TEXT("enableAutoIndentation"));
+	autoIndentationWarningAccepted = GetBoolean(TEXT("Plugin Functions"), TEXT("autoIndentationWarningAccepted"));
+	notepadRestartMode = static_cast<RestartMode>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartMode")));
+	notepadRestartFunction = static_cast<RestartFunctionHook>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction")));
+
+	// Compiler settings
+	neverwinterInstallChoice = GetNumber<int>(TEXT("Compiler Settings"), TEXT("neverwinterInstallChoice"));
+	neverwinterOneInstallDir = GetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir"));
+	neverwinterTwoInstallDir = GetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir"));
+	ignoreInstallPaths = GetBoolean(TEXT("Compiler Settings"), TEXT("ignoreInstallPaths"));
+	additionalIncludeDirs = GetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"));
+	compilerFlags = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"));
+	optimizeScript = GetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"));
+	generateSymbols = GetBoolean(TEXT("Compiler Settings"), TEXT("generateSymbols"));
+	compileVersion = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compileVersion"));
+	useScriptPathToCompile = GetBoolean(TEXT("Compiler Settings"), TEXT("useScriptPathToCompile"));
+	outputCompileDir = GetString(TEXT("Compiler Settings"), TEXT("outputCompileDir"));
+
+	// Batch Process
+	startingFolder = GetString(TEXT("Batch Processing"), TEXT("startingFolder"));
+	fileFiltersCompile = GetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"));
+	fileFiltersDisasm = GetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"));
+	compileMode = GetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"));
+	recurseSubFolders = GetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"));
+	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
+	batchOutputCompileDir = GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"));
 }
 
 void Settings::Save()
 {
-	// TODO: Set all settings variables to INI here
-	SetBoolean(TEXT("Plugin Functions"), TEXT("bEnableAutoIndentation"), bEnableAutoIndentation);
-	SetBoolean(TEXT("Plugin Functions"), TEXT("bAutoIndentationWarningAccepted"), bAutoIndentationWarningAccepted);
-	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartMode"), static_cast<int>(iNotepadRestartMode));
-	SetNumber<int>(TEXT("Notepad Restart"), TEXT("iNotepadRestartFunction"), static_cast<int>(iNotepadRestartFunction));
+	// Set this file as valid
+	SetBoolean(TEXT("Plugin Startup"), TEXT("_bValidINI"), true);
+
+	// Set all settings variables to INI here
+	SetBoolean(TEXT("Plugin Functions"), TEXT("enableAutoIndentation"), enableAutoIndentation);
+	SetBoolean(TEXT("Plugin Functions"), TEXT("autoIndentationWarningAccepted"), autoIndentationWarningAccepted);
+	SetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartMode"), static_cast<int>(notepadRestartMode));
+	SetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction"), static_cast<int>(notepadRestartFunction));
+
+	// Compiler settings
+	SetNumber<int>(TEXT("Compiler Settings"), TEXT("neverwinterInstallChoice"), neverwinterInstallChoice);
+	SetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir"), neverwinterOneInstallDir);
+	SetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir"), neverwinterTwoInstallDir);
+	SetBoolean(TEXT("Compiler Settings"), TEXT("ignoreInstallPaths"), ignoreInstallPaths);
+	SetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"), additionalIncludeDirs);
+	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"), compilerFlags);
+	SetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"), optimizeScript);
+	SetBoolean(TEXT("Compiler Settings"), TEXT("generateSymbols"), generateSymbols);
+	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compileVersion"), compileVersion);
+	SetBoolean(TEXT("Compiler Settings"), TEXT("useScriptPathToCompile"), useScriptPathToCompile);
+	SetString(TEXT("Compiler Settings"), TEXT("outputCompileDir"), outputCompileDir);
+
+	// Batch Process
+	SetString(TEXT("Batch Processing"), TEXT("startingFolder"), startingFolder);
+	SetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"), fileFiltersCompile);
+	SetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"), fileFiltersDisasm);
+	SetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"), compileMode);
+	SetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"), recurseSubFolders);
+	SetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"), useScriptPathToBatchCompile);
+	SetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"), batchOutputCompileDir);
 
 	iniFilePath->write(*iniFile);
+}
+
+std::vector<generic_string> Settings::getIncludeDirsV() {
+	return string2VectorRegex(additionalIncludeDirs, dirRegex);
+}
+
+std::vector<generic_string> Settings::getFileFiltersCompileV() {
+	return string2VectorRegex(fileFiltersCompile, filtersRegex);
+}
+
+std::vector<generic_string> Settings::getFileFiltersDisasmV() {
+	return string2VectorRegex(fileFiltersDisasm, filtersRegex);
+}
+
+void Settings::setIncludeDirs(const std::vector<generic_string>& newDirs) 
+{
+	additionalIncludeDirs = TEXT("");
+	for (const generic_string& m : newDirs)
+		additionalIncludeDirs.append(m);
+}
+
+void Settings::setFileFiltersCompile(const std::vector<generic_string>& newFilters)
+{
+	fileFiltersCompile = TEXT("");
+	for (const generic_string& m : newFilters)
+		fileFiltersCompile.append(m);
+}
+
+void Settings::setFileFiltersDisasm(const std::vector<generic_string>& newFilters)
+{
+	fileFiltersDisasm = TEXT("");
+	for (const generic_string& m : newFilters)
+		fileFiltersDisasm.append(m);
+}
+
+std::vector<generic_string> Settings::string2VectorRegex(const generic_string& target, const jpcre2::select<TCHAR>::Regex& separator)
+{
+	std::vector<generic_string> results;
+	jpcre2::select<TCHAR>::VecNum matchr;
+	jpcre2::select<TCHAR>::RegexMatch matcher(&separator);
+	matcher.setNumberedSubstringVector(&matchr).setSubject(target).setModifier("g").match();
+	
+	for (std::vector<generic_string> m : matchr)
+		results.push_back(m[1]);
+
+	return results;
 }
 
 

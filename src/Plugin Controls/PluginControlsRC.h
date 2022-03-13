@@ -12,8 +12,8 @@
 #define IDD_PATHACCESSDIALOG            106
 #define IDD_PARSERESULTS                108
 #define IDD_COMPILERSETTINGS            117
-#define IDD_BATCHCOMPILE                120
 #define IDD_BATCHPROCESS                120
+#define IDI_ICON2                       126
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -56,6 +56,7 @@
 #define IDC_BTOUTPUTDIR                 1038
 #define IDC_TXTBATCHDIR                 1038
 #define IDC_TXTOUTPUTDIR2               1039
+#define IDC_TXTOUTPUTDIRBATCH           1039
 #define IDC_CHKRECURSIVE                1040
 #define IDC_BTOUTPUTDIR2                1041
 #define IDC_TXTBATFILTERS               1042
@@ -63,6 +64,7 @@
 #define IDC_RADIO2                      1044
 #define IDC_CHKCONTINUEONFAIL           1045
 #define IDC_BTBATCHDIR                  1046
+#define IDC_LBLSTATUS                   1047
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -71,9 +73,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_RESOURCE_VALUE        127
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1047
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

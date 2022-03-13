@@ -7,21 +7,27 @@
 
 #pragma once
 
-#include "StaticDialog.h"
+#include "ModalDialog.h"
 #include "CompilerSettings.h"
 
 namespace NWScriptPlugin {
 
-	class CompilerSettingsDialog : public StaticDialog
+	class CompilerSettingsDialog : public ModalDialog
 	{
 	public:
 		CompilerSettingsDialog() = default;
 
-		void doDialog();
+		void appendSettings(Settings* settings)	{
+			_settings = settings;
+		}
+
+		virtual INT_PTR doDialog();
 
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
+		bool keepSettings();
+		Settings* _settings = nullptr;
 	};
 
 }
