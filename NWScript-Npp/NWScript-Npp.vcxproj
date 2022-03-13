@@ -98,8 +98,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PCRE2_STATIC;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
@@ -122,8 +122,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>PCRE2_STATIC;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
@@ -147,8 +147,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
@@ -171,8 +171,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\_NscLib</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
     </ClCompile>
@@ -218,8 +218,12 @@
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
+    <ClInclude Include="..\src\NWScriptCompiler.h" />
+    <ClInclude Include="..\src\NWScriptLogger.h" />
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h" />
+    <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h" />
     <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
@@ -252,8 +256,12 @@
     <ClCompile Include="..\src\LineIndentor.cpp" />
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
+    <ClCompile Include="..\src\NWScriptCompiler.cpp" />
+    <ClCompile Include="..\src\NWScriptLogger.cpp" />
     <ClCompile Include="..\src\NWScriptParser.cpp" />
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp" />
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
@@ -298,9 +306,6 @@
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lib\NscLib\NscLib.vcxproj">
-      <Project>{9d6bac40-e346-4e23-b0ea-960dd98fea37}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-16-static.vcxproj">
       <Project>{452a0049-4b9c-40c1-b337-c551c0c9357e}</Project>
     </ProjectReference>
@@ -314,6 +319,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-	<!-- Auto-export compiled files and resources to Notepad++ -->
+  <!-- Auto-export compiled files and resources to Notepad++ -->
   <Import Project="$(SolutionDir)\Publish.Dll.To.Notepad.targets" Condition="Exists('$(SolutionDir)\Publish.Dll.To.Notepad.targets')" />
 </Project>

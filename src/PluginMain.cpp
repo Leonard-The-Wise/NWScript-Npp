@@ -23,12 +23,13 @@
 #include "PluginControlsRC.h"
 
 #include "AboutDialog.h"
-#include "WarningDialog.h"
-#include "PathAccessDialog.h"
+#include "BatchProcessing.h"
+#include "CompilerSettings.h"
 #include "FileParseSummaryDialog.h"
+#include "PathAccessDialog.h"
+#include "WarningDialog.h"
 
 #include "XMLGenStrings.h"
-
 
 #pragma warning (disable : 6387)
 
@@ -40,25 +41,31 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 
 // Menu functions order. Needs to be Sync'ed with pluginFunctions[]
 #define PLUGINMENU_SWITCHAUTOINDENT 0
-#define PLUGINMENU_COMPILESCRIPT 1
-#define PLUGINMENU_DASH1 2
-#define PLUGINMENU_IMPORTDEFINITIONS 3
-#define PLUGINMENU_SETTINGS 4
-#define PLUGINMENU_DASH2 5
-#define PLUGINMENU_RESETEDITORCOLORS 6
+#define PLUGINMENU_DASH1 1
+#define PLUGINMENU_COMPILESCRIPT 2
+#define PLUGINMENU_DISASSEMBLESCRIPT 3
+#define PLUGINMENU_BATCHPROCESSING 4
+#define PLUGINMENU_SETTINGS 5
+#define PLUGINMENU_DASH2 6
 #define PLUGINMENU_INSTALLDARKTHEME 7
-#define PLUGINMENU_ABOUTME 8
+#define PLUGINMENU_IMPORTDEFINITIONS 8
+#define PLUGINMENU_RESETEDITORCOLORS 9
+#define PLUGINMENU_DASH3 10
+#define PLUGINMENU_ABOUTME 11
 
 FuncItem Plugin::pluginFunctions[] = {
-    {TEXT("Use Auto-Identation"), Plugin::SwitchAutoIndent},
-    {TEXT("Compile Script"), Plugin::CompileScript},
+    {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
     {TEXT("---")},
-    {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
-    {TEXT("Settings..."), Plugin::OpenSettings},
+    {TEXT("Compile script"), Plugin::CompileScript},
+    {TEXT("Disassemble file..."), Plugin::DisassembleFile},
+    {TEXT("Batch script processing..."), Plugin::BatchProcessFiles},
+    {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("---")},
-    {TEXT("Reset Editor Colors"), Plugin::ResetEditorColors},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
-    {TEXT("About Me"), Plugin::AboutMe},
+    {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
+    {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
+    {TEXT("---")},
+    {TEXT("About me"), Plugin::AboutMe},
 };
 
 Plugin* Plugin::_instance(nullptr);
@@ -350,10 +357,13 @@ void Plugin::SetAutoIndentSupport()
     {
         Instance()._needPluginAutoIndent = false;
 
-        // Remove the "Use Auto-Indent" menu command
+        // Remove the "Use Auto-Indent" menu command and the following separator.
         HMENU hMenu = Instance().GetNppMainMenu();
         if (hMenu)
+        {
             RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
+            RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_DASH1]._cmdID, MF_BYCOMMAND);
+        }
 
         // Auto-adjust the settings
         Instance().Settings().bEnableAutoIndentation = false;
@@ -1167,17 +1177,67 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
     }
 }
 
+//-------------------------------------------------------------
+
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
     MessageBox(Instance().NotepadHwnd(), TEXT("Coming soon! :)"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
-// Opens the Plugin's Settings panel
-PLUGINCOMMAND Plugin::OpenSettings()
+// Disassemble a compiled script file
+PLUGINCOMMAND Plugin::DisassembleFile()
 {
-    MessageBox(Instance().NotepadHwnd(), TEXT("Not yet implemented"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
+
+
 }
+
+// Opens the Plugin's Batch process files dialog
+PLUGINCOMMAND Plugin::BatchProcessFiles()
+{
+
+    static BatchProcessingDialog batchProcessing = {};
+
+    if (!batchProcessing.isCreated())
+        batchProcessing.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    if (!batchProcessing.isVisible())
+        batchProcessing.doDialog();
+
+}
+
+// Opens the Plugin's Compiler Settings panel
+PLUGINCOMMAND Plugin::CompilerSettings()
+{
+    static CompilerSettingsDialog compilerSettings = {};
+
+    if (!compilerSettings.isCreated())
+        compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    if (!compilerSettings.isVisible())
+        compilerSettings.doDialog();
+
+}
+
+//-------------------------------------------------------------
+
+// Installs Dark theme
+PLUGINCOMMAND Plugin::InstallDarkTheme()
+{
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
+
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
+    Instance().DoInstallDarkTheme();
+}
+
+// Imports Lexer's functions and constants declarations from a NWScript.nss file
+PLUGINCOMMAND Plugin::ImportDefinitions()
+{
 
 #define WARNINGMESSAGE R"(Warning: this action will replace any nwscript.nss engine definitions tags in the plugin configuration file with new ones.
 
@@ -1185,9 +1245,6 @@ All user's definitions outside reserved spaces will be preserved (read the "USAG
 
 You wish to Continue?)"
 
-// Imports Lexer's functions and constants declarations from a NWScript.nss file
-PLUGINCOMMAND Plugin::ImportDefinitions()
-{
     // Only warns the user once in a session.
     static bool bWarnedUser = false;
 
@@ -1265,19 +1322,7 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
     Instance().DoResetEditorColors();
 }
 
-// Installs Dark theme
-PLUGINCOMMAND Plugin::InstallDarkTheme()
-{
-    // Do a file check for the necessary XML files
-    std::vector<generic_string> sFiles;
-    sFiles.push_back(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
-
-    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::InstallDarkModePhase1);
-    if (static_cast<int>(fResult) < 1)
-        return;
-
-    Instance().DoInstallDarkTheme();
-}
+//-------------------------------------------------------------
 
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()

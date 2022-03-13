@@ -1,26 +1,26 @@
-/** @file Warning.h
- * Warning Dialog Box
+/** @file BatchProcessing.h
+ * Batch file processing dialog box
  *
  **/
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
+
 #include "StaticDialog.h"
 
 namespace NWScriptPlugin {
 
-	class WarningDialog : public StaticDialog
+	class BatchProcessingDialog : public StaticDialog
 	{
 	public:
-		WarningDialog() = default;
+		BatchProcessingDialog() = default;
 
 		void doDialog();
 
-		virtual void destroy() {};
-
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+	private:
 	};
 
 }

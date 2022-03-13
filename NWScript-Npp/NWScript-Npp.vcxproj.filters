@@ -164,6 +164,14 @@
     <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\NWScriptLogger.h" />
+    <ClInclude Include="..\src\NWScriptCompiler.h" />
+    <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -217,6 +225,14 @@
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NWScriptLogger.cpp" />
+    <ClCompile Include="..\src\NWScriptCompiler.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
   </ItemGroup>

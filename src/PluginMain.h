@@ -110,18 +110,22 @@ namespace NWScriptPlugin {
 
 		// ### User Interfacing
 
-		// Menu Command "Use Auto-Indentation" function handler. 
+		// Menu Command "Use auto-indentation" function handler. 
 		static PLUGINCOMMAND SwitchAutoIndent();
-		// Menu Command "Compile Script" function handler. 
+		// Menu Command "Compile script" function handler. 
 		static PLUGINCOMMAND CompileScript();
-		// Menu Command "Settings" function handler. 
-		static PLUGINCOMMAND OpenSettings();
+		// Menu Command "Disassemble file" function handler. 
+		static PLUGINCOMMAND DisassembleFile();
+		// Menu Command "Compile script" function handler. 
+		static PLUGINCOMMAND BatchProcessFiles();
+		// Menu Command "Compiler settings" function handler. 
+		static PLUGINCOMMAND CompilerSettings();
+		// Menu Command "Install dark theme"
+		static PLUGINCOMMAND InstallDarkTheme();
 		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND ImportDefinitions();
-		// Menu Command "Reset Editor Colors"
+		// Menu Command "Reset editor colors"
 		static PLUGINCOMMAND ResetEditorColors();
-		// Menu Command "Install Dark Theme"
-		static PLUGINCOMMAND InstallDarkTheme();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
