@@ -105,6 +105,75 @@ BEGIN
     LTEXT           "Do you want to keep them?",IDC_LBLKEEPRESULTS,80,105,127,13
 END
 
+IDD_COMPILERSETTINGS DIALOGEX 0, 0, 425, 300
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Compiler Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,143,279,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,254,279,50,14
+    GROUPBOX        "Neverwinter Nights Installation Folders",IDC_STATIC,7,7,411,90
+    LTEXT           "Neverwinter Nights 1 (or Enhanced Edition)",IDC_STATIC,87,20,139,8
+    CONTROL         "Use this",IDC_USENWN1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,32,33,41,10
+    EDITTEXT        IDC_TXTNWN1INSTALL,86,31,294,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNWN1INSTALL,386,31,20,14
+    LTEXT           "Neverwinter Nights 2",IDC_STATIC,87,50,68,8
+    CONTROL         "Use this",IDC_USENWN2,"Button",BS_AUTORADIOBUTTON | WS_GROUP,32,63,41,10
+    EDITTEXT        IDC_TXTNWN2INSTALL,85,60,294,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNWN2INSTALL,385,60,20,14
+    CONTROL         "Ignore installation paths, use only the Additional Include Folders.",IDC_CHKIGNOREINSTALLPATHS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,89,81,224,10
+    GROUPBOX        "Additional Include Paths",IDC_STATIC,7,104,224,118
+    EDITTEXT        IDC_TXTADDPATH,12,119,186,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTSEARCHPATH,205,118,20,14
+    LISTBOX         IDC_LSTADDPATH,12,139,185,75,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Add",IDC_BTADDPATH,205,155,20,14
+    PUSHBUTTON      "Rem",IDC_BTDELPATH,205,177,20,14
+    GROUPBOX        "Compiler Options",IDC_STATIC,248,104,170,118
+    CONTROL         "Optimize script",IDC_CHKCOMPOPTIMIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,120,63,10
+    CONTROL         "Generate (.ndb) debug symbols files",IDC_CHKCOMPNDBSYMBOLS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,136,132,10
+    CONTROL         "Enable scrict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,152,75,10
+    CONTROL         "Create makefile (.d) dependency files",IDC_CHKCOMPMAKEFILE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,168,136,10
+    CONTROL         "Disable parsing of \\"" and \\\\ tokens",IDC_CHKCOMPDISABLESLASHPARSE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,184,135,10
+    COMBOBOX        IDC_CBOTARGETVERSION,262,204,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Target Game Version",IDC_STATIC,317,206,68,8
+    GROUPBOX        "Default Output Directory",IDC_STATIC,7,229,411,40
+    CONTROL         "Same of the script file",IDC_CHKOUTPUTDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,247,85,10
+    EDITTEXT        IDC_TXTOUTPUTDIR,115,244,263,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTOUTPUTDIR,383,244,20,14
+END
+
+IDD_BATCHPROCESS DIALOGEX 0, 0, 409, 216
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Batch Process Scripts"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Close",IDCLOSE,241,195,50,14
+    PUSHBUTTON      "Start",IDSTART,137,195,50,14
+    GROUPBOX        "Files Selection",IDC_STATIC,7,7,395,90
+    LTEXT           "Starting Folder:",IDC_STATIC,18,26,51,8
+    EDITTEXT        IDC_TXTBATCHDIR,74,23,298,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTBATCHDIR,376,23,20,14
+    CONTROL         "Recurse into subfolders",IDC_CHKRECURSIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,60,91,10
+    LTEXT           "File filters:",IDC_STATIC,18,44,34,8
+    EDITTEXT        IDC_TXTBATFILTERS,74,40,84,14,ES_AUTOHSCROLL
+    LTEXT           "(comma-separated values "","")",IDC_STATIC,165,43,96,8
+    GROUPBOX        "Mode",IDC_STATIC,273,41,98,50
+    CONTROL         "Compile",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,281,56,41,10
+    CONTROL         "Disassemble",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,281,71,55,10
+    CONTROL         "Continue to the next file upon a failed compilation",IDC_CHKCONTINUEONFAIL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,75,175,10
+    GROUPBOX        "Status",IDC_STATIC,7,144,395,40
+    CTEXT           "Awaiting command...",IDC_STATIC,22,163,369,8
+    GROUPBOX        "Output Directory",IDC_STATIC,7,100,395,40
+    CONTROL         "Same of the script file",IDC_CHKOUTPUTDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,119,85,10
+    EDITTEXT        IDC_TXTOUTPUTDIR2,103,117,263,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTOUTPUTDIR2,375,117,20,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -140,6 +209,22 @@ BEGIN
         RIGHTMARGIN, 302
         TOPMARGIN, 7
         BOTTOMMARGIN, 140
+    END
+
+    IDD_COMPILERSETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 418
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 293
+    END
+
+    IDD_BATCHPROCESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 402
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 209
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -179,6 +264,16 @@ BEGIN
     0
 END
 
+IDD_COMPILERSETTINGS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_BATCHPROCESS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -198,6 +293,21 @@ IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_NWSCRIPTFILE96      ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\NWScript-File.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_COMPILERSETTINGS DLGINIT
+BEGIN
+    IDC_CBOTARGETVERSION, 0x403, 5, 0
+0x3731, 0x2b34, "\000" 
+    IDC_CBOTARGETVERSION, 0x403, 4, 0
+0x3631, 0x0039, 
+    0
+END
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

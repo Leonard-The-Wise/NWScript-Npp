@@ -13,6 +13,7 @@
 
 #include "PluginControlsRC.h"
 
+using namespace NWScriptPlugin;
 
 INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {

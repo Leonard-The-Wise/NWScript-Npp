@@ -10,18 +10,21 @@
 #include <map>
 #include "StaticDialog.h"
 
-class AboutDialog : public StaticDialog
-{
-public:
-	AboutDialog() = default;
+namespace NWScriptPlugin {
 
-	void setReplaceStrings(const std::map<generic_string, generic_string>& replaceStrings) {
-		_replaceStrings = replaceStrings;
+	class AboutDialog : public StaticDialog
+	{
+	public:
+		AboutDialog() = default;
+
+		void setReplaceStrings(const std::map<generic_string, generic_string>& replaceStrings) {
+			_replaceStrings = replaceStrings;
+		};
+		void doDialog();
+
+	protected:
+		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+	private:
+		std::map<generic_string, generic_string> _replaceStrings;
 	};
-	void doDialog();
-
-protected:
-	virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-private:
-	std::map<generic_string, generic_string> _replaceStrings;
-};
+}
