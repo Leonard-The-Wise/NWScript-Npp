@@ -8,6 +8,7 @@
 #pragma once
 #include <algorithm>
 #include <vector>
+#include <sstream>
 
 #include "ModalDialog.h"
 #include "Common.h"

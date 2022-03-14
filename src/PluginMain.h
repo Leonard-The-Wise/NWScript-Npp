@@ -7,13 +7,10 @@
 
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <filesystem>
-#include <map>
 
 #include "Common.h"
-
 #include "Notepad_plus_msgs.h"
 
 #include "PluginMessenger.h"

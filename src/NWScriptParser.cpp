@@ -5,6 +5,7 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
+#include <assert.h>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -16,7 +17,7 @@
 #include <cctype>
 #include <iterator>
 #include <locale>
-
+#include <ShlObj.h>
 
 // We switched from std::regex to boost because std:regex was very slow and with poor features...
 // then we switched again from boost to PCRE2 because boost doesn't support regex subroutines and
