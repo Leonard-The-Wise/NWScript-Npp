@@ -24,7 +24,7 @@
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 6
 #define VERSION_PATCH 3
-#define VERSION_BUILD 1000
+#define VERSION_BUILD 1046
 
 #define VERSION_STRING stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." \
 	stringify(VERSION_PATCH) "." stringify(VERSION_BUILD)
