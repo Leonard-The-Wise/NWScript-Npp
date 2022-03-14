@@ -229,27 +229,6 @@ namespace {
         FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
     };
 
-    bool IsValidDirectory(const TCHAR* sPath)
-    {
-        WIN32_FILE_ATTRIBUTE_DATA attributes = {};
-
-        if (!PathFileExists(sPath))
-            return false;
-
-        if (!GetFileAttributesEx(sPath, GetFileExInfoStandard, &attributes))
-            return false;
-
-        if (!(attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            return false;
-
-        return true;
-    }
-
-    bool IsValidDirectoryS(const generic_string& sPath)
-    {
-        return IsValidDirectory(sPath.c_str());
-    }
-
     // Checks for a path's write permission.
     // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums
     bool CheckWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission)
@@ -312,79 +291,6 @@ namespace {
         outPathPermission = PathWritePermission::WriteAllowed;
         return true;
     }
-
-    generic_string GetSystemFolder(GUID folderID) {
-
-        PWSTR path;
-        SHGetKnownFolderPath(folderID, KF_FLAG_DEFAULT, NULL, &path);
-
-        generic_string retVal;
-        retVal = path;
-        return retVal;
-    }
-
-    generic_string GetNwnHomePath(int CompilerVersion, bool Quiet)
-
-    {
-        generic_string HomePath;
-
-        if (CompilerVersion >= 174) 
-        {
-
-            TCHAR DocumentsPath[MAX_PATH];
-            if (!SHGetSpecialFolderPath(NULL, DocumentsPath, CSIDL_PERSONAL, TRUE))
-                return HomePath;
-            HomePath = DocumentsPath;
-            HomePath.append(TEXT("\\Neverwinter Nights\\"));
-        }
-        else 
-        {
-            HKEY Key;
-            LONG Status;
-
-            Status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\BioWare\\NWN\\Neverwinter"), REG_OPTION_RESERVED,
-#ifdef _WIN64
-                KEY_QUERY_VALUE | KEY_WOW64_32KEY,
-#else
-                KEY_QUERY_VALUE,
-#endif
-                & Key);
-
-            if (Status != NO_ERROR)
-                return HomePath;
-
-            try
-            {
-                TCHAR NameBuffer[MAX_PATH + 1];
-                DWORD NameBufferSize;
-                bool FoundIt;
-                static const TCHAR* ValueNames[] =
-                {
-                    TEXT("Path"),     // Retail NWN2
-                    TEXT("Location"), // Steam NWN2
-                };
-
-                FoundIt = false;
-                for (size_t i = 0; i < _countof(ValueNames); i += 1)
-                {
-                    NameBufferSize = sizeof(NameBuffer) - sizeof(NameBuffer[0]);
-                    Status = RegQueryValueEx(Key, ValueNames[i], NULL, NULL, (LPBYTE)NameBuffer, &NameBufferSize);
-                    if (Status != NO_ERROR)
-                        continue;
-                    if ((NameBufferSize > 0) && (NameBuffer[NameBufferSize - 1] == '\0')) 
-                        NameBufferSize -= 1;
-
-                    HomePath = generic_string(NameBuffer, NameBufferSize);
-                }
-            }
-            catch (...)
-            {
-                RegCloseKey(Key);
-            }
-
-        return HomePath;
-    }
-
 
     // Since codecvt is now deprecated API and no replacement is provided, we write our own.
     std::wstring str2wstr(const std::string& string)

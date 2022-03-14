@@ -16,10 +16,6 @@ namespace NWScriptPlugin {
 	public:
 		BatchProcessingDialog() = default;
 
-		void setOkDialogCallback(void (*OkDialogCallback)(HRESULT decision)) {
-			_okDialogCallback = OkDialogCallback;
-		}
-
 		void appendSettings(Settings* settings) {
 			_settings = settings;
 		}
@@ -29,12 +25,7 @@ namespace NWScriptPlugin {
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
-		bool keepSettings();
-		generic_string _tmpFiltersCompile;
-		generic_string _tmpFiltersDisasm;
 		Settings* _settings = nullptr;
-
-		void (*_okDialogCallback)(HRESULT decision) = nullptr;
 	};
 
 }

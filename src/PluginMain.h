@@ -20,7 +20,6 @@
 #include "LineIndentor.h"
 #include "Settings.h"
 #include "NWScriptParser.h"
-#include "NWScriptCompiler.h"
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -119,8 +118,6 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND DisassembleFile();
 		// Menu Command "Compile script" function handler. 
 		static PLUGINCOMMAND BatchProcessFiles();
-		// Menu Command "Run last successful batch" function handler. 
-		static PLUGINCOMMAND RunLastBatch();
 		// Menu Command "Compiler settings" function handler. 
 		static PLUGINCOMMAND CompilerSettings();
 		// Menu Command "Install dark theme"
@@ -150,21 +147,15 @@ namespace NWScriptPlugin {
 		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
 		void LoadNotepadLexer();
 
-		// ### Initialization -> Menu handling
+		// ### Initialization -> Setup bitmaps
 		
-		void RemovePluginMenuItem(int commandID);
-		// Enable/disable menu item
-		void EnablePluginMenuItem(int commandID, bool enabled);
-		// Set a plugin menu Icon from resources
-		bool SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a plugin menu Icon to a given stock Shell Icon
-		bool SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
+		bool SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
-		void SetupPluginMenuItems();
+		void SetupMenuIcons();
 
 		// ### Config files management
 
-		static void DoBatchProcessFiles(HRESULT decision);
 		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
 		static void DoImportDefinitionsCallback(HRESULT decision);
 		// Resets the Editor Colors
@@ -195,15 +186,12 @@ namespace NWScriptPlugin {
 		bool _needPluginAutoIndent = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 
-		// Internal (global) classes
+		// Internal classes
 
 		NotepadLexer _notepadCurrentLexer;
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
-		NWScriptCompiler _compiler;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
-
-
 
 		// Internal handles
 
