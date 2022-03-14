@@ -8,6 +8,9 @@ The [License.txt](../License.txt) describes how the authored/edited files in thi
 
 Notepad++ Logo used was originally created by [Hayes Roberts](https://commons.wikimedia.org/wiki/File:Notepad%2B%2B_Logo.png)
 
+Extra Icons extracted from:
+https://www.flaticon.com/free-icons/
+
 Neverwinter Font is licensed from [Shayna Davidson](shayna@pixelsagas.com).
 
 Image to Icon convert: https://www.aconvert.com/icon/png-to-ico/
