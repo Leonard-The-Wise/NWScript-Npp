@@ -225,6 +225,38 @@ namespace {
         return IconToBitmap(GetStockIcon(stockIconID, iconSize));
     }
 
+    generic_string GetSystemFolder(GUID folderID)
+    {
+
+        PWSTR path;
+        SHGetKnownFolderPath(folderID, KF_FLAG_DEFAULT, NULL, &path);
+
+        generic_string retVal;
+        retVal = path;
+        return retVal;
+    }
+
+    bool IsValidDirectory(const TCHAR* sPath)
+    {
+        WIN32_FILE_ATTRIBUTE_DATA attributes = {};
+
+        if (!PathFileExists(sPath))
+            return false;
+
+        if (!GetFileAttributesEx(sPath, GetFileExInfoStandard, &attributes))
+            return false;
+
+        if (!(attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            return false;
+
+        return true;
+    }
+
+    bool IsValidDirectoryS(const generic_string& sPath)
+    {
+        return IsValidDirectory(sPath.c_str());
+    }
+
     enum class PathWritePermission {
         FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
     };

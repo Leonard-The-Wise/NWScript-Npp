@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NWScript-Npp", "NWScript-Npp\NWScript-Npp.vcxproj", "{D414B1FF-04A2-4C73-B17C-4272B7B5932A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37} = {9D6BAC40-E346-4E23-B0EA-960DD98FEA37}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{50BE8F36-2B6A-47FC-8D93-6989E9FBB67F}"
 EndProject

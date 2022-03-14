@@ -44,12 +44,12 @@ protected:
 	// Internal functions
 	HWND _hSelf;
 	HINSTANCE _hInst;
+	HWND _hParent;
 	INT_PTR ShowModal(int dialogID, bool isRTL = false);
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE** ppMyDlgTemplate);
 
 private:
-	HWND _hParent;
 	RECT _rc;
 	void goToCenter();
 };
