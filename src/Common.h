@@ -78,6 +78,44 @@ namespace {
         return TEXT("0x") + rc;
     }
 
+    // Since codecvt is now deprecated API and no replacement is provided, we write our own.
+    std::wstring str2wstr(const std::string& string)
+    {
+        if (string.empty())
+        {
+            return L"";
+        }
+
+        const auto size_needed = MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), nullptr, 0);
+        if (size_needed < 1)
+        {
+            throw std::runtime_error("MultiByteToWideChar() failed: " + std::to_string(size_needed));
+        }
+
+        std::wstring result(size_needed, 0);
+        MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), &result.at(0), size_needed);
+        return result;
+    }
+
+    // Since codecvt is now deprecated API and no replacement is provided, we write our own.
+    std::string wstr2str(const std::wstring& wide_string)
+    {
+        if (wide_string.empty())
+        {
+            return "";
+        }
+
+        const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), nullptr, 0, nullptr, nullptr);
+        if (size_needed < 1)
+        {
+            throw std::runtime_error("WideCharToMultiByte() failed: " + std::to_string(size_needed));
+        }
+
+        std::string result(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), &result.at(0), size_needed, nullptr, nullptr);
+        return result;
+    }
+
     // Opens a file dialog
     bool OpenFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName)
     {
@@ -257,6 +295,71 @@ namespace {
         return IsValidDirectory(sPath.c_str());
     }
 
+    generic_string GetNwnHomePath(int CompilerVersion)
+    {
+        generic_string HomePath;
+
+        if (CompilerVersion >= 174) 
+        {
+            TCHAR DocumentsPath[MAX_PATH];
+
+            if (!SHGetSpecialFolderPath(NULL, DocumentsPath, CSIDL_PERSONAL, TRUE))
+                return HomePath;
+
+            HomePath = DocumentsPath;
+            HomePath.append(TEXT("\\Neverwinter Nights\\"));
+        }
+        else {
+            HKEY Key;
+            LONG Status;
+
+            Status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\BioWare\\NWN\\Neverwinter"), REG_OPTION_RESERVED,
+#ifdef _WIN64
+                KEY_QUERY_VALUE | KEY_WOW64_32KEY,
+#else
+                KEY_QUERY_VALUE,
+#endif
+                & Key);
+
+            if (Status != NO_ERROR)
+                return HomePath;
+
+            try
+            {
+                char NameBuffer[MAX_PATH + 1];
+                DWORD NameBufferSize;
+                bool FoundIt;
+                static const TCHAR* ValueNames[] =
+                {
+                    TEXT("Path"),     // Retail NWN2
+                    TEXT("Location"), // Steam NWN2
+                };
+                FoundIt = false;
+
+                for (size_t i = 0; i < _countof(ValueNames); i += 1)
+                {
+                    NameBufferSize = sizeof(NameBuffer) - sizeof(NameBuffer[0]);
+                    Status = RegQueryValueEx(Key, ValueNames[i], NULL, NULL, (LPBYTE)NameBuffer, &NameBufferSize);
+
+                    if (Status != NO_ERROR)
+                        continue;
+
+                    if ((NameBufferSize > 0) &&
+                        (NameBuffer[NameBufferSize - 1] == '\0'))
+                        NameBufferSize -= 1;
+
+                    HomePath = str2wstr(NameBuffer);
+                }
+            }
+            catch (...)
+            {
+                RegCloseKey(Key);
+            }
+        }
+
+        return HomePath;
+    }
+
     enum class PathWritePermission {
         FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
     };
@@ -322,43 +425,6 @@ namespace {
         CloseHandle(f);
         outPathPermission = PathWritePermission::WriteAllowed;
         return true;
-    }
-
-    // Since codecvt is now deprecated API and no replacement is provided, we write our own.
-    std::wstring str2wstr(const std::string& string)
-    {
-        if (string.empty())
-        {
-            return L"";
-        }
-
-        const auto size_needed = MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), nullptr, 0);
-        if (size_needed < 1)
-        {
-            throw std::runtime_error("MultiByteToWideChar() failed: " + std::to_string(size_needed));
-        }
-
-        std::wstring result(size_needed, 0);
-        MultiByteToWideChar(CP_UTF8, 0, &string.at(0), (int)string.size(), &result.at(0), size_needed);
-        return result;
-    }
-
-    std::string wstr2str(const std::wstring& wide_string)
-    {
-        if (wide_string.empty())
-        {
-            return "";
-        }
-
-        const auto size_needed = WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), nullptr, 0, nullptr, nullptr);
-        if (size_needed < 1)
-        {
-            throw std::runtime_error("WideCharToMultiByte() failed: " + std::to_string(size_needed));
-        }
-
-        std::string result(size_needed, 0);
-        WideCharToMultiByte(CP_UTF8, 0, &wide_string.at(0), (int)wide_string.size(), &result.at(0), size_needed, nullptr, nullptr);
-        return result;
     }
 
     void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args = TEXT(""),

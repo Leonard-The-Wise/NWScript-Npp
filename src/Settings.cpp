@@ -50,6 +50,7 @@ void Settings::Load()
 	additionalIncludeDirs = GetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"));
 	compilerFlags = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"));
 	optimizeScript = GetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"));
+	useNonBiowareExtenstions = GetBoolean(TEXT("Compiler Settings"), TEXT("useNonBiowareExtenstions"));
 	generateSymbols = GetBoolean(TEXT("Compiler Settings"), TEXT("generateSymbols"));
 	compileVersion = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compileVersion"));
 	useScriptPathToCompile = GetBoolean(TEXT("Compiler Settings"), TEXT("useScriptPathToCompile"));
@@ -86,6 +87,7 @@ void Settings::Save()
 	SetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"), additionalIncludeDirs);
 	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"), compilerFlags);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"), optimizeScript);
+	SetBoolean(TEXT("Compiler Settings"), TEXT("useNonBiowareExtenstions"), useNonBiowareExtenstions);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("generateSymbols"), generateSymbols);
 	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compileVersion"), compileVersion);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("useScriptPathToCompile"), useScriptPathToCompile);

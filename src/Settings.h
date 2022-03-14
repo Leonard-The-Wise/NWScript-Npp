@@ -44,6 +44,7 @@ namespace NWScriptPlugin {
 		bool ignoreInstallPaths = false;
 		UINT32 compilerFlags = 0;
 		bool optimizeScript = true;
+		bool useNonBiowareExtenstions = false;
 		bool generateSymbols = false;
 		int compileVersion = 174;
 		bool useScriptPathToCompile = true;

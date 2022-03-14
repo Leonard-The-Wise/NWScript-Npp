@@ -260,9 +260,6 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
-    <None Include="..\media\xmlfile1.bin">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
@@ -288,10 +285,7 @@
     <Image Include="..\Media\NWScript-File.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\add.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\delete.ico">
+    <Image Include="..\Media\Settings.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
