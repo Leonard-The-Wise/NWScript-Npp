@@ -227,6 +227,7 @@
     <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
+    <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -264,6 +265,7 @@
     <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp" />
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
