@@ -5,12 +5,12 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <Windows.h>
-#include <Commctrl.h>
-#include "Common.h"
+#include "pch.h"
+//#include <Windows.h>
+//#include <Commctrl.h>
+//#include "Common.h"
 
 #include "PathAccessDialog.h"
-
 #include "PluginControlsRC.h"
 
 using namespace NWScriptPlugin;

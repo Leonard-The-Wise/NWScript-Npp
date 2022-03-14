@@ -8,20 +8,20 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
+#include "pch.h"
+//#include <assert.h>
+//#include <windows.h>
+//#include <commdlg.h>
+//#include <shellapi.h>
+//#include <ShlObj.h>
+//#include <Shlwapi.h>
+//#include <stdexcept>
+//#include <errhandlingapi.h>
+//#include <sstream>
+//#include <tchar.h>
+//#include <fstream>
+//#include "tinyxml2.h"
 
-#include <assert.h>
-#include <windows.h>
-#include <commdlg.h>
-#include <shellapi.h>
-#include <ShlObj.h>
-#include <Shlwapi.h>
-#include <stdexcept>
-#include <errhandlingapi.h>
-#include <sstream>
-#include <tchar.h>
-#include <fstream>
-
-#include "tinyxml2.h"
 #include "Common.h"
 
 

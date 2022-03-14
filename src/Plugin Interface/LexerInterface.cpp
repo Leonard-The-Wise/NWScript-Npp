@@ -8,6 +8,8 @@
  // Copyright 1998-2005 by Neil Hodgson <neilh@scintilla.org>
  // The License.txt file describes the conditions under which this software may be distributed.
 
+#include "pch.h"
+
 #include "DllMain.h"
 #include "LexerInterface.h"
 

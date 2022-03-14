@@ -7,15 +7,18 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <Windows.h>
-#include <string>
-#include <sstream>
-#include <stdexcept>
-#include <ShlObj.h>
-#include <codecvt>
-#include <locale>
-#include <cwchar>
-#include <Shlwapi.h>
+#include "pch.h"
+
+//#include <Windows.h>
+//#include <string>
+//#include <sstream>
+//#include <stdexcept>
+//#include <ShlObj.h>
+//#include <codecvt>
+//#include <locale>
+//#include <cwchar>
+//#include <Shlwapi.h>
+
 
 #include "Common.h"
 #include "LexerCatalogue.h"
@@ -577,7 +580,7 @@ void Plugin::DoBatchProcessFiles(HRESULT decision)
 {
     static ProcessFilesDialog processing;
 
-    if (decision == IDCANCEL || decision == IDCLOSE)
+    if ((int)decision == IDCANCEL || (int)decision == IDCLOSE)
         return;
 
     if (!processing.isCreated())
@@ -594,7 +597,7 @@ void Plugin::DoBatchProcessFiles(HRESULT decision)
 void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 {
     // Trash results for memory space in a cancel.
-    if (decision == IDCANCEL || decision == IDNO)
+    if (static_cast<int>(decision) == IDCANCEL || static_cast<int>(decision) == IDNO)
     {
         Instance()._NWScriptParseResults.reset();
         return;

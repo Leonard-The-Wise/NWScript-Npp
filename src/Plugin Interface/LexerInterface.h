@@ -11,8 +11,8 @@
 
 #pragma once
 
-#include <string.h>
-#include <wtypes.h>
+//#include <string.h>
+//#include <wtypes.h>
 #include "LexerCatalogue.h"
 
 using namespace LexerInterface;

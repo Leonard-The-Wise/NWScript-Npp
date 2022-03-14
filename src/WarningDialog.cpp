@@ -5,11 +5,12 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <Windows.h>
-#include <Commctrl.h>
-#include <sstream>
+#include "pch.h"
+//#include <Windows.h>
+//#include <Commctrl.h>
+//#include <sstream>
 
-#include "PluginMain.h"
+//#include "PluginMain.h"
 #include "WarningDialog.h"
 
 #include "PluginControlsRC.h"
@@ -33,7 +34,8 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 			//case IDCANCEL: disabled
 				// Check settings and fall back to IDOK
 			case IDC_CHKOK:
-				Plugin::Instance().Settings().autoIndentationWarningAccepted = true;
+				// TODO: FIXME
+				//Plugin::Instance().Settings().autoIndentationWarningAccepted = true;
 			case IDOK:
 				display(false);
 				destroy();

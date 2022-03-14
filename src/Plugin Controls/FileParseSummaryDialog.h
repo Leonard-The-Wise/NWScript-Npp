@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "Common.h"
 #include "StaticDialog.h"
+#include "Common.h"
 
 namespace NWScriptPlugin {
 

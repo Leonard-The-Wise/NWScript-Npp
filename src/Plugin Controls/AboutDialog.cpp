@@ -5,13 +5,14 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <Windows.h>
-#include <Commctrl.h>
-#include <sstream>
+#include "pch.h"
+//#include <Windows.h>
+//#include <Commctrl.h>
+//#include <sstream>
+//
+//#include "jpcre2.hpp"
 
-#include "jpcre2.hpp"
-
-#include "PluginMain.h"
+//#include "PluginMain.h"
 #include "AboutDialog.h"
 
 #include "PluginControlsRC.h"
@@ -20,7 +21,6 @@
 // recompilation of this file.
 // #include "ProjectVersion.h"
 
-#include "Common.h"
 #include "VersionFromResource.h"
 
 
@@ -94,7 +94,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 		{
 			// Get version from module's binary file
-			DllVersion versionInfo = GetVersionFromResource(Plugin::Instance().DllHModule());
+			DllVersion versionInfo = GetVersionFromResource(_hInst);
 			generic_stringstream sVersion = {};
 			sVersion << "Version " << versionInfo.wLeftMost << "." << versionInfo.wSecondLeft << "." <<
 				versionInfo.wSecondRight << " (build " << versionInfo.wRightMost << ")";

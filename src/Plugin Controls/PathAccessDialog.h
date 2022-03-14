@@ -6,9 +6,9 @@
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
-#include <algorithm>
-#include <vector>
-#include <sstream>
+//#include <algorithm>
+//#include <vector>
+//#include <sstream>
 
 #include "ModalDialog.h"
 #include "Common.h"

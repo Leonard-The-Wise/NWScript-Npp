@@ -9,6 +9,9 @@
 
 #include "StaticDialog.h"
 
+#include "Common.h"
+
+
 namespace NWScriptPlugin {
 
 	class BatchProcessingDialog : public StaticDialog

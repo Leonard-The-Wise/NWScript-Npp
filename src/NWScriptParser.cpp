@@ -5,19 +5,21 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <assert.h>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <utility>
-#include <tchar.h>
-#include <sys/stat.h>
-#include <fstream>
-#include <cctype>
-#include <iterator>
-#include <locale>
-#include <ShlObj.h>
+#include "pch.h"
+
+//#include <assert.h>
+//#include <memory>
+//#include <string>
+//#include <sstream>
+//#include <algorithm>
+//#include <utility>
+//#include <tchar.h>
+//#include <sys/stat.h>
+//#include <fstream>
+//#include <cctype>
+//#include <iterator>
+//#include <locale>
+//#include <ShlObj.h>
 
 // We switched from std::regex to boost because std:regex was very slow and with poor features...
 // then we switched again from boost to PCRE2 because boost doesn't support regex subroutines and
@@ -107,6 +109,11 @@ static const jpcre2::select<wchar_t>::Regex keywordImportW(str2wstr(KEYWORDREGEX
 constexpr const int blockSize = 128 * 1024 + 4;
 
 using namespace NWScriptPlugin;
+
+void NWScriptParser::ScriptParseResults::Sort() {
+	std::sort(Members.begin(), Members.end(),
+		[](ScriptMember a, ScriptMember b) {  return a.sName < b.sName;});
+}
 
 bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResults& outParseResults)
 {

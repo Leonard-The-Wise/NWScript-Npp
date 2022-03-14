@@ -5,9 +5,10 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <stdarg.h>
+#include "pch.h"
+//#include <stdarg.h>
+//#include "jpcre2.hpp"
 
-#include "jpcre2.hpp"
 #include "NWScriptLogger.h"
 
 #define COMPILERREGEX R"((?<fileName>[a-zA-Z0-9\s_\\.\-\(\):]+)\.(?<fileExt>[a-zA-Z0-9\s_\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<code>NSC\d+):\s(?<message>.+))"

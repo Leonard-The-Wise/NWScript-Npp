@@ -5,7 +5,8 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <vector>
+#include "pch.h"
+//#include <vector>
 
 #include "Notepad_plus_msgs.h"
 #include "PluginMessenger.h"

@@ -6,7 +6,9 @@
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
+
 #include "StaticDialog.h"
+#include "Settings.h"
 
 namespace NWScriptPlugin {
 
@@ -21,6 +23,8 @@ namespace NWScriptPlugin {
 
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+	private:
+		//Settings* _settings:
 	};
 
 }

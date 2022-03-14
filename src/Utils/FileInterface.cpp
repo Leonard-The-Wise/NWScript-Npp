@@ -19,7 +19,8 @@
 //
 //:://///////////////////////////////////////////////////////////////////
 
-#include <locale>
+#include "pch.h"
+//#include <locale>
 #include <codecvt>
 #include "FileInterface.h"
 

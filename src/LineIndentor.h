@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "PluginMessenger.h"
+
 namespace NWScriptPlugin {
 
 	// The Plugin's base custom Line Indentor for a given Scintilla Text Editor window.	
