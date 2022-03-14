@@ -20,6 +20,7 @@
 #include "LineIndentor.h"
 #include "Settings.h"
 #include "NWScriptParser.h"
+#include "NWScriptCompiler.h"
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -133,7 +134,7 @@ namespace NWScriptPlugin {
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _dllHModule(dllModule), _notepadHwnd(nullptr) {}
+			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr) {}
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer.isPluginLang; }
@@ -199,6 +200,7 @@ namespace NWScriptPlugin {
 		NotepadLexer _notepadCurrentLexer;
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
+		NWScriptCompiler _compiler;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
 		// Internal handles

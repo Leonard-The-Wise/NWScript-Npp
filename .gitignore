@@ -33,8 +33,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
-# Source Media
+# External projects
 Source Media/
+nwnsc/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

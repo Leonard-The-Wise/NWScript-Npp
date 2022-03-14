@@ -61,6 +61,7 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 			}
 
 			CheckDlgButton(_hSelf, IDC_CHKCOMPOPTIMIZE, myset.optimizeScript);
+			CheckDlgButton(_hSelf, IDC_CHKNONBIOWAREXTENSIONS, myset.useNonBiowareExtenstions);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPNDBSYMBOLS, myset.generateSymbols);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPSTRICTMODE, myset.compilerFlags & NscCompilerFlag_StrictModeEnabled);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPMAKEFILE, myset.compilerFlags & NscCompilerFlag_GenerateMakeDeps);
@@ -294,7 +295,9 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.setIncludeDirs(vData);
 
 	myset.optimizeScript = IsDlgButtonChecked(_hSelf, IDC_CHKCOMPOPTIMIZE);
+	myset.useNonBiowareExtenstions = IsDlgButtonChecked(_hSelf, IDC_CHKNONBIOWAREXTENSIONS);
 	myset.generateSymbols = IsDlgButtonChecked(_hSelf, IDC_CHKCOMPNDBSYMBOLS);
+
 	myset.compilerFlags = 0;
 	myset.compilerFlags |= IsDlgButtonChecked(_hSelf, IDC_CHKCOMPSTRICTMODE) ? NscCompilerFlag_StrictModeEnabled : 0;
 	myset.compilerFlags |= IsDlgButtonChecked(_hSelf, IDC_CHKCOMPMAKEFILE) ? NscCompilerFlag_GenerateMakeDeps : 0;
@@ -305,6 +308,8 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.useScriptPathToCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR);
 	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
 	myset.outputCompileDir = tempBuffer;
+
+	myset.compilerSettingsCreated = true;
 
 	return true;
 }
