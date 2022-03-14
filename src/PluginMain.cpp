@@ -27,7 +27,6 @@
 #include "CompilerSettings.h"
 #include "FileParseSummaryDialog.h"
 #include "PathAccessDialog.h"
-#include "ProcessFilesDialog.h"
 #include "WarningDialog.h"
 
 #include "XMLGenStrings.h"
@@ -46,14 +45,13 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_COMPILESCRIPT 2
 #define PLUGINMENU_DISASSEMBLESCRIPT 3
 #define PLUGINMENU_BATCHPROCESSING 4
-#define PLUGINMENU_RUNLASTBATCH 5
-#define PLUGINMENU_SETTINGS 6
-#define PLUGINMENU_DASH2 7
-#define PLUGINMENU_INSTALLDARKTHEME 8
-#define PLUGINMENU_IMPORTDEFINITIONS 9
-#define PLUGINMENU_RESETEDITORCOLORS 10
-#define PLUGINMENU_DASH3 11
-#define PLUGINMENU_ABOUTME 12
+#define PLUGINMENU_SETTINGS 5
+#define PLUGINMENU_DASH2 6
+#define PLUGINMENU_INSTALLDARKTHEME 7
+#define PLUGINMENU_IMPORTDEFINITIONS 8
+#define PLUGINMENU_RESETEDITORCOLORS 9
+#define PLUGINMENU_DASH3 10
+#define PLUGINMENU_ABOUTME 11
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
@@ -61,7 +59,6 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Compile script"), Plugin::CompileScript},
     {TEXT("Disassemble file..."), Plugin::DisassembleFile},
     {TEXT("Batch script processing..."), Plugin::BatchProcessFiles},
-    {TEXT("Run last batch setup"), Plugin::RunLastBatch},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
@@ -223,7 +220,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         DetectDarkThemeInstall();
         LoadNotepadLexer();
 
-        SetupPluginMenuItems();
+        SetupMenuIcons();
         _isReady = true;
 
         // Auto call a function that required restart during the previous session (because of privilege elevation)
@@ -321,7 +318,7 @@ void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
 // Set the Auto-Indent type for all of this Plugin's installed languages
 void Plugin::SetAutoIndentSupport()
 {
-    PluginMessenger& msg = Messenger();
+    PluginMessenger& msg = Instance().Messenger();
     bool lexerSearch = false;
     ExternalLexerAutoIndentMode langIndent = ExternalLexerAutoIndentMode::Standard;
 
@@ -361,8 +358,12 @@ void Plugin::SetAutoIndentSupport()
         Instance()._needPluginAutoIndent = false;
 
         // Remove the "Use Auto-Indent" menu command and the following separator.
-        RemovePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT);
-        RemovePluginMenuItem(PLUGINMENU_DASH1);
+        HMENU hMenu = Instance().GetNppMainMenu();
+        if (hMenu)
+        {
+            RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._cmdID, MF_BYCOMMAND);
+            RemoveMenu(hMenu, pluginFunctions[PLUGINMENU_DASH1]._cmdID, MF_BYCOMMAND);
+        }
 
         // Auto-adjust the settings
         Instance().Settings().enableAutoIndentation = false;
@@ -403,6 +404,16 @@ void Plugin::LoadNotepadLexer()
     _notepadCurrentLexer.SetLexer(currLang, lexerName, isPluginLanguage, langIndent);
 }
 
+// A helper routine to remove Dark Theme menu item
+void RemoveDarkThemeInstallMenu()
+{
+    HMENU hMenu = Plugin::Instance().GetNppMainMenu();
+    if (hMenu)
+    {
+        RemoveMenu(hMenu, Plugin::pluginFunctions[PLUGINMENU_INSTALLDARKTHEME]._cmdID, MF_BYCOMMAND);
+    }
+}
+
 // Detects if Dark Theme is already installed
 void Plugin::DetectDarkThemeInstall()
 {
@@ -412,7 +423,7 @@ void Plugin::DetectDarkThemeInstall()
 
     if (error)
     {
-        RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
+        RemoveDarkThemeInstallMenu();
         _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
         return;
     }
@@ -423,12 +434,12 @@ void Plugin::DetectDarkThemeInstall()
     else
     {    
         //Dark theme installed, mark it here.
-        RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
+        RemoveDarkThemeInstallMenu();
         _pluginDarkThemeIs = DarkThemeStatus::Installed;
     }
 }
 
-// Handling functions for plugin menu
+// Setup menu icons
 #pragma region
 
 #define NOTEPADPLUS_USER_INTERNAL  (WM_USER + 0000)
@@ -452,59 +463,19 @@ HMENU Plugin::GetNppMainMenu()
     return ::GetMenu(Instance().NotepadHwnd());
 }
 
-void Plugin::EnablePluginMenuItem(int commandID, bool enabled)
+bool Plugin::SetStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
 {
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        EnableMenuItem(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND | (enabled) ? MF_ENABLED : MF_DISABLED );
-    }
-}
-
-void Plugin::RemovePluginMenuItem(int commandID)
-{
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        RemoveMenu(hMenu, pluginFunctions[commandID]._cmdID, MF_BYCOMMAND);
-    }
-}
-
-bool Plugin::SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
-{
-
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        HBITMAP hIconBmp = IconToBitmap(reinterpret_cast<HICON>(LoadImage(_dllHModule, MAKEINTRESOURCE(resourceID),
-            IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
-        bool bSuccess = false;
-        if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
-        if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
-        if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
-        return bSuccess;
-    }
-
-    return false;
-
-}
-
-bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
-{
-    HMENU hMenu = GetNppMainMenu();
+    HMENU hMenu = Instance().GetNppMainMenu();
     if (hMenu)
     {
         HBITMAP hIconBmp = GetStockIconBitmap(stockIconID, IconSize::Size16x16);
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
         if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
         if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
+            bSuccess = SetMenuItemBitmaps(hMenu, Instance().GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
 
         return bSuccess;
     }
@@ -512,7 +483,7 @@ bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID
     return false;
 }
 
-void Plugin::SetupPluginMenuItems()
+void Plugin::SetupMenuIcons()
 {
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
@@ -522,71 +493,45 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
     // Don't use the shield icons when user runs in Administrator mode
-    if (!IsUserAnAdmin())
+    if (IsUserAnAdmin())
+        return;
+
+    // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
+    bSuccessLexer = CheckWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
+    bSuccessDark = CheckWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
+    bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
+
+    // If this file do not exist, we test the directory instead
+    if (!bAutoComplete)
+        bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"].parent_path(), fAutoCompletePerm);
+
+    if (!bSuccessLexer)
     {
-        // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
-        bSuccessLexer = CheckWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
-        bSuccessDark = CheckWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
-        bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
+        generic_stringstream sError;
+        sError << TEXT("Unable to read information for file bellow: ") << "\r\n";
+        sError << _pluginPaths["PluginLexerConfigFilePath"] << "\r\n";
+        sError << "\r\n";
+        sError << "NWScript Plugin may not work properly, please check your installation!";
 
-        // If this file do not exist, we test the directory instead
-        if (!bAutoComplete)
-            bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"].parent_path(), fAutoCompletePerm);
-
-        if (!bSuccessLexer)
-        {
-            generic_stringstream sError;
-            sError << TEXT("Unable to read information for file bellow: ") << "\r\n";
-            sError << _pluginPaths["PluginLexerConfigFilePath"] << "\r\n";
-            sError << "\r\n";
-            sError << "NWScript Plugin may not work properly, please check your installation!";
-
-            ::MessageBox(_notepadHwnd, sError.str().c_str(), pluginName.c_str(), MB_ICONERROR | MB_APPLMODAL | MB_OK);
-        }
-
-        // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
-        if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
-            SetPluginStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
-        // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
-        if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
-            SetPluginStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
-        // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
-        if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
-            SetPluginStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
+        ::MessageBox(_notepadHwnd, sError.str().c_str(), pluginName.c_str(), MB_ICONERROR | MB_APPLMODAL | MB_OK);
     }
 
-    // Setup icons for Compiler, settings, about me...
-    SetPluginStockMenuItemIcon(PLUGINMENU_COMPILESCRIPT, SHSTOCKICONID::SIID_DOCASSOC, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGS, true, false);
-    SetPluginStockMenuItemIcon(PLUGINMENU_ABOUTME, SHSTOCKICONID::SIID_INFO, true, false);
-
-    // Menu run last batch: initially disabled
-    EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+    // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
+    if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
+        SetStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
+    // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
+    if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
+        SetStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
+    // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
+    if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
+        SetStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
 }
 
-#pragma endregion Plugin menu handling
+#pragma endregion Menu icons setup
 
 #pragma endregion Plugin initialization functions and dynamic behavior
 
 #pragma region
-
-void Plugin::DoBatchProcessFiles(HRESULT decision)
-{
-    static ProcessFilesDialog processing;
-
-    if (decision == IDCANCEL || decision == IDCLOSE)
-        return;
-
-    if (!processing.isCreated())
-    {
-        processing.init(Instance().DllHModule(), Instance().NotepadHwnd());
-    }
-
-    processing.doDialog();
-
-    // Enable run last batch menu
-    Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
-}
 
 void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 {
@@ -852,19 +797,19 @@ void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
     // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
     if (whichPhase == RestartFunctionHook::ResetEditorColorsPhase1)
     {
-        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
     }
     else
     {
-        int mResult = MessageBox(NotepadHwnd(),
+        int mResult = MessageBox(Instance().NotepadHwnd(),
             TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
             TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
 
         if (mResult == IDYES)
         {
-            SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
         }
     }
 }
@@ -880,19 +825,19 @@ void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
     // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
     if (whichPhase == RestartFunctionHook::InstallDarkModePhase1)
     {
-        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
     }
     else
     {
-        int mResult = MessageBox(NotepadHwnd(),
+        int mResult = MessageBox(Instance().NotepadHwnd(),
             TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
             TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
 
         if (mResult == IDYES)
         {
-            SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
         }
     }
 }
@@ -901,15 +846,15 @@ bool Plugin::PatchDefaultThemeXMLFile()
 {
     tinyxml2::XMLDocument defaultThemeXML;
 
-    std::string asciiFileStyler = wstr2str(_pluginPaths["PluginLexerConfigFilePath"]);
+    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
     errno_t error = defaultThemeXML.LoadFile(asciiFileStyler.c_str());
     generic_stringstream errorStream;
     if (error)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
         errorStream << TEXT("Error ID: ") << defaultThemeXML.ErrorID();
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -919,9 +864,9 @@ bool Plugin::PatchDefaultThemeXMLFile()
     tinyxml2::XMLElement* lexerType = SearchElement(defaultThemeXML.RootElement(), "LexerType", "name", lexerName);
     if (!lexerType)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -929,9 +874,9 @@ bool Plugin::PatchDefaultThemeXMLFile()
     tinyxml2::XMLElement* lexerWordsStyle = lexerType->FirstChildElement("WordsStyle");
     if (!lexerWordsStyle)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -973,9 +918,9 @@ bool Plugin::PatchDefaultThemeXMLFile()
     error = defaultThemeXML.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while patching file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while patching file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << defaultThemeXML.ErrorID();
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -986,15 +931,15 @@ bool Plugin::PatchDarkThemeXMLFile()
 {
     tinyxml2::XMLDocument darkThemeXML;
 
-    std::string asciiFileStyler = wstr2str(_pluginPaths["NotepadDarkThemeFilePath"]);
+    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["NotepadDarkThemeFilePath"]);
     errno_t error = darkThemeXML.LoadFile(asciiFileStyler.c_str());
     generic_stringstream errorStream;
     if (error)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
         errorStream << TEXT("Error ID: ") << darkThemeXML.ErrorID();
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -1002,9 +947,9 @@ bool Plugin::PatchDarkThemeXMLFile()
     tinyxml2::XMLElement* lexerStyles = SearchElement(darkThemeXML.RootElement(), "LexerStyles");
     if (!lexerStyles)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -1044,9 +989,9 @@ bool Plugin::PatchDarkThemeXMLFile()
     // Last check...
     if (!lexerType)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -1060,9 +1005,9 @@ bool Plugin::PatchDarkThemeXMLFile()
     error = darkThemeXML.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while patching file: ") << _pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while patching file: ") << Instance()._pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << darkThemeXML.ErrorID();
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -1106,7 +1051,7 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
     {
         // Show File Access dialog box in Admin Mode
         PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(true);
         ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
         ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following files/directories:"));
@@ -1137,7 +1082,7 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
     {
         // Show File Access dialog box in Normal Mode
         PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
         ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
@@ -1160,7 +1105,7 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
     {
         // Show File Access dialog box in Normal Mode
         PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
         ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
@@ -1182,7 +1127,7 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
     {
         // Show File Access dialog box in Normal Mode
         PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
         ePermission.SetAdminMode(false);
         ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
         ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
@@ -1237,25 +1182,13 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
-    // If compiler settings not initialized, run command, re-check - since it's modal.
-    if (!Instance().Settings().compilerSettingsCreated)
-        CompilerSettings();
-
-    if (!Instance().Settings().compilerSettingsCreated)
-        return;
-
+    MessageBox(Instance().NotepadHwnd(), TEXT("Coming soon! :)"), pluginName.c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 // Disassemble a compiled script file
 PLUGINCOMMAND Plugin::DisassembleFile()
 {
 
-
-}
-
-// Menu Command "Run last successful batch" function handler. 
-PLUGINCOMMAND Plugin::RunLastBatch()
-{
 
 }
 
@@ -1267,7 +1200,6 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 
     if (!batchProcessing.isCreated())
     {
-        batchProcessing.setOkDialogCallback(&Plugin::DoBatchProcessFiles);
         batchProcessing.appendSettings(&Instance()._settings);
         batchProcessing.init(Instance().DllHModule(), Instance().NotepadHwnd());
     }

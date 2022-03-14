@@ -37,7 +37,6 @@ namespace NWScriptPlugin {
 		RestartFunctionHook notepadRestartFunction = RestartFunctionHook::None;
 
 		// Compiler settings
-		bool compilerSettingsCreated = false;
 		int neverwinterInstallChoice = 0;
 		generic_string neverwinterOneInstallDir;
 		generic_string neverwinterTwoInstallDir;
@@ -50,10 +49,9 @@ namespace NWScriptPlugin {
 		generic_string outputCompileDir;
 
 		// Batch process files settings
-		generic_string startingBatchFolder;
+		generic_string startingFolder;
 		int compileMode = 0;
 		bool recurseSubFolders = false;
-		bool continueCompileOnFail = false;
 		bool useScriptPathToBatchCompile = true;
 		generic_string batchOutputCompileDir;
 

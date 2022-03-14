@@ -2,18 +2,18 @@
 // Microsoft Visual C++ generated include file.
 // Used by PluginControls.rc
 //
+#define IDC_NWSCRIPTFILE96              2
+#define IDI_NWSCRIPTFILE96              2
 #define IDB_NWSCRIPTLOGO                101
 #define IDD_ABOUT                       102
 #define IDB_HEREBEDRAGONS               103
 #define IDD_HEREBEDRAGONS               104
+#define IDD_FILEACCESSDIALOG            106
 #define IDD_PATHACCESSDIALOG            106
 #define IDD_PARSERESULTS                108
-#define IDI_NWSCRIPTFILE96              110
 #define IDD_COMPILERSETTINGS            117
 #define IDD_BATCHPROCESS                120
-#define IDD_PROCESSFILES                127
-#define IDI_ICON1                       129
-#define IDI_SETTINGS                    129
+#define IDI_ICON2                       126
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -52,19 +52,19 @@
 #define IDC_CBOTARGETVERSION            1035
 #define IDC_CHKOUTPUTDIR                1036
 #define IDC_TXTOUTPUTDIR                1037
-#define IDSTART                         1038
-#define IDC_BTOUTPUTDIR                 1039
-#define IDC_TXTBATCHDIRSTART            1040
-#define IDC_TXTOUTPUTDIRBATCH           1041
-#define IDC_CHKRECURSIVE                1042
-#define IDC_BTOUTPUTDIRBATCH            1043
-#define IDC_TXTBATCHFILTERS             1045
-#define IDC_RDCOMPILE                   1047
-#define IDC_RDDISASM                    1049
-#define IDC_CHKCONTINUEONFAIL           1050
-#define IDC_BTBATCHDIRSTART             1051
-#define IDC_LBLSTATUS                   1052
-#define IDC_CHKOUTPUTDIRBATCH           1053
+#define IDSTART                         1037
+#define IDC_BTOUTPUTDIR                 1038
+#define IDC_TXTBATCHDIR                 1038
+#define IDC_TXTOUTPUTDIR2               1039
+#define IDC_TXTOUTPUTDIRBATCH           1039
+#define IDC_CHKRECURSIVE                1040
+#define IDC_BTOUTPUTDIR2                1041
+#define IDC_TXTBATFILTERS               1042
+#define IDC_RADIO1                      1043
+#define IDC_RADIO2                      1044
+#define IDC_CHKCONTINUEONFAIL           1045
+#define IDC_BTBATCHDIR                  1046
+#define IDC_LBLSTATUS                   1047
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -73,9 +73,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        127
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1054
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

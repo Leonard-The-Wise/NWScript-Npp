@@ -146,39 +146,32 @@ BEGIN
     PUSHBUTTON      "...",IDC_BTOUTPUTDIR,383,244,20,14
 END
 
-IDD_BATCHPROCESS DIALOGEX 0, 0, 409, 171
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_BATCHPROCESS DIALOGEX 0, 0, 409, 216
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Batch Process Scripts"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Close",IDCLOSE,241,150,50,14
-    PUSHBUTTON      "Start",IDSTART,137,150,50,14
+    DEFPUSHBUTTON   "Close",IDCLOSE,241,195,50,14
+    PUSHBUTTON      "Start",IDSTART,137,195,50,14
     GROUPBOX        "Files Selection",IDC_STATIC,7,7,395,90
     LTEXT           "Starting Folder:",IDC_STATIC,18,26,51,8
-    EDITTEXT        IDC_TXTBATCHDIRSTART,74,23,298,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BTBATCHDIRSTART,376,23,20,14
+    EDITTEXT        IDC_TXTBATCHDIR,74,23,298,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTBATCHDIR,376,23,20,14
     CONTROL         "Recurse into subfolders",IDC_CHKRECURSIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,60,91,10
     LTEXT           "File filters:",IDC_STATIC,18,44,34,8
-    EDITTEXT        IDC_TXTBATCHFILTERS,74,40,84,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_TXTBATFILTERS,74,40,84,14,ES_AUTOHSCROLL
     LTEXT           "(comma-separated values "","")",IDC_STATIC,165,43,96,8
     GROUPBOX        "Mode",IDC_STATIC,273,41,98,50
-    CONTROL         "Compile",IDC_RDCOMPILE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,281,56,41,10
-    CONTROL         "Disassemble",IDC_RDDISASM,"Button",BS_AUTORADIOBUTTON,281,71,55,10
+    CONTROL         "Compile",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,281,56,41,10
+    CONTROL         "Disassemble",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,281,71,55,10
     CONTROL         "Continue to the next file upon a failed compilation",IDC_CHKCONTINUEONFAIL,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,75,175,10
+    GROUPBOX        "Status",IDC_STATIC,7,144,395,40
+    CTEXT           "Awaiting command...",IDC_LBLSTATUS,22,163,369,8
     GROUPBOX        "Output Directory",IDC_STATIC,7,100,395,40
-    CONTROL         "Same of the script file",IDC_CHKOUTPUTDIRBATCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,119,85,10
+    CONTROL         "Same of the script file",IDC_CHKOUTPUTDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,119,85,10
     EDITTEXT        IDC_TXTOUTPUTDIRBATCH,103,117,263,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BTOUTPUTDIRBATCH,375,117,20,14
-END
-
-IDD_PROCESSFILES DIALOGEX 0, 0, 311, 78
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    DEFPUSHBUTTON   "Cancel",IDCANCEL,125,57,50,14
-    GROUPBOX        "Processing file(s)...",IDC_STATIC,7,7,297,44
-    CTEXT           "Awaiting command...",IDC_LBLSTATUS,24,26,280,8
+    PUSHBUTTON      "...",IDC_BTOUTPUTDIR2,375,117,20,14
 END
 
 
@@ -231,15 +224,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 402
         TOPMARGIN, 7
-        BOTTOMMARGIN, 164
-    END
-
-    IDD_PROCESSFILES, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 304
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 71
+        BOTTOMMARGIN, 209
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -289,11 +274,6 @@ BEGIN
     0
 END
 
-IDD_PROCESSFILES AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -313,8 +293,6 @@ IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_NWSCRIPTFILE96      ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\NWScript-File.ico"
-
-IDI_SETTINGS            ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\Settings.ico"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////
