@@ -10,6 +10,9 @@
 #include <map>
 #include "StaticDialog.h"
 
+#include "Common.h"
+
+
 namespace NWScriptPlugin {
 
 	class AboutDialog : public StaticDialog

@@ -5,12 +5,13 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <algorithm>
-#include <cctype>
-#include <string>
-#include <tchar.h>
-#include <sstream>
-#include <iomanip>
+#include "pch.h"
+//#include <algorithm>
+//#include <cctype>
+//#include <string>
+//#include <tchar.h>
+//#include <sstream>
+//#include <iomanip>
 
 
 #include "Settings.h"

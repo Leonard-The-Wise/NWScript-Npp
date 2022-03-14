@@ -9,7 +9,7 @@
 
 // #define USEADVANCEDENCODINGDETECTION
 
-#include <iostream>
+//#include <iostream>
 #include <vector>
 #include "Common.h"
 
@@ -60,10 +60,7 @@ namespace NWScriptPlugin {
 
 			void AddSpacedStringAsKeywords(const generic_string& sKWArray);
 
-			void Sort() {
-				std::sort(Members.begin(), Members.end(),
-					[](ScriptMember a, ScriptMember b) {  return a.sName < b.sName;});
-			}
+			void Sort();
 		};
 
 		explicit NWScriptParser(HWND MyParent) : _hWnd(MyParent) {}

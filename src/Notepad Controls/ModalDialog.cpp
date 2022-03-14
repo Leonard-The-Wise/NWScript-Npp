@@ -5,8 +5,9 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <stdexcept>
-#include <stdio.h>
+#include "pch.h"
+//#include <stdexcept>
+//#include <stdio.h>
 
 #include "ModalDialog.h"
 

@@ -151,6 +151,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,6 +177,8 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -221,6 +225,7 @@
     <ClInclude Include="..\src\NWScriptCompiler.h" />
     <ClInclude Include="..\src\NWScriptLogger.h" />
     <ClInclude Include="..\src\NWScriptParser.h" />
+    <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h" />
     <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h" />
@@ -250,9 +255,18 @@
   <ItemGroup>
     <ClCompile Include="..\src\Common.cpp" />
     <ClCompile Include="..\src\Lexers\LexerCatalogue.cpp" />
-    <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx" />
-    <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx" />
-    <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx" />
+    <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
     <ClCompile Include="..\src\LineIndentor.cpp" />
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
@@ -260,6 +274,10 @@
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />
     <ClCompile Include="..\src\NWScriptLogger.cpp" />
     <ClCompile Include="..\src\NWScriptParser.cpp" />
+    <ClCompile Include="..\src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp" />
     <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp" />
@@ -277,8 +295,14 @@
     <ClCompile Include="..\src\PluginMessenger.cpp" />
     <ClCompile Include="..\src\Settings.cpp" />
     <ClCompile Include="..\src\Utils\FileInterface.cpp" />
-    <ClCompile Include="..\src\Utils\tinyxml2.cpp" />
-    <ClCompile Include="..\src\Utils\Utf8_16.cpp" />
+    <ClCompile Include="..\src\Utils\tinyxml2.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Utils\Utf8_16.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\WarningDialog.cpp" />
   </ItemGroup>
   <ItemGroup>

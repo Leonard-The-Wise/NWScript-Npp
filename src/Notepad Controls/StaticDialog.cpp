@@ -16,7 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-#include <stdio.h>
+#include "pch.h"
+//#include <stdio.h>
 
 #include "StaticDialog.h"
 

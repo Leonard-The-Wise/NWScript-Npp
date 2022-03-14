@@ -6,15 +6,15 @@
  // The License.txt file describes the conditions under which this software may be distributed.
 
 
+#include "pch.h"
+//#include <Windows.h>
+//#include <Commctrl.h>
+//#include <sstream>
 
-#include <Windows.h>
-#include <Commctrl.h>
-#include <sstream>
-
-#include "PluginMain.h"
-#include "FileParseSummaryDialog.h"
+//#include "PluginMain.h"
 
 #include "PluginControlsRC.h"
+#include "FileParseSummaryDialog.h"
 
 
 using namespace NWScriptPlugin;

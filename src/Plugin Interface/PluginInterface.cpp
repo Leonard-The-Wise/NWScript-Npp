@@ -6,6 +6,8 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
+#include "pch.h"
+
 #include "PluginInterface.h"
 #include "PluginMain.h"
 

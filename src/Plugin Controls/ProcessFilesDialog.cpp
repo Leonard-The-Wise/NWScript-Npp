@@ -5,9 +5,10 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include <Windows.h>
-#include <Commctrl.h>
-#include <sstream>
+#include "pch.h"
+//#include <Windows.h>
+//#include <Commctrl.h>
+//#include <sstream>
 
 #include "PluginMain.h"
 #include "ProcessFilesDialog.h"

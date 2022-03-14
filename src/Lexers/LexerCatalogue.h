@@ -7,8 +7,8 @@
 #pragma once
 
 #include <string>
-#include <tchar.h>
-#include <wtypes.h>
+//#include <tchar.h>
+//#include <wtypes.h>
 
 #include "ILexer.h"
 #include "Notepad_plus_msgs.h"

@@ -8,7 +8,7 @@
 #pragma once
 
 #include "ModalDialog.h"
-#include "CompilerSettings.h"
+#include "Settings.h"
 
 namespace NWScriptPlugin {
 

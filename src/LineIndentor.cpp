@@ -7,7 +7,9 @@
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
 
-#include "PluginMain.h"
+#include "pch.h"
+
+#include "Scintilla.h"
 #include "LineIndentor.h"
 
 using namespace NWScriptPlugin;

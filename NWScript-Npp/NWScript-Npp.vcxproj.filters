@@ -29,6 +29,9 @@
     <Filter Include="Plugin Dialogs">
       <UniqueIdentifier>{bc8f6c69-15c8-4ae4-9125-f04f61638c09}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Precompiled Header">
+      <UniqueIdentifier>{4277c788-dd29-40f9-bfa1-0e159b037504}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -169,6 +172,9 @@
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\pch.h">
+      <Filter>Precompiled Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -236,6 +242,9 @@
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Common.cpp" />
+    <ClCompile Include="..\src\pch.cpp">
+      <Filter>Precompiled Header</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
