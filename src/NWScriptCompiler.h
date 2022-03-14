@@ -10,9 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "Nsc.h"
 #include "ResourceManager.h"
-
 
 namespace NWScriptPlugin
 {
@@ -22,6 +20,6 @@ namespace NWScriptPlugin
 
 
 	private:
-
+		ResourceManager _resourceManager;
 	};
 }
