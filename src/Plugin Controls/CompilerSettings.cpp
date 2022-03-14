@@ -27,59 +27,55 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 		case WM_INITDIALOG:
 		{
-			// Initialize settings dialog
-			if (_settings)
+			Settings& myset = *_settings;
+			if (myset.neverwinterInstallChoice == 0)
 			{
-				Settings& myset = *_settings;
-				if (myset.neverwinterInstallChoice == 0)
-				{
-					::CheckRadioButton(_hSelf, IDC_USENWN1, IDC_USENWN2, IDC_USENWN1);
-					EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN2INSTALL), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN2INSTALL), false);
-				}
-				else
-				{
-					::CheckRadioButton(_hSelf, IDC_USENWN1, IDC_USENWN2, IDC_USENWN2);
-					EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN1INSTALL), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN1INSTALL), false);
-				}
+				::CheckRadioButton(_hSelf, IDC_USENWN1, IDC_USENWN2, IDC_USENWN1);
+				EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN2INSTALL), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN2INSTALL), false);
+			}
+			else
+			{
+				::CheckRadioButton(_hSelf, IDC_USENWN1, IDC_USENWN2, IDC_USENWN2);
+				EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN1INSTALL), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN1INSTALL), false);
+			}
 
-				SetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, myset.neverwinterOneInstallDir.c_str());
-				SetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, myset.neverwinterTwoInstallDir.c_str());
+			SetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, myset.neverwinterOneInstallDir.c_str());
+			SetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, myset.neverwinterTwoInstallDir.c_str());
 
-				CheckDlgButton(_hSelf, IDC_CHKIGNOREINSTALLPATHS, myset.ignoreInstallPaths ? BST_CHECKED : BST_UNCHECKED);
-				if (myset.ignoreInstallPaths)
-				{
-					EnableWindow(GetDlgItem(_hSelf, IDC_USENWN1), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_USENWN2), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN1INSTALL), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN2INSTALL), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN1INSTALL), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN2INSTALL), false);
-				}
+			CheckDlgButton(_hSelf, IDC_CHKIGNOREINSTALLPATHS, myset.ignoreInstallPaths ? BST_CHECKED : BST_UNCHECKED);
+			if (myset.ignoreInstallPaths)
+			{
+				EnableWindow(GetDlgItem(_hSelf, IDC_USENWN1), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_USENWN2), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN1INSTALL), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_TXTNWN2INSTALL), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN1INSTALL), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_BTNWN2INSTALL), false);
+			}
 
-				for (generic_string s : myset.getIncludeDirsV())
-				{
-					ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), s.c_str());
-				}
+			for (generic_string s : myset.getIncludeDirsV())
+			{
+				ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), s.c_str());
+			}
 
-				CheckDlgButton(_hSelf, IDC_CHKCOMPOPTIMIZE, myset.optimizeScript);
-				CheckDlgButton(_hSelf, IDC_CHKCOMPNDBSYMBOLS, myset.generateSymbols);
-				CheckDlgButton(_hSelf, IDC_CHKCOMPSTRICTMODE, myset.compilerFlags & NscCompilerFlag_StrictModeEnabled);
-				CheckDlgButton(_hSelf, IDC_CHKCOMPMAKEFILE, myset.compilerFlags & NscCompilerFlag_GenerateMakeDeps);
-				CheckDlgButton(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE, myset.compilerFlags & NscCompilerFlag_DisableDoubleQuote);
+			CheckDlgButton(_hSelf, IDC_CHKCOMPOPTIMIZE, myset.optimizeScript);
+			CheckDlgButton(_hSelf, IDC_CHKCOMPNDBSYMBOLS, myset.generateSymbols);
+			CheckDlgButton(_hSelf, IDC_CHKCOMPSTRICTMODE, myset.compilerFlags & NscCompilerFlag_StrictModeEnabled);
+			CheckDlgButton(_hSelf, IDC_CHKCOMPMAKEFILE, myset.compilerFlags & NscCompilerFlag_GenerateMakeDeps);
+			CheckDlgButton(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE, myset.compilerFlags & NscCompilerFlag_DisableDoubleQuote);
 
-				ComboBox_AddString(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), TEXT("174+"));
-				ComboBox_AddString(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), TEXT("169"));
-				ComboBox_SetCurSel(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), myset.compileVersion == 174 ? 0 : 1);
+			ComboBox_AddString(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), TEXT("174+"));
+			ComboBox_AddString(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), TEXT("169"));
+			ComboBox_SetCurSel(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), myset.compileVersion == 174 ? 0 : 1);
 
-				SetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, myset.outputCompileDir.c_str());
-				CheckDlgButton(_hSelf, IDC_CHKOUTPUTDIR, myset.useScriptPathToCompile);
-				if (myset.useScriptPathToCompile)
-				{
-					EnableWindow(GetDlgItem(_hSelf, IDC_TXTOUTPUTDIR), false);
-					EnableWindow(GetDlgItem(_hSelf, IDC_BTOUTPUTDIR), false);
-				}
+			SetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, myset.outputCompileDir.c_str());
+			CheckDlgButton(_hSelf, IDC_CHKOUTPUTDIR, myset.useScriptPathToCompile);
+			if (myset.useScriptPathToCompile)
+			{
+				EnableWindow(GetDlgItem(_hSelf, IDC_TXTOUTPUTDIR), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_BTOUTPUTDIR), false);
 			}
 
 			return TRUE;
@@ -153,10 +149,10 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 					generic_string newPath = path;
 					if (!newPath.empty())
 					{
-						if (PathFileExists(newPath.c_str()))
+						if (IsValidDirectory(newPath.c_str()))
 							ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), newPath.c_str());
 						else
-							MessageBox(_hSelf, TEXT("This path is inexistent or invalid!"), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
+							MessageBox(_hSelf, TEXT("This path is inexistent or an invalid directory name!"), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
 					}
 
 					SetDlgItemText(_hSelf, IDC_TXTADDPATH, TEXT(""));
@@ -232,13 +228,13 @@ bool CompilerSettingsDialog::keepSettings()
 	TCHAR tempBuffer[MAX_PATH] = {};
 	bool bValid = true;
 	generic_string errorString;
-	errorString = TEXT("Invalid Path: \"");
+	errorString = TEXT("Invalid or Inexistent Directory Name: \"");
 	if (!IsDlgButtonChecked(_hSelf, IDC_CHKIGNOREINSTALLPATHS))
 	{
 		if (IsDlgButtonChecked(_hSelf, IDC_USENWN1))
 		{
 			GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
-			if (!PathFileExists(tempBuffer))
+			if (!IsValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
 				MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
@@ -249,7 +245,7 @@ bool CompilerSettingsDialog::keepSettings()
 		else
 		{
 			GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
-			if (!PathFileExists(tempBuffer))
+			if (!IsValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
 				MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
@@ -262,7 +258,7 @@ bool CompilerSettingsDialog::keepSettings()
 	if (!IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR))
 	{
 		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
-		if (!PathFileExists(tempBuffer))
+		if (!IsValidDirectory(tempBuffer))
 		{
 			errorString.append(tempBuffer).append(TEXT("\""));
 			MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);

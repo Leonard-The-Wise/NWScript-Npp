@@ -8,6 +8,9 @@
 
 #include <fstream>
 
+#include "Nsc.h"
+
+
 #include "NWScriptCompiler.h"
 
 using namespace NWScriptPlugin;
