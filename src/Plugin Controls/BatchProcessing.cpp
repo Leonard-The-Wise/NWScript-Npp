@@ -9,6 +9,7 @@
 #include <Windows.h>
 #include <Commctrl.h>
 #include <sstream>
+#include <Shlwapi.h>
 
 #include "PluginMain.h"
 #include "BatchProcessing.h"

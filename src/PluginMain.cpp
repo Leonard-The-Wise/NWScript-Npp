@@ -15,12 +15,15 @@
 #include <codecvt>
 #include <locale>
 #include <cwchar>
+#include <Shlwapi.h>
 
 #include "Common.h"
 #include "LexerCatalogue.h"
 
 #include "PluginMain.h"
 #include "PluginControlsRC.h"
+
+#include "NWScriptParser.h"
 
 #include "AboutDialog.h"
 #include "BatchProcessing.h"
@@ -457,7 +460,7 @@ void Plugin::EnablePluginMenuItem(int commandID, bool enabled)
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        EnableMenuItem(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND | (enabled) ? MF_ENABLED : MF_DISABLED );
+        EnableMenuItem(hMenu, GetFunctions()[commandID]._cmdID, (MF_BYCOMMAND | (enabled)) ? MF_ENABLED : MF_DISABLED );
     }
 }
 
