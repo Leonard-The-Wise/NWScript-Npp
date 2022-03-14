@@ -172,6 +172,9 @@
     <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -235,6 +238,9 @@
     <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -253,9 +259,6 @@
     </None>
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
-    </None>
-    <None Include="..\media\xmlfile1.bin">
-      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -282,10 +285,7 @@
     <Image Include="..\Media\NWScript-File.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\add.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\delete.ico">
+    <Image Include="..\Media\Settings.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

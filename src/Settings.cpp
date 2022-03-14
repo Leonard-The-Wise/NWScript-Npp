@@ -42,6 +42,7 @@ void Settings::Load()
 	notepadRestartFunction = static_cast<RestartFunctionHook>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction")));
 
 	// Compiler settings
+	compilerSettingsCreated = GetBoolean(TEXT("Compiler Settings"), TEXT("compilerSettingsCreated"));
 	neverwinterInstallChoice = GetNumber<int>(TEXT("Compiler Settings"), TEXT("neverwinterInstallChoice"));
 	neverwinterOneInstallDir = GetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir"));
 	neverwinterTwoInstallDir = GetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir"));
@@ -55,11 +56,12 @@ void Settings::Load()
 	outputCompileDir = GetString(TEXT("Compiler Settings"), TEXT("outputCompileDir"));
 
 	// Batch Process
-	startingFolder = GetString(TEXT("Batch Processing"), TEXT("startingFolder"));
+	startingBatchFolder = GetString(TEXT("Batch Processing"), TEXT("startingBatchFolder"));
 	fileFiltersCompile = GetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"));
 	fileFiltersDisasm = GetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"));
 	compileMode = GetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"));
 	recurseSubFolders = GetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"));
+	continueCompileOnFail = GetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"));
 	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
 	batchOutputCompileDir = GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"));
 }
@@ -76,6 +78,7 @@ void Settings::Save()
 	SetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction"), static_cast<int>(notepadRestartFunction));
 
 	// Compiler settings
+	SetBoolean(TEXT("Compiler Settings"), TEXT("compilerSettingsCreated"), compilerSettingsCreated);
 	SetNumber<int>(TEXT("Compiler Settings"), TEXT("neverwinterInstallChoice"), neverwinterInstallChoice);
 	SetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir"), neverwinterOneInstallDir);
 	SetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir"), neverwinterTwoInstallDir);
@@ -89,11 +92,12 @@ void Settings::Save()
 	SetString(TEXT("Compiler Settings"), TEXT("outputCompileDir"), outputCompileDir);
 
 	// Batch Process
-	SetString(TEXT("Batch Processing"), TEXT("startingFolder"), startingFolder);
+	SetString(TEXT("Batch Processing"), TEXT("startingBatchFolder"), startingBatchFolder);
 	SetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"), fileFiltersCompile);
-	SetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"), fileFiltersDisasm);
+	SetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"), fileFiltersDisasm);
 	SetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"), compileMode);
 	SetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"), recurseSubFolders);
+	SetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"), continueCompileOnFail);
 	SetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"), useScriptPathToBatchCompile);
 	SetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"), batchOutputCompileDir);
 
