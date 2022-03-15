@@ -204,6 +204,10 @@ void Plugin::SetNotepadData(NppData data)
 
     // Adjust menu "Use Auto-Indentation" checked or not before creation
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().enableAutoIndentation;
+
+    // Points the compiler to our global settings if valid configurations found
+    if (_settings.compilerSettingsCreated)
+        _compiler.initialize(&_settings);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -576,7 +580,7 @@ void Plugin::SetupPluginMenuItems()
 
 #pragma region
 
-void Plugin::DoBatchProcessFiles(HRESULT decision)
+void Plugin::DoBatchProcessFilesCallback(HRESULT decision)
 {
     static ProcessFilesDialog processing;
 
@@ -1077,6 +1081,65 @@ bool Plugin::PatchDarkThemeXMLFile()
 
 #pragma endregion Plugin files management
 
+#pragma region
+
+void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentScintilla, bool batchOperations)
+{
+    fs::path scriptPath;
+    fs::path outputDir;
+    std::string fileContents;
+
+    scriptPath = filePath;
+
+    // If compiler settings not initialized, run command to initialize them, then re-check parameters - since it's a modal window.
+    if (!Settings().compilerSettingsCreated)
+        CompilerSettings();
+
+    if (!Settings().compilerSettingsCreated)
+        return;
+
+    // If from scintilla, first, save the document, so we assure it got a valid filename and at least an output path.
+    // Then we get the script name, and then the file contents.
+    if (fromCurrentScintilla)
+    {
+        if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
+            return;
+
+        // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
+        size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
+        fileContents.resize(size + 1);
+        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&fileContents[0]));
+
+        // And now, get the output filename
+        TCHAR* nameBuffer = {};
+        Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, size, reinterpret_cast<LPARAM>(nameBuffer));
+        scriptPath = generic_string(nameBuffer);
+    }
+
+    // Get output path
+    if (!batchOperations)
+    {
+        if (Settings().useScriptPathToCompile)
+            outputDir = scriptPath.parent_path();
+        else
+            outputDir = Settings().outputCompileDir;
+    }
+    else
+    {
+        if (Settings().useScriptPathToBatchCompile)
+            outputDir = scriptPath.parent_path();
+        else
+            outputDir = Settings().batchOutputCompileDir;
+    }
+
+    // TODO: Show output window and setup logging operations.
+
+    // Process script.
+    _compiler.processFile(scriptPath, outputDir, fromCurrentScintilla, &fileContents[0]);
+}
+
+
+#pragma endregion Plugin compiler functions
 
 #pragma region
 
@@ -1245,20 +1308,25 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
-    // If compiler settings not initialized, run command, re-check - since it's modal.
-    if (!Instance().Settings().compilerSettingsCreated)
-        CompilerSettings();
-
-    if (!Instance().Settings().compilerSettingsCreated)
-        return;
-
+    // Set mode to compile script
+    Instance().Settings().compileMode = 0;
+    // Pass the control to core function calling compile from current document
+    Instance().DoCompileOrDisasmScript(TEXT(""), true);
 }
 
 // Disassemble a compiled script file
 PLUGINCOMMAND Plugin::DisassembleFile()
 {
+    generic_string nFileName;
+    if (openFileDialog(Instance().NotepadHwnd(), TEXT("NWScript Compiled Files (*.ncs)\0All files (*.*)\0*.ncs)\0*.*"), nFileName))
+    {
+        // Set mode to disassemble script
+        Instance().Settings().compileMode = 1;
+        // Pass the control to core function calling disassemble from file
+        Instance().DoCompileOrDisasmScript(nFileName);
+    }
 
-
+    // TODO: Auto open disassembled file after processing.
 }
 
 // Menu Command "Run last successful batch" function handler. 
@@ -1275,7 +1343,7 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 
     if (!batchProcessing.isCreated())
     {
-        batchProcessing.setOkDialogCallback(&Plugin::DoBatchProcessFiles);
+        batchProcessing.setOkDialogCallback(&Plugin::DoBatchProcessFilesCallback);
         batchProcessing.appendSettings(&Instance()._settings);
         batchProcessing.init(Instance().DllHModule(), Instance().NotepadHwnd());
     }

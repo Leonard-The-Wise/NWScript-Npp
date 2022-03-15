@@ -66,6 +66,44 @@ void Settings::Load()
 	continueCompileOnFail = GetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"));
 	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
 	batchOutputCompileDir = GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"));
+
+	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
+	if (!isValidDirectoryS(neverwinterOneInstallDir))
+	{
+		neverwinterOneInstallDir = TEXT("");
+		compilerSettingsCreated = false;
+	}
+	if (!isValidDirectoryS(neverwinterTwoInstallDir))
+	{
+		neverwinterTwoInstallDir = TEXT("");
+		compilerSettingsCreated = false;
+	}
+
+	generic_string validPaths;
+	for (generic_string s : getIncludeDirsV())
+	{
+		if (isValidDirectoryS(s))
+			validPaths.append(s).append(TEXT(";"));
+		else
+			compilerSettingsCreated = false;
+	}
+
+	additionalIncludeDirs = validPaths;
+
+	if (compileVersion != 174 && compileVersion != 169)
+	{
+		compileVersion = 174;
+		compilerSettingsCreated = false;
+	}
+
+	if (!isValidDirectoryS(outputCompileDir))
+	{
+		outputCompileDir = TEXT("");
+		compilerSettingsCreated = false;
+	}
+
+	// We aren't checking batch compiling settings here, since the user will have to run the Dialog first to run a batch...
+
 }
 
 void Settings::Save()
