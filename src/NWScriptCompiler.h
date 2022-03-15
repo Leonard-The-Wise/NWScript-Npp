@@ -36,7 +36,7 @@ namespace NWScriptPlugin
 			InstallDir = TEXT("");
 		}
 
-		void SetLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&))	{
+		void SetLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&)) {
 			logger.setMessageCallback(MessageCallback);
 		}
 

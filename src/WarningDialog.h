@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "StaticDialog.h"
 #include "Settings.h"
+#include "StaticDialog.h"
 
 namespace NWScriptPlugin {
 
@@ -17,6 +17,10 @@ namespace NWScriptPlugin {
 	public:
 		WarningDialog() = default;
 
+		void appendSettings(Settings* settings) {
+			_settings = settings;
+		}
+
 		void doDialog();
 
 		virtual void destroy() {};
@@ -24,7 +28,7 @@ namespace NWScriptPlugin {
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
-		//Settings* _settings:
+		Settings* _settings = nullptr;
 	};
 
 }
