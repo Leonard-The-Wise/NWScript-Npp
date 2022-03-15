@@ -1231,6 +1231,8 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
         if (!warningDialog.isCreated())
             warningDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
 
+        warningDialog.appendSettings(&Instance().Settings());
+
         if (!warningDialog.isVisible())
             warningDialog.doDialog();
 
