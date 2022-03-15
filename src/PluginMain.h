@@ -124,7 +124,7 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND InstallDarkTheme();
 		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND ImportDefinitions();
-		// Menu Command "Reset editor colors"
+		// Menu Command "reset editor colors"
 		static PLUGINCOMMAND ResetEditorColors();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();

@@ -88,49 +88,69 @@ namespace NWScriptPluginCommons {
     std::string wstr2str(const std::wstring& wide_string);
 
     // Opens a file dialog
-    bool OpenFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName);
+    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName);
 
     // Opens a folder selection dialog
-    bool OpenFolderDialog(HWND hOwnerWnd, generic_string& outFolderName);
+    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName);
 
     // Retrieves an HICON from the standard Windows libraries
-    HICON GetStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
+    HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
 
     // Converts a HICON to HBITMAP, preserving transparency channels
     // Extracted from example here:
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
-    HBITMAP IconToBitmap(HICON hIcon);
+    HBITMAP iconToBitmap(HICON hIcon);
 
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
-    HBITMAP GetStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize);
+    HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize);
 
-    generic_string GetSystemFolder(GUID folderID);
+    // Get one of the system or user folders by it's GUID.
+    generic_string getSystemFolder(GUID folderID);
 
-    bool IsValidDirectory(const TCHAR* sPath);
+    // Converts a File Link into an actual filename
+    void resolveLinkFile(generic_string& linkFilePath);
 
-    bool IsValidDirectoryS(const generic_string& sPath);
+    // Checks if directory exist
+    bool isValidDirectory(const TCHAR* sPath);
 
-    generic_string GetNwnHomePath(int CompilerVersion);
+    // Checks if directory exist
+    bool isValidDirectoryS(const generic_string& sPath);
+
+    // Returns the proper back-slash ended directory name (eg: C:\Windows -> C:\Windows\)
+    generic_string properDirName(const generic_string& dirName);
+
+    // Try to retrieve the Neverwinter's Home path
+    generic_string getNwnHomePath(int CompilerVersion);
+
+    // Loads a raw file into a string buffer
+    bool fileToBuffer(const generic_string& filePath, std::string& sContents);
+
+    // Saves a string buffer into a raw file 
+    bool bufferToFile(const generic_string& filePath, const std::string& sContents);
 
     // Checks for a path's write permission.
     // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums
-    bool CheckWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission);
-
-    void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args = TEXT(""),
-        const generic_string& opendir = TEXT(""));
+    bool checkWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission);
 
     // Writes a pseudo-batch file to store Notepad++ executable to be called by ShellExecute
     // with a delay (So it can restart seeamlessly).
     bool writePseudoBatchExecute(const generic_string& path, const generic_string& executePath);
 
+    // ShellExecutes a given path with elevated privileges or not.
+    void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args = TEXT(""),
+        const generic_string& opendir = TEXT(""));
+
+    // Returns a temporary filename string
+    bool getTemporaryFile(const generic_string& path, generic_string& outputPath);
+
     // Recursively navigate on XML nodes and get rid of all comment tags.
     // Bonus: also deletes the declaration headers now, since we need to rebuild it.
-    void StripXMLInfo(tinyxml2::XMLNode* node);
+    void stripXMLInfo(tinyxml2::XMLNode* node);
 
     // Recursively navigate the XML structure until a determined first occurrence of an element is found.
     // (optional) Also checks if element has attribute checkAttribute with corresponding checkAttributeValue.
     // Returns NULL on a failed search.
-    tinyxml2::XMLElement* SearchElement(tinyxml2::XMLElement* const from, const std::string& toName,
+    tinyxml2::XMLElement* searchElement(tinyxml2::XMLElement* const from, const std::string& toName,
         const std::string checkAttribute = "", const std::string checkAttributeValue = "");
 
 }

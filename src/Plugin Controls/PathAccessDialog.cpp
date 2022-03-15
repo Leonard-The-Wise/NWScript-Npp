@@ -22,7 +22,7 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 	case WM_INITDIALOG:
 	{
 		// Set picturebox to desired icon
-		HBITMAP hBitmap = GetStockIconBitmap(_iconID, IconSize::Size64x64);
+		HBITMAP hBitmap = getStockIconBitmap(_iconID, IconSize::Size64x64);
 		::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE,
 			static_cast<WPARAM>(IMAGE_BITMAP),
 			reinterpret_cast<LPARAM>(hBitmap));
@@ -47,7 +47,7 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 		else
 		{
 			// Set a shield icon also to the Run as Admin button - to preserve Windows standards
-			HBITMAP hShieldSmall = GetStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, IconSize::Size16x16);
+			HBITMAP hShieldSmall = getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, IconSize::Size16x16);
 			::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hShieldSmall));
 		}
 

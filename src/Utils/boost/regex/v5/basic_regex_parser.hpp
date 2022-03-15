@@ -1287,7 +1287,7 @@ bool basic_regex_parser<charT, traits>::parse_alt()
       return false;
    }
    //
-   // Reset mark count if required:
+   // reset mark count if required:
    //
    if(m_max_mark < m_mark_count)
       m_max_mark = m_mark_count;

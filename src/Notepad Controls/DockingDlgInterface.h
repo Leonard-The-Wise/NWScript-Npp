@@ -17,20 +17,22 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef DOCKINGDLGINTERFACE_H
-#define DOCKINGDLGINTERFACE_H
+#pragma once
+
+#include <shlwapi.h>
 
 #include "StaticDialog.h"
 #include "dockingResource.h"
 #include "Docking.h"
-#include <shlwapi.h>
 
+#pragma warning (disable : 26495)
 
 class DockingDlgInterface : public StaticDialog
 {
 public:
-	DockingDlgInterface(): StaticDialog() {};
-	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID) {};
+
+	DockingDlgInterface(): StaticDialog(), _HSource(),  {};
+	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID),  {};
 	
 	virtual void init(HINSTANCE hInst, HWND parent)
 	{
@@ -120,4 +122,3 @@ protected :
 	TCHAR			_pluginName[MAX_PATH];
 };
 
-#endif // DOCKINGDLGINTERFACE_H

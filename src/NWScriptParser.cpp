@@ -123,7 +123,7 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 		return false;
 
 	generic_string targetFileName = sFileName;
-	ResolveLinkFile(targetFileName);
+	resolveLinkFile(targetFileName);
 	TCHAR longFileName[longFileNameBufferSize];
 
 	const DWORD getFullPathNameResult = ::GetFullPathName(targetFileName.c_str(), longFileNameBufferSize, longFileName, NULL);
@@ -148,7 +148,7 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 	
 	// Read the raw file contents
 	std::string sFileContents;
-	bool success = FileToBuffer(targetFileName, sFileContents);
+	bool success = fileToBuffer(targetFileName, sFileContents);
 
 	// Determines file encoding. We are using a maximum fixed block size to that.
 	// uni8Bit is also returned by pure ASCII files.
@@ -170,66 +170,6 @@ bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResul
 
 	return true;
 
-}
-
-void NWScriptParser::ResolveLinkFile(generic_string& linkFilePath)
-{
-	IShellLink* psl;
-	WCHAR targetFilePath[MAX_PATH];
-	WIN32_FIND_DATA wfd = {};
-
-	HRESULT hres = CoInitialize(NULL);
-	if (SUCCEEDED(hres))
-	{
-		hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-		if (SUCCEEDED(hres))
-		{
-			IPersistFile* ppf;
-			hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
-			if (SUCCEEDED(hres))
-			{
-				// Load the shortcut. 
-				hres = ppf->Load(linkFilePath.c_str(), STGM_READ);
-				if (SUCCEEDED(hres) && hres != S_FALSE)
-				{
-					// Resolve the link. 
-					hres = psl->Resolve(NULL, 0);
-					if (SUCCEEDED(hres) && hres != S_FALSE)
-					{
-						// Get the path to the link target. 
-						hres = psl->GetPath(targetFilePath, MAX_PATH, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
-						if (SUCCEEDED(hres) && hres != S_FALSE)
-						{
-							linkFilePath = targetFilePath;
-						}
-					}
-				}
-				ppf->Release();
-			}
-			psl->Release();
-		}
-		CoUninitialize();
-	}
-}
-
-bool NWScriptParser::FileToBuffer(const generic_string& fileName, std::string& sContents)
-{
-	std::ifstream fileReadStream;
-
-	fileReadStream.open(fileName.c_str(), std::ios::in | std::ios::binary);
-	if (!fileReadStream.is_open())
-	{
-		return false;
-	}
-
-	fileReadStream.seekg(0, std::ios::end);
-	sContents.resize(static_cast<std::size_t>(fileReadStream.tellg()));
-	fileReadStream.seekg(0, std::ios::beg);
-	size_t fileSize = sContents.size();
-	fileReadStream.read(&sContents[0], fileSize);
-	fileReadStream.close();
-
-	return true;
 }
 
 void NWScriptParser::ScriptParseResults::AddSpacedStringAsKeywords(const generic_string& sKWArray)

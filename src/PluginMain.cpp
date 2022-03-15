@@ -72,7 +72,7 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
     {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
-    {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
+    {TEXT("reset editor colors"), Plugin::ResetEditorColors},
     {TEXT("---")},
     {TEXT("About me"), Plugin::AboutMe},
 };
@@ -424,7 +424,7 @@ void Plugin::DetectDarkThemeInstall()
     }
 
     // Try to navigate to the XML node corresponding to the name of the installed language (nwscript). If not found, means uninstalled.
-    if (!SearchElement(darkThemeDoc.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0)))
+    if (!searchElement(darkThemeDoc.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0)))
         _pluginDarkThemeIs = DarkThemeStatus::Uninstalled;
     else
     {    
@@ -482,7 +482,7 @@ bool Plugin::SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUnc
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = IconToBitmap(reinterpret_cast<HICON>(LoadImage(_dllHModule, MAKEINTRESOURCE(resourceID),
+        HBITMAP hIconBmp = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_dllHModule, MAKEINTRESOURCE(resourceID),
             IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
@@ -503,7 +503,7 @@ bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = GetStockIconBitmap(stockIconID, IconSize::Size16x16);
+        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, IconSize::Size16x16);
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
             bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
@@ -531,13 +531,13 @@ void Plugin::SetupPluginMenuItems()
     if (!IsUserAnAdmin())
     {
         // Retrieve write permissions for _pluginLexerConfigFile and _notepadDarkThemeFilePath
-        bSuccessLexer = CheckWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
-        bSuccessDark = CheckWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
-        bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
+        bSuccessLexer = checkWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
+        bSuccessDark = checkWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
+        bAutoComplete = checkWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
 
         // If this file do not exist, we test the directory instead
         if (!bAutoComplete)
-            bAutoComplete = CheckWritePermission(_pluginPaths["PluginAutoCompleteFilePath"].parent_path(), fAutoCompletePerm);
+            bAutoComplete = checkWritePermission(_pluginPaths["PluginAutoCompleteFilePath"].parent_path(), fAutoCompletePerm);
 
         if (!bSuccessLexer)
         {
@@ -639,7 +639,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     // Call helper function to strip all comments from document, since we're merging the file, not recreating it.
     // We don't use nwscriptDoc.rootNode() here, since it will jump straight to the first ELEMENT node - ignoring
     // comments and other possible pieces of information.
-    StripXMLInfo(nwscriptDoc.FirstChild());
+    stripXMLInfo(nwscriptDoc.FirstChild());
 
     tinyxml2::XMLElement* notepadPlus = nwscriptDoc.RootElement();
     if (notepadPlus == NULL)
@@ -922,7 +922,7 @@ bool Plugin::PatchDefaultThemeXMLFile()
     // Try to navigate to LexerType named "NWScript"
     // Here we use the plugin ProperCase name.
     std::string lexerName = LexerCatalogue::GetLexerName(0);
-    tinyxml2::XMLElement* lexerType = SearchElement(defaultThemeXML.RootElement(), "LexerType", "name", lexerName);
+    tinyxml2::XMLElement* lexerType = searchElement(defaultThemeXML.RootElement(), "LexerType", "name", lexerName);
     if (!lexerType)
     {
         errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
@@ -945,7 +945,7 @@ bool Plugin::PatchDefaultThemeXMLFile()
     // We don't check for error for our own defined XML.
     tinyxml2::XMLDocument xmlPatch;
     xmlPatch.Parse(XMLDEFAULTSTYLER);
-    tinyxml2::XMLNode* xmlPatchNode = SearchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&defaultThemeXML);
+    tinyxml2::XMLNode* xmlPatchNode = searchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&defaultThemeXML);
     tinyxml2::XMLElement* patchTypeStart = xmlPatchNode->FirstChildElement("WordsStyle");
     tinyxml2::XMLElement* patchTypeSeek;
 
@@ -1005,7 +1005,7 @@ bool Plugin::PatchDarkThemeXMLFile()
     }
 
     // Try to navigate to LexerStyles
-    tinyxml2::XMLElement* lexerStyles = SearchElement(darkThemeXML.RootElement(), "LexerStyles");
+    tinyxml2::XMLElement* lexerStyles = searchElement(darkThemeXML.RootElement(), "LexerStyles");
     if (!lexerStyles)
     {
         errorStream << TEXT("Error while parsing file: ") << _pluginPaths["NotepadDarkThemeFilePath"] << "! \r\n";
@@ -1014,8 +1014,8 @@ bool Plugin::PatchDarkThemeXMLFile()
         return false;
     }
 
-    // Make sure we are not creating our stylesheet twice (eg: from a Reset Editor Colors call).
-    tinyxml2::XMLElement* oldLexerType = SearchElement(darkThemeXML.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0));
+    // Make sure we are not creating our stylesheet twice (eg: from a reset Editor Colors call).
+    tinyxml2::XMLElement* oldLexerType = searchElement(darkThemeXML.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0));
     if (oldLexerType)
         oldLexerType->Parent()->DeleteChild(oldLexerType);
 
@@ -1059,7 +1059,7 @@ bool Plugin::PatchDarkThemeXMLFile()
     // Patch file. We don't check for error for our own defined XML.
     tinyxml2::XMLDocument xmlPatch;
     xmlPatch.Parse(XMLDARKMODEDEFAULT);
-    tinyxml2::XMLNode* xmlPatchNode = SearchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&darkThemeXML);
+    tinyxml2::XMLNode* xmlPatchNode = searchElement(xmlPatch.RootElement(), "LexerType")->DeepClone(&darkThemeXML);
     lexerStyles->InsertAfterChild(lexerType, xmlPatchNode);
 
     // Save.
@@ -1097,7 +1097,7 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
         bool bExists = false;
         PathWritePermission fPerm = PathWritePermission::UndeterminedError;
 
-        bExists = CheckWritePermission(s, fPerm);
+        bExists = checkWritePermission(s, fPerm);
         checkedPaths.emplace_back(stCheckedPaths{ bExists, s, fPerm });
     }
 
@@ -1355,7 +1355,7 @@ You wish to Continue?)"
     bWarnedUser = true;
 
     generic_string nFileName;
-    if (OpenFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript*.nss\0All Files (*.*)\0*.*"), nFileName))
+    if (openFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript*.nss\0All Files (*.*)\0*.*"), nFileName))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
         NWScriptParser nParser(Instance().NotepadHwnd());
