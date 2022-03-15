@@ -152,12 +152,15 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 						if (isValidDirectory(newPath.c_str()))
 							ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), newPath.c_str());
 						else
-							MessageBox(_hSelf, TEXT("This path is inexistent or an invalid directory name!"), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
+						{
+							MessageBox(_hSelf, (TEXT("Invalid or Inexistent Directory Name: ") + newPath).c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
+							return FALSE;
+						}
 					}
 
 					SetDlgItemText(_hSelf, IDC_TXTADDPATH, TEXT(""));
 
-					return FALSE;
+					return TRUE;
 				}
 
 				case IDC_BTDELPATH:
@@ -276,18 +279,26 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.neverwinterInstallChoice = (IsDlgButtonChecked(_hSelf, IDC_USENWN1) ? 0 : 1);
 
 	GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
-	myset.neverwinterOneInstallDir = tempBuffer;
+	myset.neverwinterOneInstallDir = properDirName(tempBuffer);
 	GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
-	myset.neverwinterTwoInstallDir = tempBuffer;
+	myset.neverwinterTwoInstallDir = properDirName(tempBuffer);
 
 	myset.ignoreInstallPaths = IsDlgButtonChecked(_hSelf, IDC_CHKIGNOREINSTALLPATHS);
+
+	// If user has unsaved input in additional folders, save for him.
+	GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, std::size(tempBuffer));
+	if (tempBuffer[0] > 0)
+	{
+		if (static_cast<bool>(run_dlgProc(WM_COMMAND, IDC_BTADDPATH, 0)) == false)
+			return false;
+	}
 
 	std::vector<generic_string> vData;
 	for (int i = 0; i < ListBox_GetCount(GetDlgItem(_hSelf, IDC_LSTADDPATH)); i++)
 	{
 		generic_string strAdd;
 		ListBox_GetText(GetDlgItem(_hSelf, IDC_LSTADDPATH), i, tempBuffer);
-		strAdd = tempBuffer;
+		strAdd = properDirName(tempBuffer);
 		strAdd.append(TEXT(";"));
 		vData.push_back(strAdd);
 	}
@@ -306,7 +317,7 @@ bool CompilerSettingsDialog::keepSettings()
 
 	myset.useScriptPathToCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR);
 	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
-	myset.outputCompileDir = tempBuffer;
+	myset.outputCompileDir = properDirName(tempBuffer);
 
 	myset.compilerSettingsCreated = true;
 

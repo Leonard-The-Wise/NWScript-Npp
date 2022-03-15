@@ -53,13 +53,15 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_DISASSEMBLESCRIPT 3
 #define PLUGINMENU_BATCHPROCESSING 4
 #define PLUGINMENU_RUNLASTBATCH 5
-#define PLUGINMENU_SETTINGS 6
+#define PLUGINMENU_GENERATEPREPROCESSORFILE 6
 #define PLUGINMENU_DASH2 7
-#define PLUGINMENU_INSTALLDARKTHEME 8
-#define PLUGINMENU_IMPORTDEFINITIONS 9
-#define PLUGINMENU_RESETEDITORCOLORS 10
-#define PLUGINMENU_DASH3 11
-#define PLUGINMENU_ABOUTME 12
+#define PLUGINMENU_SETTINGS 8
+#define PLUGINMENU_DASH3 9
+#define PLUGINMENU_INSTALLDARKTHEME 10
+#define PLUGINMENU_IMPORTDEFINITIONS 11
+#define PLUGINMENU_RESETEDITORCOLORS 12
+#define PLUGINMENU_DASH4 13
+#define PLUGINMENU_ABOUTME 14
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
@@ -68,6 +70,8 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Disassemble file..."), Plugin::DisassembleFile},
     {TEXT("Batch script processing..."), Plugin::BatchProcessFiles},
     {TEXT("Run last batch setup"), Plugin::RunLastBatch},
+    {TEXT("Generate Preprocessed Output"), Plugin::RunLastBatch},
+    {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
@@ -207,7 +211,7 @@ void Plugin::SetNotepadData(NppData data)
 
     // Points the compiler to our global settings if valid configurations found
     if (_settings.compilerSettingsCreated)
-        _compiler.initialize(&_settings);
+        _compiler.appendSettings(&_settings);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -1102,8 +1106,12 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
     // Then we get the script name, and then the file contents.
     if (fromCurrentScintilla)
     {
-        if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
-            return;
+        // Check if document is changed or else the save call will fail.
+        if (Messenger().SendSciMessage<bool>(SCI_GETMODIFY))
+        {
+            if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
+                return;
+        }
 
         // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
         size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
@@ -1111,7 +1119,7 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
         Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&fileContents[0]));
 
         // And now, get the output filename
-        TCHAR* nameBuffer = {};
+        TCHAR nameBuffer[MAX_PATH] = {0};
         Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, size, reinterpret_cast<LPARAM>(nameBuffer));
         scriptPath = generic_string(nameBuffer);
     }
@@ -1122,14 +1130,14 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
         if (Settings().useScriptPathToCompile)
             outputDir = scriptPath.parent_path();
         else
-            outputDir = Settings().outputCompileDir;
+            outputDir = properDirName(Settings().outputCompileDir);
     }
     else
     {
         if (Settings().useScriptPathToBatchCompile)
             outputDir = scriptPath.parent_path();
         else
-            outputDir = Settings().batchOutputCompileDir;
+            outputDir = properDirName(Settings().batchOutputCompileDir);
     }
 
     // TODO: Show output window and setup logging operations.
@@ -1308,6 +1316,19 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
+    // Distraction helper check: see if current file is a valid NSS script
+    if (!Instance().IsPluginLanguage())
+    {
+        if (MessageBox(Instance().NotepadHwnd(),
+            TEXT("This file is not currently set as a NWScript language file. Do you want to proceed anyway?"),
+            TEXT("Confirmation required"), MB_YESNO | MB_ICONQUESTION) == IDNO)
+            return;
+    }
+
+    // Reset compiler cache and clear log so we catch all possible dependencies editions.
+    Instance().Compiler().reset();
+    Instance().Compiler().clearLog();
+
     // Set mode to compile script
     Instance().Settings().compileMode = 0;
     // Pass the control to core function calling compile from current document
@@ -1318,8 +1339,12 @@ PLUGINCOMMAND Plugin::CompileScript()
 PLUGINCOMMAND Plugin::DisassembleFile()
 {
     generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), TEXT("NWScript Compiled Files (*.ncs)\0All files (*.*)\0*.ncs)\0*.*"), nFileName))
+    if (openFileDialog(Instance().NotepadHwnd(), TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName))
     {
+        // Reset compiler cache and clear log so we catch all possible dependencies editions.
+        Instance().Compiler().reset();
+        Instance().Compiler().clearLog();
+
         // Set mode to disassemble script
         Instance().Settings().compileMode = 1;
         // Pass the control to core function calling disassemble from file
@@ -1423,7 +1448,7 @@ You wish to Continue?)"
     bWarnedUser = true;
 
     generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript*.nss\0All Files (*.*)\0*.*"), nFileName))
+    if (openFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
         NWScriptParser nParser(Instance().NotepadHwnd());

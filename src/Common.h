@@ -87,6 +87,12 @@ namespace NWScriptPluginCommons {
     // Since codecvt is now deprecated API and no replacement is provided, we write our own.
     std::string wstr2str(const std::wstring& wide_string);
 
+    // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
+    std::string replaceStringsA(const std::string& input, std::map<std::string, std::string>& replaceStrings);
+
+    // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
+    generic_string replaceStringsW(const generic_string& input, std::map<generic_string, generic_string>& replaceStrings);
+
     // Opens a file dialog
     bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName);
 

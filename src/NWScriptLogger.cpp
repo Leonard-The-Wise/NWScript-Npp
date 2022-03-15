@@ -12,7 +12,7 @@
 #include "NWScriptLogger.h"
 
 #define COMPILERREGEX R"((?<fileName>[a-zA-Z0-9\s_\\.\-\(\):]+)\.(?<fileExt>[a-zA-Z0-9\s_\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<code>NSC\d+):\s(?<message>.+))"
-#define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:(?<message>.))"
+#define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:(?<message>.+))"
 
 typedef jpcre2::select<char> pcre2;
 
@@ -59,7 +59,7 @@ void NWScriptLogger::WriteTextV(const char* fmt, va_list ap)
 	if (matches)
 	{
 		log(captureGroup[0]["message"],
-			(captureGroup[0]["type"], "Error") ? LogType::Error : (captureGroup[0]["type"] == "Warning") ? LogType::Warning : LogType::Info,
+			(captureGroup[0]["type"] == "Error") ? LogType::Error : (captureGroup[0]["type"] == "Warning") ? LogType::Warning : LogType::Info,
 			captureGroup[0]["code"], captureGroup[0]["fileName"], captureGroup[0]["fileExt"], captureGroup[0]["lineNumber"], false);
 
 		return;
@@ -72,7 +72,7 @@ void NWScriptLogger::WriteTextV(const char* fmt, va_list ap)
 
 	if (matches)
 	{
-		log(captureGroup[0]["message"], (captureGroup[0]["type"], "ERROR") ? LogType::Error : (captureGroup[0]["type"] == "WARNING") ? LogType::Warning : LogType::Info);
+		log(captureGroup[0]["message"], (captureGroup[0]["type"] == "ERROR") ? LogType::Error : (captureGroup[0]["type"] == "WARNING") ? LogType::Warning : LogType::Info);
 		return;
 	}
 

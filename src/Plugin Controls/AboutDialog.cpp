@@ -46,6 +46,15 @@ If this is already taken, Notepad++ won't map it back to the plugin automaticall
 - If you want to change the Styles for NWScript in Notepad++ preferences, don't forget to first give write permissions on \
 \"%PLUGINXMLFILE%\" to yourself, or else your changes won't be saved to the next session. This is a Notepad++ limitation.\r\n\
 \r\n\
+\r\n\
+Copyright notices for embbeded version of the NWScript Compiler:\r\n\
+\r\n\
+  Portions Copyright (C) 2008-2015 Skywing\r\n\
+  Portions copyright (C) 2002-2003, Edward T. Smith\r\n\
+  Portions copyright (C) 2003, The Open Knights Consortium\r\n\
+  Adapted for Neverwinter Nights Enhanced Edition and cross platform use by: Glorwinger and Jakkn\r\n\
+  Readapted for Windows GUI applications by: Leonard-The-Wise\r\n\
+\r\n\
 SELF-DIAGNOSTICS:\r\n\
 -----------------\r\n\
   - Auto-Indentation: %NWSCRIPTINDENT%\r\n\
@@ -73,19 +82,6 @@ using namespace NWScriptPlugin;
 static const generic_string fontFamilies[] = {
 	L"Cascadia Code", L"Cascadia Mono", L"Consolas", L"Droid Sans Mono", L"Inconsolata", L"Courier New" L"monospace", L"Monaco", L"Menlo", L"Fixedsys"
 };
-
-generic_string replaceAboutStrings(const generic_string& input, std::map<generic_string, generic_string>& replaceStrings)
-{
-	typedef jpcre2::select<wchar_t> pcre2;
-	generic_string output = input;
-	
-	for (std::map<generic_string, generic_string>::const_iterator i = replaceStrings.begin(); i != replaceStrings.end(); i++)
-	{
-		output = pcre2::Regex(i->first.c_str()).replace(output, i->second.c_str(), "g");
-	}
-
-	return output;
-}
 
 intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -119,7 +115,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 				::SendMessage(GetDlgItem(_hSelf, IDC_LBLHOMEPAGE), WM_SETFONT, reinterpret_cast<WPARAM>(hHomepageFont), 0);
 
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
-			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceAboutStrings(ABOUT_TEXT, _replaceStrings).c_str());
+			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
 
 			return TRUE;
 		}

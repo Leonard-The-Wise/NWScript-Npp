@@ -36,7 +36,7 @@ void UndefinedUserFunction(object oObject)
 	/* Press ENTER after the brackets bellow to test auto-identation */ 
 	{}
 	
-	int bReturne = FALSE;
+	int bReturn = FALSE;
 	
 	return;
 }
