@@ -22,7 +22,7 @@ namespace NWScriptPlugin
 	public:
 
 		enum class LogType {
-			Critical, Error, Warning, Info, Trace, ConsoleMessage
+			Critical, Error, Warning, Info, ConsoleMessage
 		};
 
 		struct CompilerMessage {
@@ -55,6 +55,7 @@ namespace NWScriptPlugin
 			_messageCallback = MessageCallback;
 		}
 
+		// Add log message to the stack
 		void log(generic_string message, LogType type, generic_string messageCode, generic_string fileName, generic_string fileExt, 
 			generic_string lineNumber, bool merge);
 
@@ -79,8 +80,36 @@ namespace NWScriptPlugin
 			log(message, type, TEXT(""), TEXT(""), TEXT(""), TEXT(""), false);
 		}
 
+		void log(std::string message, LogType type, std::string messageCode, std::string fileName, std::string fileExt,
+			std::string lineNumber, bool merge) {
+			log(str2wstr(message.c_str()), type, str2wstr(messageCode.c_str()), str2wstr(fileName.c_str()), str2wstr(fileExt.c_str()), str2wstr(lineNumber.c_str()), merge);
+		}
+
+		void log(std::string message, LogType type, std::string messageCode, std::string fileName,
+			std::string fileExt, std::string lineNumber) {
+			log(message, type, messageCode, fileName, fileExt, lineNumber, false);
+		}
+
+		void log(std::string message, LogType type, std::string messageCode, bool merge) {
+			log(message, type, messageCode, "", "", "", merge);
+		}
+
+		void log(std::string message, LogType type, std::string messageCode) {
+			log(message, type, messageCode, "", "", "", false);
+		}
+
+		void log(std::string message, LogType type, bool merge) {
+			log(message, type, "", "", "", "", merge);
+		}
+
+		void log(std::string message, LogType type) {
+			log(message, type, "", "", "", "", false);
+		}
+
+		// Implementation of IDebugTextOut: don't change
 		virtual void WriteText(const char* fmt, ...);
 
+		// Implementation of IDebugTextOut: don't change
 		virtual void WriteTextV(const char* fmt, va_list ap);
 
 	private:

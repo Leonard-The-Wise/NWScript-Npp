@@ -30,7 +30,7 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 			IMAGE_ICON, 96, 96, LR_DEFAULTCOLOR));
 		::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE,
 			static_cast<WPARAM>(IMAGE_BITMAP),
-			reinterpret_cast<LPARAM>(IconToBitmap(NWSCRIPTFILE)));
+			reinterpret_cast<LPARAM>(iconToBitmap(NWSCRIPTFILE)));
 
 		// Set the font style and colors for File Summary and Keep Results labels
 		// Set bold font for warning

@@ -138,9 +138,6 @@
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h">
       <Filter>Notepad Controls</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Notepad Controls\DialogCommons.h">
-      <Filter>Notepad Controls</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\Utils\FileInterface.h">
       <Filter>Utils</Filter>

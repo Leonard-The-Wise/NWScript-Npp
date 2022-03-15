@@ -894,7 +894,7 @@ namespace jpcre2 {
             if (deflt) setAllToDefault();
         }
 
-        ///Reset the match modifier table to its initial (empty) state including memory.
+        ///reset the match modifier table to its initial (empty) state including memory.
         ///@return A reference to the calling ModifierTable object.
         ModifierTable& resetMatchModifierTable() {
             std::string().swap(tabjms);
@@ -904,7 +904,7 @@ namespace jpcre2 {
             return *this;
         }
 
-        ///Reset the replace modifier table to its initial (empty) state including memory.
+        ///reset the replace modifier table to its initial (empty) state including memory.
         ///@return A reference to the calling ModifierTable object.
         ModifierTable& resetReplaceModifierTable() {
             std::string().swap(tabjrs);
@@ -914,7 +914,7 @@ namespace jpcre2 {
             return *this;
         }
 
-        ///Reset the compile modifier table to its initial (empty) state including memory.
+        ///reset the compile modifier table to its initial (empty) state including memory.
         ///@return A reference to the calling ModifierTable object.
         ModifierTable& resetCompileModifierTable() {
             std::string().swap(tabjcs);
@@ -924,7 +924,7 @@ namespace jpcre2 {
             return *this;
         }
 
-        ///Reset the modifier tables to their initial (empty) state including memory.
+        ///reset the modifier tables to their initial (empty) state including memory.
         ///@return A reference to the calling ModifierTable object.
         ModifierTable& reset() {
             resetMatchModifierTable();
@@ -1552,7 +1552,7 @@ namespace jpcre2 {
             ///Frees all internal memories that were used.
             virtual ~RegexMatch() {}
 
-            ///Reset all class variables to its default (initial) state including memory.
+            ///reset all class variables to its default (initial) state including memory.
             ///Data in the vectors will retain (as it's external)
             ///You will need to pass vector pointers again after calling this function to get match results.
             ///@return Reference to the calling RegexMatch object.
@@ -2634,7 +2634,7 @@ namespace jpcre2 {
                 return *this;
             }
 
-            ///Reset match data to initial state.
+            ///reset match data to initial state.
             ///It deletes all match data from all vectors shrinking their capacity.
             ///A call to `match()`  or nreplace() will be required to produce match data again.
             ///@return A reference to the calling MatchEvaluator object.
@@ -2648,7 +2648,7 @@ namespace jpcre2 {
             }
 
 
-            ///Reset MatchEvaluator to initial state including memory.
+            ///reset MatchEvaluator to initial state including memory.
             ///@return A reference to the calling MatchEvaluator object.
             MatchEvaluator& reset() {
                 RegexMatch::reset();
@@ -3063,7 +3063,7 @@ namespace jpcre2 {
 
             virtual ~RegexReplace() {}
 
-            ///Reset all class variables to its default (initial) state including memory.
+            ///reset all class variables to its default (initial) state including memory.
             ///@return Reference to the calling RegexReplace object.
             RegexReplace& reset() {
                 String().swap(r_subject);
@@ -3081,7 +3081,7 @@ namespace jpcre2 {
                 return *this;
             }
 
-            ///Reset replace related errors to zero.
+            ///reset replace related errors to zero.
             ///@return Reference to the calling RegexReplace object
             ///@see Regex::resetErrors()
             ///@see RegexMatch::resetErrors()
@@ -3856,7 +3856,7 @@ namespace jpcre2 {
                 freeCompileContext();
             }
 
-            ///Reset all class variables to its default (initial) state including memory.
+            ///reset all class variables to its default (initial) state including memory.
             ///@return Reference to the calling Regex object.
             Regex& reset() {
                 freeRegexMemory();
@@ -3876,7 +3876,7 @@ namespace jpcre2 {
                 return *this;
             }
 
-            ///Reset regex compile related errors to zero.
+            ///reset regex compile related errors to zero.
             ///@return A reference to the Regex object
             ///@see  RegexReplace::resetErrors()
             ///@see  RegexMatch::resetErrors()

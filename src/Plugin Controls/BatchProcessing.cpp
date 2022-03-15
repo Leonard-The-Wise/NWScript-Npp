@@ -93,7 +93,7 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 				case IDC_BTOUTPUTDIRBATCH:
 				{
 					generic_string newPath;
-					if (OpenFolderDialog(_hSelf, newPath))
+					if (openFolderDialog(_hSelf, newPath))
 					{
 						switch (wParam)
 						{

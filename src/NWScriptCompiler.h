@@ -28,35 +28,43 @@ namespace NWScriptPlugin
 			return _resourceManager != nullptr;
 		}
 
-		bool Initialize(Settings* settings);
+		bool initialize(Settings* settings);
 
-		void FlushResources() {
+		void reset() {
 			_resourceManager = nullptr;
-			ResourcesLoaded = false;
-			InstallDir = TEXT("");
+			_compiler = nullptr;
+			includePathsBuilt = false;
+			_compilerCreated = false;
+			_includePaths.clear();
 		}
 
-		void SetLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&)) {
-			logger.setMessageCallback(MessageCallback);
+		void setLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&)) {
+			_logger.setMessageCallback(MessageCallback);
 		}
 
-		NWScriptLogger& Log() {
-			return logger;
+		NWScriptLogger& logger() {
+			return _logger;
 		}
 
-		bool CompileScript(filesystem::path& scriptPath);
+		bool processFile(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory = false, char* fileContents = NULL);
 
 	private:
 		std::unique_ptr<ResourceManager> _resourceManager;
+		unique_ptr<NscCompiler> _compiler;
+
+		bool compileScript(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
+		bool disassembleBinary(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		generic_string NWNHome;
-		generic_string InstallDir;
-		bool ResourcesLoaded = false;
-		bool CompilerCreated = false;
+		bool includePathsBuilt = false;
+		std::vector<std::string> _includePaths;
+		bool _compilerCreated;
 
 		Settings* _settings;
 
-		NWScriptLogger logger;
+		NWScriptLogger _logger;
 
 
 		bool LoadScriptResources();

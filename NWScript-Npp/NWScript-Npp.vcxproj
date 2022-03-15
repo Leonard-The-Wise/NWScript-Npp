@@ -215,7 +215,6 @@
     <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
-    <ClInclude Include="..\src\Notepad Controls\DialogCommons.h" />
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />

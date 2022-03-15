@@ -87,8 +87,15 @@ namespace NWScriptPluginCommons {
         return result;
     }
 
+    generic_string properDirName(const generic_string& dirName) {
+        generic_string retval = dirName;
+        if (retval.back() != TEXT('\\'))
+            retval.push_back(TEXT('\\'));
+        return retval;
+    }
+
     // Opens a file dialog
-    bool OpenFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName)
+    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName)
     {
 
         OPENFILENAME ofn;
@@ -127,7 +134,7 @@ namespace NWScriptPluginCommons {
     }
 
     // Opens a folder selection dialog
-    bool OpenFolderDialog(HWND hOwnerWnd, generic_string& outFolderName)
+    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName)
     {
         BROWSEINFO b = { 0 };
         b.hwndOwner = hOwnerWnd;
@@ -150,7 +157,7 @@ namespace NWScriptPluginCommons {
 #pragma warning(disable : 26812)
 
     // Retrieves an HICON from the standard Windows libraries
-    HICON GetStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize)
+    HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize)
     {
         UINT uiFlags = SHGSI_ICONLOCATION;
 
@@ -178,7 +185,7 @@ namespace NWScriptPluginCommons {
     // Converts a HICON to HBITMAP, preserving transparency channels
     // Extracted from example here:
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
-    HBITMAP IconToBitmap(HICON hIcon)
+    HBITMAP iconToBitmap(HICON hIcon)
     {
         if (!hIcon)
             return NULL;
@@ -223,11 +230,11 @@ namespace NWScriptPluginCommons {
     }
 
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
-    HBITMAP GetStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize) {
-        return IconToBitmap(GetStockIcon(stockIconID, iconSize));
+    HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize) {
+        return iconToBitmap(getStockIcon(stockIconID, iconSize));
     }
 
-    generic_string GetSystemFolder(GUID folderID)
+    generic_string getSystemFolder(GUID folderID)
     {
 
         PWSTR path;
@@ -238,7 +245,47 @@ namespace NWScriptPluginCommons {
         return retVal;
     }
 
-    bool IsValidDirectory(const TCHAR* sPath)
+    void resolveLinkFile(generic_string& linkFilePath)
+    {
+        IShellLink* psl;
+        WCHAR targetFilePath[MAX_PATH];
+        WIN32_FIND_DATA wfd = {};
+
+        HRESULT hres = CoInitialize(NULL);
+        if (SUCCEEDED(hres))
+        {
+            hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+            if (SUCCEEDED(hres))
+            {
+                IPersistFile* ppf;
+                hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
+                if (SUCCEEDED(hres))
+                {
+                    // Load the shortcut. 
+                    hres = ppf->Load(linkFilePath.c_str(), STGM_READ);
+                    if (SUCCEEDED(hres) && hres != S_FALSE)
+                    {
+                        // Resolve the link. 
+                        hres = psl->Resolve(NULL, 0);
+                        if (SUCCEEDED(hres) && hres != S_FALSE)
+                        {
+                            // Get the path to the link target. 
+                            hres = psl->GetPath(targetFilePath, MAX_PATH, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
+                            if (SUCCEEDED(hres) && hres != S_FALSE)
+                            {
+                                linkFilePath = targetFilePath;
+                            }
+                        }
+                    }
+                    ppf->Release();
+                }
+                psl->Release();
+            }
+            CoUninitialize();
+        }
+    }
+
+    bool isValidDirectory(const TCHAR* sPath)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes = {};
 
@@ -254,12 +301,12 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
-    bool IsValidDirectoryS(const generic_string& sPath)
+    bool isValidDirectoryS(const generic_string& sPath)
     {
-        return IsValidDirectory(sPath.c_str());
+        return isValidDirectory(sPath.c_str());
     }
 
-    generic_string GetNwnHomePath(int CompilerVersion)
+    generic_string getNwnHomePath(int CompilerVersion)
     {
         generic_string HomePath;
 
@@ -326,7 +373,7 @@ namespace NWScriptPluginCommons {
 
     // Checks for a path's write permission.
     // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums
-    bool CheckWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission)
+    bool checkWritePermission(const generic_string& sPath, PathWritePermission& outPathPermission)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes = {};
 
@@ -387,18 +434,44 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
-    void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args,
-        const generic_string& opendir)
+    bool fileToBuffer(const generic_string& filePath, std::string& sContents)
     {
-        const TCHAR* opVerb = isElevationRequired ? TEXT("runas") : TEXT("open");
-        ::ShellExecute(NULL, opVerb, path.c_str(), args.c_str(), opendir.c_str(), SW_HIDE);
+        std::ifstream fileReadStream;
+
+        fileReadStream.open(filePath.c_str(), std::ios::in | std::ios::binary);
+        if (!fileReadStream.is_open())
+        {
+            return false;
+        }
+
+        fileReadStream.seekg(0, std::ios::end);
+        sContents.resize(static_cast<std::size_t>(fileReadStream.tellg()));
+        fileReadStream.seekg(0, std::ios::beg);
+        size_t fileSize = sContents.size();
+        fileReadStream.read(&sContents[0], fileSize);
+        fileReadStream.close();
+
+        return true;
+    }
+
+    bool bufferToFile(const generic_string& filePath, const std::string& sContents)
+    {
+        std::ofstream s;
+        s.open(filePath.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+        if (!s.is_open())
+        {
+            return false;
+        }
+
+        s << sContents;
+        s.close();
+        return true;
     }
 
     // Writes a pseudo-batch file to store Notepad++ executable to be called by ShellExecute
     // with a delay (So it can restart seeamlessly).
     bool writePseudoBatchExecute(const generic_string& path, const generic_string& executePath)
     {
-        std::ofstream s;
         std::stringstream stext;
 
         // Use ping trick on batch to delay execution, since it's the most compatible option to add a delay
@@ -406,20 +479,33 @@ namespace NWScriptPluginCommons {
         stext << "ping -n 1 -w 1000 10.255.255.255 > nul" << std::endl;
         stext << "\"" << wstr2str(executePath.c_str()) << "\"" << std::endl;
 
-        s.open(path.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-        if (!s.is_open())
+        return bufferToFile(path, stext.str());
+    }
+
+    // ShellExecutes a given path with elevated privileges or not.
+    void runProcess(bool isElevationRequired, const generic_string& path, const generic_string& args,
+        const generic_string& opendir)
+    {
+        const TCHAR* opVerb = isElevationRequired ? TEXT("runas") : TEXT("open");
+        ::ShellExecute(NULL, opVerb, path.c_str(), args.c_str(), opendir.c_str(), SW_HIDE);
+    }
+
+    // Returns a temporary filename string
+    bool getTemporaryFile(const generic_string& path, generic_string& outputPath)
+    {
+        TCHAR buffer[MAX_PATH + 1];
+        if (GetTempFileName(path.c_str(), TEXT("nwsplugin"), 0, buffer))
         {
-            return false;
+            outputPath = buffer;
+            return true;
         }
 
-        s << stext.str().c_str();
-        s.close();
-        return true;
+        return false;
     }
 
     // Recursively navigate on XML nodes and get rid of all comment tags.
     // Bonus: also deletes the declaration headers now, since we need to rebuild it.
-    void StripXMLInfo(tinyxml2::XMLNode* node)
+    void stripXMLInfo(tinyxml2::XMLNode* node)
     {
         // All XML nodes may have children and siblings. So for each valid node, first we
         // iterate on it's (possible) children, and then we proceed to clear the node itself and jump 
@@ -427,7 +513,7 @@ namespace NWScriptPluginCommons {
         while (node)
         {
             if (node->FirstChild() != NULL)
-                StripXMLInfo(node->FirstChild());
+                stripXMLInfo(node->FirstChild());
 
             //Check to see if current node is a comment
             auto comment = dynamic_cast<tinyxml2::XMLComment*>(node);
@@ -455,7 +541,7 @@ namespace NWScriptPluginCommons {
     // Recursively navigate the XML structure until a determined first occurrence of an element is found.
     // (optional) Also checks if element has attribute checkAttribute with corresponding checkAttributeValue.
     // Returns NULL on a failed search.
-    tinyxml2::XMLElement* SearchElement(tinyxml2::XMLElement* const from, const std::string& toName,
+    tinyxml2::XMLElement* searchElement(tinyxml2::XMLElement* const from, const std::string& toName,
         const std::string checkAttribute, const std::string checkAttributeValue)
     {
         tinyxml2::XMLElement* _from = from;
@@ -481,7 +567,7 @@ namespace NWScriptPluginCommons {
             }
 
             if (_from->FirstChildElement() != NULL)
-                found = SearchElement(_from->FirstChildElement(), toName, checkAttribute, checkAttributeValue);
+                found = searchElement(_from->FirstChildElement(), toName, checkAttribute, checkAttributeValue);
 
             if (!found)
                 _from = _from->NextSiblingElement();
@@ -490,6 +576,7 @@ namespace NWScriptPluginCommons {
         return found;
 
     };
+
 #pragma warning(pop)
 
 }

@@ -183,7 +183,7 @@ void SCI_METHOD LexerNWScript::Lex(Sci_PositionU startPos, Sci_Position length, 
 			if ((MaskActive(sc.state) == SCE_C_PREPROCESSOR) && (!continuationLine)) {
 				sc.SetState(SCE_C_DEFAULT|activitySet);
 			}
-			// Reset states to beginning of colourise so no surprises
+			// reset states to beginning of colourise so no surprises
 			// if different sets of lines lexed.
 			visibleChars = 0;
 			lastWordWasUUID = false;

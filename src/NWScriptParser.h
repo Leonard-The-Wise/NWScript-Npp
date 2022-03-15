@@ -70,11 +70,6 @@ namespace NWScriptPlugin {
 
 	private:
 		HWND _hWnd;
-		// Converts a File Link into an actual filename
-		void ResolveLinkFile(generic_string& linkFilePath);
-		// Converts a file to a raw char* buffer and return the actual file size
-		bool FileToBuffer(const generic_string& fileName, std::string& sContents);
-
 		// Transforms a raw FileContent pointer into a ScriptParseResults list (for ASCII and UTF-8 based contents)
 		void CreateNWScriptStructureA(const std::string& sFileContents, ScriptParseResults& outParseResults);
 		// Transforms a raw FileContent pointer into a ScriptParseResults list (for UTF-16 and wchar_t* contents)

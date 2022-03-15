@@ -149,7 +149,7 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 					generic_string newPath = path;
 					if (!newPath.empty())
 					{
-						if (IsValidDirectory(newPath.c_str()))
+						if (isValidDirectory(newPath.c_str()))
 							ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), newPath.c_str());
 						else
 							MessageBox(_hSelf, TEXT("This path is inexistent or an invalid directory name!"), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
@@ -189,7 +189,7 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				case IDC_BTOUTPUTDIR:
 				{
 					generic_string newPath;
-					if (OpenFolderDialog(_hSelf, newPath))
+					if (openFolderDialog(_hSelf, newPath))
 					{
 						switch (wParam)
 						{
@@ -234,7 +234,7 @@ bool CompilerSettingsDialog::keepSettings()
 		if (IsDlgButtonChecked(_hSelf, IDC_USENWN1))
 		{
 			GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
-			if (!IsValidDirectory(tempBuffer))
+			if (!isValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
 				MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
@@ -245,7 +245,7 @@ bool CompilerSettingsDialog::keepSettings()
 		else
 		{
 			GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
-			if (!IsValidDirectory(tempBuffer))
+			if (!isValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
 				MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
@@ -258,7 +258,7 @@ bool CompilerSettingsDialog::keepSettings()
 	if (!IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR))
 	{
 		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
-		if (!IsValidDirectory(tempBuffer))
+		if (!isValidDirectory(tempBuffer))
 		{
 			errorString.append(tempBuffer).append(TEXT("\""));
 			MessageBox(_hSelf, errorString.c_str(), TEXT("Parameter validation"), MB_OK | MB_ICONEXCLAMATION);
