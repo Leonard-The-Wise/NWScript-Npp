@@ -87,10 +87,36 @@ namespace NWScriptPluginCommons {
         return result;
     }
 
+    std::string replaceStringsA(const std::string& input, std::map<std::string, std::string>& replaceStrings)
+    {
+        typedef jpcre2::select<char> pcre2;
+        std::string output = input;
+
+        for (std::map<std::string, std::string>::const_iterator i = replaceStrings.begin(); i != replaceStrings.end(); i++)
+        {
+            output = pcre2::Regex(i->first.c_str()).replace(output, i->second.c_str(), "g");
+        }
+
+        return output;
+    }
+
+    generic_string replaceStringsW(const generic_string& input, std::map<generic_string, generic_string>& replaceStrings)
+    {
+        typedef jpcre2::select<wchar_t> pcre2;
+        generic_string output = input;
+
+        for (std::map<generic_string, generic_string>::const_iterator i = replaceStrings.begin(); i != replaceStrings.end(); i++)
+        {
+            output = pcre2::Regex(i->first.c_str()).replace(output, i->second.c_str(), "g");
+        }
+
+        return output;
+    }
+
     generic_string properDirName(const generic_string& dirName) {
         generic_string retval = dirName;
-        if (retval.back() != TEXT('\\'))
-            retval.push_back(TEXT('\\'));
+        if (retval.back() == TEXT('\\'))
+            retval.pop_back();
         return retval;
     }
 

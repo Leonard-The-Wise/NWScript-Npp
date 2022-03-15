@@ -18,28 +18,34 @@
 
 namespace NWScriptPlugin
 {
-	class NWScriptCompiler
+	class NWScriptCompiler final
 	{
 	public:
 		NWScriptCompiler() : 
-			_resourceManager(nullptr), _settings(nullptr) {}
+			_resourceManager(nullptr), _settings(nullptr), _compiler(nullptr) {}
 
 		bool isInitialized() {
 			return _resourceManager != nullptr;
 		}
 
-		bool initialize(Settings* settings);
+		void appendSettings(Settings* settings) {
+			_settings = settings;
+		}
+
+		bool initialize();
 
 		void reset() {
 			_resourceManager = nullptr;
 			_compiler = nullptr;
-			includePathsBuilt = false;
-			_compilerCreated = false;
 			_includePaths.clear();
 		}
 
 		void setLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&)) {
 			_logger.setMessageCallback(MessageCallback);
+		}
+
+		void clearLog() {
+			_logger.clear();
 		}
 
 		NWScriptLogger& logger() {
@@ -52,21 +58,25 @@ namespace NWScriptPlugin
 		std::unique_ptr<ResourceManager> _resourceManager;
 		unique_ptr<NscCompiler> _compiler;
 
-		bool compileScript(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
-			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
-		bool disassembleBinary(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
-			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
-
 		generic_string NWNHome;
-		bool includePathsBuilt = false;
 		std::vector<std::string> _includePaths;
-		bool _compilerCreated;
 
 		Settings* _settings;
 
 		NWScriptLogger _logger;
 
-
+		// Load Base script resources
 		bool LoadScriptResources();
+
+		// Compile a plain text script into binary format
+		bool compileScript(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
+
+		// Disassemble a binary file into a pcode assembly text format
+		bool disassembleBinary(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
+
+		// Write dependencies file
+		bool WriteDependencies(const filesystem::path& sourcePath, const filesystem::path& destDir, const std::set<std::string>& dependencies);
 	};
 }

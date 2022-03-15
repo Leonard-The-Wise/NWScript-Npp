@@ -21,6 +21,8 @@ namespace NWScriptPlugin
 
 	public:
 
+		NWScriptLogger() : _messageCallback(nullptr) {}
+
 		enum class LogType {
 			Critical, Error, Warning, Info, ConsoleMessage
 		};

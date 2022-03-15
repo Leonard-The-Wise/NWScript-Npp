@@ -90,6 +90,8 @@ namespace NWScriptPlugin {
 		PluginMessenger& Messenger() { return _messageInstance; }
 		// Retrieve's Plugin's LineIndentor Object
 		LineIndentor& Indentor() { return _indentor; }
+		// Retrieve the Compiler Object
+		NWScriptCompiler& Compiler() { return _compiler; };
 		// Retrieve's Plugin's Module Handle
 		HMODULE DllHModule() const { return _dllHModule; }
 		// Retrieves Notepad++ HWND
