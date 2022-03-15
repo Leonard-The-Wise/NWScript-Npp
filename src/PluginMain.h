@@ -159,9 +159,15 @@ namespace NWScriptPlugin {
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 
+		// ### Compiler functions
+
+		// Compile/Disassemble script files, simple or batch operations.
+		void DoCompileOrDisasmScript(generic_string filePath = TEXT(""), bool fromCurrentScintilla = false, bool batchOperations = false);
+		// Process files in a batch.
+		static void DoBatchProcessFilesCallback(HRESULT decision);
+
 		// ### Config files management
 
-		static void DoBatchProcessFiles(HRESULT decision);
 		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
 		static void DoImportDefinitionsCallback(HRESULT decision);
 		// Resets the Editor Colors

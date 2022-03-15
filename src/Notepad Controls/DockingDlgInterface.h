@@ -31,8 +31,8 @@ class DockingDlgInterface : public StaticDialog
 {
 public:
 
-	DockingDlgInterface(): StaticDialog(), _HSource(),  {};
-	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID),  {};
+	DockingDlgInterface(): StaticDialog(), _HSource()  {};
+	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID)  {};
 	
 	virtual void init(HINSTANCE hInst, HWND parent)
 	{
