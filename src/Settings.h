@@ -59,7 +59,7 @@ namespace NWScriptPlugin {
 		generic_string batchOutputCompileDir;
 
 		std::string getChosenInstallDir() {
-			return neverwinterInstallChoice == 0 ? wstr2str(properDirName(neverwinterOneInstallDir)) : wstr2str(properDirName(neverwinterTwoInstallDir));
+			return neverwinterInstallChoice == 0 ? properDirNameA(wstr2str(neverwinterOneInstallDir)) : properDirNameA(wstr2str(neverwinterTwoInstallDir));
 		}
 
 		generic_string getIncludeDirs() {

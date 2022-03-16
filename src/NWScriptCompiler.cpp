@@ -85,7 +85,7 @@ bool NWScriptCompiler::LoadScriptResources()
     LoadParams.ResManFlags |= ResourceManager::ResManFlagBaseResourcesOnly;
 
     // Legacy code is using ASCII string names. We convert here. Also, many exceptions thrown inside those classes to deal with.
-    std::string InstallDir = _settings->getChosenInstallDir();
+    std::string InstallDir = _settings->getChosenInstallDir() + "\\";
     try {
         _resourceManager->LoadScriptResources(wstr2str(NWNHome), InstallDir, &LoadParams);
     }
@@ -123,14 +123,14 @@ bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::pat
 
             if (_settings->compileVersion == 174)
             {
-                std::string overrideDir = _settings->getChosenInstallDir() + "ovr\\";
+                std::string overrideDir = _settings->getChosenInstallDir() + "\\ovr\\";
                 _includePaths.push_back(overrideDir);
             }
         }
 
         for (generic_string s : _settings->getIncludeDirsV())
         {
-            _includePaths.push_back(wstr2str(properDirName(s)));
+            _includePaths.push_back(properDirNameA(wstr2str(s)) + "\\");
         }
 
         if (_settings->compileMode == 0)

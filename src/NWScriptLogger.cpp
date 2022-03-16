@@ -13,14 +13,17 @@
 
 #define COMPILERREGEX R"((?<fileName>[a-zA-Z0-9\s_\\.\-\(\):]+)\.(?<fileExt>[a-zA-Z0-9\s_\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<code>NSC\d+):\s(?<message>.+))"
 #define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:(?<message>.+))"
+#define INCLUDESPARSEREGEX R"( ShowIncludes: Handled resource ([^\/]+)\/([^\\\n]+))"
 
 typedef jpcre2::select<char> pcre2;
 
 static const pcre2::Regex fileParsingMessageRegex(COMPILERREGEX, 0, jpcre2::JIT_COMPILE);
 static const pcre2::Regex generalMessageRegex(GENERALMESSAGE, PCRE2_CASELESS, jpcre2::JIT_COMPILE);
+static const pcre2::Regex includesRegex(INCLUDESPARSEREGEX, 0, jpcre2::JIT_COMPILE);
 
 static pcre2::RegexMatch fileParsingMessage(&fileParsingMessageRegex);
 static pcre2::RegexMatch generalMessage(&generalMessageRegex);
+static pcre2::RegexMatch includeFile(&includesRegex);
 
 
 using namespace NWScriptPlugin;
@@ -47,11 +50,22 @@ void NWScriptLogger::WriteText(const char* fmt, ...) {
 void NWScriptLogger::WriteTextV(const char* fmt, va_list ap)
 {
 	pcre2::VecNas captureGroup;
+	pcre2::VecNum includedFile;
 	size_t matches;
 
-	char buf[1024];
+	char buf[1024];	
 	vsnprintf(buf, sizeof(buf), fmt, ap);
-	
+
+	// Check for include files parsing
+	includeFile.setNumberedSubstringVector(&includedFile);
+	includeFile.setSubject(buf);
+	matches = includeFile.match();
+	if (matches)
+	{
+		includeFiles.push_back(properDirNameA(includedFile[0][1]) + "\\" + includedFile[0][2]);
+		return;
+	}
+
 	fileParsingMessage.setNamedSubstringVector(&captureGroup);
 	fileParsingMessage.setSubject(buf);
 	matches = fileParsingMessage.match();

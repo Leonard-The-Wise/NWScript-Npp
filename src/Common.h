@@ -122,8 +122,15 @@ namespace NWScriptPluginCommons {
     // Checks if directory exist
     bool isValidDirectoryS(const generic_string& sPath);
 
-    // Returns the proper back-slash ended directory name (eg: C:\Windows -> C:\Windows\)
-    generic_string properDirName(const generic_string& dirName);
+    // Returns the proper non back-slash ended directory name (eg: C:\Windows\ -> C:\Windows)
+    // Needed to canonicalize directory names, since then functions of NscLib will return names with or
+    // without ending backslashes.
+    std::string properDirNameA(const std::string& dirName);
+
+    // Returns the proper non back-slash ended directory name (eg: C:\Windows\ -> C:\Windows)
+    // Needed to canonicalize directory names, since then functions of NscLib will return names with or
+    // without ending backslashes.
+    generic_string properDirNameW(const generic_string& dirName);
 
     // Try to retrieve the Neverwinter's Home path
     generic_string getNwnHomePath(int CompilerVersion);

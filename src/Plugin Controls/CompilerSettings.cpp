@@ -279,9 +279,9 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.neverwinterInstallChoice = (IsDlgButtonChecked(_hSelf, IDC_USENWN1) ? 0 : 1);
 
 	GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
-	myset.neverwinterOneInstallDir = properDirName(tempBuffer);
+	myset.neverwinterOneInstallDir = properDirNameW(tempBuffer);
 	GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
-	myset.neverwinterTwoInstallDir = properDirName(tempBuffer);
+	myset.neverwinterTwoInstallDir = properDirNameW(tempBuffer);
 
 	myset.ignoreInstallPaths = IsDlgButtonChecked(_hSelf, IDC_CHKIGNOREINSTALLPATHS);
 
@@ -298,7 +298,7 @@ bool CompilerSettingsDialog::keepSettings()
 	{
 		generic_string strAdd;
 		ListBox_GetText(GetDlgItem(_hSelf, IDC_LSTADDPATH), i, tempBuffer);
-		strAdd = properDirName(tempBuffer);
+		strAdd = properDirNameW(tempBuffer);
 		strAdd.append(TEXT(";"));
 		vData.push_back(strAdd);
 	}
@@ -317,7 +317,7 @@ bool CompilerSettingsDialog::keepSettings()
 
 	myset.useScriptPathToCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR);
 	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
-	myset.outputCompileDir = properDirName(tempBuffer);
+	myset.outputCompileDir = properDirNameW(tempBuffer);
 
 	myset.compilerSettingsCreated = true;
 

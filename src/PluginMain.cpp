@@ -1130,14 +1130,14 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
         if (Settings().useScriptPathToCompile)
             outputDir = scriptPath.parent_path();
         else
-            outputDir = properDirName(Settings().outputCompileDir);
+            outputDir = properDirNameW(Settings().outputCompileDir);
     }
     else
     {
         if (Settings().useScriptPathToBatchCompile)
             outputDir = scriptPath.parent_path();
         else
-            outputDir = properDirName(Settings().batchOutputCompileDir);
+            outputDir = properDirNameW(Settings().batchOutputCompileDir);
     }
 
     // TODO: Show output window and setup logging operations.
