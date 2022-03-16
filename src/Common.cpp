@@ -113,7 +113,14 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
-    generic_string properDirName(const generic_string& dirName) {
+    std::string properDirNameA(const std::string& dirName) {
+        std::string retval = dirName;
+        if (retval.back() == '\\')
+            retval.pop_back();
+        return retval;
+    }
+
+    generic_string properDirNameW(const generic_string& dirName) {
         generic_string retval = dirName;
         if (retval.back() == TEXT('\\'))
             retval.pop_back();

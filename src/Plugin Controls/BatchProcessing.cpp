@@ -191,7 +191,7 @@ bool BatchProcessingDialog::keepSettings()
 	Settings& myset = *_settings;
 
 	GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, std::size(tempBuffer));
-	myset.startingBatchFolder = properDirName(tempBuffer);
+	myset.startingBatchFolder = properDirNameW(tempBuffer);
 
 	myset.setFileFiltersCompile(_tmpFiltersCompile);
 	myset.setFileFiltersDisasm(_tmpFiltersDisasm);
@@ -203,7 +203,7 @@ bool BatchProcessingDialog::keepSettings()
 
 	myset.useScriptPathToBatchCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIRBATCH);
 	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));
-	myset.batchOutputCompileDir = properDirName(tempBuffer);
+	myset.batchOutputCompileDir = properDirNameW(tempBuffer);
 
 	return true;
 }

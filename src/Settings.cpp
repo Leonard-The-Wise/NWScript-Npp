@@ -45,8 +45,8 @@ void Settings::Load()
 	// Compiler settings
 	compilerSettingsCreated = GetBoolean(TEXT("Compiler Settings"), TEXT("compilerSettingsCreated"));
 	neverwinterInstallChoice = GetNumber<int>(TEXT("Compiler Settings"), TEXT("neverwinterInstallChoice"));
-	neverwinterOneInstallDir = properDirName(GetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir")));
-	neverwinterTwoInstallDir = properDirName(GetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir")));
+	neverwinterOneInstallDir = properDirNameW(GetString(TEXT("Compiler Settings"), TEXT("neverwinterOneInstallDir")));
+	neverwinterTwoInstallDir = properDirNameW(GetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir")));
 	ignoreInstallPaths = GetBoolean(TEXT("Compiler Settings"), TEXT("ignoreInstallPaths"));
 	additionalIncludeDirs = GetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"));
 	compilerFlags = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"));
@@ -55,17 +55,17 @@ void Settings::Load()
 	generateSymbols = GetBoolean(TEXT("Compiler Settings"), TEXT("generateSymbols"));
 	compileVersion = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compileVersion"));
 	useScriptPathToCompile = GetBoolean(TEXT("Compiler Settings"), TEXT("useScriptPathToCompile"));
-	outputCompileDir = properDirName(GetString(TEXT("Compiler Settings"), TEXT("outputCompileDir")));
+	outputCompileDir = properDirNameW(GetString(TEXT("Compiler Settings"), TEXT("outputCompileDir")));
 
 	// Batch Process
-	startingBatchFolder = properDirName(GetString(TEXT("Batch Processing"), TEXT("startingBatchFolder")));
+	startingBatchFolder = properDirNameW(GetString(TEXT("Batch Processing"), TEXT("startingBatchFolder")));
 	fileFiltersCompile = GetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"));
 	fileFiltersDisasm = GetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"));
 	compileMode = GetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"));
 	recurseSubFolders = GetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"));
 	continueCompileOnFail = GetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"));
 	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
-	batchOutputCompileDir = properDirName(GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir")));
+	batchOutputCompileDir = properDirNameW(GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir")));
 
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
 	if (!isValidDirectoryS(neverwinterOneInstallDir))
@@ -188,7 +188,7 @@ std::vector<generic_string> Settings::string2VectorRegex(const generic_string& t
 	for (std::vector<generic_string> m : matchr)
 	{
 		if (separator.getPattern() == PATHSPLITREGEX)
-			results.push_back(properDirName(m[1]));
+			results.push_back(properDirNameW(m[1]));
 		else
 			results.push_back(m[1]);
 	}

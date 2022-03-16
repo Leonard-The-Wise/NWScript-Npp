@@ -45,17 +45,28 @@ namespace NWScriptPlugin
 			return compilerMessages[index];
 		}
 
+		filesystem::path getIncludeFile(size_t index) {
+			return includeFiles[index];
+		}
+
 		void clear() {
 			compilerMessages.clear();
 		}
 
-		size_t size() {
+		size_t logSize() {
 			return compilerMessages.size();
+		}
+
+		size_t includeLogSize() {
+			return includeFiles.size();
 		}
 
 		void setMessageCallback(void (*MessageCallback)(CompilerMessage& message)) {
 			_messageCallback = MessageCallback;
 		}
+
+		// Add include files to the log
+
 
 		// Add log message to the stack
 		void log(generic_string message, LogType type, generic_string messageCode, generic_string fileName, generic_string fileExt, 
@@ -116,6 +127,8 @@ namespace NWScriptPlugin
 
 	private:
 		std::vector<CompilerMessage> compilerMessages;
+		std::vector<filesystem::path> includeFiles;
+
 		void (*_messageCallback)(CompilerMessage& message);
 
 	};
