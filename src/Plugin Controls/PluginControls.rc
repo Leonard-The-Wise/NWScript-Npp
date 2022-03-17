@@ -112,7 +112,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,143,293,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,254,293,50,14
-    GROUPBOX        "Neverwinter Nights Installation Folders",IDC_STATIC,7,7,411,90
+    GROUPBOX        "Neverwinter Nights Installation Folders (for loading nwscript.nss and other game resources)",IDC_STATIC,7,7,411,90
     LTEXT           "Neverwinter Nights 1 (or Enhanced Edition)",IDC_STATIC,87,20,139,8
     CONTROL         "Use this",IDC_USENWN1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,32,33,41,10
     CONTROL         "Use this",IDC_USENWN2,"Button",BS_AUTORADIOBUTTON,32,63,41,10
@@ -121,14 +121,14 @@ BEGIN
     LTEXT           "Neverwinter Nights 2",IDC_STATIC,87,50,68,8
     EDITTEXT        IDC_TXTNWN2INSTALL,85,60,294,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BTNWN2INSTALL,385,60,20,14
-    CONTROL         "Ignore installation paths (Additional Include Paths will be used if not empty).",IDC_CHKIGNOREINSTALLPATHS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,89,81,259,10
+    CONTROL         "Ignore installation paths.",IDC_CHKIGNOREINSTALLPATHS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,82,96,10
     GROUPBOX        "Additional Include Paths",IDC_STATIC,7,104,224,137
     EDITTEXT        IDC_TXTADDPATH,12,119,186,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BTSEARCHPATH,205,118,20,14
     LISTBOX         IDC_LSTADDPATH,12,139,185,96,LBS_SORT | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "+",IDC_BTADDPATH,204,155,20,14,BS_BITMAP
-    PUSHBUTTON      "-",IDC_BTDELPATH,204,177,20,15,BS_BITMAP
+    PUSHBUTTON      "+",IDC_BTADDPATH,204,161,20,14,BS_BITMAP
+    PUSHBUTTON      "-",IDC_BTDELPATH,204,190,20,15,BS_BITMAP
     GROUPBOX        "Compiler Options",IDC_STATIC,248,104,170,137
     CONTROL         "Optimize script",IDC_CHKCOMPOPTIMIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,120,63,10
     CONTROL         "Enable non-Bioware's extensions",IDC_CHKNONBIOWAREXTENSIONS,
@@ -136,13 +136,13 @@ BEGIN
     CONTROL         "Generate (.ndb) debug symbols files",IDC_CHKCOMPNDBSYMBOLS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,153,132,10
     CONTROL         "Enable scrict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,169,75,10
-    CONTROL         "Create makefile (.d) dependency files",IDC_CHKCOMPMAKEFILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,185,136,10
+    CONTROL         "Create makefile (.d) dependencies files",IDC_CHKCOMPMAKEFILE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,185,141,10
     CONTROL         "Disable parsing of \\"" and \\\\ tokens",IDC_CHKCOMPDISABLESLASHPARSE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,201,135,10
     COMBOBOX        IDC_CBOTARGETVERSION,262,219,48,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Target Version",IDC_STATIC,317,220,48,8
-    GROUPBOX        "Compiled Script Output Directory",IDC_STATIC,7,246,411,40
+    LTEXT           "Target game version",IDC_STATIC,317,220,67,8
+    GROUPBOX        "Output Directory",IDC_STATIC,7,246,411,40
     CONTROL         "Same of the script file",IDC_CHKOUTPUTDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,264,85,10
     EDITTEXT        IDC_TXTOUTPUTDIR,115,261,263,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BTOUTPUTDIR,383,261,20,14

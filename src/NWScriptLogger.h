@@ -49,8 +49,18 @@ namespace NWScriptPlugin
 			return includeFiles[index];
 		}
 
+		void setProcessorString(const std::string& newValue) {
+			processorContents.str(newValue);
+		}
+
+		const std::string getProcessorString() {
+			return processorContents.str();
+		}
+
 		void clear() {
 			compilerMessages.clear();
+			includeFiles.clear();
+			processorContents.str(std::string());
 		}
 
 		size_t logSize() {
@@ -64,9 +74,6 @@ namespace NWScriptPlugin
 		void setMessageCallback(void (*MessageCallback)(CompilerMessage& message)) {
 			_messageCallback = MessageCallback;
 		}
-
-		// Add include files to the log
-
 
 		// Add log message to the stack
 		void log(generic_string message, LogType type, generic_string messageCode, generic_string fileName, generic_string fileExt, 
@@ -128,6 +135,7 @@ namespace NWScriptPlugin
 	private:
 		std::vector<CompilerMessage> compilerMessages;
 		std::vector<filesystem::path> includeFiles;
+		std::stringstream processorContents;
 
 		void (*_messageCallback)(CompilerMessage& message);
 

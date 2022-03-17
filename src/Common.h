@@ -46,6 +46,13 @@ struct tstat : stat {};
 #endif
 #endif
 
+// Constants for NWScript file names
+const std::string textScriptSuffix = ".nss";
+const std::string compiledScriptSuffix = ".ncs";
+const std::string disassembledScriptSuffix = ".ncs.pcode";
+const std::string dependencyFileSuffix = ".d";
+const std::string debugSymbolsFileSuffix = ".ndb";
+
 // Current Windows official sizes for icons
 // https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-icons
 enum IconSize {

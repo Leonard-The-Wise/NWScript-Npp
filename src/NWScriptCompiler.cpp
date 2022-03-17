@@ -53,7 +53,7 @@ bool NWScriptCompiler::initialize() {
     return true;
 }
 
-bool NWScriptCompiler::LoadScriptResources()
+bool NWScriptCompiler::loadScriptResources()
 {
     ResourceManager::ModuleLoadParams LoadParams;
     ResourceManager::StringVec KeyFiles;
@@ -97,7 +97,7 @@ bool NWScriptCompiler::LoadScriptResources()
     return true;
 }
 
-bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, char* fileContents)
+void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
 {
     _logger.log("Initializing process...", LogType::ConsoleMessage);
 
@@ -109,14 +109,17 @@ bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::pat
     if (!isInitialized())
     {
         if (!initialize())
-            return false;
+        {
+            notifyCaller(false);
+            return;
+        }
 
         // Start building up search paths. 
-        _includePaths.push_back(wstr2str(sourcePath.parent_path()));
+        _includePaths.push_back(wstr2str(_sourcePath.parent_path()));
 
         if (!_settings->ignoreInstallPaths)
         {
-            if (!LoadScriptResources())
+            if (!loadScriptResources())
             {
                 _logger.log("Could not load script resources on installation path: " + _settings->getChosenInstallDir(), LogType::Warning);
             }
@@ -134,15 +137,15 @@ bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::pat
         }
 
         if (_settings->compileMode == 0)
-            _logger.log("Compiling script:" + wstr2str(sourcePath), LogType::Info);
+            _logger.log("Compiling script:" + wstr2str(_sourcePath), LogType::Info);
         else
-            _logger.log("Disassembling binary:" + wstr2str(sourcePath), LogType::Info);
+            _logger.log("Disassembling binary:" + wstr2str(_sourcePath), LogType::Info);
 
         // Acquire information about NWN Resource Type of the file. Warning of ignored result is incorrect.
 #pragma warning (push)
 #pragma warning (disable : 6031)
-        fileResType = _resourceManager->ExtToResType(wstr2str(sourcePath).c_str());
-        fileResRef = _resourceManager->ResRef32FromStr(wstr2str(sourcePath.stem()).c_str());
+        fileResType = _resourceManager->ExtToResType(wstr2str(_sourcePath).c_str());
+        fileResRef = _resourceManager->ResRef32FromStr(wstr2str(_sourcePath.stem()).c_str());
 #pragma warning (pop)
 
         inFileContents;
@@ -150,10 +153,11 @@ bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::pat
             inFileContents = fileContents;
         else
         {
-            if (!fileToBuffer(sourcePath.c_str(), inFileContents))
+            if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
             {
-                _logger.log("Could not load the specified file: " + wstr2str(sourcePath), LogType::Error, "NSC2002");
-                return false;
+                _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Error, "NSC2002");
+                notifyCaller(false);
+                return;
             }
         }
 
@@ -165,26 +169,54 @@ bool NWScriptCompiler::processFile(filesystem::path& sourcePath, filesystem::pat
     }
 
     // Execute the process
-    if (_settings->compileMode == 0)
+    bool bSuccess = false;
+    if (_compilerMode == 0)
     {
-        _logger.log("Compiling script: " + sourcePath.string(), LogType::ConsoleMessage);
-        return compileScript(sourcePath, destDir, fromMemory, inFileContents, fileResType, fileResRef);
+        if (_fetchPreprocessorOnly)
+            _logger.log("Fetching preprocessor output for: " + _sourcePath.string(), LogType::ConsoleMessage);
+        else
+            _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
+        bSuccess = compileScript(fromMemory, inFileContents, fileResType, fileResRef);
     }
     else
     {
-        _logger.log("Disassembling binary: " + sourcePath.string(), LogType::ConsoleMessage);
-        return disassembleBinary(sourcePath, destDir, fromMemory, inFileContents, fileResType, fileResRef);
+        _logger.log("Disassembling binary: " + _sourcePath.string(), LogType::ConsoleMessage);
+        bSuccess = disassembleBinary(fromMemory, inFileContents, fileResType, fileResRef);
     }
+
+    notifyCaller(bSuccess);
 }
 
 
-bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     // We always ignore include files. And for our project, the compiler ALWAYS
     // return include dependencies, since message filters are done in a higher application layer.
     bool bIgnoreIncludes = true;
-    _settings->compilerFlags |= NscCompilerFlag_ShowIncludes;
+    bool bOptimize = _settings->optimizeScript;
+    UINT32 compilerFlags = _settings->compilerFlags;
+    compilerFlags |= NscCompilerFlag_ShowIncludes;
+
+    // Disable processing overhead for preprocessor messages..
+    // Also, since warnings are the type of return, we don't want to suppress them here, no matter what.
+    if (_fetchPreprocessorOnly)
+    {
+        compilerFlags &= ~NscCompilerFlag_GenerateMakeDeps;
+        bOptimize = false;
+        compilerFlags &= ~NscCompilerFlag_SuppressWarnings;
+        compilerFlags |= NscCompilerFlag_ShowPreprocessed;
+    }
+
+    // Here we are solely worried about creating a human-readable dependencies view
+    if (_makeDependencyView)
+    {
+        compilerFlags |= NscCompilerFlag_GenerateMakeDeps;
+        compilerFlags |= NscCompilerFlag_SuppressWarnings;
+        bOptimize = false;
+    }
+
+    compilerFlags |= NscCompilerFlag_DumpPCode;
 
     // Main compilation step
     std::string dataRef;                     // Buffer to file is generic and requires a std::string
@@ -193,7 +225,7 @@ bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::p
     std::set<std::string> fileDependencies;
 
     NscResult result = _compiler->NscCompileScript(fileResRef, fileContents.c_str(), fileContents.size(), _settings->compileVersion,
-        _settings->optimizeScript, bIgnoreIncludes, &_logger, _settings->compilerFlags, generatedCode, debugSymbols, fileDependencies);
+        bOptimize, bIgnoreIncludes, &_logger, compilerFlags, generatedCode, debugSymbols, fileDependencies, _settings->generateSymbols);
 
     switch (result)
     {
@@ -205,7 +237,7 @@ bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::p
 
     case NscResult_Include:
     {
-        _logger.log(sourcePath.filename().string() + " is an include file, ignored.", LogType::ConsoleMessage);
+        _logger.log(_sourcePath.filename().string() + " is an include file, ignored.", LogType::ConsoleMessage);
         return true;
     }
 
@@ -217,8 +249,16 @@ bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::p
         return false;
     }
 
+    // If we are only to fetch preprocessor code, we're done here (since the _logger takes care of that inside the Compile function)
+    if (_fetchPreprocessorOnly)
+        return true;
+
+    // If we are to create human-readable dependencies, return that
+    if (_makeDependencyView)
+        return MakeDependenciesView(fileDependencies);
+
     // Now save code data
-    generic_string outputPath = str2wstr(destDir.string() + "\\" + sourcePath.stem().string() + ".ncs");
+    generic_string outputPath = str2wstr(_destDir.string() + "\\" + _sourcePath.stem().string() + compiledScriptSuffix);
     dataRef.assign(reinterpret_cast<char*>(&generatedCode[0]), generatedCode.size());
     if (!bufferToFile(outputPath, dataRef))
     {
@@ -230,7 +270,7 @@ bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::p
     if (_settings->generateSymbols)
     {
         dataRef.clear();
-        outputPath = str2wstr(destDir.string() + "\\" + sourcePath.stem().string() + ".ndb");
+        outputPath = str2wstr(_destDir.string() + "\\" + _sourcePath.stem().string() + debugSymbolsFileSuffix);
         dataRef.assign(reinterpret_cast<char*>(&debugSymbols[0]), debugSymbols.size());
         if (!bufferToFile(outputPath, dataRef))
         {
@@ -241,13 +281,12 @@ bool NWScriptCompiler::compileScript(filesystem::path& sourcePath, filesystem::p
 
     // And file dependencies if apply
     if (_settings->compilerFlags & NscCompilerFlag_GenerateMakeDeps)
-        return WriteDependencies(sourcePath, destDir, fileDependencies);
+        return MakeDependenciesFile(fileDependencies);
 
     return true;
 }
 
-
-bool NWScriptCompiler::disassembleBinary(filesystem::path& sourcePath, filesystem::path& destDir, bool fromMemory, std::string& fileContents,
+bool NWScriptCompiler::disassembleBinary(bool fromMemory, std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     std::string generatedCode;
@@ -263,7 +302,7 @@ bool NWScriptCompiler::disassembleBinary(filesystem::path& sourcePath, filesyste
     }
 
     // Save file, but first, we remove extra carriage returns the library is generating...
-    generic_string outputPath = str2wstr(destDir.string() + "\\" + sourcePath.stem().string() + ".ncs.pcode");
+    generic_string outputPath = str2wstr(_destDir.string() + "\\" + _sourcePath.stem().string() + disassembledScriptSuffix);
     
     std::stringstream formatedCode;
     pcre2::VecNum matches;
@@ -282,8 +321,7 @@ bool NWScriptCompiler::disassembleBinary(filesystem::path& sourcePath, filesyste
     return true;
 }
 
-
-bool NWScriptCompiler::WriteDependencies(const filesystem::path& sourcePath, const filesystem::path& destDir, const std::set<std::string>& dependencies)
+bool NWScriptCompiler::MakeDependenciesView(const std::set<std::string>& dependencies)
 {
     // Generate some timestamp headers
     char timestamp[128]; time_t currTime;  struct tm currTimeP;
@@ -299,7 +337,7 @@ bool NWScriptCompiler::WriteDependencies(const filesystem::path& sourcePath, con
 
     std::map<std::string, std::string> variablesMap;
 
-    variablesMap.insert({ "%DEPENDENCYFILE%", sourcePath.filename().string() });
+    variablesMap.insert({ "%DEPENDENCYFILE%", _sourcePath.filename().string() });
     variablesMap.insert({ "%VERSION%", sVersion.str() });
     variablesMap.insert({ "%GENERATIONDATE%", timestamp });
 
@@ -309,14 +347,15 @@ bool NWScriptCompiler::WriteDependencies(const filesystem::path& sourcePath, con
 
     // Main dependencies
     sdependencies << "  1) Main file relation (compiled script -> script)" << "\r\n\r\n";
-    sdependencies << "     Source Directory: " + sourcePath.parent_path().string() << "\r\n";
-    sdependencies << "     Destination Directory: " + destDir.string() << "\r\n";
-    sdependencies << "          " + sourcePath.stem().string() << ".ncs <- generated from -> " << sourcePath.stem().string() << ".nss" << "\r\n\r\n";
+    sdependencies << "     Source Directory: " + _sourcePath.parent_path().string() << "\r\n";
+    sdependencies << "     Destination Directory: " + _destDir.string() << "\r\n";
+    sdependencies << "          " + _sourcePath.stem().string() << compiledScriptSuffix << 
+        " <- is generated from -> " << _sourcePath.stem().string() << textScriptSuffix << "\r\n\r\n";
 
     // Additional dependencies
     if (!dependencies.empty())
     {
-        sdependencies << "  2) Dependencies of script source: " << sourcePath.stem().string() << ".nss" << "\r\n\r\n";
+        sdependencies << "  2) Dependencies of script source: " << _sourcePath.stem().string() << textScriptSuffix << "\r\n\r\n";
 
         pcre2::VecNum matches;
         pcre2::RegexMatch dependencyParser(&dependencyParse);
@@ -355,7 +394,29 @@ bool NWScriptCompiler::WriteDependencies(const filesystem::path& sourcePath, con
         sdependencies << "\r\n\r\n";
         sdependencies << "------------------[ END OF FILE DEPENDENCIES ]------------------" << "\r\n\r\n";
 
-        generic_string outputPath = str2wstr(destDir.string() + "\\" + sourcePath.stem().string() + ".nss.dependencies");
+        _logger.setProcessorString(sdependencies.str());
+    }
+
+    return true;
+}
+
+bool NWScriptCompiler::MakeDependenciesFile(const std::set<std::string>& dependencies)
+{
+
+    // Additional dependencies
+    if (!dependencies.empty())
+    {
+        std::stringstream sdependencies;
+
+        sdependencies << _sourcePath.stem() << compiledScriptSuffix << ": " << _sourcePath.stem() << textScriptSuffix;
+
+        for (auto& dep : dependencies)
+            sdependencies << " \\\n    " << dep.c_str();
+
+        for (auto& dep : dependencies)
+            sdependencies << "\n" << dep.c_str() << "\n";
+
+        generic_string outputPath = str2wstr(_destDir.string() + "\\" + _sourcePath.stem().string() + dependencyFileSuffix);
         if (!bufferToFile(outputPath, sdependencies.str()))
         {
             _logger.log(TEXT("Error: could not write dependency file: ") + outputPath, LogType::ConsoleMessage);
@@ -364,5 +425,4 @@ bool NWScriptCompiler::WriteDependencies(const filesystem::path& sourcePath, con
     }
 
     return true;
-
 }

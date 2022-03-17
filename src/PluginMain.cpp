@@ -20,6 +20,8 @@
 //#include <Shlwapi.h>
 
 
+#include "menuCmdID.h"
+
 #include "Common.h"
 #include "LexerCatalogue.h"
 
@@ -46,22 +48,26 @@ using namespace LexerInterface;
 // Static members definition
 generic_string Plugin::pluginName = TEXT("NWScript Tools");
 
-// Menu functions order. Needs to be Sync'ed with pluginFunctions[]
+// Menu functions order. Most of these is just to keep track of menu items.
+// Some are used to modificate menu items.
+// Needs to be Sync'ed with pluginFunctions[]
 #define PLUGINMENU_SWITCHAUTOINDENT 0
 #define PLUGINMENU_DASH1 1
 #define PLUGINMENU_COMPILESCRIPT 2
 #define PLUGINMENU_DISASSEMBLESCRIPT 3
 #define PLUGINMENU_BATCHPROCESSING 4
 #define PLUGINMENU_RUNLASTBATCH 5
-#define PLUGINMENU_GENERATEPREPROCESSORFILE 6
-#define PLUGINMENU_DASH2 7
-#define PLUGINMENU_SETTINGS 8
+#define PLUGINMENU_DASH2 6
+#define PLUGINMENU_FETCHPREPROCESSORTEXT 7
+#define PLUGINMENU_VIEWSCRIPTDEPENDENCIES 8
 #define PLUGINMENU_DASH3 9
-#define PLUGINMENU_INSTALLDARKTHEME 10
-#define PLUGINMENU_IMPORTDEFINITIONS 11
-#define PLUGINMENU_RESETEDITORCOLORS 12
-#define PLUGINMENU_DASH4 13
-#define PLUGINMENU_ABOUTME 14
+#define PLUGINMENU_SETTINGS 10
+#define PLUGINMENU_DASH4 11
+#define PLUGINMENU_INSTALLDARKTHEME 12
+#define PLUGINMENU_IMPORTDEFINITIONS 13
+#define PLUGINMENU_RESETEDITORCOLORS 14
+#define PLUGINMENU_DASH5 15
+#define PLUGINMENU_ABOUTME 16
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
@@ -70,13 +76,15 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Disassemble file..."), Plugin::DisassembleFile},
     {TEXT("Batch script processing..."), Plugin::BatchProcessFiles},
     {TEXT("Run last batch setup"), Plugin::RunLastBatch},
-    {TEXT("Generate Preprocessed Output"), Plugin::RunLastBatch},
+    {TEXT("---")},
+    {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
+    {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
     {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
-    {TEXT("reset editor colors"), Plugin::ResetEditorColors},
+    {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
     {TEXT("---")},
     {TEXT("About me"), Plugin::AboutMe},
 };
@@ -314,6 +322,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     }
 }
 
+// Setup a restart Hook. Normal or Admin mode. Save settings immediately after.
 void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
 {
     Settings().notepadRestartMode = type; Settings().notepadRestartFunction = function;
@@ -328,6 +337,71 @@ void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
     Settings().Save();
 }
 
+#ifdef INACTIVE
+// Sets the current language to our plugin's lexer language by calling MENU commands.
+// Needs recursion to navigate here...
+bool Plugin::SetNotepadToPluginLexer(HMENU parent)
+{
+    // Notepad++ don't have support to set external lexer languages by message calling, so we
+    // do it by directly sending a "menu command" there...
+
+    MENUITEMINFO menuInfo = {};
+    HMENU currentMenu;
+
+    if (parent)
+        currentMenu = parent;
+    else
+        currentMenu = GetNppMainMenu();
+
+    int count = GetMenuItemCount(currentMenu);
+    if (count < 0)
+        return FALSE;
+
+    generic_string menuItemName;
+    generic_string lexerName = str2wstr(LexerCatalogue::GetLexerName(0));
+    TCHAR szString[256] = {};
+
+    int commandID = -1;
+
+    // Search for name
+    bool bFound = false;
+    for (int i = 0; i < count && !bFound; i++)
+    { 
+        ZeroMemory(szString, sizeof(szString));
+        menuInfo.cch = 256;
+        menuInfo.fMask = MIIM_TYPE;
+        menuInfo.fType = MFT_STRING;
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.dwTypeData = szString;
+        bool bSuccess = GetMenuItemInfo(currentMenu, i, MF_BYPOSITION, &menuInfo);
+        menuItemName = szString;
+
+        if (menuItemName == lexerName)
+        {
+            // Found name. Find command ID;
+            commandID = GetMenuItemID(currentMenu, i);
+            bFound = true;
+            break;
+        }
+
+        HMENU hSubMenu = GetSubMenu(currentMenu, i);
+        if (hSubMenu)
+        {
+            if (SetNotepadToPluginLexer(hSubMenu))
+                return TRUE;
+        }
+    }
+
+    // Dispatch command.
+    if (bFound)
+    {
+        Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, commandID);
+    }
+
+    return bFound;
+}
+
+#endif
 #pragma endregion Plugin DLL Message Processing
 
 #pragma region 
@@ -440,6 +514,41 @@ void Plugin::DetectDarkThemeInstall()
         RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
         _pluginDarkThemeIs = DarkThemeStatus::Installed;
     }
+}
+
+// Look for our language menu item among installed external languages and call it
+void Plugin::SetNotepadToPluginLexer()
+{
+    MENUITEMINFO menuInfo = {};
+    HMENU currentMenu = GetNppMainMenu();
+    generic_string menuItemName;
+    generic_string lexerName = str2wstr(LexerCatalogue::GetLexerName(0));
+    TCHAR szString[256] = {};
+
+    int commandID = -1;
+
+    // Search for name inside given external language names
+    for (int i = IDM_LANG_EXTERNAL; i < IDM_LANG_EXTERNAL_LIMIT; i++)
+    {
+        ZeroMemory(szString, sizeof(szString));
+        menuInfo.cch = 256;
+        menuInfo.fMask = MIIM_TYPE;
+        menuInfo.fType = MFT_STRING;
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.dwTypeData = szString;
+        bool bSuccess = GetMenuItemInfo(currentMenu, i, MF_BYCOMMAND, &menuInfo);
+        menuItemName = szString;
+
+        if (menuItemName == lexerName)
+        {
+            commandID = i;
+            break;
+        }
+    }
+
+    // Dispatch command.
+    if (commandID > -1)
+        Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, commandID);
 }
 
 // Handling functions for plugin menu
@@ -580,38 +689,187 @@ void Plugin::SetupPluginMenuItems()
 
 #pragma endregion Plugin menu handling
 
+Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generic_string>& paths, RestartFunctionHook iFunctionToCallIfRestart)
+{
+    struct stCheckedPaths {
+        bool bExists;
+        generic_string path;
+        PathWritePermission fPerm;
+    };
+
+    std::vector<stCheckedPaths> checkedPaths;
+    checkedPaths.reserve(paths.size());
+
+    // Batch check files
+    for (const generic_string& s : paths)
+    {
+        bool bExists = false;
+        PathWritePermission fPerm = PathWritePermission::UndeterminedError;
+
+        bExists = checkWritePermission(s, fPerm);
+        checkedPaths.emplace_back(stCheckedPaths{ bExists, s, fPerm });
+    }
+
+    // Check for Admin privileges required first
+    std::vector<generic_string> sWhichPaths;
+    for (stCheckedPaths& st : checkedPaths)
+    {
+        if (st.fPerm == PathWritePermission::RequiresAdminPrivileges)
+            sWhichPaths.push_back(st.path);
+    }
+    if (sWhichPaths.size() > 0)
+    {
+        // Show File Access dialog box in Admin Mode
+        PathAccessDialog ePermission = {};
+        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.SetAdminMode(true);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
+        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following files/directories:"));
+        ePermission.SetPathsText(sWhichPaths);
+        ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
+- Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
+
+        INT_PTR RunAdmin = ePermission.doDialog();
+        if (RunAdmin == 1)
+        {
+            // Set our hook flag 2 to rerun Notepad++ in admin mode and call iFunctionToCallIfRestart upon restart
+            // Then tells notepad++ to quit.
+            SetRestartHook(RestartMode::Admin, iFunctionToCallIfRestart);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        }
+
+        return PathCheckResults::RequiresAdminPrivileges;
+    }
+
+    // Check for read-only second
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
+    {
+        if (st.fPerm == PathWritePermission::FileIsReadOnly)
+            sWhichPaths.push_back(st.path);
+    }
+    if (sWhichPaths.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        PathAccessDialog ePermission = {};
+        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
+        ePermission.SetPathsText(sWhichPaths);
+        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary permissions to use this option.\r\n \
+  Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return PathCheckResults::ReadOnly;
+    }
+
+    // Check for blocked by application third
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
+    {
+        if (st.fPerm == PathWritePermission::BlockedByApplication)
+            sWhichPaths.push_back(st.path);
+    }
+    if (sWhichPaths.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        PathAccessDialog ePermission = {};
+        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
+        ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
+        ePermission.SetPathsText(sWhichPaths);
+        ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return PathCheckResults::BlockedByApplication;
+    }
+
+    // Finally, check for inexistent files and/or other unknown errors
+    sWhichPaths.clear();
+    for (stCheckedPaths& st : checkedPaths)
+    {
+        if (st.bExists == false || st.fPerm == PathWritePermission::UndeterminedError)
+            sWhichPaths.push_back(st.path);
+    }
+    if (sWhichPaths.size() > 0)
+    {
+        // Show File Access dialog box in Normal Mode
+        PathAccessDialog ePermission = {};
+        ePermission.init(DllHModule(), NotepadHwnd());
+        ePermission.SetAdminMode(false);
+        ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
+        ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
+        ePermission.SetPathsText(sWhichPaths);
+        ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
+you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
+        INT_PTR ignore = ePermission.doDialog();
+
+        return PathCheckResults::UnknownError;
+    }
+
+    return PathCheckResults::CheckSuccess;
+}
+
+// Checks the current status of the in-screen Scintilla document.
+bool Plugin::CheckScintillaDocument()
+{
+    // Check if document is empty
+    if (Messenger().SendSciMessage<size_t>(SCI_GETLENGTH) == 0)
+        return false;
+
+    // Get the output filename 
+    TCHAR nameBuffer[MAX_PATH] = { 0 };
+    Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, std::size(nameBuffer) - sizeof(TCHAR), reinterpret_cast<LPARAM>(nameBuffer));
+    fs::path scriptPath = generic_string(nameBuffer);
+
+    // Distraction helper: see if the current file our user is trying to process is a valid NSS script...
+    if (!Instance().IsPluginLanguage())
+    {
+        if (MessageBox(Instance().NotepadHwnd(),
+            TEXT("This file is not currently set as a NWScript language file. Do you want to proceed anyway?"),
+            TEXT("Confirmation required"), MB_YESNO | MB_ICONQUESTION) == IDNO)
+            return false;
+    }
+
+    // Another distraction helper: check if the user is trying to compile any DISASSEMBLED generated file
+    if (scriptPath.extension() == "pcode")
+    {
+        MessageBox(Instance().NotepadHwnd(),
+            TEXT("Hey pal, are you trying to compile assemble or PCODE? It will NOT compile with this plugin! :)"),
+            TEXT("Cease and desist!"), MB_OK | MB_ICONEXCLAMATION);
+        return false;
+    }
+
+    // Check if document is changed or else the save call will fail.
+    if (Messenger().SendSciMessage<bool>(SCI_GETMODIFY))
+    {
+        if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
+            return false;
+    }
+
+    // Check for it's existance (because the user might be opening a "dirty" memory file from previous session)
+    if (!PathFileExists(scriptPath.c_str()))
+    {
+        // Call save again...
+        if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
+            return false;
+    }
+
+    return true;
+}
+
 #pragma endregion Plugin initialization functions and dynamic behavior
 
 #pragma region
 
-void Plugin::DoBatchProcessFilesCallback(HRESULT decision)
+void Plugin::DoImportDefinitions()
 {
-    static ProcessFilesDialog processing;
 
-    if ((int)decision == IDCANCEL || (int)decision == IDCLOSE)
-        return;
+    // TODO: Re-test code moving
 
-    if (!processing.isCreated())
-    {
-        processing.init(Instance().DllHModule(), Instance().NotepadHwnd());
-    }
-
-    processing.doDialog();
-
-    // Enable run last batch menu
-    Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
-}
-
-void Plugin::DoImportDefinitionsCallback(HRESULT decision)
-{
-    // Trash results for memory space in a cancel.
-    if (static_cast<int>(decision) == IDCANCEL || static_cast<int>(decision) == IDNO)
-    {
-        Instance()._NWScriptParseResults.reset();
-        return;
-    }
-
-    NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
+    NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
     tinyxml2::XMLDocument nwscriptDoc;
 
     // We retrieve all fixed keywords and emplace them on results, so we can sort everything out
@@ -631,16 +889,16 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
     // Since TinyXML only accepts ASCII filenames, we do a crude conversion here... hopefully we won't have any
     // intermediary directory using chinese characters here... :P
-    std::string asciiFileStyler = wstr2str(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+    std::string asciiFileStyler = wstr2str(_pluginPaths["PluginLexerConfigFilePath"]);
     error = nwscriptDoc.LoadFile(asciiFileStyler.c_str());
     generic_stringstream errorStream;
     if (error)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("File might be corrupted!\r\n");
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
@@ -652,11 +910,11 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* notepadPlus = nwscriptDoc.RootElement();
     if (notepadPlus == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'NotepadPlus'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
@@ -667,11 +925,11 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* languages = notepadPlus->FirstChildElement("Languages");
     if (languages == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find XML node 'Languages'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
     // Add info on Languages
@@ -680,22 +938,22 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* language = languages->FirstChildElement("Language");
     if (language == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'Language'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
     // We are only supporting our default lexer here
     if (!language->Attribute("name", LexerCatalogue::GetLexerName(0).c_str()))
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Language name for ") << str2wstr(LexerCatalogue::GetLexerName(0)) << TEXT(" not found!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
     // Add info on Keywords
@@ -706,11 +964,11 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     tinyxml2::XMLElement* Keywords = language->FirstChildElement("Keywords");
     if (Keywords == NULL)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Cannot find root XML node 'Keywords'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
@@ -725,7 +983,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
             generic_string generic_output = myResults.MembersAsSpacedString(NWScriptParser::MemberID::EngineStruct);
             Keywords->SetText(wstr2str(generic_output).c_str());
             bType2 = true;
-        } 
+        }
 
         if (Keywords->Attribute("name", "type4") && !bType4)
         {
@@ -747,13 +1005,13 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     // Another error handling...
     if (!bType2 || !bType4 || !bType6)
     {
-        errorStream << TEXT("Error while parsing file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("The following nodes could not be found!\r\n");
         errorStream << TEXT("Nodes: [") << (!bType2 ? TEXT(" type2") : TEXT("")) << (!bType4 ? TEXT(" type4") : TEXT(""))
             << (!bType6 ? TEXT(" type6") : TEXT("")) << TEXT(" ]");
         errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
@@ -769,7 +1027,7 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
 
     // Now we overwrite autoComplete XML. We're doing this before saving the other
     // so we do a more or less of a transactioned modification - if one fails, the other isn't saved.
-    std::string asciiFileAutoC = wstr2str(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+    std::string asciiFileAutoC = wstr2str(_pluginPaths["PluginAutoCompleteFilePath"]);
     tinyxml2::XMLDocument nwscriptAutoc;
     nwscriptAutoc.InsertFirstChild(nwscriptAutoc.NewDeclaration());
     nwscriptAutoc.InsertEndChild(nwscriptAutoc.NewComment(xmlHeaderComment.c_str()));
@@ -821,35 +1079,36 @@ void Plugin::DoImportDefinitionsCallback(HRESULT decision)
     error = nwscriptAutoc.SaveFile(asciiFileAutoC.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while saving file: ") << Instance()._pluginPaths["PluginAutoCompleteFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while saving file: ") << _pluginPaths["PluginAutoCompleteFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
     error = nwscriptDoc.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
-        errorStream << TEXT("Error while saving file: ") << Instance()._pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while saving file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
-        MessageBox(Instance().NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        Instance()._NWScriptParseResults.reset();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
         return;
     }
 
     // Close our results (for memory cleanup) and report back.
-    Instance()._NWScriptParseResults.reset();
-    int mResult = MessageBox(Instance().NotepadHwnd(), 
-            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"), 
+    _NWScriptParseResults.reset();
+    int mResult = MessageBox(NotepadHwnd(),
+        TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
         TEXT("Import successful!"), MB_YESNO | MB_ICONINFORMATION);
 
     if (mResult == IDYES)
     {
         // Setup our hook to auto-restart notepad++ normally and not run any other function on restart.
         // Then send message for notepad to close itself.
-        Instance().SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
     }
+
 }
 
 void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
@@ -1083,11 +1342,50 @@ bool Plugin::PatchDarkThemeXMLFile()
     return true;
 }
 
-#pragma endregion Plugin files management
+#pragma endregion XML Config Files Management
 
 #pragma region
 
-void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentScintilla, bool batchOperations)
+// Receives notifications from Import Definitions Dialog
+void Plugin::ImportDefinitionsCallback(HRESULT decision)
+{
+    // Trash results for memory space in a cancel.
+    if (static_cast<int>(decision) == IDCANCEL || static_cast<int>(decision) == IDNO)
+    {
+        Instance()._NWScriptParseResults.reset();
+        return;
+    }
+
+    // Calls the actual Import Definitions method
+    Instance().DoImportDefinitions();
+}
+
+// Receives notifications from Batch Processing Dialog
+void Plugin::BatchProcessDialogCallback(HRESULT decision)
+{
+    // TODO: Move dialog to class since it will be controlled by multiple methods
+    static ProcessFilesDialog processing;
+
+    if ((int)decision == IDCANCEL || (int)decision == IDCLOSE)
+        return;
+
+    if (!processing.isCreated())
+    {
+        processing.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    }
+
+    processing.doDialog();
+
+    // Enable run last batch menu
+    Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
+}
+
+#pragma endregion Dialog Callbacks
+
+#pragma region
+
+// Compile or Disassemble a file / memory stream
+void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintilla, bool batchOperations)
 {
     fs::path scriptPath;
     fs::path outputDir;
@@ -1106,13 +1404,6 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
     // Then we get the script name, and then the file contents.
     if (fromCurrentScintilla)
     {
-        // Check if document is changed or else the save call will fail.
-        if (Messenger().SendSciMessage<bool>(SCI_GETMODIFY))
-        {
-            if (!Messenger().SendNppMessage<bool>(NPPM_SAVECURRENTFILE))
-                return;
-        }
-
         // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
         size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
         fileContents.resize(size + 1);
@@ -1120,7 +1411,7 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
 
         // And now, get the output filename
         TCHAR nameBuffer[MAX_PATH] = {0};
-        Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, size, reinterpret_cast<LPARAM>(nameBuffer));
+        Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, std::size(nameBuffer) - sizeof(TCHAR), reinterpret_cast<LPARAM>(nameBuffer));
         scriptPath = generic_string(nameBuffer);
     }
 
@@ -1140,139 +1431,90 @@ void Plugin::DoCompileOrDisasmScript(generic_string filePath, bool fromCurrentSc
             outputDir = properDirNameW(Settings().batchOutputCompileDir);
     }
 
-    // TODO: Show output window and setup logging operations.
+    // Last check for file existence (helps debugging)
+    if (!PathFileExists(scriptPath.filename().c_str()))
+    {
+        MessageBox(NotepadHwnd(), TEXT("Error: file inexistent or not yet saved!"), TEXT("Preprocessor check"), MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    // Check for output directory validity
+    if (!isValidDirectory(str2wstr(outputDir.filename().string()).c_str()))
+    {
+        MessageBox(NotepadHwnd(), TEXT("Error: output directory is invalid or inexistent!"), TEXT("Preprocessor check"), MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    // TODO: Convert to multi-threaded operation
 
     // Process script.
-    _compiler.processFile(scriptPath, outputDir, fromCurrentScintilla, &fileContents[0]);
+    _compiler.setSourceFilePath(scriptPath);
+    _compiler.setDestinationDirectory(outputDir);
+    _compiler.processFile(fromCurrentScintilla, &fileContents[0]);
 }
 
+// Receives notifications when a "Compile" menu command ends
+void Plugin::CompileEndingCallback(HRESULT decision) 
+{
+    if (static_cast<int>(decision) == false)
+        return;
 
-#pragma endregion Plugin compiler functions
+}
+
+// Receives notifications when a "Disassemble" menu command ends
+void Plugin::DisassembleEndingCallback(HRESULT decision)
+{
+    NWScriptCompiler& compiler = Instance().Compiler();
+
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
+
+    generic_string resultPath = str2wstr(compiler.getSourceFilePath().parent_path().string() + "\\" + compiler.getSourceFilePath().stem().string() + compiledScriptSuffix);
+
+    // Points notepad++ to open that file
+    std::ignore = Instance().Messenger().SendNppMessage<bool>(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(resultPath.c_str()));
+
+    //Sets language to NWScript (because color syntax WILL work for assembled symbols)
+    Instance().SetNotepadToPluginLexer();
+}
+
+// Receives notifications for each file processed
+void Plugin::BatchProcessFilesCallback(HRESULT decision)
+{
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
+
+}
+
+// Receives notifications when a "Fetch preprocessed" menu command ends
+void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
+{
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
+
+    // Creates a new document...
+    Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    // Sets the language to NWScript
+    Instance().SetNotepadToPluginLexer();
+    // Sets document data
+    Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
+}
+
+// Receives notifications when a "View Script Dependencies" menu command ends
+void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
+{
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
+
+    // Creates a new document...
+    Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
+    // Sets document data
+    Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
+}
+
+#pragma endregion Compiler Funcionality
 
 #pragma region
-
-Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generic_string>& paths, RestartFunctionHook iFunctionToCallIfRestart)
-{
-    struct stCheckedPaths {
-        bool bExists;
-        generic_string path;
-        PathWritePermission fPerm;
-    };
-
-    std::vector<stCheckedPaths> checkedPaths;
-    checkedPaths.reserve(paths.size());
-
-    // Batch check files
-    for (const generic_string& s : paths)
-    {
-        bool bExists = false;
-        PathWritePermission fPerm = PathWritePermission::UndeterminedError;
-
-        bExists = checkWritePermission(s, fPerm);
-        checkedPaths.emplace_back(stCheckedPaths{ bExists, s, fPerm });
-    }
-
-    // Check for Admin privileges required first
-    std::vector<generic_string> sWhichPaths;
-    for (stCheckedPaths& st : checkedPaths)
-    {
-        if (st.fPerm == PathWritePermission::RequiresAdminPrivileges)
-            sWhichPaths.push_back(st.path);
-    }
-    if (sWhichPaths.size() > 0)
-    {
-        // Show File Access dialog box in Admin Mode
-        PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
-        ePermission.SetAdminMode(true);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_SHIELD);
-        ePermission.SetWarning(TEXT("WARNING - this action requires write permission to the following files/directories:"));
-        ePermission.SetPathsText(sWhichPaths);
-        ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
-- Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
-
-        INT_PTR RunAdmin = ePermission.doDialog();
-        if (RunAdmin == 1)
-        {
-            // Set our hook flag 2 to rerun Notepad++ in admin mode and call iFunctionToCallIfRestart upon restart
-            // Then tells notepad++ to quit.
-            SetRestartHook(RestartMode::Admin, iFunctionToCallIfRestart);
-            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
-        }
-
-        return PathCheckResults::RequiresAdminPrivileges;
-    }
-
-    // Check for read-only second
-    sWhichPaths.clear();
-    for (stCheckedPaths& st : checkedPaths)
-    {
-        if (st.fPerm == PathWritePermission::FileIsReadOnly)
-            sWhichPaths.push_back(st.path);
-    }
-    if (sWhichPaths.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_ERROR);
-        ePermission.SetWarning(TEXT("ERROR: The following file(s) are marked as 'Read-Only' and cannot be changed:"));
-        ePermission.SetPathsText(sWhichPaths);
-        ePermission.SetSolution(TEXT("To solve this: \r\n  - Please, provide the necessary permissions to use this option.\r\n \
-  Find it in Windows Explorer, select Properties -> Uncheck Read-Only flag. "));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return PathCheckResults::ReadOnly;
-    }
-
-    // Check for blocked by application third
-    sWhichPaths.clear();
-    for (stCheckedPaths& st : checkedPaths)
-    {
-        if (st.fPerm == PathWritePermission::BlockedByApplication)
-            sWhichPaths.push_back(st.path);
-    }
-    if (sWhichPaths.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_DOCASSOC);
-        ePermission.SetWarning(TEXT("ERROR: The following file(s) are currently blocked by other applications/processes and cannot be changed:"));
-        ePermission.SetPathsText(sWhichPaths);
-        ePermission.SetSolution(TEXT("To solve this:\r\n  - Please, close the files in other applications before trying this action again."));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return PathCheckResults::BlockedByApplication;
-    }
-
-    // Finally, check for inexistent files and/or other unknown errors
-    sWhichPaths.clear();
-    for (stCheckedPaths& st : checkedPaths)
-    {
-        if (st.bExists == false || st.fPerm == PathWritePermission::UndeterminedError)
-            sWhichPaths.push_back(st.path);
-    }
-    if (sWhichPaths.size() > 0)
-    {
-        // Show File Access dialog box in Normal Mode
-        PathAccessDialog ePermission = {};
-        ePermission.init(DllHModule(), NotepadHwnd());
-        ePermission.SetAdminMode(false);
-        ePermission.SetIcon(SHSTOCKICONID::SIID_DELETE);
-        ePermission.SetWarning(TEXT("ERROR: The file(s) bellow are inexistent or could not be accessed:"));
-        ePermission.SetPathsText(sWhichPaths);
-        ePermission.SetSolution(TEXT("Some reasons might happen:\r\n  - Either you are running the plugin with a Notepad++ incompatible with this function; or \
-you may have accidentaly deleted the file(s).\r\nPlease try reinstalling the products."));
-        INT_PTR ignore = ePermission.doDialog();
-
-        return PathCheckResults::UnknownError;
-    }
-
-    return PathCheckResults::CheckSuccess;
-}
 
 // Support for Auto-Indentation for old versions of Notepad++
 PLUGINCOMMAND Plugin::SwitchAutoIndent()
@@ -1316,23 +1558,18 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
 // Compiles current .NSS Script file
 PLUGINCOMMAND Plugin::CompileScript()
 {
-    // Distraction helper check: see if current file is a valid NSS script
-    if (!Instance().IsPluginLanguage())
-    {
-        if (MessageBox(Instance().NotepadHwnd(),
-            TEXT("This file is not currently set as a NWScript language file. Do you want to proceed anyway?"),
-            TEXT("Confirmation required"), MB_YESNO | MB_ICONQUESTION) == IDNO)
-            return;
-    }
+    // Do a check of the current script for the user.
+    if (!Instance().CheckScintillaDocument())
+        return;
 
-    // Reset compiler cache and clear log so we catch all possible dependencies editions.
+    // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
-    Instance().Compiler().clearLog();
-
     // Set mode to compile script
-    Instance().Settings().compileMode = 0;
+    Instance().Compiler().setMode(0);
+    // Set our caller callback
+    Instance().Compiler().setProcessingEndCallback(CompileEndingCallback);
     // Pass the control to core function calling compile from current document
-    Instance().DoCompileOrDisasmScript(TEXT(""), true);
+    Instance().DoCompileOrDisasm(TEXT(""), true);
 }
 
 // Disassemble a compiled script file
@@ -1343,12 +1580,12 @@ PLUGINCOMMAND Plugin::DisassembleFile()
     {
         // Reset compiler cache and clear log so we catch all possible dependencies editions.
         Instance().Compiler().reset();
-        Instance().Compiler().clearLog();
-
         // Set mode to disassemble script
-        Instance().Settings().compileMode = 1;
+        Instance().Compiler().setMode(1);
+        // Set our caller callback
+        Instance().Compiler().setProcessingEndCallback(DisassembleEndingCallback);
         // Pass the control to core function calling disassemble from file
-        Instance().DoCompileOrDisasmScript(nFileName);
+        Instance().DoCompileOrDisasm(nFileName);
     }
 
     // TODO: Auto open disassembled file after processing.
@@ -1368,7 +1605,7 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 
     if (!batchProcessing.isCreated())
     {
-        batchProcessing.setOkDialogCallback(&Plugin::DoBatchProcessFilesCallback);
+        batchProcessing.setOkDialogCallback(&Plugin::BatchProcessDialogCallback);
         batchProcessing.appendSettings(&Instance()._settings);
         batchProcessing.init(Instance().DllHModule(), Instance().NotepadHwnd());
     }
@@ -1377,6 +1614,46 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
         batchProcessing.doDialog();
 
 }
+
+//-------------------------------------------------------------
+
+// Menu Command "Fetch preprocessor text" function handler. 
+PLUGINCOMMAND Plugin::FetchPreprocessorText()
+{
+    // Do a check of the current script for the user.
+    if (!Instance().CheckScintillaDocument())
+        return;
+
+    // Reset compiler so we catch all possible dependencies editions.
+    Instance().Compiler().reset();
+    // Tells compiler to only fetch preprocessed text
+    Instance().Compiler().setFetchPreprocessorOnly();
+    // Set our caller callback
+    Instance().Compiler().setProcessingEndCallback(FetchPreprocessedEndingCallback);
+    // Pass the control to core function calling compile from current document
+    Instance().DoCompileOrDisasm(TEXT(""), true);
+
+}
+
+// Menu Command "View Script Dependencies" function handler. 
+PLUGINCOMMAND Plugin::ViewScriptDependencies()
+{
+    // Do a check of the current script for the user.
+    if (!Instance().CheckScintillaDocument())
+        return;
+
+    // Reset compiler so we catch all possible dependencies editions.
+    Instance().Compiler().reset();
+    // Tells compiler to only fetch preprocessed text
+    Instance().Compiler().setViewDependencies();
+    // Set our caller callback
+    Instance().Compiler().setProcessingEndCallback(ViewDependenciesEndingCallback);
+    // Pass the control to core function calling compile from current document
+    Instance().DoCompileOrDisasm(TEXT(""), true);
+
+}
+
+//-------------------------------------------------------------
 
 // Opens the Plugin's Compiler Settings panel
 PLUGINCOMMAND Plugin::CompilerSettings()
@@ -1466,12 +1743,12 @@ You wish to Continue?)"
             return;
         }
 
-        // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in DoImportDefinitionsCallback.
+        // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in ImportDefinitionsCallback.
         parseDialog.setEngineStructuresCount(myResults.EngineStructuresCount);
         parseDialog.setFunctionDefinitionsCount(myResults.FunctionsCount);
         parseDialog.setConstantsCount(myResults.ConstantsCount);
 
-        parseDialog.setOkDialogCallback(&Plugin::DoImportDefinitionsCallback);
+        parseDialog.setOkDialogCallback(&Plugin::ImportDefinitionsCallback);
         parseDialog.doDialog();
     }
 }
@@ -1530,4 +1807,4 @@ PLUGINCOMMAND Plugin::AboutMe()
         aboutDialog.doDialog();
 }
 
-#pragma endregion Plugin User Interfacing
+#pragma endregion Plugin User Interfacing and Menu Commands

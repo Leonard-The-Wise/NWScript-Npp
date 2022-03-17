@@ -96,7 +96,7 @@ namespace NWScriptPlugin {
 		HMODULE DllHModule() const { return _dllHModule; }
 		// Retrieves Notepad++ HWND
 		HWND NotepadHwnd() const { return _notepadHwnd; }
-		// Returns tha handle of Notepad++ Main Menu
+		// Returns the handle of Notepad++ Main Menu
 		HMENU GetNppMainMenu();
 
 		// ### Message Processing
@@ -107,6 +107,11 @@ namespace NWScriptPlugin {
 		LRESULT ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam);
 		// Setup a restart Hook. Normal or Admin mode. Save settings immediately after.
 		void SetRestartHook(RestartMode type, RestartFunctionHook function = RestartFunctionHook::None);
+
+		// ### Dynamic behavior
+
+		// Sets the current language to our plugin's lexer language by calling MENU commands.
+		void SetNotepadToPluginLexer();
 
 		// ### User Interfacing
 
@@ -120,6 +125,10 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND BatchProcessFiles();
 		// Menu Command "Run last successful batch" function handler. 
 		static PLUGINCOMMAND RunLastBatch();
+		// Menu Command "Fetch preprocessor text" function handler. 
+		static PLUGINCOMMAND FetchPreprocessorText();
+		// Menu Command "View Script Dependencies" function handler. 
+		static PLUGINCOMMAND ViewScriptDependencies();
 		// Menu Command "Compiler settings" function handler. 
 		static PLUGINCOMMAND CompilerSettings();
 		// Menu Command "Install dark theme"
@@ -161,17 +170,38 @@ namespace NWScriptPlugin {
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 
-		// ### Compiler functions
+		// ### Dialog Callback functions
 
+		static void ImportDefinitionsCallback(HRESULT decision);
+		// Batch processing Dialog callback
+		static void BatchProcessDialogCallback(HRESULT decision);
+
+		// ### Compiler functionality
+
+		// Checks the current scintilla document to see if it conforms to NWScript Language, then auto-saves the file and prepares it
+		// to compilation.
+		bool CheckScintillaDocument();
 		// Compile/Disassemble script files, simple or batch operations.
-		void DoCompileOrDisasmScript(generic_string filePath = TEXT(""), bool fromCurrentScintilla = false, bool batchOperations = false);
-		// Process files in a batch.
-		static void DoBatchProcessFilesCallback(HRESULT decision);
+		void DoCompileOrDisasm(generic_string filePath = TEXT(""), bool fromCurrentScintilla = false, bool batchOperations = false);
 
-		// ### Config files management
+		// Some callback functions for different operations
+
+		// Receives notifications when a "Compile" menu command ends
+		static void CompileEndingCallback(HRESULT decision);
+		// Receives notifications when a "Disassemble" menu command ends
+		static void DisassembleEndingCallback(HRESULT decision);
+		// Receives notifications for each file processed
+		static void BatchProcessFilesCallback(HRESULT decision);
+		// Receives notifications when a "Fetch preprocessed" menu command ends
+		static void FetchPreprocessedEndingCallback(HRESULT decision);
+		// Receives notifications when a "Fetch preprocessed" menu command ends
+		static void ViewDependenciesEndingCallback(HRESULT decision);
+
+
+		// ### XML config files management
 
 		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
-		static void DoImportDefinitionsCallback(HRESULT decision);
+		void DoImportDefinitions();
 		// Resets the Editor Colors
 		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
 		// Install Dark Theme
@@ -181,7 +211,7 @@ namespace NWScriptPlugin {
 		// Helper to patch the Default XML Styler. This is different, since we must preserve user information.
 		bool PatchDefaultThemeXMLFile();
 
-		// ### User interfacing
+		// ### Dynamic Behavior
 
 		// Do a full file permission check and show appropriate error dialogs to the user when required. Callers can set
 		// a function to be called automatically upon a possible program restart if PathCheckResults::RequiresAdminPrivileges is reached
