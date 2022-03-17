@@ -67,6 +67,16 @@ void Settings::Load()
 	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
 	batchOutputCompileDir = properDirNameW(GetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir")));
 
+	// User's Preferences
+	autoDisplayDisassembled = GetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDisassembled"));
+	autoDisplayDebugSymbols = GetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDebugSymbols"));
+	autoInstallDarkTheme = GetBoolean(TEXT("User's Preferences"), TEXT("autoInstallDarkTheme"));
+	lastOpenedDir = properDirNameW(GetString(TEXT("User's Preferences"), TEXT("lastOpenedDir")));
+
+	// Dark Theme auto-install support
+	darkThemePreviouslyInstalled = GetBoolean(TEXT("Auto-Install"), TEXT("darkThemePreviouslyInstalled"));
+	darkThemeInstallAttempt = GetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"));
+
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
 	if (!isValidDirectoryS(neverwinterOneInstallDir))
 	{
@@ -101,6 +111,9 @@ void Settings::Load()
 		outputCompileDir = TEXT("");
 		compilerSettingsCreated = false;
 	}
+
+	if (!isValidDirectoryS(lastOpenedDir))
+		lastOpenedDir = TEXT("");
 
 	// We aren't checking batch compiling settings here, since the user will have to run the Dialog first to run a batch...
 
@@ -141,6 +154,16 @@ void Settings::Save()
 	SetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"), continueCompileOnFail);
 	SetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"), useScriptPathToBatchCompile);
 	SetString(TEXT("Batch Processing"), TEXT("batchOutputCompileDir"), batchOutputCompileDir);
+
+	// User's Preferences
+	SetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDisassembled"), autoDisplayDisassembled);
+	SetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDebugSymbols"), autoDisplayDebugSymbols);
+	SetBoolean(TEXT("User's Preferences"), TEXT("autoInstallDarkTheme"), autoInstallDarkTheme);
+	SetString(TEXT("User's Preferences"), TEXT("lastOpenedDir"), lastOpenedDir);
+
+	// Dark Theme auto-install support
+	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemePreviouslyInstalled"), darkThemePreviouslyInstalled);
+	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"), darkThemeInstallAttempt);
 
 	iniFilePath->write(*iniFile);
 }

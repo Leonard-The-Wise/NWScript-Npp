@@ -53,8 +53,7 @@ CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,130,226,50,14
-    CONTROL         "<a href=""https://github.com/Leonard-The-Wise/NWScript-Npp"">https://github.com/Leonard-The-Wise/NWScript-Npp</a>",IDC_LNKHOMEPAGE,
-                    "SysLink",WS_TABSTOP,71,113,204,14
+    CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,71,113,204,12
     EDITTEXT        IDC_TXTABOUT,7,126,304,94,ES_MULTILINE | ES_READONLY | NOT WS_BORDER | WS_VSCROLL,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,11
     CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
@@ -183,6 +182,23 @@ BEGIN
     CTEXT           "Awaiting command...",IDC_LBLSTATUS,24,26,280,8
 END
 
+IDD_USERSPREFERENCES DIALOGEX 0, 0, 311, 124
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "User's Preferences"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,75,102,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,102,50,14
+    GROUPBOX        "Preferences",IDC_STATIC,7,7,297,87
+    CONTROL         "Auto-open disassembled (.ncs.pcode) binaries.",IDC_CHKAUTOOPENDISASSEMBLED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,24,251,10
+    CONTROL         "Auto-open debug symbols (.ndb) generated files on successfull compilations.",IDC_CHKAUTOOPENDEBUGSYMBOLS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,40,260,10
+    CONTROL         "Auto-reinstall Dark Theme support on Notepad++ upgrades.",IDC_CHKAUTOINSTALLDARKTHEME,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,57,210,10
+    LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_STATIC,32,69,272,20
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -243,6 +259,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 71
     END
+
+    IDD_USERSPREFERENCES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 304
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 116
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -292,6 +316,11 @@ BEGIN
 END
 
 IDD_PROCESSFILES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_USERSPREFERENCES AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

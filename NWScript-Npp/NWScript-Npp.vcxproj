@@ -232,6 +232,7 @@
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\UsersPreferences.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -247,7 +248,7 @@
     <ClInclude Include="..\src\Utils\MiniINI.h" />
     <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
-    <ClInclude Include="..\src\Utils\VersionFromResource.h" />
+    <ClInclude Include="..\src\Utils\VersionInfo.h" />
     <ClInclude Include="..\src\WarningDialog.h" />
     <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
@@ -283,6 +284,7 @@
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -302,7 +304,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\Utils\VersionFromResource.cpp" />
+    <ClCompile Include="..\src\Utils\VersionInfo.cpp" />
     <ClCompile Include="..\src\WarningDialog.cpp" />
   </ItemGroup>
   <ItemGroup>

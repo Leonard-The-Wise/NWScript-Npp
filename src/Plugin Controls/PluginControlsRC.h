@@ -14,6 +14,7 @@
 #define IDD_PROCESSFILES                127
 #define IDI_ICON1                       129
 #define IDI_SETTINGS                    129
+#define IDD_USERSPREFERENCES            130
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -66,6 +67,10 @@
 #define IDC_LBLSTATUS                   1052
 #define IDC_CHKOUTPUTDIRBATCH           1053
 #define IDC_CHKNONBIOWAREXTENSIONS      1054
+#define IDC_CHKAUTOOPENDISASSEMBLED     1055
+#define IDC_CHKAUTOOPENDEBUGSYMBOLS     1056
+#define IDC_CHECK3                      1057
+#define IDC_CHKAUTOINSTALLDARKTHEME     1057
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -74,9 +79,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1055
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
