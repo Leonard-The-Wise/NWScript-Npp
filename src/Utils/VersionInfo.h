@@ -23,42 +23,45 @@
 
 struct VersionInfo {
 
+	// Constructors
 	VersionInfo() {}
 
+	// This constructor may require explicit type cast to WORD
 	VersionInfo(WORD major) :
 		_major(major) {}
-
 	VersionInfo(WORD major, WORD minor) :
 		_major(major), _minor(minor) {}
-
 	VersionInfo(WORD major, WORD minor, WORD patch) :
 		_major(major), _minor(minor), _patch(patch) {}
-
 	VersionInfo(WORD major, WORD minor, WORD patch, WORD build) :
 		_major(major), _minor(minor), _patch(patch), _build(build) {}
-
 	VersionInfo(HMODULE fromModule) {
-		LoadFromModule(fromModule);
+		LoadThisFromModule(fromModule);
+	}
+	// This constructor may require explicit type cast to char*
+	VersionInfo(const char* versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(str2wstr(std::string(versionStringOrModulePath)).c_str());
+	}
+	// This constructor may require explicit type cast to TCHAR*
+	VersionInfo(const TCHAR* versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(versionStringOrModulePath);
+	}
+	VersionInfo(std::string& versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(str2wstr(versionStringOrModulePath).c_str());
+	}
+	VersionInfo(std::wstring& versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(versionStringOrModulePath.c_str());
+	}
+	VersionInfo(std::string versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(str2wstr(versionStringOrModulePath).c_str());
+	}
+	VersionInfo(std::wstring versionStringOrModulePath) {
+		LoadThisFromVersionStringOrPath(versionStringOrModulePath.c_str());
 	}
 
-	VersionInfo(const char* fromPath) {
-		HMODULE hModule = GetModuleHandle(str2wstr(std::string(fromPath)).c_str());
-		LoadFromModule(hModule);
-	}
-
-	VersionInfo(const TCHAR* fromPath) {
-		HMODULE hModule = GetModuleHandle(fromPath);
-		LoadFromModule(hModule);
-	}
-
-	VersionInfo(std::string& fromPath) {
-		HMODULE hModule = GetModuleHandle(str2wstr(fromPath.c_str()).c_str());
-		LoadFromModule(hModule);
-	}
-
-	VersionInfo(generic_string fromPath) {
-		HMODULE hModule = GetModuleHandle(fromPath.c_str());
-		LoadFromModule(hModule);
+	// This operator may require explicit type cast to WORD
+	void operator =(WORD newVersion) {
+		*this = VersionInfo(newVersion & 0xFFFF);
 	}
 
 	bool operator ==(VersionInfo& other) {
@@ -68,8 +71,20 @@ struct VersionInfo {
 			_patch == other._patch &&
 			_build == other._build;
 	}
+	bool operator ==(const char* other) {
+		return *this == VersionInfo(other);
+	}
+	bool operator ==(const TCHAR* other) {
+		return *this == VersionInfo(other);
+	}
+	bool operator ==(const std::string& other) {
+		return *this == VersionInfo(other);
+	}
+	bool operator ==(const std::wstring& other) {
+		return *this == VersionInfo(other);
+	}
 
-	bool operator >(VersionInfo& other) {
+	bool operator >(VersionInfo other) {
 		if (_major > other._major)
 			return true;
 		if (_major < other._major)
@@ -93,8 +108,20 @@ struct VersionInfo {
 		else
 			return false;
 	}
+	bool operator >(const char* other) {
+		return *this > VersionInfo(other);
+	}
+	bool operator >(const TCHAR* other) {
+		return *this > VersionInfo(other);
+	}
+	bool operator >(const std::string& other) {
+		return *this > VersionInfo(other);
+	}
+	bool operator >(const std::wstring& other) {
+		return *this > VersionInfo(other);
+	}
 
-	bool operator <(VersionInfo& other) {
+	bool operator <(VersionInfo other) {
 		if (_major < other._major)
 			return true;
 		if (_major > other._major)
@@ -118,6 +145,50 @@ struct VersionInfo {
 		else
 			return false;
 	}
+	bool operator <(const char* other) {
+		return *this < VersionInfo(other);
+	}
+	bool operator <(const TCHAR* other) {
+		return *this < VersionInfo(other);
+	}
+	bool operator <(const std::string& other) {
+		return *this < VersionInfo(other);
+	}
+	bool operator <(const std::wstring& other) {
+		return *this < VersionInfo(other);
+	}
+
+	bool operator <=(VersionInfo other) {
+		return !(*this > other);
+	}
+	bool operator <=(const char* other) {
+		return !(*this > other);
+	}
+	bool operator <=(const TCHAR* other) {
+		return !(*this > other);
+	}
+	bool operator <=(const std::string& other) {
+		return !(*this > other);
+	}
+	bool operator <=(const std::wstring& other) {
+		return !(*this > other);
+	}
+
+	bool operator >=(VersionInfo other) {
+		return !(*this < other);
+	}
+	bool operator >=(const char* other) {
+		return !(*this < other);
+	}
+	bool operator >=(const TCHAR* other) {
+		return !(*this < other);
+	}
+	bool operator >=(const std::string& other) {
+		return !(*this < other);
+	}
+	bool operator >=(const std::wstring& other) {
+		return !(*this < other);
+	}
 
 	WORD major() const {
 		return _major;
@@ -133,6 +204,10 @@ struct VersionInfo {
 
 	WORD build() const {
 		return _build;
+	}
+
+	bool empty() const {
+		return _major == 0 && _minor == 0 && _patch == 0 && _build == 0;
 	}
 
 	// Returns module complete string (ex: 1.0.0.0)
@@ -163,12 +238,12 @@ struct VersionInfo {
 		return str2wstr(doubleShortString());
 	}
 
-	// Extracts version information from a module resource
-	static VersionInfo getVersionFromResource(HMODULE hModule);
+	// Static (class) functions
 
+	// Extracts version information from a module resource
+	static VersionInfo getVersionFromModuleHandle(HMODULE hModule);
 	// Returns version information of the local module
 	static VersionInfo getLocalVersion();
-
 	// Extracts version information from a module binary path
 	static VersionInfo getVersionFromBinary(generic_string modulePath);
 
@@ -179,10 +254,15 @@ private:
 	WORD _patch = 0;
 	WORD _build = 0;
 
-	void LoadFromModule(HMODULE moduleName);
+	// Load version from version string (eg: 1.0.0.0) - may fail to parse string.
+	bool LoadThisFromVersionString(const TCHAR* versionString);
 
-	void setVersionString(std::string& value);
+	// Load version from module handle.
+	void LoadThisFromModule(HMODULE moduleName);
 
-	// In case you don't know which module to load
+	// Load version from version string or binary path.
+	void LoadThisFromVersionStringOrPath(const TCHAR* versionStringOrModulePath);
+
+	// Returns this module handle. Required to be static.
 	static HMODULE getThisModuleHandle();
 };

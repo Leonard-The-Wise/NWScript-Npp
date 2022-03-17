@@ -16,33 +16,75 @@
 
 #include "VersionInfo.h"
 
-static const jpcre2::select<char>::Regex number(R"(\d+)", 0, jpcre2::JIT_COMPILE);
-static const jpcre2::select<char>::Regex validversion(R"(^(\d+)\.?(?:(\d+)\.?)?(?:(\d+)\.?)?(?:(\d+)\.?)?$)", 0, jpcre2::JIT_COMPILE);
-static jpcre2::select<char>::RegexMatch validator(&validversion);
-static jpcre2::select<char>::RegexMatch numbers(&number);
+static const jpcre2::select<wchar_t>::Regex number(TEXT(R"(\d+)"), 0, jpcre2::JIT_COMPILE | jpcre2::FIND_ALL);
+static const jpcre2::select<wchar_t>::Regex validversion(TEXT(R"(^(\d+)\.?(?:(\d+)\.?)?(?:(\d+)\.?)?(?:(\d+)\.?)?$)"), 0, jpcre2::JIT_COMPILE);
+static jpcre2::select<wchar_t>::RegexMatch validator(&validversion);
+static jpcre2::select<wchar_t>::RegexMatch numbers(&number);
 
-void VersionInfo::setVersionString(std::string& value)
+// Load version from version string
+bool VersionInfo::LoadThisFromVersionString(const TCHAR* versionString)
 {
-	jpcre2::select<char>::VecNum versions;
-	int count = validator.setNumberedSubstringVector(&versions).setSubject(value).match();
+	jpcre2::select<wchar_t>::VecNum version;
+	std::wstring subject(versionString);
+	int count = validator.setNumberedSubstringVector(&version).setSubject(subject).match();
 	if (count == 0)
-		return;
+		return false;
 
-	numbers.setNumberedSubstringVector(&versions).setSubject(value).match();
+	count = numbers.setNumberedSubstringVector(&version).setSubject(subject).setModifier("g").match();
 	if (count > 0)
 	{
-		_major = stoi(versions[0][1]) & 0xFFFF;
-		if (!versions[0][2].empty())
-			_minor = stoi(versions[0][2]) & 0xFFFF;
-		if (!versions[0][3].empty())
-			_patch = stoi(versions[0][3]) & 0xFFFF;
-		if (!versions[0][4].empty())
-			_build = stoi(versions[0][4]) & 0xFFFF;
+		_major = stoi(version[0][0]) & 0xFFFF;
+		if (count > 1)
+			_minor = stoi(version[1][0]) & 0xFFFF;
+		if (count > 2)
+			_patch = stoi(version[2][0]) & 0xFFFF;
+		if (count > 3)
+			_build = stoi(version[3][0]) & 0xFFFF;
+	}
+
+	return true;
+}
+
+// Load version from module
+void VersionInfo::LoadThisFromModule(HMODULE moduleName) {
+	VersionInfo myVersion = getVersionFromModuleHandle(moduleName);
+	_major = myVersion._major;
+	_minor = myVersion._minor;
+	_patch = myVersion._patch;
+	_build = myVersion._build;
+}
+
+// Load version from version string or module path
+void VersionInfo::LoadThisFromVersionStringOrPath(const TCHAR* versionStringOrModulePath)
+{
+	// First try to set strings directly. If fail, try loading modules
+	if (!LoadThisFromVersionString(versionStringOrModulePath))
+	{
+		HMODULE hModule = GetModuleHandle(versionStringOrModulePath);
+		if (hModule)
+			LoadThisFromModule(hModule);
 	}
 }
 
+
+
+// Static (class) functions
+
+// In case we don't know which module to search
+// Static private (required for GetModuleHandleEx call)
+HMODULE VersionInfo::getThisModuleHandle()
+{
+	//Returns module handle where this function is running in: EXE or DLL
+	HMODULE hModule = NULL;
+	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+		GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCTSTR)getThisModuleHandle, &hModule);
+
+	return hModule;
+}
+
 // Extracts version information from a Executable or DLL binary
-VersionInfo VersionInfo::getVersionFromResource(HMODULE hModule)
+VersionInfo VersionInfo::getVersionFromModuleHandle(HMODULE hModule)
 {
 	if (!hModule)
 		return VersionInfo();
@@ -92,33 +134,16 @@ VersionInfo VersionInfo::getVersionFromResource(HMODULE hModule)
 VersionInfo VersionInfo::getLocalVersion()
 {
 	HMODULE hModule = getThisModuleHandle();
-	return getVersionFromResource(hModule);
+	return getVersionFromModuleHandle(hModule);
 }
 
 // Extracts version information from a given binary/executable
 VersionInfo VersionInfo::getVersionFromBinary(generic_string modulePath) {
 
 	HMODULE hModule = GetModuleHandle(modulePath.c_str());
-	return getVersionFromResource(hModule);
+	return getVersionFromModuleHandle(hModule);
 }
 
-// In case we don't know which module to search
-HMODULE VersionInfo::getThisModuleHandle()
-{
-	//Returns module handle where this function is running in: EXE or DLL
-	HMODULE hModule = NULL;
-	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-		GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		(LPCTSTR)getThisModuleHandle, &hModule);
 
-	return hModule;
-}
 
-// Load version from module
-void VersionInfo::LoadFromModule(HMODULE moduleName) {
-	VersionInfo myVersion = getVersionFromResource(moduleName);
-	_major = myVersion._major;
-	_minor = myVersion._minor;
-	_patch = myVersion._patch;
-	_build = myVersion._build;
-}
+
