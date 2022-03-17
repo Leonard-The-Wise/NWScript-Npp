@@ -20,15 +20,16 @@
 // Using method to read project version straight from binaries to avoid constant 
 // recompilation of this file .
 // #include "ProjectVersion.h"
-#include "VersionInfo.h"
+#include "VersionInfoEx.h"
 
 
 #define ABOUT_TEXT TEXT( \
-" ** For a more detailed and formated version of the help text, please visit the web page on the \"Online Help\" menu. **\r\n\
- ** Diagnostics information and some use statistics are avaliable at the end of this text. **\r\n\
+"** For a more detailed and formated version of the help text, please visit the web page on the \"Online Help\" menu. **\r\n\
+\r\n\
+** Diagnostics information and some use statistics are avaliable at the end of this text. **\r\n\
 \r\n\
 PLUGIN USAGE:\r\n\
------------------\r\n\
+--------------------------\r\n\
 • Editor Syntax Highlighting:\r\n\
    - Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
 \r\n\
@@ -87,14 +88,14 @@ put them manually inside the reserved sections of the XML configuration file. So
 \r\n\
 \r\n\
 REMARKS:\r\n\
------------------\r\n\
+--------------------------\r\n\
 • If you noticed the SHIELD icons near some menu options, that's because if you want to use that option you must either run Notepad++ with\
 administrator privileges OR you may also manually provide write permissions to the option's required files (you'll be notified of which file you\
 need to provide permissions to for each option.\r\n\
 \r\n\
 \r\n\
 EXTRA COPYRIGHT INFO:\r\n\
----------------\r\n\
+--------------------------\r\n\
 \r\n\
 Copyright notices for embbeded version of the NWScript Compiler Library:\r\n\
 \r\n\
@@ -106,13 +107,13 @@ Copyright notices for embbeded version of the NWScript Compiler Library:\r\n\
 \r\n\
 \r\n\
 SELF-DIAGNOSTICS:\r\n\
------------------\r\n\
+--------------------------\r\n\
   - Auto-Indentation: %NWSCRIPTINDENT%\r\n\
   - Dark Mode Theme:  %DARKTHEMESUPPORT%\r\n\
 \r\n\
 \r\n\
 NERDY STATISTICS:\r\n\
------------------\r\n\
+--------------------------\r\n\
   - Number of compilations attempts: %COMPILEATTEMPTS%\r\n\
   - Successful compilations:         %COMPILESUCCESSES%\r\n\
   - Failed compilations:             %COMPILESFAILED%\r\n\
@@ -141,7 +142,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 		{
 			// Get version from module's binary file
-			VersionInfo versionInfo = VersionInfo::getLocalVersion();
+			VersionInfoEx versionInfo = VersionInfoEx::getLocalVersion();
 			generic_stringstream sVersion = {};
 			sVersion << "Version " << versionInfo.shortString().c_str() << " (build " << versionInfo.build() << ")";
 

@@ -40,7 +40,7 @@
 #include "WarningDialog.h"
 
 #include "XMLGenStrings.h"
-#include "VersionInfo.h"
+#include "VersionInfoEx.h"
 
 #pragma warning (disable : 6387)
 
@@ -229,7 +229,7 @@ void Plugin::SetNotepadData(NppData data)
 
     // Pick current Notepad++ version and compares with Settings, to se whether user gets a new 
     // Dark Mode install attempt or not...
-    VersionInfo currentNotepad = VersionInfo(_pluginPaths["NotepadExecutablePath"]);
+    VersionInfoEx currentNotepad = VersionInfoEx(_pluginPaths["NotepadExecutablePath"]);
     if (Settings().notepadVersion.empty())
         Settings().notepadVersion = currentNotepad;
 

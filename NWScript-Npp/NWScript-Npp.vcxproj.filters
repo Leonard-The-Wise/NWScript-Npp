@@ -110,7 +110,7 @@
     <ClInclude Include="..\src\Notepad Controls\Window.h">
       <Filter>Notepad Controls</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Utils\VersionInfo.h">
+    <ClInclude Include="..\src\Utils\VersionInfoEx.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ProjectVersion.h">
@@ -245,7 +245,7 @@
     <ClCompile Include="..\src\pch.cpp">
       <Filter>Precompiled Header</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Utils\VersionInfo.cpp">
+    <ClCompile Include="..\src\Utils\VersionInfoEx.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp">
