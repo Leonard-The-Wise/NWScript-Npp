@@ -110,7 +110,7 @@
     <ClInclude Include="..\src\Notepad Controls\Window.h">
       <Filter>Notepad Controls</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Utils\VersionFromResource.h">
+    <ClInclude Include="..\src\Utils\VersionInfo.h">
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ProjectVersion.h">
@@ -171,6 +171,9 @@
     </ClInclude>
     <ClInclude Include="..\src\pch.h">
       <Filter>Precompiled Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\UsersPreferences.h">
+      <Filter>Plugin Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -242,8 +245,11 @@
     <ClCompile Include="..\src\pch.cpp">
       <Filter>Precompiled Header</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Utils\VersionFromResource.cpp">
+    <ClCompile Include="..\src\Utils\VersionInfo.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp">
+      <Filter>Plugin Dialogs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

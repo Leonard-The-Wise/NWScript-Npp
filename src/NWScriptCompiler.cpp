@@ -11,7 +11,7 @@
 //#include "jpcre2.h"
 
 #include "NWScriptCompiler.h"
-#include "VersionFromResource.h"
+#include "VersionInfo.h"
 
 using namespace NWScriptPlugin;
 typedef NWScriptLogger::LogType LogType;
@@ -331,10 +331,9 @@ bool NWScriptCompiler::MakeDependenciesView(const std::set<std::string>& depende
     strftime(timestamp, 64, "%B %d, %Y - %R", &currTimeP);
 
     // Get version from module's binary file
-    DllVersion versionInfo = GetVersionFromResource();
+    VersionInfo versionInfo = VersionInfo::getLocalVersion();
     std::stringstream sVersion = {};
-    sVersion << "version " << versionInfo.wLeftMost << "." << versionInfo.wSecondLeft << "." <<
-        versionInfo.wSecondRight << " - build " << versionInfo.wRightMost;
+    sVersion << "version " << versionInfo.shortString().c_str() << " - build " << versionInfo.build();
 
     std::map<std::string, std::string> variablesMap;
 

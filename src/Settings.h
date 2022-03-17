@@ -36,6 +36,10 @@ namespace NWScriptPlugin {
 		// Which function called the restart?
 		RestartFunctionHook notepadRestartFunction = RestartFunctionHook::None;
 
+		// Controls Notepad++ versions and auto-install Dark Theme
+		bool darkThemePreviouslyInstalled = false;
+		bool darkThemeInstallAttempt = false;
+
 		// Compiler settings
 		bool compilerSettingsCreated = false;
 		int neverwinterInstallChoice = 0;
@@ -57,6 +61,12 @@ namespace NWScriptPlugin {
 		bool continueCompileOnFail = false;
 		bool useScriptPathToBatchCompile = true;
 		generic_string batchOutputCompileDir;
+
+		// User's preferences
+		bool autoDisplayDisassembled = true;
+		bool autoDisplayDebugSymbols = true;
+		bool autoInstallDarkTheme = false;
+		generic_string lastOpenedDir;
 
 		std::string getChosenInstallDir() {
 			return neverwinterInstallChoice == 0 ? properDirNameA(wstr2str(neverwinterOneInstallDir)) : properDirNameA(wstr2str(neverwinterTwoInstallDir));
@@ -101,6 +111,7 @@ namespace NWScriptPlugin {
 	private:
 		// Used to self-check if ini was present and correctly loaded.
 		bool _bValidINI = false;
+		std::string NotepadVersion;
 
 		// Additional include dirs. Set/Get as list, save as string.
 		generic_string additionalIncludeDirs;

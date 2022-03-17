@@ -131,12 +131,20 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND ViewScriptDependencies();
 		// Menu Command "Compiler settings" function handler. 
 		static PLUGINCOMMAND CompilerSettings();
+		// Menu Command "Compiler settings" function handler. 
+		static PLUGINCOMMAND UserPreferences();
 		// Menu Command "Install dark theme"
 		static PLUGINCOMMAND InstallDarkTheme();
 		// Menu Command "Import NWScript definitions" function handler. 
 		static PLUGINCOMMAND ImportDefinitions();
-		// Menu Command "reset editor colors"
+		// Menu Command "Import user-defined tokens" function handler. 
+		static PLUGINCOMMAND ImportUserTokens();
+		// Menu Command "Reset user-defined tokens" function handler. 
+		static PLUGINCOMMAND ResetUserTokens();
+		// Menu Command "Reset editor colors" function handler. 
 		static PLUGINCOMMAND ResetEditorColors();
+		// Menu Command "Online help" function handler. 
+		static PLUGINCOMMAND OnlineHelp();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
@@ -160,9 +168,10 @@ namespace NWScriptPlugin {
 
 		// ### Initialization -> Menu handling
 		
-		void RemovePluginMenuItem(int commandID);
+		// Removes a menu item by ID or position (this last one used for commands without IDs like separators)
+		void RemovePluginMenuItem(int ID, bool byPosition = false);
 		// Enable/disable menu item
-		void EnablePluginMenuItem(int commandID, bool enabled);
+		void EnablePluginMenuItem(int ID, bool enabled);
 		// Set a plugin menu Icon from resources
 		bool SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a plugin menu Icon to a given stock Shell Icon

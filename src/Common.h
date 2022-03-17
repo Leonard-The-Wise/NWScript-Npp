@@ -98,10 +98,10 @@ namespace NWScriptPluginCommons {
     std::string replaceStringsA(const std::string& input, std::map<std::string, std::string>& replaceStrings);
 
     // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
-    generic_string replaceStringsW(const generic_string& input, std::map<generic_string, generic_string>& replaceStrings);
+    std::wstring replaceStringsW(const std::wstring& input, std::map<std::wstring, std::wstring>& replaceStrings);
 
     // Opens a file dialog
-    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName);
+    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName, generic_string lastOpenedFolder = TEXT(""));
 
     // Opens a folder selection dialog
     bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName);
@@ -137,7 +137,7 @@ namespace NWScriptPluginCommons {
     // Returns the proper non back-slash ended directory name (eg: C:\Windows\ -> C:\Windows)
     // Needed to canonicalize directory names, since then functions of NscLib will return names with or
     // without ending backslashes.
-    generic_string properDirNameW(const generic_string& dirName);
+    std::wstring properDirNameW(const std::wstring& dirName);
 
     // Try to retrieve the Neverwinter's Home path
     generic_string getNwnHomePath(int CompilerVersion);
@@ -173,6 +173,11 @@ namespace NWScriptPluginCommons {
     tinyxml2::XMLElement* searchElement(tinyxml2::XMLElement* const from, const std::string& toName,
         const std::string checkAttribute = "", const std::string checkAttributeValue = "");
 
+    // Finds the Menu Handle of a submenu with name subMenuName
+    HMENU FindSubMenu(HMENU baseMenu, generic_string subMenuName);
+
+    // Returns the menu name for a given position inside a menu handle
+    generic_string GetMenuItemName(HMENU menu, int position);
 }
 
 using namespace NWScriptPluginCommons;

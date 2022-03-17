@@ -100,12 +100,12 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
-    generic_string replaceStringsW(const generic_string& input, std::map<generic_string, generic_string>& replaceStrings)
+    std::wstring replaceStringsW(const std::wstring& input, std::map<std::wstring, std::wstring>& replaceStrings)
     {
         typedef jpcre2::select<wchar_t> pcre2;
-        generic_string output = input;
+        std::wstring output = input;
 
-        for (std::map<generic_string, generic_string>::const_iterator i = replaceStrings.begin(); i != replaceStrings.end(); i++)
+        for (std::map<std::wstring, std::wstring>::const_iterator i = replaceStrings.begin(); i != replaceStrings.end(); i++)
         {
             output = pcre2::Regex(i->first.c_str()).replace(output, i->second.c_str(), "g");
         }
@@ -113,24 +113,9 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
-    std::string properDirNameA(const std::string& dirName) {
-        std::string retval = dirName;
-        if (retval.back() == '\\')
-            retval.pop_back();
-        return retval;
-    }
-
-    generic_string properDirNameW(const generic_string& dirName) {
-        generic_string retval = dirName;
-        if (retval.back() == TEXT('\\'))
-            retval.pop_back();
-        return retval;
-    }
-
     // Opens a file dialog
-    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName)
+    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName, generic_string lastOpenedFolder)
     {
-
         OPENFILENAME ofn;
 
         TCHAR sFileOpen[MAX_PATH];
@@ -144,7 +129,7 @@ namespace NWScriptPluginCommons {
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = NULL;
         ofn.nMaxFileTitle = 0;
-        ofn.lpstrInitialDir = NULL;
+        ofn.lpstrInitialDir = lastOpenedFolder.c_str();
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
         if (!GetOpenFileName(&ofn))
@@ -337,6 +322,24 @@ namespace NWScriptPluginCommons {
     bool isValidDirectoryS(const generic_string& sPath)
     {
         return isValidDirectory(sPath.c_str());
+    }
+
+    std::string properDirNameA(const std::string& dirName) {
+        if (dirName.empty())
+            return "";
+        std::string retval = dirName;
+        if (retval.back() == '\\')
+            retval.pop_back();
+        return retval;
+    }
+
+    std::wstring properDirNameW(const std::wstring& dirName) {
+        if (dirName.empty())
+            return L"";
+        std::wstring retval = dirName;
+        if (retval.back() == TEXT('\\'))
+            retval.pop_back();
+        return retval;
     }
 
     generic_string getNwnHomePath(int CompilerVersion)
@@ -609,6 +612,56 @@ namespace NWScriptPluginCommons {
         return found;
 
     };
+
+    // Adapted from function source:
+    // https://www.codeguru.com/cplusplus/finding-a-menuitem-from-command-id/
+    HMENU FindSubMenu(HMENU baseMenu, generic_string menuName)
+    {
+        int myPos;
+        if (baseMenu == NULL)
+            // Sorry, Wrong Number
+            return NULL;
+
+        int count = GetMenuItemCount(baseMenu);
+        HMENU returnValue = NULL;
+        for (myPos = 0; myPos < count && returnValue == NULL; myPos++)
+        {
+            // Is this the real one?
+            generic_string toCompare = GetMenuItemName(baseMenu, myPos);
+            if (GetMenuItemName(baseMenu, myPos) == menuName)
+                // Yep!
+                return GetSubMenu(baseMenu, myPos);
+
+            // Maybe in a subMenu?
+            HMENU mNewMenu = GetSubMenu(baseMenu, myPos);
+            if (mNewMenu != NULL)
+                // rekursive!
+                returnValue = FindSubMenu(mNewMenu, menuName);
+
+            // If not found... next!!!
+        }
+
+        return returnValue; // iterate in the upper stackframe
+    }
+
+    generic_string GetMenuItemName(HMENU menu, int position)
+    {
+        MENUITEMINFO menuInfo = {};
+        TCHAR szString[256] = {};
+
+        ZeroMemory(szString, sizeof(szString));
+        menuInfo.cch = 256;
+        menuInfo.fMask = MIIM_TYPE;
+        menuInfo.fType = MFT_STRING;
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.dwTypeData = szString;
+        bool bSuccess = GetMenuItemInfo(menu, position, MF_BYPOSITION, &menuInfo);
+
+        if (bSuccess)
+            return generic_string(szString);
+        else
+            return generic_string(TEXT(""));
+    }
 
 #pragma warning(pop)
 

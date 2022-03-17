@@ -20,11 +20,14 @@
 // Using method to read project version straight from binaries to avoid constant 
 // recompilation of this file .
 // #include "ProjectVersion.h"
-#include "VersionFromResource.h"
+#include "VersionInfo.h"
 
 
 #define ABOUT_TEXT TEXT( \
-"PLUGIN USAGE:\r\n\
+" ** For a more detailed and formated version of the help text, please visit the web page on the \"Online Help\" menu. **\r\n\
+ ** Diagnostics information and some use statistics are avaliable at the end of this text. **\r\n\
+\r\n\
+PLUGIN USAGE:\r\n\
 -----------------\r\n\
 • Editor Syntax Highlighting:\r\n\
    - Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
@@ -46,17 +49,20 @@ and beyond so this menu option won't show anymore for users with up-to-date vers
 • Menu - \"Run last batch\":\r\n\
    - Runs the last successful batch operation in this session.\r\n\
 \r\n\
-• Menu - \"Fetch preprocessor output\"\r\n\
+• Menu - \"Fetch preprocessor output\":\r\n\
    - Runs a compile preprocessing phase on current script and display the results in a new document for the user. \
 Useful to view what final text the compiler will ACTUALLY use to compile the script.\r\n\
 \r\n\
-• Menu - \"View Script Dependencies\"\r\n\
+• Menu - \"View Script Dependencies\":\r\n\
    - Parse the script file's dependencies and display to the user as a new human-readable document.\r\n\
 \r\n\
-• Menu - \"Compiler settings\"\r\n\
+• Menu - \"Compiler settings\":\r\n\
    - Opens the compiler settings.\r\n\
 \r\n\
-• Menu - \"Install Dark Theme\"\r\n\
+• Menu - \"User's Preferences\":\r\n\
+   - Opens the user's preferences dialog.\r\n\
+\r\n\
+• Menu - \"Install Dark Theme\":\r\n\
    - Installs Dark Theme support if not already present. (When installation is detected, this option won't show up).\r\n\
 \r\n\
 • Menu - \"Import NWScript definitions\":\r\n\
@@ -64,13 +70,13 @@ Useful to view what final text the compiler will ACTUALLY use to compile the scr
 structures to use with syntax coloring and highlighting and also this enables the Auto Complete functions to them. This will overwrite any \
 previous engine definitions present on the plugin configuration.\r\n\
 \r\n\
-• Menu - \"Import User's definitions\":\r\n\
+• Menu - \"Import user-defined tokens\":\r\n\
    - With this option, you may import new user-defined functions and constants from any .nss file to enable color-syntax highlighting and auto-completion to them. \
 Please notice that only function DECLARATIONS and GLOBAL CONSTANTS will be imported in this process. \
 And if you have any user-defined functions and constants previously imported or in use, don't worry, they will be preserved, as long as you did NOT \
 put them manually inside the reserved sections of the XML configuration file. So I advise you to NEVER edit that file manually. Like, ever!\r\n\
 \r\n\
-• Menu - \"Reset NWScript user definitons\":\r\n\
+• Menu - \"Reset user-defined tokens\":\r\n\
    - This will clear ANY user-defined functions and constants previously imported to the plugin's configurations.\r\n\
 \r\n\
 • Menu - \"Reset editor colors\":\r\n\
@@ -135,10 +141,9 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 		case WM_INITDIALOG:
 		{
 			// Get version from module's binary file
-			DllVersion versionInfo = GetVersionFromResource(_hInst);
+			VersionInfo versionInfo = VersionInfo::getLocalVersion();
 			generic_stringstream sVersion = {};
-			sVersion << "Version " << versionInfo.wLeftMost << "." << versionInfo.wSecondLeft << "." <<
-				versionInfo.wSecondRight << " (build " << versionInfo.wRightMost << ")";
+			sVersion << "Version " << versionInfo.shortString().c_str() << " (build " << versionInfo.build() << ")";
 
 			// Set user fonts. Try to keep same font for all.
 			HFONT hTitleFont = NULL;
@@ -161,6 +166,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
+			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
 
 			return TRUE;
 		}

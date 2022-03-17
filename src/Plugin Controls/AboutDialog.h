@@ -23,11 +23,17 @@ namespace NWScriptPlugin {
 		void setReplaceStrings(const std::map<generic_string, generic_string>& replaceStrings) {
 			_replaceStrings = replaceStrings;
 		};
+
+		void setHomePath(const TCHAR* homePath) {
+			_homePath = homePath;
+		}
+
 		void doDialog();
 
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
+		generic_string _homePath;
 		std::map<generic_string, generic_string> _replaceStrings;
 	};
 }

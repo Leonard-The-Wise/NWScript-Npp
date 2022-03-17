@@ -36,6 +36,7 @@
 #include "FileParseSummaryDialog.h"
 #include "PathAccessDialog.h"
 #include "ProcessFilesDialog.h"
+#include "UsersPreferences.h"
 #include "WarningDialog.h"
 
 #include "XMLGenStrings.h"
@@ -62,12 +63,19 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_VIEWSCRIPTDEPENDENCIES 8
 #define PLUGINMENU_DASH3 9
 #define PLUGINMENU_SETTINGS 10
-#define PLUGINMENU_DASH4 11
-#define PLUGINMENU_INSTALLDARKTHEME 12
-#define PLUGINMENU_IMPORTDEFINITIONS 13
-#define PLUGINMENU_RESETEDITORCOLORS 14
-#define PLUGINMENU_DASH5 15
-#define PLUGINMENU_ABOUTME 16
+#define PLUGINMENU_USERPREFERENCES 11
+#define PLUGINMENU_DASH4 12
+#define PLUGINMENU_INSTALLDARKTHEME 13
+#define PLUGINMENU_IMPORTDEFINITIONS 14
+#define PLUGINMENU_IMPORTUSERTOKENS 15
+#define PLUGINMENU_RESETUSERTOKENS 16
+#define PLUGINMENU_RESETEDITORCOLORS 17
+#define PLUGINMENU_DASH5 18
+#define PLUGINMENU_ONLINEHELP 19
+#define PLUGINMENU_ABOUTME 20
+
+#define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
+#define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/Help.md")
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
@@ -81,11 +89,15 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
+    {TEXT("User's preferences..."), Plugin::UserPreferences},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
     {TEXT("Import NWScript definitions"), Plugin::ImportDefinitions},
+    {TEXT("Import user-defined tokens"), Plugin::ImportUserTokens},
+    {TEXT("Reset user-defined tokens"), Plugin::ResetUserTokens},
     {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
     {TEXT("---")},
+    {TEXT("Online Help"), Plugin::OnlineHelp},
     {TEXT("About me"), Plugin::AboutMe},
 };
 
@@ -450,7 +462,9 @@ void Plugin::SetAutoIndentSupport()
 
         // Remove the "Use Auto-Indent" menu command and the following separator.
         RemovePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT);
-        RemovePluginMenuItem(PLUGINMENU_DASH1);
+
+        // Since the dash does not have an ID, got to the previous position.
+        RemovePluginMenuItem(PLUGINMENU_DASH1 - 1, true);
 
         // Auto-adjust the settings
         Instance().Settings().enableAutoIndentation = false;
@@ -514,6 +528,37 @@ void Plugin::DetectDarkThemeInstall()
         RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
         _pluginDarkThemeIs = DarkThemeStatus::Installed;
     }
+
+    // Auto-reinstall if a previous installation existed and support for it is enabled...
+    if (_pluginDarkThemeIs == DarkThemeStatus::Uninstalled && _settings.darkThemePreviouslyInstalled && _settings.autoInstallDarkTheme)
+    {
+        // Check to see if we already attempted a reinstall before, so we won't loop...
+        if (_settings.darkThemeInstallAttempt)
+            return;
+
+        // Set to true... this will only be reset upon a successfull installation.
+        _settings.darkThemeInstallAttempt = true;
+
+        // Check files permissions (redirect result to ignore since we already know file exists)...
+        PathWritePermission fPerm = PathWritePermission::UndeterminedError;
+        std::ignore = checkWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fPerm);
+        
+        // Setup a restart hook...
+        if (fPerm == PathWritePermission::RequiresAdminPrivileges && !IsUserAnAdmin())
+        {
+            SetRestartHook(RestartMode::Admin, RestartFunctionHook::InstallDarkModePhase1);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        }
+        else
+            // Since we've got perms... call the install function right on...
+            DoInstallDarkTheme(RestartFunctionHook::InstallDarkModePhase1);
+
+        return;
+    }
+
+    // Mark it was previously installed
+    if (_pluginDarkThemeIs == DarkThemeStatus::Installed && !_settings.darkThemePreviouslyInstalled)
+        _settings.darkThemePreviouslyInstalled = true;
 }
 
 // Look for our language menu item among installed external languages and call it
@@ -575,21 +620,30 @@ HMENU Plugin::GetNppMainMenu()
     return ::GetMenu(Instance().NotepadHwnd());
 }
 
-void Plugin::EnablePluginMenuItem(int commandID, bool enabled)
+void Plugin::EnablePluginMenuItem(int ID, bool enabled)
 {
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        EnableMenuItem(hMenu, GetFunctions()[commandID]._cmdID, (MF_BYCOMMAND | (enabled)) ? MF_ENABLED : MF_DISABLED );
+        EnableMenuItem(hMenu, GetFunctions()[ID]._cmdID, (MF_BYCOMMAND | (enabled)) ? MF_ENABLED : MF_DISABLED );
     }
 }
 
-void Plugin::RemovePluginMenuItem(int commandID)
+void Plugin::RemovePluginMenuItem(int ID, bool byPosition)
 {
     HMENU hMenu = GetNppMainMenu();
+
     if (hMenu)
     {
-        RemoveMenu(hMenu, pluginFunctions[commandID]._cmdID, MF_BYCOMMAND);
+        if (!byPosition)
+            RemoveMenu(hMenu, pluginFunctions[ID]._cmdID, MF_BYCOMMAND);
+        else
+        {
+            // Find our submenu
+            HMENU hSubMenu = FindSubMenu(hMenu, pluginName);
+            if (hSubMenu)
+                RemoveMenu(hSubMenu, ID, MF_BYPOSITION);
+        }
     }
 }
 
@@ -681,6 +735,7 @@ void Plugin::SetupPluginMenuItems()
     // Setup icons for Compiler, settings, about me...
     SetPluginStockMenuItemIcon(PLUGINMENU_COMPILESCRIPT, SHSTOCKICONID::SIID_DOCASSOC, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGS, true, false);
+    SetPluginStockMenuItemIcon(PLUGINMENU_USERPREFERENCES, SHSTOCKICONID::SIID_USERS, true, false);
     SetPluginStockMenuItemIcon(PLUGINMENU_ABOUTME, SHSTOCKICONID::SIID_INFO, true, false);
 
     // Menu run last batch: initially disabled
@@ -1150,7 +1205,10 @@ void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
     if (!PatchDarkThemeXMLFile())
         return;
 
-    // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
+    // Clear install attempt marks, so next Notepad++ patch this will trigger a new auto-installation again (if set)...
+    _settings.darkThemeInstallAttempt = false;
+
+    // Do restart. If it came from a callback, do it automatically. Else ask for it.
     if (whichPhase == RestartFunctionHook::InstallDarkModePhase1)
     {
         SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
@@ -1459,9 +1517,20 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 // Receives notifications when a "Compile" menu command ends
 void Plugin::CompileEndingCallback(HRESULT decision) 
 {
+    NWScriptCompiler& compiler = Instance().Compiler();
+
     if (static_cast<int>(decision) == false)
         return;
 
+    // Options to generate symbols and auto display must be set.
+    if (Instance().Settings().autoDisplayDebugSymbols && Instance().Settings().generateSymbols)
+    {
+        generic_string resultPath = str2wstr(properDirNameA(compiler.getDestinationDirectory().string()) + "\\" + compiler.getSourceFilePath().stem().string() + debugSymbolsFileSuffix);
+        // Points notepad++ to open that file
+        std::ignore = Instance().Messenger().SendNppMessage<bool>(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(resultPath.c_str()));
+        //Sets language to NWScript (because color syntax WILL work for assembled symbols)
+        Instance().SetNotepadToPluginLexer();
+    }
 }
 
 // Receives notifications when a "Disassemble" menu command ends
@@ -1472,13 +1541,14 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
 
-    generic_string resultPath = str2wstr(compiler.getSourceFilePath().parent_path().string() + "\\" + compiler.getSourceFilePath().stem().string() + compiledScriptSuffix);
-
-    // Points notepad++ to open that file
-    std::ignore = Instance().Messenger().SendNppMessage<bool>(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(resultPath.c_str()));
-
-    //Sets language to NWScript (because color syntax WILL work for assembled symbols)
-    Instance().SetNotepadToPluginLexer();
+    if (Instance().Settings().autoDisplayDisassembled)
+    {
+        generic_string resultPath = str2wstr(properDirNameA(compiler.getDestinationDirectory().string()) + "\\" + compiler.getSourceFilePath().stem().string() + disassembledScriptSuffix);
+        // Points notepad++ to open that file
+        std::ignore = Instance().Messenger().SendNppMessage<bool>(NPPM_DOOPEN, 0, reinterpret_cast<LPARAM>(resultPath.c_str()));
+        //Sets language to NWScript (because color syntax WILL work for assembled symbols)
+        Instance().SetNotepadToPluginLexer();
+    }
 }
 
 // Receives notifications for each file processed
@@ -1579,7 +1649,9 @@ PLUGINCOMMAND Plugin::CompileScript()
 PLUGINCOMMAND Plugin::DisassembleFile()
 {
     generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName))
+    if (openFileDialog(Instance().NotepadHwnd(), 
+        TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName, 
+        properDirNameW(Instance().Settings().lastOpenedDir)))
     {
         // Reset compiler cache and clear log so we catch all possible dependencies editions.
         Instance().Compiler().reset();
@@ -1668,6 +1740,15 @@ PLUGINCOMMAND Plugin::CompilerSettings()
     compilerSettings.doDialog();
 }
 
+PLUGINCOMMAND Plugin::UserPreferences()
+{
+    static UsersPreferencesDialog userPreferences = {};
+
+    userPreferences.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    userPreferences.appendSettings(&Instance()._settings);
+    userPreferences.doDialog();
+}
+
 //-------------------------------------------------------------
 
 // Installs Dark theme
@@ -1728,7 +1809,9 @@ You wish to Continue?)"
     bWarnedUser = true;
 
     generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName))
+    if (openFileDialog(Instance().NotepadHwnd(), 
+        TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName,
+        properDirNameW(Instance().Settings().lastOpenedDir )))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
         NWScriptParser nParser(Instance().NotepadHwnd());
@@ -1756,6 +1839,18 @@ You wish to Continue?)"
     }
 }
 
+// Menu Command "Import user-defined tokens" function handler. 
+PLUGINCOMMAND Plugin::ImportUserTokens()
+{
+
+}
+
+// Menu Command "Reset user-defined tokens" function handler. 
+PLUGINCOMMAND Plugin::ResetUserTokens()
+{
+
+}
+
 // Fixes the language colors to default
 PLUGINCOMMAND Plugin::ResetEditorColors()
 {
@@ -1773,6 +1868,11 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 
 //-------------------------------------------------------------
 
+PLUGINCOMMAND Plugin::OnlineHelp()
+{
+    ShellExecute(NULL, L"open", PLUGIN_ONLINEHELP, L"", L"", WM_SHOWWINDOW);
+}
+
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
@@ -1787,7 +1887,7 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%AUTOCOMPLETEFILE%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"] });
     replaceStrings.insert({ TEXT("%AUTOCOMPLETEDIR%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path()});
 
-    bool bIsAutoIndentOn = Instance().Messenger().SendSciMessage<bool>(NPPM_ISAUTOINDENTON);
+    DWORD bIsAutoIndentOn = Instance().Messenger().SendNppMessage<DWORD>(NPPM_ISAUTOINDENTON);
 
     // Diagnostic data.
     if (Instance()._needPluginAutoIndent)
@@ -1800,7 +1900,10 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
 
     // Set replace strings
-    aboutDialog.setReplaceStrings(replaceStrings);
+    aboutDialog.setReplaceStrings(replaceStrings); 
+
+    // Set homepath dir...
+    aboutDialog.setHomePath(PLUGIN_HOMEPATH);
 
     // Present it
     if (!aboutDialog.isCreated())
