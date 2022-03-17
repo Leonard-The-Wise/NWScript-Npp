@@ -19,20 +19,21 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #pragma once
 
+#include <string>
 #include <shlwapi.h>
 
 #include "StaticDialog.h"
 #include "dockingResource.h"
 #include "Docking.h"
 
-#pragma warning (disable : 26495)
+//#pragma warning (disable : 26495)
 
 class DockingDlgInterface : public StaticDialog
 {
 public:
 
-	DockingDlgInterface(): StaticDialog(), _HSource()  {};
-	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID)  {};
+	DockingDlgInterface(): StaticDialog() {};
+	DockingDlgInterface(int dlgID): StaticDialog(), _dlgID(dlgID) {};
 	
 	virtual void init(HINSTANCE hInst, HWND parent)
 	{
@@ -41,9 +42,9 @@ public:
 		lstrcpy(_moduleName, PathFindFileName(_moduleName));
 	}
 
-    void create(tTbData * data, bool isRTL = false){
+    void create(tTbData * data, bool isRTL = false) {
 		StaticDialog::create(_dlgID, isRTL);
-		::GetWindowText(_hSelf, _pluginName, sizeof(_pluginName));
+		::GetWindowText(_hSelf, _pluginName, std::size(_pluginName) - sizeof(TCHAR));
 
         // user information
 		data->hClient		= _hSelf;
@@ -114,11 +115,11 @@ protected :
 	};
 	
 	// Handles
-    HWND			_HSource;
-	tTbData*		_data;
-	int				_dlgID;
-	bool            _isFloating;
-	TCHAR            _moduleName[MAX_PATH];
-	TCHAR			_pluginName[MAX_PATH];
+    HWND			_HSource = nullptr;
+	tTbData*		_data = nullptr;
+	int				_dlgID = 0;
+	bool            _isFloating = false;
+	TCHAR            _moduleName[MAX_PATH] = {};
+	TCHAR			_pluginName[MAX_PATH] = {};
 };
 

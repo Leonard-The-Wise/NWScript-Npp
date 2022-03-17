@@ -674,7 +674,6 @@ public:
 			return "";
 		if (style < sizeLexicalClasses)
 			return lexicalClasses[style].name;
-		// TODO: inactive and substyles
 		return "";
 	}
 	const char* SCI_METHOD TagsOfStyle(int style) override {
@@ -714,7 +713,6 @@ public:
 			return "";
 		if (style < sizeLexicalClasses)
 			return lexicalClasses[style].description;
-		// TODO: inactive and substyles
 		return "";
 	}
 

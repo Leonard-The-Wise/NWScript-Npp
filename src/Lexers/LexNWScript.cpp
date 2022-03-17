@@ -945,7 +945,6 @@ void LexerNWScript::EvaluateTokens(std::vector<std::string> &tokens, const Symbo
 							if (setWordStart.Contains(macroTokens[iMacro][0])) {
 								std::map<std::string, std::string>::const_iterator itFind = arguments.find(macroTokens[iMacro]);
 								if (itFind != arguments.end()) {
-									// TODO: Possible that value will be expression so should insert tokenized form
 									macroTokens[iMacro] = itFind->second;
 								}
 							}
