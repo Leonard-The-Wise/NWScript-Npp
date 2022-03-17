@@ -11,7 +11,7 @@
 
 #include "Common.h"
 #include "MiniINI.h"
-#include "VersionInfo.h"
+#include "VersionInfoEx.h"
 
 using namespace mINI;
 
@@ -40,7 +40,7 @@ namespace NWScriptPlugin {
 		// Controls Notepad++ versions and auto-install Dark Theme
 		bool darkThemePreviouslyInstalled = false;
 		bool darkThemeInstallAttempt = false;
-		VersionInfo notepadVersion;
+		VersionInfoEx notepadVersion;
 
 		// Compiler settings
 		bool compilerSettingsCreated = false;

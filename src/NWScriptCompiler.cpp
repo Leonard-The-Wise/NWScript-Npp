@@ -11,7 +11,7 @@
 //#include "jpcre2.h"
 
 #include "NWScriptCompiler.h"
-#include "VersionInfo.h"
+#include "VersionInfoEx.h"
 
 using namespace NWScriptPlugin;
 typedef NWScriptLogger::LogType LogType;
@@ -331,7 +331,7 @@ bool NWScriptCompiler::MakeDependenciesView(const std::set<std::string>& depende
     strftime(timestamp, 64, "%B %d, %Y - %R", &currTimeP);
 
     // Get version from module's binary file
-    VersionInfo versionInfo = VersionInfo::getLocalVersion();
+    VersionInfoEx versionInfo = VersionInfoEx::getLocalVersion();
     std::stringstream sVersion = {};
     sVersion << "version " << versionInfo.shortString().c_str() << " - build " << versionInfo.build();
 

@@ -1,4 +1,4 @@
-/** @file VersionInfo.cpp
+/** @file VersionInfoEx.cpp
  * Get version information from resource file.
  * 
  * Original idea extracted from simple example here:
@@ -14,15 +14,13 @@
 #include "Common.h"
 #include "jpcre2.hpp"
 
-#include "VersionInfo.h"
+#include "VersionInfoEx.h"
 
-static const jpcre2::select<wchar_t>::Regex number(TEXT(R"(\d+)"), 0, jpcre2::JIT_COMPILE | jpcre2::FIND_ALL);
-static const jpcre2::select<wchar_t>::Regex validversion(TEXT(R"(^(\d+)\.?(?:(\d+)\.?)?(?:(\d+)\.?)?(?:(\d+)\.?)?$)"), 0, jpcre2::JIT_COMPILE);
+static const jpcre2::select<wchar_t>::Regex validversion(TEXT(R"(^(\d+)\.?(?:(\d+)\.?)?(?:(\d+)\.?)?(?:(\d+))?$)"), 0, jpcre2::JIT_COMPILE);
 static jpcre2::select<wchar_t>::RegexMatch validator(&validversion);
-static jpcre2::select<wchar_t>::RegexMatch numbers(&number);
 
-// Load version from version string
-bool VersionInfo::LoadThisFromVersionString(const TCHAR* versionString)
+// Load version from version string. Internal use...
+bool VersionInfoEx::LoadThisFromVersionString(const TCHAR* versionString)
 {
 	jpcre2::select<wchar_t>::VecNum version;
 	std::wstring subject(versionString);
@@ -30,32 +28,28 @@ bool VersionInfo::LoadThisFromVersionString(const TCHAR* versionString)
 	if (count == 0)
 		return false;
 
-	count = numbers.setNumberedSubstringVector(&version).setSubject(subject).setModifier("g").match();
-	if (count > 0)
-	{
-		_major = stoi(version[0][0]) & 0xFFFF;
-		if (count > 1)
-			_minor = stoi(version[1][0]) & 0xFFFF;
-		if (count > 2)
-			_patch = stoi(version[2][0]) & 0xFFFF;
-		if (count > 3)
-			_build = stoi(version[3][0]) & 0xFFFF;
-	}
+	_major = stoi(version[0][1]) & 0xFFFF;
+	if (!version[0][2].empty())
+		_minor = stoi(version[0][2]) & 0xFFFF;
+	if (!version[0][3].empty())
+		_patch = stoi(version[0][3]) & 0xFFFF;
+	if (!version[0][4].empty())
+		_build = stoi(version[0][4]) & 0xFFFF;
 
 	return true;
 }
 
-// Load version from module
-void VersionInfo::LoadThisFromModule(HMODULE moduleName) {
-	VersionInfo myVersion = getVersionFromModuleHandle(moduleName);
+// Load version from module. Internal use...
+void VersionInfoEx::LoadThisFromModule(HMODULE moduleName) {
+	VersionInfoEx myVersion = getVersionFromModuleHandle(moduleName);
 	_major = myVersion._major;
 	_minor = myVersion._minor;
 	_patch = myVersion._patch;
 	_build = myVersion._build;
 }
 
-// Load version from version string or module path
-void VersionInfo::LoadThisFromVersionStringOrPath(const TCHAR* versionStringOrModulePath)
+// Load version from version string or module path. Internal use...
+void VersionInfoEx::LoadThisFromVersionStringOrPath(const TCHAR* versionStringOrModulePath)
 {
 	// First try to set strings directly. If fail, try loading modules
 	if (!LoadThisFromVersionString(versionStringOrModulePath))
@@ -66,13 +60,11 @@ void VersionInfo::LoadThisFromVersionStringOrPath(const TCHAR* versionStringOrMo
 	}
 }
 
-
-
 // Static (class) functions
 
 // In case we don't know which module to search
 // Static private (required for GetModuleHandleEx call)
-HMODULE VersionInfo::getThisModuleHandle()
+HMODULE VersionInfoEx::getThisModuleHandle()
 {
 	//Returns module handle where this function is running in: EXE or DLL
 	HMODULE hModule = NULL;
@@ -84,10 +76,10 @@ HMODULE VersionInfo::getThisModuleHandle()
 }
 
 // Extracts version information from a Executable or DLL binary
-VersionInfo VersionInfo::getVersionFromModuleHandle(HMODULE hModule)
+VersionInfoEx VersionInfoEx::getVersionFromModuleHandle(HMODULE hModule)
 {
 	if (!hModule)
-		return VersionInfo();
+		return VersionInfoEx();
 
 	HRSRC hResInfo;
 	DWORD dwSize;
@@ -96,7 +88,7 @@ VersionInfo VersionInfo::getVersionFromModuleHandle(HMODULE hModule)
 	UINT uLen = 0;
 	VS_FIXEDFILEINFO* lpFfi = NULL;
 	HINSTANCE hInst = reinterpret_cast<HINSTANCE>(hModule);
-	VersionInfo VersionInfo;
+	VersionInfoEx VersionInfoEx;
 
 	hResInfo = FindResource(hInst, reinterpret_cast<LPCWSTR>(MAKEINTRESOURCE(VERSION_POINTER)), RT_VERSION);
 	if (hResInfo)
@@ -117,7 +109,7 @@ VersionInfo VersionInfo::getVersionFromModuleHandle(HMODULE hModule)
 					{
 						if (lpFfi != NULL)
 						{
-							VersionInfo = { HIWORD(lpFfi->dwFileVersionMS), LOWORD(lpFfi->dwFileVersionMS),
+							VersionInfoEx = { HIWORD(lpFfi->dwFileVersionMS), LOWORD(lpFfi->dwFileVersionMS),
 								HIWORD(lpFfi->dwFileVersionLS), LOWORD(lpFfi->dwFileVersionLS) };
 						}
 					}
@@ -127,18 +119,18 @@ VersionInfo VersionInfo::getVersionFromModuleHandle(HMODULE hModule)
 		}
 	}
 
-	return VersionInfo;
+	return VersionInfoEx;
 }
 
 // Extracts version information from this executable/binary
-VersionInfo VersionInfo::getLocalVersion()
+VersionInfoEx VersionInfoEx::getLocalVersion()
 {
 	HMODULE hModule = getThisModuleHandle();
 	return getVersionFromModuleHandle(hModule);
 }
 
 // Extracts version information from a given binary/executable
-VersionInfo VersionInfo::getVersionFromBinary(generic_string modulePath) {
+VersionInfoEx VersionInfoEx::getVersionFromBinary(generic_string modulePath) {
 
 	HMODULE hModule = GetModuleHandle(modulePath.c_str());
 	return getVersionFromModuleHandle(hModule);
