@@ -18,36 +18,79 @@
 #include "PluginControlsRC.h"
 
 // Using method to read project version straight from binaries to avoid constant 
-// recompilation of this file.
+// recompilation of this file .
 // #include "ProjectVersion.h"
-
 #include "VersionFromResource.h"
 
 
 #define ABOUT_TEXT TEXT( \
 "PLUGIN USAGE:\r\n\
 -----------------\r\n\
-- Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
+• Editor Syntax Highlighting:\r\n\
+   - Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
 \r\n\
-- You may import a new nwscript.nss to replace the current engine definitions like constants, functions and engine structures and also enable Auto Complete functions to them. \
-To do that, use the \"Import Definitions\" menu options. This will overwrite any previous engine definitions present on the plugin configuration. \
-If you have any user-defined functions and constants previously imported or in use, don't worry, they will be preserved, as long as you did NOT \
+• Using Auto-Indentation:\r\n\
+   - For Notepad++ 8.3.2 and bellow, chose the option \"Use Auto-Indentation\" to enable the plugin's built-in auto-indentation support. \
+You'll need to disable Notepad++ Auto-Indentation in user preferences to avoid any conflicts. This feature is automatic on Notepad++ 8.3.3 \
+and beyond so this menu option won't show anymore for users with up-to-date versions.\r\n\
+\r\n\
+• Menu - \"Compile script\":\r\n\
+   - Compiles the current opened document into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
+\r\n\
+• Menu - \"Disassemble file\":\r\n\
+   - Disassembles a compiled NWscript file from the disk and put results into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
+\r\n\
+• Menu - \"Batch processing\":\r\n\
+   - Opens the Batch-processing dialog box.\r\n\
+\r\n\
+• Menu - \"Run last batch\":\r\n\
+   - Runs the last successful batch operation in this session.\r\n\
+\r\n\
+• Menu - \"Fetch preprocessor output\"\r\n\
+   - Runs a compile preprocessing phase on current script and display the results in a new document for the user. \
+Useful to view what final text the compiler will ACTUALLY use to compile the script.\r\n\
+\r\n\
+• Menu - \"View Script Dependencies\"\r\n\
+   - Parse the script file's dependencies and display to the user as a new human-readable document.\r\n\
+\r\n\
+• Menu - \"Compiler settings\"\r\n\
+   - Opens the compiler settings.\r\n\
+\r\n\
+• Menu - \"Install Dark Theme\"\r\n\
+   - Installs Dark Theme support if not already present. (When installation is detected, this option won't show up).\r\n\
+\r\n\
+• Menu - \"Import NWScript definitions\":\r\n\
+   - With this option, you may import a new \"nwscript.nss\" to replace the current engine definitions like constants, functions and engine \
+structures to use with syntax coloring and highlighting and also this enables the Auto Complete functions to them. This will overwrite any \
+previous engine definitions present on the plugin configuration.\r\n\
+\r\n\
+• Menu - \"Import User's definitions\":\r\n\
+   - With this option, you may import new user-defined functions and constants from any .nss file to enable color-syntax highlighting and auto-completion to them. \
+Please notice that only function DECLARATIONS and GLOBAL CONSTANTS will be imported in this process. \
+And if you have any user-defined functions and constants previously imported or in use, don't worry, they will be preserved, as long as you did NOT \
 put them manually inside the reserved sections of the XML configuration file. So I advise you to NEVER edit that file manually. Like, ever!\r\n\
 \r\n\
-- If for some reason the plugin colors break, use the \"Reset editor colors\" to fix. This will NOT erease any keyword or user-defined constants and functions \
-in use.\r\n\
+• Menu - \"Reset NWScript user definitons\":\r\n\
+   - This will clear ANY user-defined functions and constants previously imported to the plugin's configurations.\r\n\
 \r\n\
- - To enable .nss file compilation you first need to setup the environment and point to the proper Neverwinter installation folders, \
-where the include files are present. Or you can make your own folder with the necessary files to compile a script. The nwscript.nss MUST \
-be present in at least one of the defined paths.\r\n\
-TIP: you may map a shortcut to the compilation menu to facilitate the process The default compilation shortcut is F9. \
-If this is already taken, Notepad++ won't map it back to the plugin automatically. \r\n\
+• Menu - \"Reset editor colors\":\r\n\
+   - This will reset all editor color styles to the default values - eihter for light and dark themes. No function or constants definitions will be ereased in the process.\r\n\
 \r\n\
-- If you want to change the Styles for NWScript in Notepad++ preferences, don't forget to first give write permissions on \
-\"%PLUGINXMLFILE%\" to yourself, or else your changes won't be saved to the next session. This is a Notepad++ limitation.\r\n\
+• Menu - \"About me\":\r\n\
+   - Self reference ®. :)\r\n\
 \r\n\
 \r\n\
-Copyright notices for embbeded version of the NWScript Compiler:\r\n\
+REMARKS:\r\n\
+-----------------\r\n\
+• If you noticed the SHIELD icons near some menu options, that's because if you want to use that option you must either run Notepad++ with\
+administrator privileges OR you may also manually provide write permissions to the option's required files (you'll be notified of which file you\
+need to provide permissions to for each option.\r\n\
+\r\n\
+\r\n\
+EXTRA COPYRIGHT INFO:\r\n\
+---------------\r\n\
+\r\n\
+Copyright notices for embbeded version of the NWScript Compiler Library:\r\n\
 \r\n\
   Portions Copyright (C) 2008-2015 Skywing\r\n\
   Portions copyright (C) 2002-2003, Edward T. Smith\r\n\
@@ -55,10 +98,12 @@ Copyright notices for embbeded version of the NWScript Compiler:\r\n\
   Adapted for Neverwinter Nights Enhanced Edition and cross platform use by: Glorwinger and Jakkn\r\n\
   Readapted for Windows GUI applications by: Leonard-The-Wise\r\n\
 \r\n\
+\r\n\
 SELF-DIAGNOSTICS:\r\n\
 -----------------\r\n\
   - Auto-Indentation: %NWSCRIPTINDENT%\r\n\
   - Dark Mode Theme:  %DARKTHEMESUPPORT%\r\n\
+\r\n\
 \r\n\
 NERDY STATISTICS:\r\n\
 -----------------\r\n\

@@ -53,14 +53,14 @@ namespace NWScriptPlugin
 
 		// Sets destination to a VALID and existing directory (or else get an error)
 		void setDestinationDirectory(filesystem::path dest) {
-			if (!isValidDirectory(str2wstr(dest.filename().string()).c_str()))
+			if (!isValidDirectory(str2wstr(dest.string()).c_str()))
 				throw;
-			dest = _destDir;
+			_destDir = dest;
 		}
 
 		// Sets source path to a VALID and existing file path (or else get an error)
 		void setSourceFilePath(filesystem::path source) {
-			if (!PathFileExists(str2wstr(source.filename().string()).c_str()))
+			if (!PathFileExists(source.c_str()))
 				throw;
 			_sourcePath = source;
 		}
@@ -115,6 +115,12 @@ namespace NWScriptPlugin
 		NWScriptLogger& logger() {
 			return _logger;
 		}
+
+		// Returns if an output path is required for operation
+		bool isOutputDirRequired() {
+			return !(_fetchPreprocessorOnly || _makeDependencyView);
+		}
+
 
 		void processFile(bool fromMemory = false, char* fileContents = NULL);
 
