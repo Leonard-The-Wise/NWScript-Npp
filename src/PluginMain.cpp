@@ -74,8 +74,8 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("---")},
     {TEXT("Compile script"), Plugin::CompileScript},
     {TEXT("Disassemble file..."), Plugin::DisassembleFile},
-    {TEXT("Batch script processing..."), Plugin::BatchProcessFiles},
-    {TEXT("Run last batch setup"), Plugin::RunLastBatch},
+    {TEXT("Batch processing..."), Plugin::BatchProcessFiles},
+    {TEXT("Run last batch"), Plugin::RunLastBatch},
     {TEXT("---")},
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
@@ -1432,24 +1432,27 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     }
 
     // Last check for file existence (helps debugging)
-    if (!PathFileExists(scriptPath.filename().c_str()))
+    if (!PathFileExists(scriptPath.c_str()))
     {
         MessageBox(NotepadHwnd(), TEXT("Error: file inexistent or not yet saved!"), TEXT("Preprocessor check"), MB_OK | MB_ICONERROR);
         return;
     }
 
-    // Check for output directory validity
-    if (!isValidDirectory(str2wstr(outputDir.filename().string()).c_str()))
+    if (_compiler.isOutputDirRequired())
     {
-        MessageBox(NotepadHwnd(), TEXT("Error: output directory is invalid or inexistent!"), TEXT("Preprocessor check"), MB_OK | MB_ICONERROR);
-        return;
+        if (!isValidDirectory(str2wstr(outputDir.string()).c_str()))
+        {
+            MessageBox(NotepadHwnd(), TEXT("Error: output directory is invalid or inexistent!"), TEXT("Preprocessor check"), MB_OK | MB_ICONERROR);
+            return;
+        }
+
+        _compiler.setDestinationDirectory(outputDir);
     }
 
     // TODO: Convert to multi-threaded operation
 
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
-    _compiler.setDestinationDirectory(outputDir);
     _compiler.processFile(fromCurrentScintilla, &fileContents[0]);
 }
 

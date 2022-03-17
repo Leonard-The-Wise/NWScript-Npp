@@ -216,7 +216,8 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
         bOptimize = false;
     }
 
-    compilerFlags |= NscCompilerFlag_DumpPCode;
+    // HACK: Need to know if this will ever be used on this project (we already have a disassembly option, this one generates PCODE while compiling also).
+    //compilerFlags |= NscCompilerFlag_DumpPCode;
 
     // Main compilation step
     std::string dataRef;                     // Buffer to file is generic and requires a std::string
