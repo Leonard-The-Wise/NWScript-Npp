@@ -76,6 +76,7 @@ void Settings::Load()
 	// Dark Theme auto-install support
 	darkThemePreviouslyInstalled = GetBoolean(TEXT("Auto-Install"), TEXT("darkThemePreviouslyInstalled"));
 	darkThemeInstallAttempt = GetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"));
+	notepadVersion = GetString(TEXT("Auto-Install"), TEXT("notepadVersion"));
 
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
 	if (!isValidDirectoryS(neverwinterOneInstallDir))
@@ -164,6 +165,7 @@ void Settings::Save()
 	// Dark Theme auto-install support
 	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemePreviouslyInstalled"), darkThemePreviouslyInstalled);
 	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"), darkThemeInstallAttempt);
+	SetString(TEXT("Auto-Install"), TEXT("notepadVersion"), notepadVersion.wstring());
 
 	iniFilePath->write(*iniFile);
 }

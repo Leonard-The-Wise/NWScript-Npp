@@ -40,6 +40,7 @@
 #include "WarningDialog.h"
 
 #include "XMLGenStrings.h"
+#include "VersionInfo.h"
 
 #pragma warning (disable : 6387)
 
@@ -75,7 +76,7 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_ABOUTME 20
 
 #define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
-#define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/Help.md")
+#define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/OnlineHelp.md")
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
@@ -225,6 +226,18 @@ void Plugin::SetNotepadData(NppData data)
     // Create settings instance and load all values
     _settings.InitSettings(sPluginConfigPath);
     Settings().Load();
+
+    // Pick current Notepad++ version and compares with Settings, to se whether user gets a new 
+    // Dark Mode install attempt or not...
+    VersionInfo currentNotepad = VersionInfo(_pluginPaths["NotepadExecutablePath"]);
+    if (Settings().notepadVersion.empty())
+        Settings().notepadVersion = currentNotepad;
+
+    if (Settings().notepadVersion < currentNotepad)
+    {
+        Settings().darkThemeInstallAttempt = false;
+        Settings().notepadVersion = currentNotepad;
+    }
 
     // Adjust menu "Use Auto-Indentation" checked or not before creation
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().enableAutoIndentation;
@@ -723,7 +736,11 @@ void Plugin::SetupPluginMenuItems()
 
         // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
+        {
             SetPluginStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
+            SetPluginStockMenuItemIcon(PLUGINMENU_IMPORTUSERTOKENS, SHSTOCKICONID::SIID_SHIELD, true, false);
+            SetPluginStockMenuItemIcon(PLUGINMENU_RESETUSERTOKENS, SHSTOCKICONID::SIID_SHIELD, true, false);
+        }
         // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
         if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
             SetPluginStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
@@ -732,7 +749,7 @@ void Plugin::SetupPluginMenuItems()
             SetPluginStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
     }
 
-    // Setup icons for Compiler, settings, about me...
+    // Setup icons for compiler, settings, user's preferences, about me...
     SetPluginStockMenuItemIcon(PLUGINMENU_COMPILESCRIPT, SHSTOCKICONID::SIID_DOCASSOC, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGS, true, false);
     SetPluginStockMenuItemIcon(PLUGINMENU_USERPREFERENCES, SHSTOCKICONID::SIID_USERS, true, false);
@@ -1868,6 +1885,7 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 
 //-------------------------------------------------------------
 
+// Opens the user's online help web page
 PLUGINCOMMAND Plugin::OnlineHelp()
 {
     ShellExecute(NULL, L"open", PLUGIN_ONLINEHELP, L"", L"", WM_SHOWWINDOW);
