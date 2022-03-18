@@ -15,9 +15,6 @@
 #define IDI_ICON1                       129
 #define IDI_SETTINGS                    129
 #define IDD_USERSPREFERENCES            130
-#define IDD_LOGGER                      132
-#define IDD_LOGGER_ERRORS               134
-#define IDD_LOGGER_CONSOLE              136
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -72,15 +69,8 @@
 #define IDC_CHKNONBIOWAREXTENSIONS      1054
 #define IDC_CHKAUTOOPENDISASSEMBLED     1055
 #define IDC_CHKAUTOOPENDEBUGSYMBOLS     1056
+#define IDC_CHECK3                      1057
 #define IDC_CHKAUTOINSTALLDARKTHEME     1057
-#define IDC_TABLOGGER                   1060
-#define IDC_TXTCONSOLE                  1062
-#define IDC_BTERRORSTOGGLE              1064
-#define IDC_BTWARNINGSTOGGLE            1065
-#define IDC_CHECK3                      1066
-#define IDC_BTMESSGESTOGGLE             1066
-#define IDC_LSTERRORS                   1067
-#define IDC_ERRORGROUPBOX               1068
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -89,9 +79,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1069
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

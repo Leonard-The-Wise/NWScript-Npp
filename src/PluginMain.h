@@ -19,8 +19,6 @@
 #include "NWScriptParser.h"
 #include "NWScriptCompiler.h"
 
-#include "LoggerDialog.h"
-
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
 
@@ -127,8 +125,6 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND BatchProcessFiles();
 		// Menu Command "Run last successful batch" function handler. 
 		static PLUGINCOMMAND RunLastBatch();
-		// Menu Command "Run last successful batch" function handler. 
-		static PLUGINCOMMAND ToggleConsole();
 		// Menu Command "Fetch preprocessor text" function handler. 
 		static PLUGINCOMMAND FetchPreprocessorText();
 		// Menu Command "View Script Dependencies" function handler. 
@@ -249,7 +245,6 @@ namespace NWScriptPlugin {
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
 		NWScriptCompiler _compiler;
-		LoggerDialog _logConsole;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
 		// Internal handles
