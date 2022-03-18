@@ -63,40 +63,31 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_FETCHPREPROCESSORTEXT 7
 #define PLUGINMENU_VIEWSCRIPTDEPENDENCIES 8
 #define PLUGINMENU_DASH3 9
-#define PLUGINMENU_SHOWCONSOLE 10
-#define PLUGINMENU_DASH4 11
-#define PLUGINMENU_SETTINGS 12
-#define PLUGINMENU_USERPREFERENCES 13
-#define PLUGINMENU_DASH5 14
-#define PLUGINMENU_INSTALLDARKTHEME 15
-#define PLUGINMENU_IMPORTDEFINITIONS 16
-#define PLUGINMENU_IMPORTUSERTOKENS 17
-#define PLUGINMENU_RESETUSERTOKENS 18
-#define PLUGINMENU_RESETEDITORCOLORS 19
-#define PLUGINMENU_DASH6 20
-#define PLUGINMENU_ONLINEHELP 21
-#define PLUGINMENU_ABOUTME 22
+#define PLUGINMENU_SETTINGS 10
+#define PLUGINMENU_USERPREFERENCES 11
+#define PLUGINMENU_DASH4 12
+#define PLUGINMENU_INSTALLDARKTHEME 13
+#define PLUGINMENU_IMPORTDEFINITIONS 14
+#define PLUGINMENU_IMPORTUSERTOKENS 15
+#define PLUGINMENU_RESETUSERTOKENS 16
+#define PLUGINMENU_RESETEDITORCOLORS 17
+#define PLUGINMENU_DASH5 18
+#define PLUGINMENU_ONLINEHELP 19
+#define PLUGINMENU_ABOUTME 20
 
 #define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
 #define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/OnlineHelp.md")
 
-ShortcutKey compileScriptKey = { false, false, false, VK_F9 };
-ShortcutKey disassembleScriptKey = { true, false, false, VK_F9 };
-ShortcutKey batchScriptKey = { true, false, true, VK_F9 };
-ShortcutKey showConsoleKey = { true, false, false,  VK_OEM_COMMA };
-
 FuncItem Plugin::pluginFunctions[] = {
-    {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent, 0, false },
+    {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent},
     {TEXT("---")},
-    {TEXT("Compile script"), Plugin::CompileScript, 0, false, &compileScriptKey },
-    {TEXT("Disassemble file..."), Plugin::DisassembleFile, 0, false, &disassembleScriptKey },
-    {TEXT("Batch processing..."), Plugin::BatchProcessFiles, 0, false, &batchScriptKey },
+    {TEXT("Compile script"), Plugin::CompileScript},
+    {TEXT("Disassemble file..."), Plugin::DisassembleFile},
+    {TEXT("Batch processing..."), Plugin::BatchProcessFiles},
     {TEXT("Run last batch"), Plugin::RunLastBatch},
     {TEXT("---")},
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
-    {TEXT("---")},
-    {TEXT("Toggle compiler log window"), Plugin::ToggleConsole, 0, false, &showConsoleKey},
     {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
@@ -254,22 +245,6 @@ void Plugin::SetNotepadData(NppData data)
     // Points the compiler to our global settings if valid configurations found
     if (_settings.compilerSettingsCreated)
         _compiler.appendSettings(&_settings);
-
-    // Initializes the log console
-    _logConsole.init(DllHModule(), NotepadHwnd());
-
-    // Docking dialog data
-    tTbData	windowdata = { 0 };
-    _logConsole.create(&windowdata);
-
-    // _logConsole.create() resets some masks of windowdata, hence we set them after...
-    windowdata.uMask = DWS_DF_CONT_BOTTOM;
-    windowdata.hIconTab = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
-    windowdata.pszModuleName = _pluginFileName.data();
-    windowdata.pszAddInfo = (TCHAR*)TEXT("Compiler Log");
-
-    // Register the dialog box with Notepad++
-    Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&windowdata);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -778,7 +753,6 @@ void Plugin::SetupPluginMenuItems()
     SetPluginStockMenuItemIcon(PLUGINMENU_COMPILESCRIPT, SHSTOCKICONID::SIID_DOCASSOC, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGS, true, false);
     SetPluginStockMenuItemIcon(PLUGINMENU_USERPREFERENCES, SHSTOCKICONID::SIID_USERS, true, false);
-    SetPluginStockMenuItemIcon(PLUGINMENU_ONLINEHELP, SHSTOCKICONID::SIID_HELP, true, false);
     SetPluginStockMenuItemIcon(PLUGINMENU_ABOUTME, SHSTOCKICONID::SIID_INFO, true, false);
 
     // Menu run last batch: initially disabled
@@ -1731,14 +1705,6 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
     if (!batchProcessing.isVisible())
         batchProcessing.doDialog();
 
-}
-
-//-------------------------------------------------------------
-
-// Toggles the log console
-PLUGINCOMMAND Plugin::ToggleConsole()
-{
-    Instance()._logConsole.display(!Instance()._logConsole.isVisible());
 }
 
 //-------------------------------------------------------------
