@@ -226,14 +226,14 @@
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h" />
-    <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h" />
+    <ClInclude Include="..\src\Plugin Controls\BatchProcessingDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\CompilerSettingsDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\UsersPreferences.h" />
+    <ClInclude Include="..\src\Plugin Controls\UsersPreferencesDialog.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -280,13 +280,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\BatchProcessingDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\CompilerSettingsDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

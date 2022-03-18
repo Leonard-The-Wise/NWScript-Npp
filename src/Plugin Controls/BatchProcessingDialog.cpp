@@ -12,7 +12,7 @@
 //#include <Shlwapi.h>
 
 #include "Settings.h"
-#include "BatchProcessing.h"
+#include "BatchProcessingDialog.h"
 
 #include "PluginControlsRC.h"
 

@@ -160,10 +160,10 @@
     </ClInclude>
     <ClInclude Include="..\src\NWScriptLogger.h" />
     <ClInclude Include="..\src\NWScriptCompiler.h" />
-    <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h">
+    <ClInclude Include="..\src\Plugin Controls\CompilerSettingsDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h">
+    <ClInclude Include="..\src\Plugin Controls\BatchProcessingDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h">
@@ -172,7 +172,7 @@
     <ClInclude Include="..\src\pch.h">
       <Filter>Precompiled Header</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\UsersPreferences.h">
+    <ClInclude Include="..\src\Plugin Controls\UsersPreferencesDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
@@ -235,10 +235,10 @@
     </ClCompile>
     <ClCompile Include="..\src\NWScriptLogger.cpp" />
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp">
+    <ClCompile Include="..\src\Plugin Controls\CompilerSettingsDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp">
+    <ClCompile Include="..\src\Plugin Controls\BatchProcessingDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp">
@@ -251,7 +251,7 @@
     <ClCompile Include="..\src\Utils\VersionInfoEx.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp">
+    <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
