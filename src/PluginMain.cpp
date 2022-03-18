@@ -31,12 +31,12 @@
 #include "NWScriptParser.h"
 
 #include "AboutDialog.h"
-#include "BatchProcessing.h"
-#include "CompilerSettings.h"
+#include "BatchProcessingDialog.h"
+#include "CompilerSettingsDialog.h"
 #include "FileParseSummaryDialog.h"
 #include "PathAccessDialog.h"
 #include "ProcessFilesDialog.h"
-#include "UsersPreferences.h"
+#include "UsersPreferencesDialog.h"
 #include "WarningDialog.h"
 
 #include "XMLGenStrings.h"

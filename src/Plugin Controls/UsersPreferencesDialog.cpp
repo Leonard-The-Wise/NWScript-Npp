@@ -13,7 +13,7 @@
 //#include <sstream>
 
 //#include "PluginMain.h"
-#include "UsersPreferences.h"
+#include "UsersPreferencesDialog.h"
 
 #include "PluginControlsRC.h"
 

@@ -13,7 +13,7 @@
 
 //#include "Nsc.h"
 
-#include "CompilerSettings.h"
+#include "CompilerSettingsDialog.h"
 
 #include "PluginControlsRC.h"
 
