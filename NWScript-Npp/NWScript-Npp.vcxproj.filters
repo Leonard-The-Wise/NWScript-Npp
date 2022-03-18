@@ -175,6 +175,9 @@
     <ClInclude Include="..\src\Plugin Controls\UsersPreferences.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -250,6 +253,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\UsersPreferences.cpp">
       <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
+      <Filter>Notepad Controls</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
