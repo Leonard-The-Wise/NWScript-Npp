@@ -228,6 +228,7 @@
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\BatchProcessing.h" />
     <ClInclude Include="..\src\Plugin Controls\CompilerSettings.h" />
+    <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
@@ -281,6 +282,7 @@
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\BatchProcessing.cpp" />
     <ClCompile Include="..\src\Plugin Controls\CompilerSettings.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
