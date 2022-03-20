@@ -82,7 +82,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 		{
 			// Do auto-resize to controls
 			if (anchorsPrepared)
-				handleSizers();
+				return handleSizers();
 		}
 
 		case WM_COMMAND:

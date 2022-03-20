@@ -127,8 +127,40 @@ NERDY STATISTICS:\r\n\
 \r\n\
 ")
 
-
 using namespace NWScriptPlugin;
+
+constexpr const RECTSIZER mainWindowSize = { {652, 562 }, {1024, 768} };
+
+constexpr const RECTSIZER lblVersion = { { 397, 0 } };
+constexpr const RECTSIZER lblCopyright = { { 397, 0 } };
+constexpr const RECTSIZER lblCredits = { { 397, 114 } };
+constexpr const RECTSIZER lnkHomepageSize = { { 490, 0 } };
+constexpr const RECTSIZER txtAboutSize = { { 608, 243 } };
+
+BEGIN_ANCHOR_MAP(AboutDialog)
+	ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(mainWindowSize)
+#ifdef DEBUG_ANCHORLIB
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Version")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Copyright")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Credits")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Link to Homepage")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL, "Editor About")
+	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM, "Ok Button")
+#else
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL)
+	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM)
+#endif
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLVERSION), lblVersion)
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLCOPYRIGHT), lblCopyright)
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLSPECIALCREDITS), lblCredits)
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LNKHOMEPAGE), lnkHomepageSize)
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_TXTABOUT), txtAboutSize)
+END_ANCHOR_MAP(_hSelf)
+
 
 // Use one of these fonts to display text. Crescent order.
 static const generic_string fontFamilies[] = {
@@ -169,6 +201,8 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
 			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
 
+			InitAnchors();
+
 			return TRUE;
 		}
 
@@ -183,6 +217,13 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 		}
+
+		case WM_SIZE:
+			ANCHOR_MAP_HANDLESIZERS();
+
+		case WM_GETMINMAXINFO:
+			ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam);
+
 		case WM_NOTIFY:
 		{
 			if (wParam == IDC_LNKHOMEPAGE)

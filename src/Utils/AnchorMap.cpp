@@ -17,20 +17,27 @@
 // ** ------------------------------
 // ** Modification as of March-2022:
 // ** ------------------------------ 
-// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors), 
-// **     removed previous hardcoded control limits, added scoping to methods to leave
-// **     the class with a more intuitive usage, separated header from code for 
-// **     faster compilations of projects using precompiled headers and also to keep 
-// **     the header clean from new internal helper functions, moved MOST global variables 
-// **     that caused some hardcoded behavior (dificulting support for child windowses) 
-// **     to individual per-control items and now added support for child windowses inside 
-// **     containers in the same windows. 
-// **     (Like windowsews inside tabbed controls that won't auto-move or auto-resize
-// **      if the original control resized and all children windows inside childre windows).
+// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors);
+// **      . removed previous hardcoded control limits;
+// **      . added scoping to methods to leave the class with a more intuitive usage;
+// **      . separated header from code for faster compilations of projects using 
+// **        precompiled headers and also to keep the header clean from new internal 
+// **        helper functions;
+// **      . moved MOST global variables that restricted the class to some fixed 
+// **        behaviors (mostly dificulting support for child windowses) to individual 
+// **        per-control items;
+// **   - Added support for child windowses inside containers in the same windows. 
+// **         (Like windowsews inside tabbed controls that won't auto-move or 
+// **          auto-resize if the original control resized and all children windows 
+// **          inside children windows). This can be Rekursive (advised to not abuse :p)!
+// **   - Added size restrictions capabilities to the class. Now you can specify
+// **     minimum and maximum sizes for your controls (and for the main window).
 // **   - Also the class now have several static methods to recalculate/reposition controls
 // **     that were originally part of a subdialog that now must fit inside a new 
 // **     window or container (like a tab control), all respecting the given docking /
 // **     anchoring behaviors.
+// **
+// **   So I'll hapily call this class now ControlAnchorMaps 2.0
 // **
 // **   I hope you enjoy.
 // **
@@ -42,42 +49,69 @@
 // USAGE:
 //
 // - include DECLARE_ANCHOR_MAP() within your window/dialog class declaration
+//   (sugested inside a private section of your window handling class)
 //
-// - include the other macros within the implementation file (outside your class)
+// - include the other macros within the implementation file (.cpp), outside your 
+//   class delimiters
 //
 //   example:   BEGIN_ANCHOR_MAP(CMyDialogClass)
+//                ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(RectSizer) 
 //                ANCHOR_MAP_CHILDWINDOW(hWndWindow, ANF_ALL)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDOK,         ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDCANCEL,     ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDC_EDITCTRL, ANF_TOP | RIGHT | ANF_BOTTOM)
-//                ANCHOR_MAP_ENTRY(hWndParent, NULL,         ANF_AUTOMATIC)
+//                ANCHOR_MAP_ADDSIZERESTRICTION(hWndChildWindow, RECTSIZER&)  
+//                ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(hWndParent, IDC_SOMEEDITOR), OtherRectSizer)
 //              END_ANCHOR_MAP(YourMainWindowHandle)
 // 
-// - Within your WM_SIZE handler, call handleSizers() to auto-resize controls.
-//   this will auto-call InvalidateRect after to ensure screen redrawings...
+// Remark: ANCHOR_MAP_ADDSIZERESTRICTION(hWndWindowOrControl, RECTSIZER&) must be called
+//         AFTER adding the control to the ANCHOR_MAP_ENTRY list or else it won't find the
+//         item in the control's list.
+// 
+// - Within your WM_SIZE handler, call macro ANCHOR_MAP_HANDLESIZERS() to auto-resize controls.
+//   this will auto-call InvalidateRect and UpdateWindow after to ensure screen redrawings...
+//   this will return the MessageProc immediately, hence put it at the end of WM_SIZE 
+//   processing handler.
+// 
+// - Within your WM_GETMINMAXINFO handler, put the ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam)
+//   macro if you have any GLOBAL WINDOW size restrictor active. Child windowses and 
+//   other Controls are handled within ANCHOR_MAP_HANDLESIZERS() already.
+//   Same rules apply here: put it in the END of WM_GETMINMAXINFO message processing section
+//   or equivalent.
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
 //   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
-//   per-control ereasing handler (I personally don't use, but depending on the
-//   target machine you may gain performance here - I didn't test, left this here
+//   per-control ereasing handler (I personally don't use it, but depending on the
+//   target machine you may gain performance here - Didn't test, left this here
 //   because the original author included it - Leonardo Silva).
 // 
 // - You can #define USE_ANF_SCREEN_TO_CLIENT before including the header to replace
 //   the original POINT-using ScreenToClient API to a new one supporting RECT
-//   structures.
+//   structures (this is just an alias call to ControlAnchorMap::screenToClientEx).
 // 
-// - There are some new CLASS-level (static) overloaded function helpers to use 
+// - And don't forget to call macro ANCHOR_MAP_RESETANCHORS() on your window destruction
+//   call (this is NOT on your class destructor, it's the Window's... like when you call
+//   DestroyWindow() API, cause it will need to reinitialize after). Assertions crashes
+//   will (kindly) remember you, so you won't spend a day trying to find why suddenly your
+//   anchors are not working anymore... :)
+// 
+//   ===== EXTRAS =====
+// 
+// - There are new CLASS-level (static) overloaded function helpers to use 
 //   when the target window of your controls is created externally and you need to 
 //   reposition / anchor controls using the original screen design. 
 //   They are listed bellow:
 // 
-//          - ControlAnchorMap::ScreenToClientEx (the USE_ANF_SCREEN_TO_CLIENT macro function)
+//          - ControlAnchorMap::screenToClientEx 
 //          - ControlAnchorMap::copyOffsetRect
 //          - ControlAnchorMap::moveRect
 //          - ControlAnchorMap::moveOffsetRect
 //          - ControlAnchorMap::invertRect
 //          - ControlAnchorMap::invertOffsetRect
+//          - ControlAnchorMap::compareRects
+//          - ControlAnchorMap::compareOffsetRects
 //          - ControlAnchorMap::applyMargins
+//          - ControlAnchorMap::applySizer
 //          - ControlAnchorMap::calculateMargins
 //          - ControlAnchorMap::calculateReverseMargins
 //          - ControlAnchorMap::calculateOriginalMargins
@@ -85,7 +119,7 @@
 // 
 //   Please see the documentation for each on the method's header.
 //
-// That´s it.
+// And that's all.
 //
 // =============================================================================
 
@@ -140,12 +174,43 @@ bool ControlAnchorMap::addControl(HWND parent, unsigned int ctrlID, unsigned int
 #endif
 
 // ======================================================================
+// Adds a global size constrictor to the window.
+// Use it BEFORE initialize().
+// ======================================================================
+void ControlAnchorMap::addGlobalSizeRestrictor(const RECTSIZER& rectSizer)
+{
+    m_globalSizer = rectSizer;
+}
+
+// ======================================================================
+// Adds a size constrictor to a control or child window.
+// Use it BEFORE initialize(). Returns true if successful.
+// ======================================================================
+bool ControlAnchorMap::addSizeRestrictor(HWND windowOrControl, const RECTSIZER& rectSizer)
+{
+    for (TCtrlEntry& e : m_Controls)
+    {
+        if (e.hWnd == windowOrControl)
+        {
+            e.controlSizer.minSize.width = rectSizer.minSize.width;
+            e.controlSizer.minSize.height = rectSizer.minSize.height;
+            e.controlSizer.maxSize.width = rectSizer.maxSize.width;
+            e.controlSizer.maxSize.height = rectSizer.maxSize.height;
+            return true;
+        }
+    }
+
+    assert(1==0); // tried to add an invalid restrictor. Did you call this BEFORE adding the control to the list?
+    return false;
+}
+
+// ======================================================================
 // Setups the class to use the some Default Flags for unassigned controls.
 // Use it BEFORE initialize().
 // ======================================================================
 void ControlAnchorMap::useDefaultFlags(unsigned int nFlags)
 {
-    assert(isInitialized() == false);
+    assert(isInitialized() == false);  // tried to call function after initializing
     if (isInitialized())
         return;
 
@@ -207,8 +272,10 @@ void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
     rcMaxBR.right = 0;
     rcMaxBR.bottom = 0;
 
-    // preserve the handle of the parent window
+    // preserve the handle of the parent window. Also saves the window size
+    // if we'll be using size restrictors later
     m_globalParent = hWndGlobalParent;
+    GetWindowRect(m_globalParent, &m_previousWindowSize);
 
     // Add the "default control entries" to the list, if this option
     // has been used.
@@ -302,7 +369,7 @@ void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
 //               before... assertions for throwing errors on uinitialized
 //               usage.
 // ======================================================================
-void ControlAnchorMap::handleSizers()
+intptr_t ControlAnchorMap::handleSizers()
 {
     int             iCtrl = 0;
     TCtrlEntry* pCtrl = nullptr;
@@ -310,12 +377,12 @@ void ControlAnchorMap::handleSizers()
     HDWP            hWdp = NULL;
     WINDOWPLACEMENT wpl = { 0, 0, 0, {0, 0}, {0, 0}, {0, 0, 0, 0} };
 
-    assert(isInitialized() == true);
+    assert(isInitialized() == true); // tried to call handle sizer function without initializing class
     if (!isInitialized())
-        return;
+        return TRUE;
 
     if (m_Controls.empty())
-        return;
+        return TRUE;
 
     // handle the visibility of the sizing-grip if we have one
     if (m_hWndSizeGrip != NULL)
@@ -380,9 +447,37 @@ void ControlAnchorMap::handleSizers()
         std::ignore = ::EndDeferWindowPos(hWdp);    
     }
 
-    // Ensure window redraw
-    InvalidateRect(m_globalParent, NULL, false);
+    // Do an immediate update
+    ::InvalidateRect(m_globalParent, NULL, TRUE);
+    ::UpdateWindow(m_globalParent);
 
+    return FALSE;     // tells the message processor we've managed the sizing
+}
+
+// ======================================================================
+// Handles the WM_GETMINMAXINFO messages.
+// 
+// Requirements: calls to this functions MUST have Initialized()
+//               before... assertions for throwing errors on uinitialized
+//               usage.
+// ======================================================================
+intptr_t ControlAnchorMap::handleRestrictors(WPARAM wParam, LPARAM lParam)
+{
+    assert(isInitialized() == true); // tried to call handle restrictor function without initializing class
+    if (!isInitialized())
+        return TRUE;
+
+    MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
+    if (m_globalSizer.maxSize.width)
+        info->ptMaxTrackSize.x = m_globalSizer.maxSize.width;
+    if (m_globalSizer.maxSize.height)
+        info->ptMaxTrackSize.y = m_globalSizer.maxSize.height;
+    if (m_globalSizer.minSize.width)
+        info->ptMinTrackSize.x = m_globalSizer.minSize.width;
+    if (m_globalSizer.minSize.height)
+        info->ptMinTrackSize.y = m_globalSizer.minSize.height;
+
+    return FALSE;  // tells the message processor we've handled the message
 }
 
 // ======================================================================
@@ -404,7 +499,7 @@ bool ControlAnchorMap::eraseBackground(HDC hDC)
     bool        bForceErase = false;
     bool        bVisible = false;
 
-    assert(hDC != NULL);
+    assert(hDC != NULL); // Invalid hDC
     if (hDC == NULL)
         return false;
 
@@ -472,6 +567,8 @@ void ControlAnchorMap::reset()
     m_hWndSizeGrip = NULL;
     m_isSorted = false;
     m_Controls.clear();
+    m_globalSizer = {};
+    m_previousWindowSize = {};
 }
 
 // ======================================================================
@@ -505,10 +602,10 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 #endif
 {
     // Validations!
-    assert(windowOrParent != NULL);
+    assert(windowOrParent != NULL); // tried to add an invalid object
     if (windowOrParent == NULL)
         return false;
-    assert(isInitialized() == false);
+    assert(isInitialized() == false); // tried to add object after initializing
     if (isInitialized())
         return true;
 
@@ -528,14 +625,14 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
         // For child window items, the "windowOrParent" field is the child window itself...
         controlWindowHwnd = windowOrParent;
         HWND grandParent = GetParent(windowOrParent);
-        assert(grandParent != NULL);
+        assert(grandParent != NULL);       // no window here should have a NULL parent
         newCtrl.hWndParent = grandParent;
     }
     else
     {
         // For child window dialog items, the "windowOrParent" field is the parent, so we grab the GetDlgItem instead...
         controlWindowHwnd = ::GetDlgItem(windowOrParent, newCtrl.nCtrlID);
-        assert(controlWindowHwnd != NULL);
+        assert(controlWindowHwnd != NULL); // no control here should have a nul parent
         newCtrl.hWndParent = windowOrParent;
     }
 
@@ -577,7 +674,7 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 void ControlAnchorMap::PreProcess(TCtrlEntry& pControl)
 {
     // Validation
-    assert(pControl.hWndParent != nullptr);
+    assert(pControl.hWndParent != nullptr); // something bad happened to the control list
     if (pControl.hWndParent == nullptr)
         return;
 
@@ -752,6 +849,10 @@ void ControlAnchorMap::MoveObject(TCtrlEntry& pCtrl, HDWP hDeferPos, bool useSet
         szCtrl.cx = pCtrl.rect.right - pCtrl.rect.left;
         szCtrl.cy = pCtrl.rect.bottom - pCtrl.rect.top;
 
+        // Apply sizers
+        if (!pCtrl.controlSizer.empty())
+            applyRectSizer(szCtrl, pCtrl.controlSizer);
+
         if (useSetPosition)
             SetWindowPos(pCtrl.hWnd, pCtrl.hWndParent, (int)pCtrl.rect.left,
                 (int)pCtrl.rect.top, (int)szCtrl.cx, (int)szCtrl.cy, SWP_NOZORDER | SWP_NOACTIVATE);
@@ -788,7 +889,7 @@ int CALLBACK ControlAnchorMap::InitDefaultControl(HWND hWnd, LPARAM lParam)
     // do some validation
     if (hWnd == NULL)
         return static_cast<int>(false);
-    assert(pMap != NULL);
+    assert(pMap != NULL);              // something bad happened to your class instance...
 
     // do not add the control if it is already within our list
     for (int iCtrl = 0; iCtrl < pMap->m_Controls.size(); iCtrl++)
