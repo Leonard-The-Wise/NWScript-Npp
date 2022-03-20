@@ -4,7 +4,7 @@
 
 #include <Windows.h>
 #include <windowsx.h>
-#include <Commctrl.h>
+#include <commctrl.h>
 #include <commdlg.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>

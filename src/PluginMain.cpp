@@ -83,7 +83,7 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 ShortcutKey compileScriptKey = { false, false, false, VK_F9 };
 ShortcutKey disassembleScriptKey = { true, false, false, VK_F9 };
 ShortcutKey batchScriptKey = { true, false, true, VK_F9 };
-ShortcutKey showConsoleKey = { true, false, false,  VK_OEM_COMMA };
+ShortcutKey toggleConsoleKey = { true, false, false,  VK_OEM_COMMA };
 
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent, 0, false },
@@ -96,7 +96,7 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
-    {TEXT("Toggle compiler log window"), Plugin::ToggleConsole, 0, false, &showConsoleKey},
+    {TEXT("Toggle compiler log window"), Plugin::ToggleConsole, 0, false, &toggleConsoleKey},
     {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
@@ -259,17 +259,23 @@ void Plugin::SetNotepadData(NppData data)
     _logConsole.init(DllHModule(), NotepadHwnd());
 
     // Docking dialog data
-    tTbData	windowdata = { 0 };
-    _logConsole.create(&windowdata);
+    _dockingData = { 0 };
 
     // _logConsole.create() resets some masks of windowdata, hence we set them after...
-    windowdata.uMask = DWS_DF_CONT_BOTTOM;
-    windowdata.hIconTab = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
-    windowdata.pszModuleName = _pluginFileName.data();
-    windowdata.pszAddInfo = (TCHAR*)TEXT("Compiler Log");
+    //_dockingData.iPrevCont = -1;
+    _logConsole.setParent(data._nppHandle);
+    _logConsole.create(&_dockingData);
+    _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
+    _dockingData.hIconTab = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
+    _dockingData.pszModuleName = _pluginFileName.data();
+    _dockingData.pszAddInfo = (TCHAR*)TEXT("No current log");
+    _dockingData.dlgID = IDD_LOGGER;
+
+    ::SendMessage(data._nppHandle, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
 
     // Register the dialog box with Notepad++
-    Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&windowdata);
+    Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
+    _logConsole.display(false);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -1738,7 +1744,7 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 // Toggles the log console
 PLUGINCOMMAND Plugin::ToggleConsole()
 {
-    Instance()._logConsole.display(!Instance()._logConsole.isVisible());
+    Instance()._logConsole.doDialog(!Instance()._logConsole.isVisible());
 }
 
 //-------------------------------------------------------------
@@ -1928,6 +1934,8 @@ PLUGINCOMMAND Plugin::OnlineHelp()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
+    ::SendMessage(Instance()._logConsole.getHSelf(), WM_SIZE, 0, 0);
+
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 
     // Dialog boxes need to be static unless modal ones.

@@ -175,8 +175,11 @@
     <ClInclude Include="..\src\Plugin Controls\UsersPreferencesDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Utils\AnchorMap.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
-      <Filter>Notepad Controls</Filter>
+      <Filter>Plugin Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -255,7 +258,10 @@
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
-      <Filter>Notepad Controls</Filter>
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Utils\AnchorMap.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
