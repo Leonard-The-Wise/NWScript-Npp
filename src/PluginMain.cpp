@@ -393,71 +393,6 @@ void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
     Settings().Save();
 }
 
-#ifdef INACTIVE
-// Sets the current language to our plugin's lexer language by calling MENU commands.
-// Needs recursion to navigate here...
-bool Plugin::SetNotepadToPluginLexer(HMENU parent)
-{
-    // Notepad++ don't have support to set external lexer languages by message calling, so we
-    // do it by directly sending a "menu command" there...
-
-    MENUITEMINFO menuInfo = {};
-    HMENU currentMenu;
-
-    if (parent)
-        currentMenu = parent;
-    else
-        currentMenu = GetNppMainMenu();
-
-    int count = GetMenuItemCount(currentMenu);
-    if (count < 0)
-        return FALSE;
-
-    generic_string menuItemName;
-    generic_string lexerName = str2wstr(LexerCatalogue::GetLexerName(0));
-    TCHAR szString[256] = {};
-
-    int commandID = -1;
-
-    // Search for name
-    bool bFound = false;
-    for (int i = 0; i < count && !bFound; i++)
-    { 
-        ZeroMemory(szString, sizeof(szString));
-        menuInfo.cch = 256;
-        menuInfo.fMask = MIIM_TYPE;
-        menuInfo.fType = MFT_STRING;
-        menuInfo.cbSize = sizeof(MENUITEMINFO);
-        menuInfo.dwTypeData = szString;
-        bool bSuccess = GetMenuItemInfo(currentMenu, i, MF_BYPOSITION, &menuInfo);
-        menuItemName = szString;
-
-        if (menuItemName == lexerName)
-        {
-            // Found name. Find command ID;
-            commandID = GetMenuItemID(currentMenu, i);
-            bFound = true;
-            break;
-        }
-
-        HMENU hSubMenu = GetSubMenu(currentMenu, i);
-        if (hSubMenu)
-        {
-            if (SetNotepadToPluginLexer(hSubMenu))
-                return TRUE;
-        }
-    }
-
-    // Dispatch command.
-    if (bFound)
-    {
-        Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, commandID);
-    }
-
-    return bFound;
-}
-
-#endif
 #pragma endregion Plugin DLL Message Processing
 
 #pragma region 
@@ -604,6 +539,72 @@ void Plugin::DetectDarkThemeInstall()
     if (_pluginDarkThemeIs == DarkThemeStatus::Installed && !_settings.darkThemePreviouslyInstalled)
         _settings.darkThemePreviouslyInstalled = true;
 }
+
+#ifdef INACTIVE_DEPRECATED // Another same-named much more efficient method found
+// Sets the current language to our plugin's lexer language by calling MENU commands.
+// Needs recursion to navigate here...
+bool Plugin::SetNotepadToPluginLexer(HMENU parent)
+{
+    // Notepad++ don't have support to set external lexer languages by message calling, so we
+    // do it by directly sending a "menu command" there...
+
+    MENUITEMINFO menuInfo = {};
+    HMENU currentMenu;
+
+    if (parent)
+        currentMenu = parent;
+    else
+        currentMenu = GetNppMainMenu();
+
+    int count = GetMenuItemCount(currentMenu);
+    if (count < 0)
+        return FALSE;
+
+    generic_string menuItemName;
+    generic_string lexerName = str2wstr(LexerCatalogue::GetLexerName(0));
+    TCHAR szString[256] = {};
+
+    int commandID = -1;
+
+    // Search for name
+    bool bFound = false;
+    for (int i = 0; i < count && !bFound; i++)
+    {
+        ZeroMemory(szString, sizeof(szString));
+        menuInfo.cch = 256;
+        menuInfo.fMask = MIIM_TYPE;
+        menuInfo.fType = MFT_STRING;
+        menuInfo.cbSize = sizeof(MENUITEMINFO);
+        menuInfo.dwTypeData = szString;
+        bool bSuccess = GetMenuItemInfo(currentMenu, i, MF_BYPOSITION, &menuInfo);
+        menuItemName = szString;
+
+        if (menuItemName == lexerName)
+        {
+            // Found name. Find command ID;
+            commandID = GetMenuItemID(currentMenu, i);
+            bFound = true;
+            break;
+        }
+
+        HMENU hSubMenu = GetSubMenu(currentMenu, i);
+        if (hSubMenu)
+        {
+            if (SetNotepadToPluginLexer(hSubMenu))
+                return TRUE;
+        }
+    }
+
+    // Dispatch command.
+    if (bFound)
+    {
+        Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, commandID);
+    }
+
+    return bFound;
+}
+
+#endif
 
 // Look for our language menu item among installed external languages and call it
 void Plugin::SetNotepadToPluginLexer()
@@ -1711,8 +1712,6 @@ PLUGINCOMMAND Plugin::DisassembleFile()
         // Pass the control to core function calling disassemble from file
         Instance().DoCompileOrDisasm(nFileName);
     }
-
-    // TODO: Auto open disassembled file after processing.
 }
 
 // Menu Command "Run last successful batch" function handler. 

@@ -82,7 +82,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 		{
 			// Do auto-resize to controls
 			if (anchorsPrepared)
-				handleAnchors();
+				handleSizers();
 		}
 
 		case WM_COMMAND:
@@ -167,7 +167,7 @@ void LoggerDialog::SetupDockingAnchors()
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), _consoleDlgHwnd,
 		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
 
-	// initialize anchors for auto-resize
+	// initialize anchors for auto-resize and mark ready for WM_SIZE processing
 	InitAnchors();
 	anchorsPrepared = true;
 }

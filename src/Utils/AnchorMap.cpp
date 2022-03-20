@@ -53,7 +53,7 @@
 //                ANCHOR_MAP_ENTRY(hWndParent, NULL,         ANF_AUTOMATIC)
 //              END_ANCHOR_MAP(YourMainWindowHandle)
 // 
-// - Within your WM_SIZE handler, call handleAnchors() to auto-resize controls.
+// - Within your WM_SIZE handler, call handleSizers() to auto-resize controls.
 //   this will auto-call InvalidateRect after to ensure screen redrawings...
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
@@ -302,7 +302,7 @@ void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
 //               before... assertions for throwing errors on uinitialized
 //               usage.
 // ======================================================================
-void ControlAnchorMap::handleAnchors()
+void ControlAnchorMap::handleSizers()
 {
     int             iCtrl = 0;
     TCtrlEntry* pCtrl = nullptr;
@@ -564,12 +564,12 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 }
 
 // ======================================================================
-// This function does the pre-processing for the calls to handleAnchors.
+// This function does the pre-processing for the calls to handleSizers.
 // It stores the new size of the parent-window within m_rcNew, determines
 // which side(s) of the window have been resized and sets the apropriate
 // flags in m_uiSizedBorders and then it calculates the deltas and the
 // new client-rectangle of the parent.
-// The calculated values are then used by handleAnchors to move/resize
+// The calculated values are then used by handleSizers to move/resize
 // the controls.
 // [in]: pWndRect = new rectangle of the resized parent-window 
 //                  (use GetWndRect())
@@ -610,7 +610,7 @@ void ControlAnchorMap::PreProcess(TCtrlEntry& pControl)
 }
 
 // ======================================================================
-// This function does the post-processing for the calls to handleAnchors.
+// This function does the post-processing for the calls to handleSizers.
 // It preserves the actual (new) size of the parent-window as "previous
 // size". In the next call to PreProcess, this "previons size" is used
 // to calulate the deltas
