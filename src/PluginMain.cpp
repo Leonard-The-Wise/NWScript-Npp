@@ -1744,6 +1744,7 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 // Toggles the log console
 PLUGINCOMMAND Plugin::ToggleConsole()
 {
+    //Instance()._logConsole.display(!Instance()._logConsole.isVisible());
     Instance()._logConsole.doDialog(!Instance()._logConsole.isVisible());
 }
 

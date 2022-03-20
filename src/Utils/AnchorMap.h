@@ -14,20 +14,28 @@
 // ** greetz!, 
 // ** A. Thiede / BluePearl Software aka. drice
 // **
-// ** Remarks: 
-// **   - Revamped the entire code to add modern C++ features, (yikes, vectors), 
-// **     removed previous hardcoded control limits, added scoping to methods to avoid
-// **     usage confusion, separated header from code for faster compilations of
-// **     projects using precompiled headers (also to keep the header cleaner from helper
-// **     functions), moved MOST global variables to individual list items and now 
-// **     added support for child windowses inside containers in the same windows. 
+// ** ------------------------------
+// ** Modification as of March-2022:
+// ** ------------------------------ 
+// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors), 
+// **     removed previous hardcoded control limits, added scoping to methods to leave
+// **     the class with a more intuitive usage, separated header from code for 
+// **     faster compilations of projects using precompiled headers and also to keep 
+// **     the header clean from new internal helper functions, moved MOST global variables 
+// **     that caused some hardcoded behavior (dificulting support for child windowses) 
+// **     to individual per-control items and now added support for child windowses inside 
+// **     containers in the same windows. 
 // **     (Like windowsews inside tabbed controls that won't auto-move or auto-resize
 // **      if the original control resized and all children windows inside childre windows).
-// **   - Also the class can now call static methods to recalculate/reposition controls
+// **   - Also the class now have several static methods to recalculate/reposition controls
 // **     that were originally part of a subdialog that now must fit inside a new 
 // **     window or container (like a tab control), all respecting the given docking /
 // **     anchoring behaviors.
-// **   By: Leonardo Silva
+// **
+// **   I hope you enjoy.
+// **
+// **   (Leonardo Silva)
+// **
 // ********************************************************************************
 
 // ============================================================================
@@ -38,32 +46,40 @@
 // - include the other macros within the implementation file (outside your class)
 //
 //   example:   BEGIN_ANCHOR_MAP(CMyDialogClass)
-//                ANCHOR_MAP_CHILDWINDOW(hWndWindowInContainer, ANF_ALL)
+//                ANCHOR_MAP_CHILDWINDOW(hWndWindow, ANF_ALL)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDOK,         ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDCANCEL,     ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDC_EDITCTRL, ANF_TOP | RIGHT | ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, NULL,         ANF_AUTOMATIC)
 //              END_ANCHOR_MAP(YourMainWindowHandle)
 // 
-// - Within your WM_SIZE handler, call HandleAnchors You can additionally
-//   call Invalidate(false) after calling HandleAnchors to ensure that there are
-//   no painting/updating problems when the contorls have been moved.
+// - Within your WM_SIZE handler, call handleAnchors() to auto-resize controls.
+//   this will auto-call InvalidateRect after to ensure screen redrawings...
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
-//   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to ensure
-//   proper screens update upon control resizing.
+//   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
+//   per-control ereasing handler (I personally don't use, but depending on the
+//   target machine you may gain performance here - I didn't test, left this here
+//   because the original author included it - Leonardo Silva).
 // 
-// - You can #define USE_ANF_SCREEN_TO_CLIENT before including the header for a 
-//   RECT supporting version of Win32 API ScreenToClient (originally takes 
-//   POINT structs);
+// - You can #define USE_ANF_SCREEN_TO_CLIENT before including the header to replace
+//   the original POINT-using ScreenToClient API to a new one supporting RECT
+//   structures.
 // 
 // - There are some new CLASS-level (static) overloaded function helpers to use 
 //   when the target window of your controls is created externally and you need to 
 //   reposition / anchor controls using the original screen design. 
 //   They are listed bellow:
 // 
+//          - ControlAnchorMap::ScreenToClientEx (the USE_ANF_SCREEN_TO_CLIENT macro function)
+//          - ControlAnchorMap::copyOffsetRect
+//          - ControlAnchorMap::moveRect
+//          - ControlAnchorMap::moveOffsetRect
+//          - ControlAnchorMap::invertRect
+//          - ControlAnchorMap::invertOffsetRect
 //          - ControlAnchorMap::applyMargins
 //          - ControlAnchorMap::calculateMargins
+//          - ControlAnchorMap::calculateReverseMargins
 //          - ControlAnchorMap::calculateOriginalMargins
 //          - ControlAnchorMap::repositControl
 // 
@@ -104,7 +120,7 @@
 #define ANF_DOCK_RIGHT_EX   0x1000                  /* docks the right-side of the control to the right-side of the window */
 
 // some additional control flags
-#define ANF_ERASE           0x2000                  /* forces to erase the background of the control in EraseBackground */
+#define ANF_ERASE           0x2000                  /* forces to erase the background of the control in eraseBackground */
 
 // some combinations
 #define ANF_TOPLEFT         (ANF_TOP | ANF_LEFT)              /* combined anchors TOP and LEFT */
@@ -132,7 +148,7 @@
 #define MARGIN_LEFTRIGHT    MARGIN_LEFT | MARGIN_RIGHT
 #define MARGIN_ALL          0x000F
 
-// Flags for InvertMargins
+// Flags for Inverting rectangles and margin (offset) rectangles
 #define INVERT_HORIZONTAL   0x0001
 #define INVERT_VERTICAL     0x0002
 #define INVERT_BOTH         0x0003
@@ -218,44 +234,44 @@ public:
     // ======================================================================
     // Adds a child window for docking/anchoring -> eg: a dialog loaded inside
     // a control container - like a Tab Control. You must call this before 
-    // calling Initialize(). A call to this function is wrapped within the 
+    // calling initialize(). A call to this function is wrapped within the 
     // ANCHOR_MAP_CHILDWINDOW function.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool AddChildWindow(HWND window, unsigned int flags, const std::string& name);
+    bool addChildWindow(HWND window, unsigned int flags, const std::string& name);
 #else
-    bool AddChildWindow(HWND window, unsigned int flags);
+    bool addChildWindow(HWND window, unsigned int flags);
 #endif
 
     // ======================================================================
     // Adds a control for docking/anchoring. You must call this before calling
-    // Initialize() A call to this function is wrapped within the 
+    // initialize() A call to this function is wrapped within the 
     // ANCHOR_MAP_ENTRY function.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name);
+    bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name);
 #else
-    bool AddControl(HWND parent, unsigned int ctrlID, unsigned int flags);
+    bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags);
 #endif
 
     // ======================================================================
     // Setups the class to use the some Default Flags for unassigned controls.
-    // Use it BEFORE Initialize().
+    // Use it BEFORE initialize().
     // ======================================================================
-    void UseDefaultFlags(unsigned int nFlags);
+    void useDefaultFlags(unsigned int nFlags);
 
     // ======================================================================
     // Returns true if the information for the parent-window and the
     // controls has been initialized, false otherwise
     // ======================================================================
-    bool IsInitialized();
+    bool isInitialized();
 
     // ======================================================================
     // Initializes the class-members, gets window locations and information
     // about the controls in the control-map (m_Ctrls).
     // dwFlags is a combination of ANIF_ flags
     // ======================================================================
-    void Initialize(HWND hWndGlobalParent, DWORD dwFlags);
+    void initialize(HWND hWndGlobalParent, DWORD dwFlags);
 
     // ======================================================================
     // Does the actual anchoring/docking processing.
@@ -269,37 +285,42 @@ public:
     //               before... assertions for throwing errors on uinitialized
     //               usage.
     // ======================================================================
-    void HandleAnchors();
+    void handleAnchors();
 
     // ======================================================================
-    // This is an enhanced EraseBackground-function which only erases the
+    // This is an enhanced eraseBackground-function which only erases the
     // background "around" the controls to remove the flicker when the
     // window is resized. Call this function from your OnEraseBackground-
     // (WM_ERASEBACKGROUND)-message handler instead of the default-
-    // implementation
+    // implementation (although many modern apps aren't requiring this 
+    // anymore)...
     // ======================================================================
-    bool EraseBackground(HDC hDC);
+    bool eraseBackground(HDC hDC);
 
     // ======================================================================
     // Clears the whole system...
     // ======================================================================
-    void Reset();
+    void reset();
 
     // ======================================================================
     // Sets default background for erease operations...
     // ======================================================================
-    void SetClearBackgroundColor(COLORREF newColor);
+    void setClearBackgroundColor(COLORREF newColor);
 
 
     // ========================= STATIC METHODS =============================
 
 
     // ======================================================================
-    // ScreenToClientH helper-function 
+    // ScreenToClientEx helper-function (takes a rect instead of a point)
     // ======================================================================
-    static bool ScreenToClientH(HWND hWnd, RECT* pRect);
+    static bool screenToClientEx(HWND hWnd, RECT* pRect);
 
-    static void CopyOffsetRect(OFFSETRECT& target, const OFFSETRECT& origin)
+    // ======================================================================
+    // Copies a margin (offset) rectangle to another. (WINAPI CopyRect() 
+    // sibling...
+    // ======================================================================
+    static void copyOffsetRect(OFFSETRECT& target, const OFFSETRECT& origin)
     {
         target.leftMargin = origin.leftMargin;
         target.topMargin = origin.topMargin;
@@ -308,7 +329,71 @@ public:
     }
 
     // ======================================================================
-    // Applies the margins from an OFFSETRECT into a RECT struct...
+    // Displaces the given rectangle in the X and Y axis.
+    // ======================================================================
+    static void moveRect(RECT& rect, const POINT& displacement)
+    {
+        rect.left += displacement.x;
+        rect.right += displacement.x;
+        rect.top += displacement.x;
+        rect.bottom += displacement.x;
+    }
+
+    // ======================================================================
+    // Displaces the given marginRect in the X and Y axis.
+    // ======================================================================
+    static void moveOffsetRect(OFFSETRECT& marginRect, const POINT& displacement)
+    {
+        marginRect.leftMargin += displacement.x;
+        marginRect.rightMargin += displacement.x;
+        marginRect.topMargin += displacement.y;
+        marginRect.bottomMargin += displacement.y;
+    }
+
+    // ======================================================================
+    // Inverts a rectangle reference. Flags are:
+    // INVERT_HORIZONTAL, INVERT_VERTICAL, INVERT_BOTH.
+    // ======================================================================
+    static void invertRect(RECT& rect, int flags = INVERT_BOTH)
+    {
+        RECT resultRect = rect;
+        if (flags & INVERT_HORIZONTAL)
+        {
+            resultRect.left = rect.right;
+            resultRect.right = rect.left;
+        }
+        if (flags & INVERT_VERTICAL)
+        {
+            resultRect.top = rect.bottom;
+            resultRect.bottom = rect.top;
+        }
+
+        CopyRect(&rect, &resultRect);
+    }
+
+    // ======================================================================
+    // Inverts a margin (offset) rectangle reference. Flags are:
+    // INVERT_HORIZONTAL, INVERT_VERTICAL, INVERT_BOTH.
+    // ======================================================================
+    static void invertOffsetRect(OFFSETRECT& marginRect, int flags = INVERT_BOTH)
+    {
+        OFFSETRECT resultOffset = marginRect;
+        if (flags & INVERT_HORIZONTAL)
+        {
+            resultOffset.leftMargin = marginRect.rightMargin;
+            resultOffset.rightMargin = marginRect.leftMargin;
+        }
+        if (flags & INVERT_VERTICAL)
+        {
+            resultOffset.topMargin = marginRect.bottomMargin;
+            resultOffset.bottomMargin = marginRect.topMargin;
+        }
+
+        copyOffsetRect(marginRect, resultOffset);
+    }
+
+    // ======================================================================
+    // Applies the margins from an OFFSETRECT into a RECT struct.
     // ======================================================================
     static void applyMargins(const OFFSETRECT& margins, RECT& target, int marginFlags = MARGIN_ALL) {
         if (marginFlags & MARGIN_LEFT)
@@ -341,47 +426,6 @@ public:
     static OFFSETRECT calculateReverseMargins(const RECT& a, const RECT& b) 
     {
         return { a.left - b.left, a.top - b.top, a.right - b.right, a.bottom - b.bottom };
-    }
-
-    // ======================================================================
-    // Inverts a offset rectangle reference. Flags are:
-    // INVERT_HORIZONTAL, INVERT_VERTICAL, INVERT_BOTH.
-    // ======================================================================
-    static void invertOffsetRect(OFFSETRECT& marginRect, int flags = INVERT_BOTH) 
-    {
-        OFFSETRECT resultOffset = marginRect;
-        if (flags & INVERT_HORIZONTAL)
-        {
-            resultOffset.leftMargin = marginRect.rightMargin;
-            resultOffset.rightMargin = marginRect.leftMargin;
-        }
-        if (flags & INVERT_VERTICAL)
-        {
-            resultOffset.topMargin = marginRect.bottomMargin;
-            resultOffset.bottomMargin = marginRect.topMargin;
-        }
-
-        CopyOffsetRect(marginRect, resultOffset);
-    }
-
-
-    // ======================================================================
-    // Displaces the given marginRect in the displacements points X and Y.
-    // ======================================================================
-    static void moveOffsetRect(OFFSETRECT& marginRect, const POINT& displacement)
-    {
-        marginRect.leftMargin += displacement.x;
-        marginRect.rightMargin += displacement.x;
-        marginRect.topMargin += displacement.y;
-        marginRect.bottomMargin += displacement.y;
-    }
-
-    static void moveRect(RECT& rect, const POINT& displacement)
-    {
-        rect.left += displacement.x;
-        rect.right += displacement.x;
-        rect.top += displacement.x;
-        rect.bottom += displacement.x;
     }
 
     // ======================================================================
@@ -443,7 +487,7 @@ private:
 
     // ======================================================================
     // Adds a control or window for docking/anchoring. Internal use...
-    // Call AddControl or AddChildWindow instead.
+    // Call addControl or addChildWindow instead.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
     bool AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
@@ -454,12 +498,12 @@ private:
 #endif
 
     // ======================================================================
-    // This function does the pre-processing for the calls to HandleAnchors.
+    // This function does the pre-processing for the calls to handleAnchors.
     // It stores the new size of the parent-window within m_rcNew, determines
     // which side(s) of the window have been resized and sets the apropriate
     // flags in m_uiSizedBorders and then it calculates the deltas and the
     // new client-rectangle of the parent.
-    // The calculated values are then used by HandleAnchors to move/resize
+    // The calculated values are then used by handleAnchors to move/resize
     // the controls.
     // [in]: pWndRect = new rectangle of the resized parent-window 
     //                  (use GetWndRect())
@@ -467,7 +511,7 @@ private:
     static void PreProcess(TCtrlEntry& pControl);
 
     // ======================================================================
-    // This function does the post-processing for the calls to HandleAnchors.
+    // This function does the post-processing for the calls to handleAnchors.
     // It preserves the actual (new) size of the parent-window as "previous
     // size". In the next call to PreProcess, this "previons size" is used
     // to calulate the deltas
@@ -501,7 +545,7 @@ private:
     // ======================================================================
     // Child-window enumeration callback function.
     // This function is called from EnumChildWindows, which again is
-    // called from Initialize if the "default option" has been used.
+    // called from initialize if the "default option" has been used.
     // It adds the enumerated window to the control-list, if it is not
     // already there.
     // ======================================================================
@@ -515,7 +559,7 @@ private:
 //
 // DECLARE_ANCHOR_MAP declares the variable m_bpfxAnchorMap within your window
 //                    class and declares the two functions InitAnchors and
-//                    HandleAnchors
+//                    handleAnchors
 //
 // BEGIN_ANCHOR_MAP   implements the two functions, declared by 
 //                    DECLARE_ANCHOR_MAP
@@ -544,33 +588,33 @@ private:
 
 #define DECLARE_ANCHOR_MAP() ControlAnchorMap m_bpfxAnchorMap; \
                                 void InitAnchors(DWORD dwFlags = 0); \
-                                void HandleAnchors();
+                                void handleAnchors();
 
-#define BEGIN_ANCHOR_MAP(theclass) void theclass::HandleAnchors() { \
-                                m_bpfxAnchorMap.HandleAnchors(); \
+#define BEGIN_ANCHOR_MAP(theclass) void theclass::handleAnchors() { \
+                                m_bpfxAnchorMap.handleAnchors(); \
                                 }; \
                                 void theclass::InitAnchors(DWORD dwFlags) {
 
 #ifdef DEBUG_ANCHORLIB
-#define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags, name) m_bpfxAnchorMap.AddControl(hWndParent, nIDCtrl, nFlags, name);
+#define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags, name) m_bpfxAnchorMap.addControl(hWndParent, nIDCtrl, nFlags, name);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags, rangename) \
-                                for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
-                                std::ignore = m_bpfxAnchorMap.AddControl(hWndParent, iCtrl, nFlags, name);
-#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.AddChildWindow(hWndWindow, nFlags, name);
+                                     for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
+                                     std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags, name);
+#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags, name);
 #else
-#define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags) std::ignore = m_bpfxAnchorMap.AddControl(hWndParent, nIDCtrl, nFlags);
+#define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags) std::ignore = m_bpfxAnchorMap.addControl(hWndParent, nIDCtrl, nFlags);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags) \
-                                for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
-                                std::ignore = m_bpfxAnchorMap.AddControl(hWndParent, iCtrl, nFlags);
-#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags) m_bpfxAnchorMap.AddChildWindow(hWndWindow, nFlags);
+                                     for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
+                                     std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags);
+#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags);
 #endif
 
-#define END_ANCHOR_MAP(hWndParent)   m_bpfxAnchorMap.Initialize(hWndParent, dwFlags); \
-                         };
-//m_bpfxAnchorMap.HandleAnchors(); \
+#define END_ANCHOR_MAP(hWndParent)   m_bpfxAnchorMap.initialize(hWndParent, dwFlags); \
+                                     m_bpfxAnchorMap.handleAnchors(); \
+                                };
 
-#define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.EraseBackground(reinterpret_cast<HDC>(wParam))
+#define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.eraseBackground(reinterpret_cast<HDC>(wParam))
 
 #ifdef USE_ANF_SCREEN_TO_CLIENT
-#define ScreenToClient(hWnd, pRECT) m_bpfxAnchorMap.ScreenToClientH(hWnd, pRECT)
+#define ScreenToClient(hWnd, pRECT) ControlAnchorMap::screenToClientEx(hWnd, pRECT)
 #endif

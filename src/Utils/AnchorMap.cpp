@@ -14,13 +14,28 @@
 // ** greetz!, 
 // ** A. Thiede / BluePearl Software aka. drice
 // **
-// ** Remark: 
-// **   Upgraded to modern C++ (yikes, vector) and modified to remove previous 
-// **   hardcoded control limit and now support child windowses inside containers 
-// **   in the same class and controls. 
-// **   (just like windowsews inside a tab control).
+// ** ------------------------------
+// ** Modification as of March-2022:
+// ** ------------------------------ 
+// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors), 
+// **     removed previous hardcoded control limits, added scoping to methods to leave
+// **     the class with a more intuitive usage, separated header from code for 
+// **     faster compilations of projects using precompiled headers and also to keep 
+// **     the header clean from new internal helper functions, moved MOST global variables 
+// **     that caused some hardcoded behavior (dificulting support for child windowses) 
+// **     to individual per-control items and now added support for child windowses inside 
+// **     containers in the same windows. 
+// **     (Like windowsews inside tabbed controls that won't auto-move or auto-resize
+// **      if the original control resized and all children windows inside childre windows).
+// **   - Also the class now have several static methods to recalculate/reposition controls
+// **     that were originally part of a subdialog that now must fit inside a new 
+// **     window or container (like a tab control), all respecting the given docking /
+// **     anchoring behaviors.
 // **
-// **   By: Leonardo Silva
+// **   I hope you enjoy.
+// **
+// **   (Leonardo Silva)
+// **
 // ********************************************************************************
 
 // ============================================================================
@@ -31,23 +46,52 @@
 // - include the other macros within the implementation file (outside your class)
 //
 //   example:   BEGIN_ANCHOR_MAP(CMyDialogClass)
-//                ANCHOR_MAP_CHILDWINDOW(hWndWindowInContainer, ANF_ALL)
+//                ANCHOR_MAP_CHILDWINDOW(hWndWindow, ANF_ALL)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDOK,         ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDCANCEL,     ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDC_EDITCTRL, ANF_TOP | RIGHT | ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, NULL,         ANF_AUTOMATIC)
 //              END_ANCHOR_MAP(YourMainWindowHandle)
+// 
+// - Within your WM_SIZE handler, call handleAnchors() to auto-resize controls.
+//   this will auto-call InvalidateRect after to ensure screen redrawings...
 //
-// - Within your WM_SIZE handler, call HandleAnchors You can additionally
-//   call Invalidate(false) after calling HandleAnchors to ensure that there are
-//   no painting/updating problems when the contorls have been moved.
+// - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
+//   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
+//   per-control ereasing handler (I personally don't use, but depending on the
+//   target machine you may gain performance here - I didn't test, left this here
+//   because the original author included it - Leonardo Silva).
+// 
+// - You can #define USE_ANF_SCREEN_TO_CLIENT before including the header to replace
+//   the original POINT-using ScreenToClient API to a new one supporting RECT
+//   structures.
+// 
+// - There are some new CLASS-level (static) overloaded function helpers to use 
+//   when the target window of your controls is created externally and you need to 
+//   reposition / anchor controls using the original screen design. 
+//   They are listed bellow:
+// 
+//          - ControlAnchorMap::ScreenToClientEx (the USE_ANF_SCREEN_TO_CLIENT macro function)
+//          - ControlAnchorMap::copyOffsetRect
+//          - ControlAnchorMap::moveRect
+//          - ControlAnchorMap::moveOffsetRect
+//          - ControlAnchorMap::invertRect
+//          - ControlAnchorMap::invertOffsetRect
+//          - ControlAnchorMap::applyMargins
+//          - ControlAnchorMap::calculateMargins
+//          - ControlAnchorMap::calculateReverseMargins
+//          - ControlAnchorMap::calculateOriginalMargins
+//          - ControlAnchorMap::repositControl
+// 
+//   Please see the documentation for each on the method's header.
 //
-// that´s it.
+// That´s it.
 //
 // =============================================================================
 
 
-// Using precompiled headers... original #includes are preserved commented bellow
+// Using precompiled headers... original #include dependencies 
+// are preserved bellow if needed
 #include "pch.h"
 
 /*
@@ -63,16 +107,16 @@
 // ======================================================================
 // Adds a child window for docking/anchoring -> eg: a dialog loaded inside
 // a control container - like a Tab Control. You must call this before 
-// calling Initialize(). A call to this function is wrapped within the 
+// calling initialize(). A call to this function is wrapped within the 
 // ANCHOR_MAP_CHILDWINDOW function.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags, const std::string& name)
+bool ControlAnchorMap::addChildWindow(HWND window, unsigned int flags, const std::string& name)
 {
     return AddObject(window, flags, 0, true, name);
 }
 #else
-bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags)
+bool ControlAnchorMap::addChildWindow(HWND window, unsigned int flags)
 {
     return AddObject(window, flags, 0, true);
 }
@@ -80,16 +124,16 @@ bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags)
 
 // ======================================================================
 // Adds a control for docking/anchoring. You must call this before calling
-// Initialize() A call to this function is wrapped within the 
+// initialize() A call to this function is wrapped within the 
 // ANCHOR_MAP_ENTRY function.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name)
+bool ControlAnchorMap::addControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name)
 {
     return AddObject(parent, flags, ctrlID, false, name);
 }
 #else
-bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int flags)
+bool ControlAnchorMap::addControl(HWND parent, unsigned int ctrlID, unsigned int flags)
 {
     return AddObject(parent, flags, ctrlID, false);
 }
@@ -97,12 +141,12 @@ bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int
 
 // ======================================================================
 // Setups the class to use the some Default Flags for unassigned controls.
-// Use it BEFORE Initialize().
+// Use it BEFORE initialize().
 // ======================================================================
-void ControlAnchorMap::UseDefaultFlags(unsigned int nFlags)
+void ControlAnchorMap::useDefaultFlags(unsigned int nFlags)
 {
-    assert(IsInitialized() == false);
-    if (IsInitialized())
+    assert(isInitialized() == false);
+    if (isInitialized())
         return;
 
     m_bUsedDefaultEntry = true;
@@ -113,15 +157,15 @@ void ControlAnchorMap::UseDefaultFlags(unsigned int nFlags)
 // Returns true if the information for the parent-window and the
 // controls has been initialized, false otherwise
 // ======================================================================
-bool ControlAnchorMap::IsInitialized()
+bool ControlAnchorMap::isInitialized()
 {
     return(m_bInitialized);
 }
 
 // ======================================================================
-// ScreenToClientH helper-function 
+// ScreenToClientEx helper-function 
 // ======================================================================
-bool ControlAnchorMap::ScreenToClientH(HWND hWnd, RECT* pRect)
+bool ControlAnchorMap::screenToClientEx(HWND hWnd, RECT* pRect)
 {
     POINT   pt1 = { 0,0 };
     POINT   pt2 = { 0,0 };
@@ -145,7 +189,7 @@ bool ControlAnchorMap::ScreenToClientH(HWND hWnd, RECT* pRect)
 // about the controls in the control-map (m_Ctrls).
 // dwFlags is a combination of ANIF_ flags
 // ======================================================================
-void ControlAnchorMap::Initialize(HWND hWndGlobalParent, DWORD dwFlags)
+void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
 {
     int     iCtrl = 0;
     HWND    hWndCtrl = NULL;
@@ -258,7 +302,7 @@ void ControlAnchorMap::Initialize(HWND hWndGlobalParent, DWORD dwFlags)
 //               before... assertions for throwing errors on uinitialized
 //               usage.
 // ======================================================================
-void ControlAnchorMap::HandleAnchors()
+void ControlAnchorMap::handleAnchors()
 {
     int             iCtrl = 0;
     TCtrlEntry* pCtrl = nullptr;
@@ -266,8 +310,8 @@ void ControlAnchorMap::HandleAnchors()
     HDWP            hWdp = NULL;
     WINDOWPLACEMENT wpl = { 0, 0, 0, {0, 0}, {0, 0}, {0, 0, 0, 0} };
 
-    assert(IsInitialized() == true);
-    if (!IsInitialized())
+    assert(isInitialized() == true);
+    if (!isInitialized())
         return;
 
     if (m_Controls.empty())
@@ -289,9 +333,8 @@ void ControlAnchorMap::HandleAnchors()
     };
 
     // Must group controls by parent hWnd or else BeginDeferWindowPos will fail...
-    // Also we are processing parent windowses first.
-    // Microsoft documentation on that (see `[in] hWnd` parameter):
-    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deferwindowpos
+    // Also we are processing parent windowses first or else children will get
+    // incorrect rectangles for resizing.
     if (!m_isSorted)
     {
         FullControlsSort();
@@ -334,18 +377,22 @@ void ControlAnchorMap::HandleAnchors()
             PostProcess(m_Controls[iCtrl]);
             curPosition++;
         };
-        std::ignore = ::EndDeferWindowPos(hWdp);
+        std::ignore = ::EndDeferWindowPos(hWdp);    
     }
+
+    // Ensure window redraw
+    InvalidateRect(m_globalParent, NULL, false);
+
 }
 
 // ======================================================================
-// This is an enhanced EraseBackground-function which only erases the
+// This is an enhanced eraseBackground-function which only erases the
 // background "around" the controls to remove the flicker when the
 // window is resized. Call this function from your OnEraseBackground-
 // (WM_ERASEBACKGROUND)-message handler instead of the default-
 // implementation
 // ======================================================================
-bool ControlAnchorMap::EraseBackground(HDC hDC)
+bool ControlAnchorMap::eraseBackground(HDC hDC)
 {
     HRGN        hRgn1 = NULL;
     HRGN        hRgn2 = NULL;
@@ -385,7 +432,7 @@ bool ControlAnchorMap::EraseBackground(HDC hDC)
         if ((iCtrl == -1) && (bVisible)) {
 
             ::GetWindowRect(hWndChild, &rc);
-            ScreenToClientH(m_globalParent, &rc);
+            screenToClientEx(m_globalParent, &rc);
 
             ::SetRectRgn(hRgn2, rc.left, rc.top, rc.right, rc.bottom);
 
@@ -415,7 +462,7 @@ bool ControlAnchorMap::EraseBackground(HDC hDC)
 // ======================================================================
 // Clears the whole system...
 // ======================================================================
-void ControlAnchorMap::Reset()
+void ControlAnchorMap::reset()
 {
     m_bInitialized = false;
     m_bUsedDefaultEntry = false;
@@ -430,7 +477,7 @@ void ControlAnchorMap::Reset()
 // ======================================================================
 // Sets default background for erease operations...
 // ======================================================================
-void ControlAnchorMap::SetClearBackgroundColor(COLORREF newColor)
+void ControlAnchorMap::setClearBackgroundColor(COLORREF newColor)
 {
     m_clrBackground = newColor;
 }
@@ -449,7 +496,7 @@ int ControlAnchorMap::FindWindow(HWND hWnd) {
 
 // ======================================================================
 // Adds a control or window for docking/anchoring. Internal use...
-// Call AddControl or AddChildWindow instead.
+// Call addControl or addChildWindow instead.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
 bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl, bool isChildWindow, const std::string& nControlName)
@@ -461,8 +508,8 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
     assert(windowOrParent != NULL);
     if (windowOrParent == NULL)
         return false;
-    assert(IsInitialized() == false);
-    if (IsInitialized())
+    assert(isInitialized() == false);
+    if (isInitialized())
         return true;
 
     TCtrlEntry newCtrl;
@@ -504,7 +551,7 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
     // are double floating-point numbers, we use a temporary RECT for that...
     RECT rcCtrl;
     ::GetWindowRect(newCtrl.hWnd, &rcCtrl);
-    ScreenToClientH(newCtrl.hWndParent, &rcCtrl);
+    screenToClientEx(newCtrl.hWndParent, &rcCtrl);
     newCtrl.rect.left = rcCtrl.left;
     newCtrl.rect.top = rcCtrl.top;
     newCtrl.rect.right = rcCtrl.right;
@@ -517,12 +564,12 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 }
 
 // ======================================================================
-// This function does the pre-processing for the calls to HandleAnchors.
+// This function does the pre-processing for the calls to handleAnchors.
 // It stores the new size of the parent-window within m_rcNew, determines
 // which side(s) of the window have been resized and sets the apropriate
 // flags in m_uiSizedBorders and then it calculates the deltas and the
 // new client-rectangle of the parent.
-// The calculated values are then used by HandleAnchors to move/resize
+// The calculated values are then used by handleAnchors to move/resize
 // the controls.
 // [in]: pWndRect = new rectangle of the resized parent-window 
 //                  (use GetWndRect())
@@ -563,7 +610,7 @@ void ControlAnchorMap::PreProcess(TCtrlEntry& pControl)
 }
 
 // ======================================================================
-// This function does the post-processing for the calls to HandleAnchors.
+// This function does the post-processing for the calls to handleAnchors.
 // It preserves the actual (new) size of the parent-window as "previous
 // size". In the next call to PreProcess, this "previons size" is used
 // to calulate the deltas
@@ -728,7 +775,7 @@ void ControlAnchorMap::SetFRect(FRECT* pRect, double left, double top, double ri
 // ======================================================================
 // Child-window enumeration callback function.
 // This function is called from EnumChildWindows, which again is
-// called from Initialize if the "default option" has been used.
+// called from initialize if the "default option" has been used.
 // It adds the enumerated window to the control-list, if it is not
 // already there.
 // ======================================================================
@@ -836,7 +883,7 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWN
 
     RECT rcCtrl;
     ::GetWindowRect(originalControl, &rcCtrl);
-    ScreenToClientH(originalWindow, &rcCtrl);
+    screenToClientEx(originalWindow, &rcCtrl);
     applyMargins(additionalMargins, rcCtrl);
 
     myControl.rect.left = rcCtrl.left;
