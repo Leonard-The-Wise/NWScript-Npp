@@ -18,11 +18,11 @@
 // **   - Revamped the entire code to add modern C++ features, (yikes, vectors), 
 // **     removed previous hardcoded control limits, added scoping to methods to avoid
 // **     usage confusion, separated header from code for faster compilations of
-// **     projects using precompiled headers, moved MOST global variables to individual 
-// **     list items and now added support for child windowses inside containers in the 
-// **     same windows. 
+// **     projects using precompiled headers (also to keep the header cleaner from helper
+// **     functions), moved MOST global variables to individual list items and now 
+// **     added support for child windowses inside containers in the same windows. 
 // **     (Like windowsews inside tabbed controls that won't auto-move or auto-resize
-// **      if the original control resized).
+// **      if the original control resized and all children windows inside childre windows).
 // **   - Also the class can now call static methods to recalculate/reposition controls
 // **     that were originally part of a subdialog that now must fit inside a new 
 // **     window or container (like a tab control), all respecting the given docking /
@@ -75,7 +75,7 @@
 
 #pragma once
 
-// #define DEBUG_ANCHORLIB       // Enables passing user-defined names for controls to debug this class
+#define DEBUG_ANCHORLIB       // Enables passing user-defined names for controls to debug this class
 
 
 
@@ -163,27 +163,29 @@ struct FSIZE {
 };
 
 
+// ======================== NEW CONTROL STRUCTURE =========================
+
+struct TCtrlEntry {
+#ifdef DEBUG_ANCHORLIB
+    std::string     nControlName;                                 // control name - for debbugging only
+#endif
+    HWND            hWnd = nullptr;                               // hWnd of the control
+    HWND            hWndParent = nullptr;                         // handle of the window that contains the control/window
+    unsigned int    nCtrlID = 0;                                  // dialog-control resource id of the window
+    bool            isChildWindow = false;                        // is this control a child (container) window of other controls?
+    unsigned int    nFlags = 0;                                   // docking/anchoring flags for this control
+    FRECT           rect = { 0, 0, 0, 0 };                        // actual client-rectangle of the control
+    RECT            parentPrevWindowRect = { 0, 0, 0, 0 };        // previous rect of the parent window (old m_rcPrev)
+    RECT            parentClientRect = { 0, 0, 0, 0 };            // client area of child window's parent (old m_rcClient)
+    RECT            parentNewRect = { 0, 0, 0, 0 };               // current window-rect of the parent window (old m_rcNew)
+    SIZE            szDelta = { 0, 0 };                           // delta of the size-change
+    unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
+    int             childNestLevel = 0;                           // current nesting level of a child window inside a parent->children hierarchy
+};
+
 class ControlAnchorMap {
 
 protected:
-
-    // ======================== INTERNAL STRUCTURES =========================
-
-    struct TCtrlEntry {
-#ifdef DEBUG_ANCHORLIB
-        std::string     nControlName;                                 // control name - for debbugging only
-#endif
-        HWND            hWnd = nullptr;                               // hWnd of the control
-        HWND            hWndParent = nullptr;                         // handle of the window that contains the control/window
-        unsigned int    nCtrlID = 0;                                  // dialog-control resource id of the window
-        unsigned int    nFlags = 0;                                   // docking/anchoring flags for this control
-        FRECT           rect = { 0, 0, 0, 0 };                        // actual client-rectangle of the control
-        RECT            parentPrevWindowRect = { 0, 0, 0, 0 };        // previous rect of the parent window (old m_rcPrev)
-        RECT            parentClientRect = { 0, 0, 0, 0 };            // client area of child window's parent (old m_rcClient)
-        RECT            parentNewRect = { 0, 0, 0, 0 };               // current window-rect of the parent window (old m_rcNew)
-        SIZE            szDelta = { 0, 0 };                           // delta of the size-change
-        unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
-    };
 
     // ============================ MEMBERS =================================
 
@@ -220,7 +222,7 @@ public:
     // ANCHOR_MAP_CHILDWINDOW function.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool AddChildWindow(HWND window, unsigned int flags, std::string name);
+    bool AddChildWindow(HWND window, unsigned int flags, const std::string& name);
 #else
     bool AddChildWindow(HWND window, unsigned int flags);
 #endif
@@ -231,7 +233,7 @@ public:
     // ANCHOR_MAP_ENTRY function.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, std::string name);
+    bool AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name);
 #else
     bool AddControl(HWND parent, unsigned int ctrlID, unsigned int flags);
 #endif
@@ -368,10 +370,18 @@ public:
     // ======================================================================
     static void moveOffsetRect(OFFSETRECT& marginRect, const POINT& displacement)
     {
-        marginRect.topMargin += displacement.x;
+        marginRect.leftMargin += displacement.x;
         marginRect.rightMargin += displacement.x;
         marginRect.topMargin += displacement.y;
         marginRect.bottomMargin += displacement.y;
+    }
+
+    static void moveRect(RECT& rect, const POINT& displacement)
+    {
+        rect.left += displacement.x;
+        rect.right += displacement.x;
+        rect.top += displacement.x;
+        rect.bottom += displacement.x;
     }
 
     // ======================================================================
@@ -437,7 +447,7 @@ private:
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
     bool AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
-        bool isChildWindow = false, std::string nControlName = "");
+        bool isChildWindow = false, const std::string& nControlName = "");
 #else
     bool AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
         bool isChildWindow = false);
@@ -475,6 +485,18 @@ private:
     // SetFREct helper-function
     // ======================================================================
     static void SetFRect(FRECT* pRect, double left, double top, double right, double bottom);
+
+    // ======================================================================
+    // Helper function to sort control entries.
+    // Algorith: FIRST, we need to resize ALL child windowses - from parents 
+    // to children, or else, children controls / windowses will get wrong 
+    // resizing rectangles. 
+    // Then sort by hWnd, because of the DeferWindowPos API requirements:
+    // "hWnd of controls in a DeferWindowPos must have the same parent or 
+    // else the function will fail...
+    // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deferwindowpos
+    // ======================================================================
+    void FullControlsSort();
 
     // ======================================================================
     // Child-window enumeration callback function.
@@ -534,7 +556,7 @@ private:
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags, rangename) \
                                 for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
                                 std::ignore = m_bpfxAnchorMap.AddControl(hWndParent, iCtrl, nFlags, name);
-#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.AddChildWindow(hWndWindow, nFlags, name)
+#define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.AddChildWindow(hWndWindow, nFlags, name);
 #else
 #define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags) std::ignore = m_bpfxAnchorMap.AddControl(hWndParent, nIDCtrl, nFlags);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags) \
