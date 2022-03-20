@@ -67,9 +67,9 @@
 // ANCHOR_MAP_CHILDWINDOW function.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags, std::string name)
+bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags, const std::string& name)
 {
-    AddObject(window, flags, 0, true, name);
+    return AddObject(window, flags, 0, true, name);
 }
 #else
 bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags)
@@ -84,9 +84,9 @@ bool ControlAnchorMap::AddChildWindow(HWND window, unsigned int flags)
 // ANCHOR_MAP_ENTRY function.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, std::string name)
+bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name)
 {
-    AddObject(parent, flags, ctrlID, false, name);
+    return AddObject(parent, flags, ctrlID, false, name);
 }
 #else
 bool ControlAnchorMap::AddControl(HWND parent, unsigned int ctrlID, unsigned int flags)
@@ -289,14 +289,12 @@ void ControlAnchorMap::HandleAnchors()
     };
 
     // Must group controls by parent hWnd or else BeginDeferWindowPos will fail...
+    // Also we are processing parent windowses first.
     // Microsoft documentation on that (see `[in] hWnd` parameter):
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deferwindowpos
     if (!m_isSorted)
     {
-        sort(m_Controls.begin(), m_Controls.end(),
-            [](TCtrlEntry& a, TCtrlEntry& b) {
-            return (a.hWndParent < b.hWndParent); });
-
+        FullControlsSort();
         m_isSorted = true;
     }
 
@@ -454,7 +452,7 @@ int ControlAnchorMap::FindWindow(HWND hWnd) {
 // Call AddControl or AddChildWindow instead.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl, bool isChildWindow, std::string nControlName)
+bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl, bool isChildWindow, const std::string& nControlName)
 #else
 bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl, bool isChildWindow)
 #endif
@@ -475,6 +473,7 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 
     newCtrl.nCtrlID = nIDCtrl;
     newCtrl.nFlags = nFlags;
+    newCtrl.isChildWindow = isChildWindow;
 
     // Fetch informations about the control.
     if (isChildWindow)
@@ -762,7 +761,6 @@ int CALLBACK ControlAnchorMap::InitDefaultControl(HWND hWnd, LPARAM lParam)
     return static_cast<int>(true);
 }
 
-
 // ======================================================================
 // Calculate the original margin OFFSETS of a given controlID inside a 
 // compiled Dialog resource persisted in a module (eg: returns the margins 
@@ -788,7 +786,6 @@ bool ControlAnchorMap::calculateOriginalMargins(HINSTANCE parent, int dialogID, 
     return bSuccess;
 }
 
-
 // ======================================================================
 // Calculate the original margin OFFSETS of a given control inside a 
 // compiled Dialog resource persisted in a module (eg: returns the margins 
@@ -813,7 +810,6 @@ bool ControlAnchorMap::calculateOriginalMargins(HWND originalParentWindow, HWND 
 
     return true;
 }
-
 
 // ======================================================================
 // Repositions the targetControl inside a targetWindow client area,
@@ -896,3 +892,60 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HIN
     return bSuccess;
 }
 
+
+// Helper recursive function to return the nesting level of a window inside 
+// a group of windowses (any Windows control is a window)
+int findNestingLevel(const TCtrlEntry& control, const std::vector<TCtrlEntry> list, int currentLevel) 
+{
+    // Look for a parent of the control inside the list
+    for (const TCtrlEntry& e : list)
+    {
+        // If the control has a parent, find the grandparent... and so on...
+        if (control.hWndParent == e.hWnd)
+            return findNestingLevel(e, list, currentLevel + 1);
+    }
+
+    // When no parent found, return the current nesting level
+    return currentLevel;
+}
+
+bool ControlEntrySort(TCtrlEntry& a, TCtrlEntry& b)
+{
+    // Child windowses come first
+    if (a.isChildWindow && !b.isChildWindow)
+        return true;
+    if (!a.isChildWindow && b.isChildWindow)
+        return false;
+
+    // Then for any child window, the nesting level comes first
+    // from bigger to smaller ones (bigger has less nesting).
+    if (a.isChildWindow && b.isChildWindow)
+    {
+        if (a.childNestLevel < b.childNestLevel)
+            return true;
+        if (a.childNestLevel > b.childNestLevel)
+            return false;
+    }
+
+    // then for the rest of the controls and windows with equal nesting, 
+    // sort by hWndParent.
+    return a.hWndParent < b.hWndParent;
+}
+
+// Algorith: FIRST, we need to resize ALL child windowses - from parents to children, 
+// or else, children controls and windowses will get wrong resizing rectangles. 
+// Then sort by hWndParent, for the DeferWindowPos requirements. 
+void ControlAnchorMap::FullControlsSort()
+{
+    // first we determine the nesting level of our objects
+    for (TCtrlEntry& e : m_Controls)
+    {
+        if (e.isChildWindow)
+        {
+            e.childNestLevel = findNestingLevel(e, m_Controls, 0);
+        }
+    }
+
+    // then we sort the list following our priorities
+    sort(m_Controls.begin(), m_Controls.end(), ControlEntrySort);
+}

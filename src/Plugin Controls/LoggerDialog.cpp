@@ -15,15 +15,25 @@
 using namespace NWScriptPlugin;
 
 
+// From AnchorMap.h MACROS...
 BEGIN_ANCHOR_MAP(LoggerDialog)
 
+#ifdef DEBUG_ANCHORLIB
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL, "Dialog Control: Tab Logger Control (main window child)")
+	ANCHOR_MAP_CHILDWINDOW(_consoleDlgHwnd, ANF_ALL, "Dialog Box: Console")
+	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT, "Dialog Control: LBLCONSOLE (console child)")
+	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL, "Dialog Control: TXTCONSOLE (console child)")
+	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL, "Dialog Box: Error")
+#else
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL)
 	ANCHOR_MAP_CHILDWINDOW(_consoleDlgHwnd, ANF_ALL)
-	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL)
+	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL)
+#endif
 
 END_ANCHOR_MAP(_hSelf)
+
 
 intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -31,7 +41,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 	{
 		case WM_INITDIALOG:
 		{
-			INITCOMMONCONTROLSEX ix;
+			INITCOMMONCONTROLSEX ix = { 0, 0 };
 			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
 			ix.dwICC = ICC_TAB_CLASSES;
 			InitCommonControlsEx(&ix);
@@ -61,7 +71,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			TabCtrl_HighlightItem(_mainTabHwnd, 1, 1);
 
 			// Default tab to display
-			//ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
 		}
 		
 		case WM_SIZE:
@@ -99,40 +109,48 @@ void LoggerDialog::SetupDockingAnchors()
 		m_bpfxAnchorMap.Reset();
 
 	// The tab control is inside a bordered dialog with a title (because Notepad++ needs the title), 
-	// hence we first get the original height OFFSET between the client with borders to apply to the new 
-	// dialog window without borders
+	// hence we first get the original height OFFSETS between the client with borders to apply to the new 
+	// dialog window without borders. The title bar will become our new bottom limit to expand.
+
+	// So, first grab the original designed dialog
 	HWND originalLoggerDlg = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER), _hSelf, 0);
 	RECT loggerWindow, loggerClient;
 	GetWindowRect(originalLoggerDlg, &loggerWindow);
 	ScreenToClient(originalLoggerDlg, &loggerWindow);
 	GetClientRect(originalLoggerDlg, &loggerClient);
-	// Get rid of the extra window.
-	DestroyWindow(originalLoggerDlg);
 
 	// Now grab the original margins...
 	OFFSETRECT loggerMargins = ControlAnchorMap::calculateMargins(loggerWindow, loggerClient);
 	// turn it upside down (cause we want the window title to become the bottom expansion)...
 	ControlAnchorMap::invertOffsetRect(loggerMargins, INVERT_VERTICAL);
-	// displace it on the Y axis twice (because we got a negative top now)...
+	// displace it on the Y axis twice the current top (because we got a negative top margin now)...
 	ControlAnchorMap::moveOffsetRect(loggerMargins, { 0, -loggerMargins.topMargin * 2 });
 
-	// And then resize and reposition the TAB control into the new sized docked window keeping original offsets
-	ControlAnchorMap::repositControl(_mainTabHwnd, _hSelf, _hInst, 
-		IDD_LOGGER, IDC_TABLOGGER, ANF_ALL, loggerMargins);
+	// And then resize and reposition the TAB control into the new sized docked window while keeping the original offsets...
+	// ding!
+	ControlAnchorMap::repositControl(_mainTabHwnd, _hSelf, originalLoggerDlg, IDC_TABLOGGER, ANF_ALL, loggerMargins);
+
+	// (now get rid of the extra window)
+	DestroyWindow(originalLoggerDlg);
 
 	// Resize and reposition children dialog windows inside the tab control with a fixed margin
 
 	// Get tab Client area
 	GetClientRect(_mainTabHwnd, &rcTabClient);
 	TabCtrl_AdjustRect(_mainTabHwnd, false, &rcTabClient);
-	// Now apply some fixed margins
-	OFFSETRECT margins = { 2, 2, -3, -4 };
-	ControlAnchorMap::applyMargins(margins, rcTabClient);
+
+	// And since we don't want our child windowses completely overlapping
+
+	// Investigating why TabCtrl_AdjustRect() don't give accurate margins...
+	// meanwhile we displace the rectangles.
+	ControlAnchorMap::moveRect(rcTabClient, { 3 , 3 });
+	// and apply a *small* extra right/bottom margin...
+	ControlAnchorMap::applyMargins({ 1, 1, -4, -5 }, rcTabClient);
 
 	// Now accomodate windowses inside the tab control
 	SetWindowPos(_consoleDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
 		rcTabClient.right, rcTabClient.bottom, SWP_NOREDRAW | SWP_NOZORDER);
-	SetWindowPos(_errorDlgHwnd, _mainTabHwnd, rcTabClient.left + 3, rcTabClient.top,
+	SetWindowPos(_errorDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
 		rcTabClient.right, rcTabClient.bottom, SWP_NOREDRAW | SWP_NOZORDER);
 
 	// Reposition tabbed child controls on their destination windowses

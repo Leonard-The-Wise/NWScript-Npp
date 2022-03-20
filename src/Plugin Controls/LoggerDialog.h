@@ -22,11 +22,11 @@ namespace NWScriptPlugin {
 		LoggerDialog() : DockingDlgInterface(IDD_LOGGER) {};
 
 		// Notepad calls this on registering the class...
-		// DON'T use it directly UNLESS on class initialization 
-		// [to override Notepad++ auto-show for instance, you may call display(false) 
-		// so no auto-anchoring setup will be done].
+		// so, DON'T use it directly UNLESS on your class initialization routines
+		// [to override Notepad++ auto-show docked dialogs on initialization for instance, 
+		// you may call display(false) to reverse that behavior].
 		// On normal uses, call doDialog() instead because we must setup anchors first...
-		// read the SetupDockingAnchors() implement description on LoggerDialog.cpp for more
+		// read the SetupDockingAnchors() implementation description on LoggerDialog.cpp for more
 		// info.
 		virtual void display(bool toShow = true) 
 		{
@@ -37,10 +37,15 @@ namespace NWScriptPlugin {
 
 		void doDialog(bool toShow = true)
 		{
+			// To work with notepad++ drawing mechanisms, we reverse the process...
+			// usually we would first setup anchors and display our dialog, but here
+			// we first SHOW the window, so all the drawing messages pass through
+			display(toShow);
+
+			// and ONLY THEN we setup anchors... (this is only required on DockingDialogs)
+			// or else we may get some unexpected control sizes as a result.
 			if (!anchorsPrepared && toShow)
 				SetupDockingAnchors();
-
-			display(toShow);
 			anchorsPrepared = toShow;
 		}
 
