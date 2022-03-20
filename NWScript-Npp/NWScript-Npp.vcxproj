@@ -88,12 +88,14 @@
     <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -166,7 +168,7 @@
       <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(SolutionDir)IncrementBuild.ps1" "$(SolutionDir)src\ProjectVersion.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Uptating project build version</Message>
+      <Message>Updating project build version</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -194,7 +196,7 @@
       <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(SolutionDir)IncrementBuild.ps1" "$(SolutionDir)src\ProjectVersion.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Uptating project build version</Message>
+      <Message>Updating project build version</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -244,6 +246,7 @@
     <ClInclude Include="..\src\PluginMessenger.h" />
     <ClInclude Include="..\src\ProjectVersion.h" />
     <ClInclude Include="..\src\Settings.h" />
+    <ClInclude Include="..\src\Utils\AnchorMap.h" />
     <ClInclude Include="..\src\Utils\FileInterface.h" />
     <ClInclude Include="..\src\Utils\jpcre2.hpp" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
@@ -297,6 +300,7 @@
     <ClCompile Include="..\src\Plugin Interface\PluginInterface.cpp" />
     <ClCompile Include="..\src\PluginMessenger.cpp" />
     <ClCompile Include="..\src\Settings.cpp" />
+    <ClCompile Include="..\src\Utils\AnchorMap.cpp" />
     <ClCompile Include="..\src\Utils\FileInterface.cpp" />
     <ClCompile Include="..\src\Utils\tinyxml2.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

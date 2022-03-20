@@ -250,6 +250,7 @@ namespace NWScriptPlugin {
 		LineIndentor _indentor;
 		NWScriptCompiler _compiler;
 		LoggerDialog _logConsole;
+		tTbData _dockingData;
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
 		// Internal handles
