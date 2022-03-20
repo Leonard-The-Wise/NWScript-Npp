@@ -572,6 +572,41 @@ void ControlAnchorMap::reset()
 }
 
 // ======================================================================
+// Remove any child windows or control from the list...
+// ======================================================================
+bool ControlAnchorMap::removeWindowOrControl(HWND toRemove)
+{
+    for (auto i = m_Controls.begin(); i != m_Controls.end(); i++)
+    {
+        if (i->hWnd == toRemove)
+        {
+            m_Controls.erase(i);
+            m_isSorted = false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ======================================================================
+// Remove a size restrictor from a control or child window
+// ======================================================================
+bool ControlAnchorMap::removeRestrictor(HWND toRemove)
+{
+    for (auto i = m_Controls.begin(); i != m_Controls.end(); i++)
+    {
+        if (i->hWnd == toRemove)
+        {
+            i->controlSizer = { {0,0}, {0,0} };
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ======================================================================
 // Sets default background for erease operations...
 // ======================================================================
 void ControlAnchorMap::setClearBackgroundColor(COLORREF newColor)
@@ -605,9 +640,6 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
     assert(windowOrParent != NULL); // tried to add an invalid object
     if (windowOrParent == NULL)
         return false;
-    assert(isInitialized() == false); // tried to add object after initializing
-    if (isInitialized())
-        return true;
 
     TCtrlEntry newCtrl;
 #ifdef DEBUG_ANCHORLIB
@@ -653,6 +685,26 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
     newCtrl.rect.top = rcCtrl.top;
     newCtrl.rect.right = rcCtrl.right;
     newCtrl.rect.bottom = rcCtrl.bottom;
+
+    // Calculate anchors for automatic placement (this overrides other flags)
+    if (newCtrl.nFlags & ANF_AUTOMATIC) {
+        SIZE szClient = { 0,0 };
+
+        newCtrl.nFlags = 0;
+
+        szClient.cx = (newCtrl.parentClientRect.right - newCtrl.parentClientRect.left);
+        szClient.cy = (newCtrl.parentClientRect.bottom - newCtrl.parentClientRect.top);
+        // If the top-edge of the control is within the upper-half of the
+        // client area, set a top-anchor. If the bottom-edge of the control
+        // is within the lower-half of the client area, set a bottom-anchor
+        if (newCtrl.rect.top < (szClient.cy / (double)2)) newCtrl.nFlags |= ANF_TOP;
+        if (newCtrl.rect.bottom >= (szClient.cy / (double)2)) newCtrl.nFlags |= ANF_BOTTOM;
+        // If the left-edge of the control is within the left-half of the
+        // client area, set a left-anchor. If the right-edge of the control
+        // is within the right-half of the client area, set a right-anchor
+        if (newCtrl.rect.left < (szClient.cx / (double)2)) newCtrl.nFlags |= ANF_LEFT;
+        if (newCtrl.rect.right >= (szClient.cx / (double)2)) newCtrl.nFlags |= ANF_RIGHT;
+    }
 
     m_Controls.push_back(newCtrl);
     m_isSorted = false;
@@ -1041,9 +1093,11 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HIN
 }
 
 
+// ======================================================================
 // Helper recursive function to return the nesting level of a window inside 
 // a group of windowses (any Windows control is a window)
-int findNestingLevel(const TCtrlEntry& control, const std::vector<TCtrlEntry> list, int currentLevel) 
+// ======================================================================
+int findNestingLevel(const TCtrlEntry& control, const std::vector<TCtrlEntry> list, int currentLevel)
 {
     // Look for a parent of the control inside the list
     for (const TCtrlEntry& e : list)
@@ -1057,6 +1111,9 @@ int findNestingLevel(const TCtrlEntry& control, const std::vector<TCtrlEntry> li
     return currentLevel;
 }
 
+// ======================================================================
+// Sorting rules for FullControlSort
+// ======================================================================
 bool ControlEntrySort(TCtrlEntry& a, TCtrlEntry& b)
 {
     // Child windowses come first
@@ -1080,9 +1137,12 @@ bool ControlEntrySort(TCtrlEntry& a, TCtrlEntry& b)
     return a.hWndParent < b.hWndParent;
 }
 
-// Algorith: FIRST, we need to resize ALL child windowses - from parents to children, 
-// or else, children controls and windowses will get wrong resizing rectangles. 
+// ======================================================================
+// Algorithm: FIRST, we need to resize ALL child windowses - from parents 
+// to children, or else, children controls and windowses will get wrong 
+// resizing rectangles. 
 // Then sort by hWndParent, for the DeferWindowPos requirements. 
+// ======================================================================
 void ControlAnchorMap::FullControlsSort()
 {
     // first we determine the nesting level of our objects
@@ -1094,6 +1154,6 @@ void ControlAnchorMap::FullControlsSort()
         }
     }
 
-    // then we sort the list following our priorities
+    // then we sort the list following ControlEntrySort rules
     sort(m_Controls.begin(), m_Controls.end(), ControlEntrySort);
 }
