@@ -17,20 +17,27 @@
 // ** ------------------------------
 // ** Modification as of March-2022:
 // ** ------------------------------ 
-// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors), 
-// **     removed previous hardcoded control limits, added scoping to methods to leave
-// **     the class with a more intuitive usage, separated header from code for 
-// **     faster compilations of projects using precompiled headers and also to keep 
-// **     the header clean from new internal helper functions, moved MOST global variables 
-// **     that caused some hardcoded behavior (dificulting support for child windowses) 
-// **     to individual per-control items and now added support for child windowses inside 
-// **     containers in the same windows. 
-// **     (Like windowsews inside tabbed controls that won't auto-move or auto-resize
-// **      if the original control resized and all children windows inside childre windows).
+// **   - Revamped the entire idea to add modern C++ features, (yikes, vectors);
+// **      . removed previous hardcoded control limits;
+// **      . added scoping to methods to leave the class with a more intuitive usage;
+// **      . separated header from code for faster compilations of projects using 
+// **        precompiled headers and also to keep the header clean from new internal 
+// **        helper functions;
+// **      . moved MOST global variables that restricted the class to some fixed 
+// **        behaviors (mostly dificulting support for child windowses) to individual 
+// **        per-control items;
+// **   - Added support for child windowses inside containers in the same windows. 
+// **         (Like windowsews inside tabbed controls that won't auto-move or 
+// **          auto-resize if the original control resized and all children windows 
+// **          inside children windows). This can be Rekursive (advised to not abuse :p)!
+// **   - Added size restrictions capabilities to the class. Now you can specify
+// **     minimum and maximum sizes for your controls (and for the main window).
 // **   - Also the class now have several static methods to recalculate/reposition controls
 // **     that were originally part of a subdialog that now must fit inside a new 
 // **     window or container (like a tab control), all respecting the given docking /
 // **     anchoring behaviors.
+// **
+// **   So I'll hapily call this class now ControlAnchorMaps 2.0
 // **
 // **   I hope you enjoy.
 // **
@@ -42,42 +49,69 @@
 // USAGE:
 //
 // - include DECLARE_ANCHOR_MAP() within your window/dialog class declaration
+//   (sugested inside a private section of your window handling class)
 //
-// - include the other macros within the implementation file (outside your class)
+// - include the other macros within the implementation file (.cpp), outside your 
+//   class delimiters
 //
 //   example:   BEGIN_ANCHOR_MAP(CMyDialogClass)
+//                ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(RectSizer) 
 //                ANCHOR_MAP_CHILDWINDOW(hWndWindow, ANF_ALL)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDOK,         ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDCANCEL,     ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDC_EDITCTRL, ANF_TOP | RIGHT | ANF_BOTTOM)
-//                ANCHOR_MAP_ENTRY(hWndParent, NULL,         ANF_AUTOMATIC)
+//                ANCHOR_MAP_ADDSIZERESTRICTION(hWndChildWindow, RECTSIZER&)  
+//                ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(hWndParent, IDC_SOMEEDITOR), OtherRectSizer)
 //              END_ANCHOR_MAP(YourMainWindowHandle)
 // 
-// - Within your WM_SIZE handler, call handleSizers() to auto-resize controls.
-//   this will auto-call InvalidateRect after to ensure screen redrawings...
+// Remark: ANCHOR_MAP_ADDSIZERESTRICTION(hWndWindowOrControl, RECTSIZER&) must be called
+//         AFTER adding the control to the ANCHOR_MAP_ENTRY list or else it won't find the
+//         item in the control's list.
+// 
+// - Within your WM_SIZE handler, call macro ANCHOR_MAP_HANDLESIZERS() to auto-resize controls.
+//   this will auto-call InvalidateRect and UpdateWindow after to ensure screen redrawings...
+//   this will return the MessageProc immediately, hence put it at the end of WM_SIZE 
+//   processing handler.
+// 
+// - Within your WM_GETMINMAXINFO handler, put the ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam)
+//   macro if you have any GLOBAL WINDOW size restrictor active. Child windowses and 
+//   other Controls are handled within ANCHOR_MAP_HANDLESIZERS() already.
+//   Same rules apply here: put it in the END of WM_GETMINMAXINFO message processing section
+//   or equivalent.
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
 //   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
-//   per-control ereasing handler (I personally don't use, but depending on the
-//   target machine you may gain performance here - I didn't test, left this here
+//   per-control ereasing handler (I personally don't use it, but depending on the
+//   target machine you may gain performance here - Didn't test, left this here
 //   because the original author included it - Leonardo Silva).
 // 
 // - You can #define USE_ANF_SCREEN_TO_CLIENT before including the header to replace
 //   the original POINT-using ScreenToClient API to a new one supporting RECT
-//   structures.
+//   structures (this is just an alias call to ControlAnchorMap::screenToClientEx).
 // 
-// - There are some new CLASS-level (static) overloaded function helpers to use 
+// - And don't forget to call macro ANCHOR_MAP_RESETANCHORS() on your window destruction
+//   call (this is NOT on your class destructor, it's the Window's... like when you call
+//   DestroyWindow() API, cause it will need to reinitialize after). Assertions crashes
+//   will (kindly) remember you, so you won't spend a day trying to find why suddenly your
+//   anchors are not working anymore... :)
+// 
+//   ===== EXTRAS =====
+// 
+// - There are new CLASS-level (static) overloaded function helpers to use 
 //   when the target window of your controls is created externally and you need to 
 //   reposition / anchor controls using the original screen design. 
 //   They are listed bellow:
 // 
-//          - ControlAnchorMap::ScreenToClientEx (the USE_ANF_SCREEN_TO_CLIENT macro function)
+//          - ControlAnchorMap::screenToClientEx 
 //          - ControlAnchorMap::copyOffsetRect
 //          - ControlAnchorMap::moveRect
 //          - ControlAnchorMap::moveOffsetRect
 //          - ControlAnchorMap::invertRect
 //          - ControlAnchorMap::invertOffsetRect
+//          - ControlAnchorMap::compareRects
+//          - ControlAnchorMap::compareOffsetRects
 //          - ControlAnchorMap::applyMargins
+//          - ControlAnchorMap::applySizer
 //          - ControlAnchorMap::calculateMargins
 //          - ControlAnchorMap::calculateReverseMargins
 //          - ControlAnchorMap::calculateOriginalMargins
@@ -85,14 +119,13 @@
 // 
 //   Please see the documentation for each on the method's header.
 //
-// That´s it.
+// And that's all.
 //
 // =============================================================================
 
 #pragma once
 
-//#define DEBUG_ANCHORLIB       // Enables passing user-defined names for controls to debug this class
-
+#define DEBUG_ANCHORLIB       // Enables passing user-defined names for controls to debug this class
 
 
     // ===================== Anchoring / Docking flags ======================
@@ -149,12 +182,36 @@
 #define MARGIN_ALL          0x000F
 
 // Flags for Inverting rectangles and margin (offset) rectangles
-#define INVERT_HORIZONTAL   0x0001
-#define INVERT_VERTICAL     0x0002
-#define INVERT_BOTH         0x0003
+#define INVERT_HORIZONTAL             0x0001
+#define INVERT_VERTICAL               0x0002
+#define INVERT_BOTH                   0x0003
+
+// Flags for comparing rectangles
+#define RECT_COMPARE_VERTICAL         0x0001
+#define RECT_COMPARE_HORIZONTAL       0x0002
+#define RECT_COMPARE_BOTH             0x0003
+
+// Flags for applying sizers to a rectangle
+#define SIZER_MIN                     0x0001
+#define SIZER_MAX                     0x0002
 
     // =============== Some structures for the audience... ==================
 
+struct SIZER {
+    LONG width = 0;
+    LONG height = 0;
+    bool empty() {
+        return width == 0 && height == 0;
+    }
+};
+
+struct RECTSIZER {
+    SIZER minSize = {};
+    SIZER maxSize = {};
+    bool empty() {
+        return minSize.empty() && maxSize.empty();            
+    }
+};
 
 // A margin-defining rectangle
 struct OFFSETRECT {  
@@ -197,6 +254,7 @@ struct TCtrlEntry {
     SIZE            szDelta = { 0, 0 };                           // delta of the size-change
     unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
     int             childNestLevel = 0;                           // current nesting level of a child window inside a parent->children hierarchy
+    RECTSIZER       controlSizer = {};                            // controls minimum and maximum sizes for all controls
 };
 
 class ControlAnchorMap {
@@ -214,6 +272,8 @@ protected:
     HWND                         m_hWndSizeGrip;             // handle of the sizing-grip or NULL
     std::vector<TCtrlEntry>      m_Controls;                 // control-map
     bool                         m_isSorted = false;         // checks if a sort was already done
+    RECTSIZER                    m_globalSizer;              // controls the global resizing of the window
+    RECT                         m_previousWindowSize;       // previous rectangle of parent (global) window
 
 public:
 
@@ -226,7 +286,8 @@ public:
     // ======================================================================
     ControlAnchorMap() :
         m_bInitialized(0), m_bUsedDefaultEntry(0), m_globalParent(nullptr),
-        m_nDefaultFlags(0), m_hWndSizeGrip(0), m_isSorted(false)
+        m_nDefaultFlags(0), m_hWndSizeGrip(0), m_isSorted(false), m_globalSizer(),
+        m_previousWindowSize()
     {
         m_clrBackground = GetSysColor(COLOR_BTNFACE);
     };
@@ -253,6 +314,18 @@ public:
 #else
     bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags);
 #endif
+
+    // ======================================================================
+    // Adds a global size constrictor to the window.
+    // Use it BEFORE initialize().
+    // ======================================================================
+    void addGlobalSizeRestrictor(const RECTSIZER& rectSizer);
+
+    // ======================================================================
+    // Adds a size constrictor to a control or child window.
+    // Use it BEFORE initialize().
+    // ======================================================================
+    bool addSizeRestrictor(HWND windowOrControl, const RECTSIZER& rectSizer);
 
     // ======================================================================
     // Setups the class to use the some Default Flags for unassigned controls.
@@ -285,7 +358,16 @@ public:
     //               before... assertions for throwing errors on uinitialized
     //               usage.
     // ======================================================================
-    void handleSizers();
+    intptr_t handleSizers();
+
+    // ======================================================================
+    // Handles the WM_GETMINMAXINFO messages.
+    // 
+    // Requirements: calls to this functions MUST have Initialized()
+    //               before... assertions for throwing errors on uinitialized
+    //               usage.
+    // ======================================================================
+    intptr_t handleRestrictors(WPARAM wParam, LPARAM lParam);
 
     // ======================================================================
     // This is an enhanced eraseBackground-function which only erases the
@@ -393,6 +475,40 @@ public:
     }
 
     // ======================================================================
+    // Compares two rectangles. Return -1 if (a < b); 0 if (a == b); 
+    // 1 if (a > b). Returns -2 on invalid flags. Flags are:
+    // RECT_COMPARE_VERTICAL, RECT_COMPARE_HORIZONTAL, RECT_COMPARE_BOTH.
+    // ======================================================================
+    static int compareRects(const RECT& a, const RECT& b, int flags = RECT_COMPARE_BOTH)
+    {
+        if (flags == RECT_COMPARE_VERTICAL)
+            return ((a.bottom - a.top) < (b.bottom - b.top)) ? -1 : ((a.bottom - a.top) == (b.bottom - b.top)) ? 0 : 1;
+        if (flags == RECT_COMPARE_HORIZONTAL)
+            return ((a.right - a.left) < (b.right - b.left)) ? -1 : ((a.right - a.left) == (b.right - b.left)) ? 0 : 1;
+        if (flags == RECT_COMPARE_BOTH)
+            return ((a.right - a.left) * (a.bottom - a.top)) < ((b.right - b.left) * (b.bottom - b.top)) ? -1 :
+                ((a.right - a.left) * (a.bottom - a.top)) == ((b.right - b.left) * (b.bottom - b.top)) ? 0 : 1;
+        return -2;
+    }
+
+    // ======================================================================
+    // Compares two rectangles. Return -1 if (a < b); 0 if (a == b); 
+    // 1 if (a > b). Returns -2 on invalid flags. Flags are:
+    // RECT_COMPARE_VERTICAL, RECT_COMPARE_HORIZONTAL, RECT_COMPARE_BOTH.
+    // ======================================================================
+    static int compareOffsetRects(const OFFSETRECT& a, const OFFSETRECT& b, int flags = RECT_COMPARE_BOTH)
+    {
+        if (flags == RECT_COMPARE_VERTICAL)
+            return ((a.bottomMargin - a.topMargin) < (b.bottomMargin - b.topMargin)) ? -1 : ((a.bottomMargin - a.topMargin) == (b.bottomMargin - b.topMargin)) ? 0 : 1;
+        if (flags == RECT_COMPARE_HORIZONTAL)
+            return ((a.rightMargin - a.leftMargin) < (b.rightMargin - b.leftMargin)) ? -1 : ((a.rightMargin - a.leftMargin) == (b.rightMargin - b.leftMargin)) ? 0 : 1;
+        if (flags == RECT_COMPARE_BOTH)
+            return ((a.rightMargin - a.leftMargin) * (a.bottomMargin - a.topMargin)) < ((b.rightMargin - b.leftMargin) * (b.bottomMargin - b.topMargin)) ? -1 :
+                ((a.rightMargin - a.leftMargin) * (a.bottomMargin - a.topMargin)) == ((b.rightMargin - b.leftMargin) * (b.bottomMargin - b.topMargin)) ? 0 : 1;
+        return -2;
+    }
+
+    // ======================================================================
     // Applies the margins from an OFFSETRECT into a RECT struct.
     // ======================================================================
     static void applyMargins(const OFFSETRECT& margins, RECT& target, int marginFlags = MARGIN_ALL) {
@@ -404,6 +520,38 @@ public:
             target.right += margins.rightMargin;
         if (marginFlags & MARGIN_BOTTOM)
             target.bottom += margins.bottomMargin;
+    }
+
+    // ======================================================================
+    // Applies a sizer constriction to a given FSIZE. Flags are:
+    // SIZER_MIN and SIZER_MAX. They are mutually exclusive.
+    // A 0 on a sizer member means that side (width or height) won't be tested 
+    // ======================================================================
+    static void applySizer(FSIZE& target, const SIZER& sizer, int flags) {
+        if (flags == SIZER_MIN)
+        {
+            if (sizer.width > 0 && sizer.width > target.cx)
+                target.cx = sizer.width;
+            if (sizer.height > 0 && sizer.height > target.cy)
+                target.cy = sizer.height;
+        }
+        else
+        {
+            if (sizer.width > 0 && sizer.width < target.cx)
+                target.cx = sizer.width;
+            if (sizer.height > 0 && sizer.height < target.cy)
+                target.cy = sizer.height;
+        }
+    }
+
+    // ======================================================================
+    // Applies a window sizer constriction to a given FSIZE. RECTSIZERs
+    // can have 0 value for any member. That means that that member won't
+    // apply on the calculations.
+    // ======================================================================
+    static void applyRectSizer(FSIZE& target, const RECTSIZER& sizer) {
+        applySizer(target, sizer.minSize, SIZER_MIN);
+        applySizer(target, sizer.maxSize, SIZER_MAX);
     }
 
     // ======================================================================
@@ -588,10 +736,10 @@ private:
 
 #define DECLARE_ANCHOR_MAP() ControlAnchorMap m_bpfxAnchorMap; \
                                 void InitAnchors(DWORD dwFlags = 0); \
-                                void handleSizers();
+                                intptr_t handleSizers();
 
-#define BEGIN_ANCHOR_MAP(theclass) void theclass::handleSizers() { \
-                                m_bpfxAnchorMap.handleSizers(); \
+#define BEGIN_ANCHOR_MAP(theclass) intptr_t theclass::handleSizers() { \
+                                return m_bpfxAnchorMap.handleSizers(); \
                                 }; \
                                 void theclass::InitAnchors(DWORD dwFlags) {
 
@@ -608,12 +756,18 @@ private:
                                      std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags);
 #define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags);
 #endif
+#define ANCHOR_MAP_ADDSIZERESTRICTION(hWndWindowOrControl, RectSizer) m_bpfxAnchorMap.addSizeRestrictor(hWndWindowOrControl, RectSizer);
+#define ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(RectSizer) m_bpfxAnchorMap.addGlobalSizeRestrictor(RectSizer);
 
 #define END_ANCHOR_MAP(hWndParent)   m_bpfxAnchorMap.initialize(hWndParent, dwFlags); \
                                      m_bpfxAnchorMap.handleSizers(); \
                                 };
+#define ANCHOR_MAP_HANDLESIZERS() return handleSizers();
+#define ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam) return m_bpfxAnchorMap.handleRestrictors(wParam, lParam);
 
-#define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.eraseBackground(reinterpret_cast<HDC>(wParam))
+#define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.eraseBackground(reinterpret_cast<HDC>(wParam));
+
+#define ANCHOR_MAP_RESETANCHORS() m_bpfxAnchorMap.reset();
 
 #ifdef USE_ANF_SCREEN_TO_CLIENT
 #define ScreenToClient(hWnd, pRECT) ControlAnchorMap::screenToClientEx(hWnd, pRECT)

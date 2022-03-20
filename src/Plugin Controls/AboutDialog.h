@@ -9,6 +9,7 @@
 
 #include <map>
 #include "StaticDialog.h"
+#include "AnchorMap.h"
 
 #include "Common.h"
 
@@ -25,14 +26,18 @@ namespace NWScriptPlugin {
 		};
 
 		void setHomePath(const TCHAR* homePath) {
-			_homePath = homePath;
+			_homePath = homePath;			
 		}
 
 		void doDialog();
 
 	protected:
+
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
+
+		DECLARE_ANCHOR_MAP()
+
 		generic_string _homePath;
 		std::map<generic_string, generic_string> _replaceStrings;
 	};

@@ -259,19 +259,17 @@ void Plugin::SetNotepadData(NppData data)
     _logConsole.init(DllHModule(), NotepadHwnd());
 
     // Docking dialog data
-    _dockingData = { 0 };
 
     // _logConsole.create() resets some masks of windowdata, hence we set them after...
-    //_dockingData.iPrevCont = -1;
-    _logConsole.setParent(data._nppHandle);
+    _dockingData = {};
     _logConsole.create(&_dockingData);
+    Messenger().SendNppMessage<void>(NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
-    _dockingData.hIconTab = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
-    _dockingData.pszModuleName = _pluginFileName.data();
+    _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
+    _dockingData.hIconTab = _dockingIcon;
+    _dockingData.pszModuleName = _pluginFileName.c_str();
     _dockingData.pszAddInfo = (TCHAR*)TEXT("No current log");
-    _dockingData.dlgID = IDD_LOGGER;
-
-    ::SendMessage(data._nppHandle, NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
+    _dockingData.dlgID = 0;
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
