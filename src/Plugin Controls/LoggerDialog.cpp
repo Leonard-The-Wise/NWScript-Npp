@@ -14,6 +14,7 @@
 
 using namespace NWScriptPlugin;
 
+#define POSTINITSETUP
 
 // From AnchorMap.h MACROS...
 BEGIN_ANCHOR_MAP(LoggerDialog)
@@ -70,6 +71,9 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			// Default tab selected item
 			TabCtrl_HighlightItem(_mainTabHwnd, 1, 1);
 
+#ifndef POSTINITSETUP
+			SetupDockingAnchors();
+#endif
 			// Default tab to display
 			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
 		}
@@ -78,7 +82,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 		{
 			// Do auto-resize to controls
 			if (anchorsPrepared)
-				HandleAnchors();
+				handleAnchors();
 		}
 
 		case WM_COMMAND:
@@ -105,8 +109,8 @@ void LoggerDialog::SetupDockingAnchors()
 	RECT rcTabClient;
 
 	// We reset anchors here, so we can reposition at will...
-	if (m_bpfxAnchorMap.IsInitialized())
-		m_bpfxAnchorMap.Reset();
+	if (m_bpfxAnchorMap.isInitialized())
+		m_bpfxAnchorMap.reset();
 
 	// The tab control is inside a bordered dialog with a title (because Notepad++ needs the title), 
 	// hence we first get the original height OFFSETS between the client with borders to apply to the new 
@@ -119,13 +123,16 @@ void LoggerDialog::SetupDockingAnchors()
 	ScreenToClient(originalLoggerDlg, &loggerWindow);
 	GetClientRect(originalLoggerDlg, &loggerClient);
 
+#ifdef POSTINITSETUP
 	// Now grab the original margins...
 	OFFSETRECT loggerMargins = ControlAnchorMap::calculateMargins(loggerWindow, loggerClient);
 	// turn it upside down (cause we want the window title to become the bottom expansion)...
 	ControlAnchorMap::invertOffsetRect(loggerMargins, INVERT_VERTICAL);
 	// displace it on the Y axis twice the current top (because we got a negative top margin now)...
 	ControlAnchorMap::moveOffsetRect(loggerMargins, { 0, -loggerMargins.topMargin * 2 });
-
+#else
+	OFFSETRECT loggerMargins = { 0,0,0,0 };
+#endif
 	// And then resize and reposition the TAB control into the new sized docked window while keeping the original offsets...
 	// ding!
 	ControlAnchorMap::repositControl(_mainTabHwnd, _hSelf, originalLoggerDlg, IDC_TABLOGGER, ANF_ALL, loggerMargins);
@@ -140,13 +147,13 @@ void LoggerDialog::SetupDockingAnchors()
 	TabCtrl_AdjustRect(_mainTabHwnd, false, &rcTabClient);
 
 	// And since we don't want our child windowses completely overlapping
-
+#ifdef POSTINITSETUP
 	// Investigating why TabCtrl_AdjustRect() don't give accurate margins...
 	// meanwhile we displace the rectangles.
 	ControlAnchorMap::moveRect(rcTabClient, { 3 , 3 });
 	// and apply a *small* extra right/bottom margin...
 	ControlAnchorMap::applyMargins({ 1, 1, -4, -5 }, rcTabClient);
-
+#endif
 	// Now accomodate windowses inside the tab control
 	SetWindowPos(_consoleDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
 		rcTabClient.right, rcTabClient.bottom, SWP_NOREDRAW | SWP_NOZORDER);
@@ -160,7 +167,7 @@ void LoggerDialog::SetupDockingAnchors()
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), _consoleDlgHwnd,
 		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
 
-	// Initialize anchors for auto-resize
+	// initialize anchors for auto-resize
 	InitAnchors();
 	anchorsPrepared = true;
 }
