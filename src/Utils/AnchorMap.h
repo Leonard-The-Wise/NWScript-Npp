@@ -26,6 +26,8 @@
 // **      . moved MOST global variables that restricted the class to some fixed 
 // **        behaviors (mostly dificulting support for child windowses) to individual 
 // **        per-control items;
+// **      . controls and windowses can now be added/removed dynamically so you may
+// **        alter the anchoring for your controls on the fly.
 // **   - Added support for child windowses inside containers in the same windows. 
 // **         (Like windowsews inside tabbed controls that won't auto-move or 
 // **          auto-resize if the original control resized and all children windows 
@@ -94,6 +96,13 @@
 //   DestroyWindow() API, cause it will need to reinitialize after). Assertions crashes
 //   will (kindly) remember you, so you won't spend a day trying to find why suddenly your
 //   anchors are not working anymore... :)
+// 
+// - You may add/remove controls from docking dynamically now, use the aforementioned
+//   ANCHOR_MAP_CHILDWINDOW() and ANCHOR_MAP_ENTRY() macros inside your code to add controls
+//   and call macro ANCHOR_MAP_REMOVE(hWnd) to remove an item or ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd)
+//   to remove an item restrictor. If you plan on clearing or rebuilding the list, use 
+//   ANCHOR_MAP_RESETANCHORS() instead. 
+//   Remark: operations here are NOT thread-safe, specially when handling resizes.
 // 
 //   ===== EXTRAS =====
 // 
@@ -378,6 +387,16 @@ public:
     // anymore)...
     // ======================================================================
     bool eraseBackground(HDC hDC);
+
+    // ======================================================================
+    // Remove any control or child window from the list...
+    // ======================================================================
+    bool removeWindowOrControl(HWND toRemove);
+
+    // ======================================================================
+    // Remove a size restrictor from a control or child window
+    // ======================================================================
+    bool removeRestrictor(HWND toRemove);
 
     // ======================================================================
     // Clears the whole system...
@@ -766,6 +785,9 @@ private:
 #define ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam) return m_bpfxAnchorMap.handleRestrictors(wParam, lParam);
 
 #define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.eraseBackground(reinterpret_cast<HDC>(wParam));
+
+#define ANCHOR_MAP_REMOVE(hWnd) m_bpfxAnchorMap.removeWindowOrControl(hWnd);
+#define ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd) m_bpfxAnchorMap.removeSizeRestrictor(hWnd);
 
 #define ANCHOR_MAP_RESETANCHORS() m_bpfxAnchorMap.reset();
 
