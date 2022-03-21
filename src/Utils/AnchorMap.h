@@ -91,18 +91,17 @@
 //   the original POINT-using ScreenToClient API to a new one supporting RECT
 //   structures (this is just an alias call to ControlAnchorMap::screenToClientEx).
 // 
-// - And don't forget to call macro ANCHOR_MAP_RESETANCHORS() on your window destruction
-//   call (this is NOT on your class destructor, it's the Window's... like when you call
-//   DestroyWindow() API, cause it will need to reinitialize after). Assertions crashes
-//   will (kindly) remember you, so you won't spend a day trying to find why suddenly your
-//   anchors are not working anymore... :)
-// 
 // - You may add/remove controls from docking dynamically now, use the aforementioned
-//   ANCHOR_MAP_CHILDWINDOW() and ANCHOR_MAP_ENTRY() macros inside your code to add controls
-//   and call macro ANCHOR_MAP_REMOVE(hWnd) to remove an item or ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd)
+//   ANCHOR_MAP_CHILDWINDOW() and ANCHOR_MAP_ENTRY() macros inside your code to add controls.
+//   And if your control is created without a proper resource ID, call ANCHOR_MAP_DYNAMICCONTROL()
+//   to add it to the list instead of ANCHOR_MAP_ENTRY() because that macro makes our functions
+//   ignores Control IDs.
+//   [Dynamic windowses are still managed by ANCHOR_MAP_CHILDWINDOW()].
+// 
+//   Call macro ANCHOR_MAP_REMOVE(hWnd) to remove an item or ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd)
 //   to remove an item restrictor. If you plan on clearing or rebuilding the list, use 
 //   ANCHOR_MAP_RESETANCHORS() instead. 
-//   Remark: operations here are NOT thread-safe, specially when handling resizes.
+//   Remark: operations here are NOT thread-safe, unless your application is thread safe itself.
 // 
 //   ===== EXTRAS =====
 // 
@@ -760,16 +759,19 @@ private:
 #define BEGIN_ANCHOR_MAP(theclass) intptr_t theclass::handleSizers() { \
                                 return m_bpfxAnchorMap.handleSizers(); \
                                 }; \
-                                void theclass::InitAnchors(DWORD dwFlags) {
+                                void theclass::InitAnchors(DWORD dwFlags) { \
+                                m_bpfxAnchorMap.reset();  // ensure our class is clean between window reutilizations and re-creations.
 
 #ifdef DEBUG_ANCHORLIB
 #define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags, name) m_bpfxAnchorMap.addControl(hWndParent, nIDCtrl, nFlags, name);
+#define ANCHOR_MAP_DYNAMICCONTROL(hWnd, nFlags, name) m_bpfxAnchorMap.addControl(hWnd, -1, nFlags, name);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags, rangename) \
                                      for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
                                      std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags, name);
 #define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags, name);
 #else
 #define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags) std::ignore = m_bpfxAnchorMap.addControl(hWndParent, nIDCtrl, nFlags);
+#define ANCHOR_MAP_DYNAMICCONTROL(hWnd, nFlags) m_bpfxAnchorMap.addControl(hWnd, -1, nFlags);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags) \
                                      for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
                                      std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags);
