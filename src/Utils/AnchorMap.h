@@ -1,4 +1,4 @@
-// ********************************************************************************
+// ******************************************************************************************
 // **
 // ** Original link:
 // ** https://www.codeproject.com/Articles/9434/Automatic-resizing-controls
@@ -45,9 +45,9 @@
 // **
 // **   (Leonardo Silva)
 // **
-// ********************************************************************************
+// ******************************************************************************************
 
-// ============================================================================
+// ==========================================================================================
 // USAGE:
 //
 // - include DECLARE_ANCHOR_MAP() within your window/dialog class declaration
@@ -62,24 +62,23 @@
 //                ANCHOR_MAP_ENTRY(hWndParent, IDOK,         ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDCANCEL,     ANF_BOTTOM)
 //                ANCHOR_MAP_ENTRY(hWndParent, IDC_EDITCTRL, ANF_TOP | RIGHT | ANF_BOTTOM)
-//                ANCHOR_MAP_ADDSIZERESTRICTION(hWndChildWindow, RECTSIZER&)  
-//                ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(hWndParent, IDC_SOMEEDITOR), OtherRectSizer)
+//                ANCHOR_MAP_ADDSIZERESTRICTION(hWndParent, IDC_EDITCTRL, RECTSIZER&)  
 //              END_ANCHOR_MAP(YourMainWindowHandle)
 // 
-// Remark: ANCHOR_MAP_ADDSIZERESTRICTION(hWndWindowOrControl, RECTSIZER&) must be called
-//         AFTER adding the control to the ANCHOR_MAP_ENTRY list or else it won't find the
-//         item in the control's list.
+// Remark: ANCHOR_MAP_ADDSIZERESTRICTION() must be called adding the control to the 
+//         ANCHOR_MAP_ENTRY list or else it won't find the in the control's list.
 // 
-// - Within your WM_SIZE handler, call macro ANCHOR_MAP_HANDLESIZERS() to auto-resize controls.
-//   this will auto-call InvalidateRect and UpdateWindow after to ensure screen redrawings...
-//   this will return the MessageProc immediately, hence put it at the end of WM_SIZE 
-//   processing handler.
+// - Within your WM_SIZE handler, call macro ANCHOR_MAP_HANDLESIZERS() to auto-resize 
+//   controls. This will auto-call InvalidateRect and UpdateWindow after to ensure screen 
+//   redrawings (this happens only if a control changed size). Also this macro 
+//   will return the MessageProc immediately, hence put it at the of your WM_SIZE processing 
+//   handler.
 // 
-// - Within your WM_GETMINMAXINFO handler, put the ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam)
-//   macro if you have any GLOBAL WINDOW size restrictor active. Child windowses and 
-//   other Controls are handled within ANCHOR_MAP_HANDLESIZERS() already.
-//   Same rules apply here: put it in the END of WM_GETMINMAXINFO message processing section
-//   or equivalent.
+// - Within your WM_GETMINMAXINFO handler, put the ANCHOR_MAP_HANDLERESTRICTORS(wParam, 
+//   lParam) macro if you have any GLOBAL WINDOW size restrictor active. Child windowses 
+//   and other Controls are handled within ANCHOR_MAP_HANDLESIZERS() already.
+//   Same rules apply here: put it in the END of WM_GETMINMAXINFO message processing 
+//   section or equivalent.
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
 //   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
@@ -91,17 +90,13 @@
 //   the original POINT-using ScreenToClient API to a new one supporting RECT
 //   structures (this is just an alias call to ControlAnchorMap::screenToClientEx).
 // 
-// - You may add/remove controls from docking dynamically now, use the aforementioned
-//   ANCHOR_MAP_CHILDWINDOW() and ANCHOR_MAP_ENTRY() macros inside your code to add controls.
-//   And if your control is created without a proper resource ID, call ANCHOR_MAP_DYNAMICCONTROL()
-//   to add it to the list instead of ANCHOR_MAP_ENTRY() because that macro makes our functions
-//   ignores Control IDs.
-//   [Dynamic windowses are still managed by ANCHOR_MAP_CHILDWINDOW()].
-// 
+// - You may add/remove controls from docking dynamically too, use the macros 
+//   ANCHOR_MAP_DYNAMICCONTROL() and ANCHOR_MAP_ADDSIZERESTRICTIONDYNAMIC() for that.
+//   Same rules of adding restrictors after controls apply.
+//   [Dynamic-created child windowses are still managed by ANCHOR_MAP_CHILDWINDOW()].
 //   Call macro ANCHOR_MAP_REMOVE(hWnd) to remove an item or ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd)
 //   to remove an item restrictor. If you plan on clearing or rebuilding the list, use 
-//   ANCHOR_MAP_RESETANCHORS() instead. 
-//   Remark: operations here are NOT thread-safe, unless your application is thread safe itself.
+//   ANCHOR_MAP_RESET() instead. 
 // 
 //   ===== EXTRAS =====
 // 
@@ -133,7 +128,7 @@
 
 #pragma once
 
-#define DEBUG_ANCHORLIB       // Enables passing user-defined names for controls to debug this class
+#define DEBUG_ANCHORLIB       // Enables user-defined names field for controls to better debug this class
 
 
     // ===================== Anchoring / Docking flags ======================
@@ -203,6 +198,13 @@
 #define SIZER_MIN                     0x0001
 #define SIZER_MAX                     0x0002
 
+// Flags for returned RestrictSize results
+#define RESTRICTED_NONE               0x0000
+#define RESTRICTED_X                  0x0001
+#define RESTRICTED_Y                  0x0002
+#define RESTRICTED_BOTH               0x0003
+
+
     // =============== Some structures for the audience... ==================
 
 struct SIZER {
@@ -244,47 +246,28 @@ struct FSIZE {
 };
 
 
-// ======================== NEW CONTROL STRUCTURE =========================
 
-struct TCtrlEntry {
-#ifdef DEBUG_ANCHORLIB
-    std::string     nControlName;                                 // control name - for debbugging only
-#endif
-    HWND            hWnd = nullptr;                               // hWnd of the control
-    HWND            hWndParent = nullptr;                         // handle of the window that contains the control/window
-    unsigned int    nCtrlID = 0;                                  // dialog-control resource id of the window
-    bool            isChildWindow = false;                        // is this control a child (container) window of other controls?
-    unsigned int    nFlags = 0;                                   // docking/anchoring flags for this control
-    FRECT           rect = { 0, 0, 0, 0 };                        // actual client-rectangle of the control
-    RECT            parentPrevWindowRect = { 0, 0, 0, 0 };        // previous rect of the parent window (old m_rcPrev)
-    RECT            parentClientRect = { 0, 0, 0, 0 };            // client area of child window's parent (old m_rcClient)
-    RECT            parentNewRect = { 0, 0, 0, 0 };               // current window-rect of the parent window (old m_rcNew)
-    SIZE            szDelta = { 0, 0 };                           // delta of the size-change
-    unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
-    int             childNestLevel = 0;                           // current nesting level of a child window inside a parent->children hierarchy
-    RECTSIZER       controlSizer = {};                            // controls minimum and maximum sizes for all controls
-};
-
-class ControlAnchorMap {
-
-protected:
-
-    // ============================ MEMBERS =================================
-
-
-    bool                         m_bInitialized;             // class and control-information is inited
-    HWND                         m_globalParent;             // used to grab controls when user didn't specify which ones he wanted auto-handled
-    bool                         m_bUsedDefaultEntry;        // "default" (NULL) anchor-map entry has been used
-    unsigned int                 m_nDefaultFlags;            // flags for "default" controls
-    COLORREF                     m_clrBackground;            // background-color of the dialog
-    HWND                         m_hWndSizeGrip;             // handle of the sizing-grip or NULL
-    std::vector<TCtrlEntry>      m_Controls;                 // control-map
-    bool                         m_isSorted = false;         // checks if a sort was already done
-    RECTSIZER                    m_globalSizer;              // controls the global resizing of the window
-    RECT                         m_previousWindowSize;       // previous rectangle of parent (global) window
-
+class ControlAnchorMap final {
 public:
+    // ======================== NEW CONTROL STRUCTURE =========================
 
+    struct TCtrlEntry {
+#ifdef DEBUG_ANCHORLIB
+        std::string     nControlName;                                 // control name - for debbugging only
+#endif
+        HWND            hWnd = nullptr;                               // hWnd of the control
+        HWND            hWndParent = nullptr;                         // handle of the window that contains the control/window
+        bool            isChildWindow = false;                        // is this control a child (container) window of other controls?
+        unsigned int    nFlags = 0;                                   // docking/anchoring flags for this control
+        FRECT           rect = { 0, 0, 0, 0 };                        // actual client-rectangle of the control
+        RECT            parentPrevWindowRect = { 0, 0, 0, 0 };        // previous rect of the parent window (old m_rcPrev)
+        RECT            parentClientRect = { 0, 0, 0, 0 };            // client area of child window's parent (old m_rcClient)
+        RECT            parentNewRect = { 0, 0, 0, 0 };               // current window-rect of the parent window (old m_rcNew)
+        SIZE            szDelta = { 0, 0 };                           // delta of the size-change
+        unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
+        int             childNestLevel = 0;                           // current nesting level of a child window inside a parent->children hierarchy
+        RECTSIZER       controlSizer = {};                            // controls minimum and maximum sizes for all controls
+    };
 
     // ========================= CLASS METHODS ==============================
 
@@ -304,7 +287,7 @@ public:
     // Adds a child window for docking/anchoring -> eg: a dialog loaded inside
     // a control container - like a Tab Control. You must call this before 
     // calling initialize(). A call to this function is wrapped within the 
-    // ANCHOR_MAP_CHILDWINDOW function.
+    // ANCHOR_MAP_CHILDWINDOW macro.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
     bool addChildWindow(HWND window, unsigned int flags, const std::string& name);
@@ -315,7 +298,7 @@ public:
     // ======================================================================
     // Adds a control for docking/anchoring. You must call this before calling
     // initialize() A call to this function is wrapped within the 
-    // ANCHOR_MAP_ENTRY function.
+    // ANCHOR_MAP_ENTRY and ANCHOR_MAP_DYNAMICCONTROL macros.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
     bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name);
@@ -325,13 +308,16 @@ public:
 
     // ======================================================================
     // Adds a global size constrictor to the window.
-    // Use it BEFORE initialize().
     // ======================================================================
     void addGlobalSizeRestrictor(const RECTSIZER& rectSizer);
 
     // ======================================================================
     // Adds a size constrictor to a control or child window.
-    // Use it BEFORE initialize().
+    // ======================================================================
+    bool addSizeRestrictor(HWND parent, int nCtrlID, const RECTSIZER& rectSizer);
+
+    // ======================================================================
+    // Adds a size constrictor to a control or child window.
     // ======================================================================
     bool addSizeRestrictor(HWND windowOrControl, const RECTSIZER& rectSizer);
 
@@ -362,18 +348,11 @@ public:
     // [in] : pWndRect = new rectangle of the resized window (use GetWndRect())
     //                   If you pass NULL, the function will call GetWndRect()
     //                   itself.
-    // Requirements: calls to this functions MUST have Initialized()
-    //               before... assertions for throwing errors on uinitialized
-    //               usage.
     // ======================================================================
     intptr_t handleSizers();
 
     // ======================================================================
     // Handles the WM_GETMINMAXINFO messages.
-    // 
-    // Requirements: calls to this functions MUST have Initialized()
-    //               before... assertions for throwing errors on uinitialized
-    //               usage.
     // ======================================================================
     intptr_t handleRestrictors(WPARAM wParam, LPARAM lParam);
 
@@ -386,6 +365,11 @@ public:
     // anymore)...
     // ======================================================================
     bool eraseBackground(HDC hDC);
+
+    // ======================================================================
+    // Removes the global size constrictor to the window.
+    // ======================================================================
+    void removeGlobalSizeRestrictor();
 
     // ======================================================================
     // Remove any control or child window from the list...
@@ -543,33 +527,31 @@ public:
     // ======================================================================
     // Applies a sizer constriction to a given FSIZE. Flags are:
     // SIZER_MIN and SIZER_MAX. They are mutually exclusive.
-    // A 0 on a sizer member means that side (width or height) won't be tested 
+    // A 0 on a sizer member means that side (width or height) won't be 
+    // tested. 
+    // Returns: RESTRTICTED_NONE if control wasn't restricted from changing
+    //          RESTRTICTED_X if control was restricted from changing X axis
+    //          RESTRTICTED_Y if control was restricted from changing Y axis
+    //          RESTRTICTED_BOTH if control was restricted from changing both 
+    //                           axis
     // ======================================================================
-    static void applySizer(FSIZE& target, const SIZER& sizer, int flags) {
-        if (flags == SIZER_MIN)
-        {
-            if (sizer.width > 0 && sizer.width > target.cx)
-                target.cx = sizer.width;
-            if (sizer.height > 0 && sizer.height > target.cy)
-                target.cy = sizer.height;
-        }
-        else
-        {
-            if (sizer.width > 0 && sizer.width < target.cx)
-                target.cx = sizer.width;
-            if (sizer.height > 0 && sizer.height < target.cy)
-                target.cy = sizer.height;
-        }
-    }
+    static UINT applySizer(FSIZE& target, const SIZER& sizer, int flags);
 
     // ======================================================================
     // Applies a window sizer constriction to a given FSIZE. RECTSIZERs
     // can have 0 value for any member. That means that that member won't
-    // apply on the calculations.
+    // apply on the calculations. 
+    // Returns: RESTRTICTED_NONE if control wasn't restricted from changing
+    //          RESTRTICTED_X if control was restricted from changing X axis
+    //          RESTRTICTED_Y if control was restricted from changing Y axis
+    //          RESTRTICTED_BOTH if control was restricted from changing both 
+    //                           axis
     // ======================================================================
-    static void applyRectSizer(FSIZE& target, const RECTSIZER& sizer) {
-        applySizer(target, sizer.minSize, SIZER_MIN);
-        applySizer(target, sizer.maxSize, SIZER_MAX);
+    static UINT applyRectSizer(FSIZE& target, const RECTSIZER& sizer) {
+        UINT restrictedMin = 0, restrictedMax = 0;
+        restrictedMin = applySizer(target, sizer.minSize, SIZER_MIN);
+        restrictedMin = applySizer(target, sizer.maxSize, SIZER_MAX);
+        return restrictedMin | restrictedMax;
     }
 
     // ======================================================================
@@ -645,56 +627,77 @@ public:
 
 private:
 
+    // ============================ MEMBERS =================================
+
+    bool                         m_bInitialized;             // class and control-information is inited
+    HWND                         m_globalParent;             // used to grab controls when user didn't specify which ones he wanted auto-handled
+    bool                         m_bUsedDefaultEntry;        // "default" (NULL) anchor-map entry has been used
+    unsigned int                 m_nDefaultFlags;            // flags for "default" controls
+    COLORREF                     m_clrBackground;            // background-color of the dialog
+    HWND                         m_hWndSizeGrip;             // handle of the sizing-grip or NULL
+    std::vector<TCtrlEntry>      m_Controls;                 // control-map
+    bool                         m_isSorted;                 // checks if a sort was already done
+    RECTSIZER                    m_globalSizer;              // controls the global resizing of the window
+    RECT                         m_previousWindowSize;       // previous rectangle of parent (global) window
+    bool                         m_invalidated;               // controls invalidations and updatewindows calls.
+
+
     // ======================================================================
     // Finds a window with the specified HWND in the control-map and 
     // returns its index or returns -1 if the window was not found
+    // Internal use.
     // ======================================================================
-    int FindWindow(HWND hWnd);
+    int findWindow(HWND hWnd);
 
     // ======================================================================
     // Adds a control or window for docking/anchoring. Internal use...
     // Call addControl or addChildWindow instead.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
+    bool addObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
         bool isChildWindow = false, const std::string& nControlName = "");
 #else
-    bool AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
+    bool addObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl = 0, 
         bool isChildWindow = false);
 #endif
 
     // ======================================================================
     // This function does the pre-processing for the calls to handleSizers.
-    // It stores the new size of the parent-window within m_rcNew, determines
-    // which side(s) of the window have been resized and sets the apropriate
-    // flags in m_uiSizedBorders and then it calculates the deltas and the
-    // new client-rectangle of the parent.
+    // It stores the new size of the parent-window, determines which side(s) 
+    // of the window have been resized and sets the apropriate flags in 
+    // uiSizedBorders and then it calculates the deltas and the new client-
+    // rectangle of the parent.
     // The calculated values are then used by handleSizers to move/resize
     // the controls.
     // [in]: pWndRect = new rectangle of the resized parent-window 
     //                  (use GetWndRect())
+    // Internal use.
     // ======================================================================
-    static void PreProcess(TCtrlEntry& pControl);
+    static void preProcess(TCtrlEntry& pControl);
 
     // ======================================================================
     // This function does the post-processing for the calls to handleSizers.
     // It preserves the actual (new) size of the parent-window as "previous
-    // size". In the next call to PreProcess, this "previons size" is used
-    // to calulate the deltas
+    // size". In the next call to preProcess, this "previons size" is used
+    // to calulate the deltas. Internal use.
     // ======================================================================
-    static void PostProcess(TCtrlEntry& pControl);
+    static void postProcess(TCtrlEntry& pControl);
 
     // ======================================================================
     // Moves one object on the screen - a control or a window.
-    // if useSetPosition is set to TRUE will move with SetPosition function
-    // instead of the (default) DeferWindowPos behavior.
     // ======================================================================
-    static void MoveObject(TCtrlEntry& pCtrl, HDWP hDeferPos, bool useSetPosition = false);
+    void moveObject(TCtrlEntry& pCtrl, HDWP hDeferPos);
 
     // ======================================================================
-    // SetFREct helper-function
+    //  The same as moveObject, but without any global redraw control flag
     // ======================================================================
-    static void SetFRect(FRECT* pRect, double left, double top, double right, double bottom);
+    static void moveObjectStatic(TCtrlEntry& pCtrl, HDWP hDeferPos);
+
+    // ======================================================================
+    // SetFREct helper-function.
+    // Internal use.
+    // ======================================================================
+    static void setFRect(FRECT* pRect, double left, double top, double right, double bottom);
 
     // ======================================================================
     // Helper function to sort control entries.
@@ -705,8 +708,9 @@ private:
     // "hWnd of controls in a DeferWindowPos must have the same parent or 
     // else the function will fail...
     // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-deferwindowpos
+    // Internal use.
     // ======================================================================
-    void FullControlsSort();
+    void fullControlsSort();
 
     // ======================================================================
     // Child-window enumeration callback function.
@@ -714,8 +718,9 @@ private:
     // called from initialize if the "default option" has been used.
     // It adds the enumerated window to the control-list, if it is not
     // already there.
+    // Internal use.
     // ======================================================================
-    static int CALLBACK InitDefaultControl(HWND hWnd, LPARAM lParam);
+    static int CALLBACK initDefaultControl(HWND hWnd, LPARAM lParam);
 
 };
 
@@ -737,18 +742,57 @@ private:
 //                    This is the same as ANCHOR_MAP_ENTRY except that it
 //                    adds a range of controls to the control-map
 // 
+// ANCHOR_MAP_DYNAMICCONTROL
+//                    This is the same as ANCHOR_MAP_ENTRY, except it takes
+//                    the hWnd of a control instead of hWnd of the parent
+//                    and a Control ID. Used to add controls dynamically
+//                    to the list.
+// 
 // ANCHOR_MAP_CHILDWINDOW
 //                    Adds a window-inside-container to the anchoring/docking
 //                    mechanism. Usefull for tabbed dialogs.
-//
+// 
+// ANCHOR_MAP_ADDSIZERESTRICTION
+//                    Adds a size restrictor to a control a restrictor is a 
+//                    RECTSIZER struct that contains info of maximum and 
+//                    minimum sizes.
+// 
+// ANCHOR_MAP_ADDSIZERESTRICTIONCHILDWINDOW
+//                    Adds a size restrictor to a child window.
+// 
+// ANCHOR_MAP_ADDSIZERESTRICTIONDYNAMIC
+//                    This is the same of ANCHOR_MAP_ADDSIZERESTRICTION()
+//                    except that it takes a control hWnd instead of a 
+//                    hWndParent and a Control ID. It's the same thing
+//                    of calling ANCHOR_MAP_ADDSIZERESTRICTIONCHILDWINDOW
+//                    since any control hWnd is also a window... this is
+//                    only for code readability.
+// 
+// ANCHOR_MAP_ADDGLOBALSIZERESTRICTION
+//                    Adds a size restrictor to the main window using anchor
+//                    maps.
+// 
+// ANCHOR_MAP_REMOVE  Removes a control or a child window from the anchor map.
+// 
+// ANCHOR_MAP_REMOVESIZERESTRICTOR
+//                    Removes a size restrictor from any control or child
+//                    window.
+// 
+// ANCHOR_MAP_REMOVEGLOBALSIZERESTRICTION
+//                    Removes the global size restrictor from the main window.
+// 
 // END_ANCHOR_MAP     finishes the implementation of InitAnchors and calls
 //                    the initialization routine of the helper-class.
 //
+// ANCHOR_MAP_RESET   Wipes the system clear.
+// 
 // ANCHOR_MAP_EREASEBACKGROUND() 
 //                    You may call this on WM_ERASEBKGND messages to repaint.
 // 
-// ScreenToClient     Overrided ScreenToClient method. #declare USE_ANF_SCREEN_TO_CLIENT
-//                    to enable
+// ScreenToClient     Overrided ScreenToClient method. 
+//                    #declare USE_ANF_SCREEN_TO_CLIENT before including
+//                    this header to enable.
+// 
 // ============================================================================
 
 
@@ -767,7 +811,7 @@ private:
 #define ANCHOR_MAP_DYNAMICCONTROL(hWnd, nFlags, name) m_bpfxAnchorMap.addControl(hWnd, -1, nFlags, name);
 #define ANCHOR_MAP_ENTRY_RANGE(hWndParent, nIDCtrlFrom, nIDCtrlTo, nFlags, rangename) \
                                      for (int iCtrl=nIDCtrlFrom; iCtrl <= nIDCtrlTo; iCtrl++) \
-                                     std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags, name);
+                                     std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags, rangename);
 #define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags, name) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags, name);
 #else
 #define ANCHOR_MAP_ENTRY(hWndParent, nIDCtrl, nFlags) std::ignore = m_bpfxAnchorMap.addControl(hWndParent, nIDCtrl, nFlags);
@@ -777,8 +821,11 @@ private:
                                      std::ignore = m_bpfxAnchorMap.addControl(hWndParent, iCtrl, nFlags);
 #define ANCHOR_MAP_CHILDWINDOW(hWndWindow, nFlags) m_bpfxAnchorMap.addChildWindow(hWndWindow, nFlags);
 #endif
-#define ANCHOR_MAP_ADDSIZERESTRICTION(hWndWindowOrControl, RectSizer) m_bpfxAnchorMap.addSizeRestrictor(hWndWindowOrControl, RectSizer);
+#define ANCHOR_MAP_ADDSIZERESTRICTION(hWndParent, nIDCtrl, RectSizer) m_bpfxAnchorMap.addSizeRestrictor(hWndParent, nIDCtrl, RectSizer);
+#define ANCHOR_MAP_ADDSIZERESTRICTIONCHILDWINDOW(hWndWindow, RectSizer) m_bpfxAnchorMap.addSizeRestrictor(hWndWindow, RectSizer);
+#define ANCHOR_MAP_ADDSIZERESTRICTIONDYNAMIC(hWndControl, RectSizer) m_bpfxAnchorMap.addSizeRestrictor(hWndControl, RectSizer);
 #define ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(RectSizer) m_bpfxAnchorMap.addGlobalSizeRestrictor(RectSizer);
+#define ANCHOR_MAP_REMOVEGLOBALSIZERESTRICTION() m_bpfxAnchorMap.removeGlobalSizeRestrictor();
 
 #define END_ANCHOR_MAP(hWndParent)   m_bpfxAnchorMap.initialize(hWndParent, dwFlags); \
                                      m_bpfxAnchorMap.handleSizers(); \
@@ -789,9 +836,9 @@ private:
 #define ANCHOR_MAP_EREASEBACKGROUND() m_bpfxAnchorMap.eraseBackground(reinterpret_cast<HDC>(wParam));
 
 #define ANCHOR_MAP_REMOVE(hWnd) m_bpfxAnchorMap.removeWindowOrControl(hWnd);
-#define ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd) m_bpfxAnchorMap.removeSizeRestrictor(hWnd);
+#define ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd) m_bpfxAnchorMap.removeRestrictor(hWnd);
 
-#define ANCHOR_MAP_RESETANCHORS() m_bpfxAnchorMap.reset();
+#define ANCHOR_MAP_RESET() m_bpfxAnchorMap.reset();
 
 #ifdef USE_ANF_SCREEN_TO_CLIENT
 #define ScreenToClient(hWnd, pRECT) ControlAnchorMap::screenToClientEx(hWnd, pRECT)

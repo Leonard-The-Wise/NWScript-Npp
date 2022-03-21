@@ -60,6 +60,7 @@
 #define IDC_TXTOUTPUTDIR                1037
 #define IDSTART                         1038
 #define IDC_BTOUTPUTDIR                 1039
+#define IDSTART2                        1039
 #define IDC_TXTBATCHDIRSTART            1040
 #define IDC_TXTOUTPUTDIRBATCH           1041
 #define IDC_CHKRECURSIVE                1042
@@ -93,7 +94,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        140
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1070
+#define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
