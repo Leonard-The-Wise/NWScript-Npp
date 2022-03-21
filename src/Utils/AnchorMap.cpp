@@ -729,6 +729,9 @@ void ControlAnchorMap::preProcess(TCtrlEntry& pControl)
     RECT pWndRect = { 0, 0, 0, 0 };
     GetWindowRect(pControl.hWndParent, &pWndRect);
 
+    if (!pControl.additionalMargins.empty())
+        applyMargins(pWndRect, pControl.additionalMargins);
+
     // preserve the new bounds of the parent window
     pControl.parentNewRect.left = pWndRect.left;
     pControl.parentNewRect.top = pWndRect.top;
@@ -982,16 +985,16 @@ bool ControlAnchorMap::calculateOriginalMargins(HWND originalParentWindow, HWND 
     return true;
 }
 
-bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWND originalWindow, 
+bool ControlAnchorMap::repositControl(HWND targetControl, HWND originalWindow, 
     HWND originalControl, int flags, const OFFSETRECT& additionalMargins)
 {
     // Validations
-    if (targetControl == NULL || targetWindow == NULL || originalWindow == NULL || originalControl == NULL || flags < 1)
+    if (targetControl == NULL || originalWindow == NULL || originalControl == NULL || flags < 1)
         return false;
 
     // Now create information for object moving/resizing...
     TCtrlEntry myControl;
-    myControl.hWndParent = targetWindow;
+    myControl.hWndParent = GetParent(targetControl);
     myControl.hWnd = targetControl;
     myControl.nFlags = flags;
 
@@ -1001,12 +1004,13 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWN
     RECT rcCtrl;
     ::GetWindowRect(originalControl, &rcCtrl);
     screenToClientEx(originalWindow, &rcCtrl);
-    applyMargins(additionalMargins, rcCtrl);
 
     myControl.rect.left = rcCtrl.left;
     myControl.rect.top = rcCtrl.top;
     myControl.rect.right = rcCtrl.right;
     myControl.rect.bottom = rcCtrl.bottom;
+
+    copyOffsetRect(myControl.additionalMargins, additionalMargins);
 
     // Pass the object into the anchoring/docking pipeline...
     preProcess(myControl);
@@ -1015,7 +1019,7 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWN
     return true;
 }
 
-bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWND originalWindow,
+bool ControlAnchorMap::repositControl(HWND targetControl, HWND originalWindow,
     int originalControlID, int flags, const OFFSETRECT& additionalMargins)
 {
     // Get the original control
@@ -1023,19 +1027,19 @@ bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HWN
     if (!originalControl)
         return false;
 
-    return repositControl(targetControl, targetWindow, originalWindow, originalControl, flags, additionalMargins);
+    return repositControl(targetControl, originalWindow, originalControl, flags, additionalMargins);
 }
 
-bool ControlAnchorMap::repositControl(HWND targetControl, HWND targetWindow, HINSTANCE originalModule,
+bool ControlAnchorMap::repositControl(HWND targetControl, HINSTANCE originalModule,
     int originalDialogID, int originalControlID, int flags, const OFFSETRECT& additionalMargins)
 {
     // create a temporary object to calculate rectangles
-    HWND windowParent = GetParent(targetWindow);
+    HWND windowParent = GetParent(targetControl);
     HWND tempDialog = CreateDialog(originalModule, MAKEINTRESOURCE(originalDialogID), windowParent, 0);
     if (!tempDialog)
         return false;
 
-    bool bSuccess = repositControl(targetControl, targetWindow, tempDialog, originalControlID, flags, additionalMargins);
+    bool bSuccess = repositControl(targetControl, tempDialog, originalControlID, flags, additionalMargins);
     DestroyWindow(tempDialog);
 
     return bSuccess;
