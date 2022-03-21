@@ -122,7 +122,7 @@
 // 
 //   Please see the documentation for each on the method's header.
 //
-// And that's all.
+// That's all.
 //
 // =============================================================================
 
@@ -210,7 +210,7 @@
 struct SIZER {
     LONG width = 0;
     LONG height = 0;
-    bool empty() {
+    bool empty() const {
         return width == 0 && height == 0;
     }
 };
@@ -218,7 +218,7 @@ struct SIZER {
 struct RECTSIZER {
     SIZER minSize = {};
     SIZER maxSize = {};
-    bool empty() {
+    bool empty() const {
         return minSize.empty() && maxSize.empty();            
     }
 };
@@ -229,6 +229,9 @@ struct OFFSETRECT {
     LONG topMargin = 0;
     LONG rightMargin = 0;
     LONG bottomMargin = 0;
+    bool empty() const {
+        return (leftMargin == 0 && topMargin == 0 && rightMargin == 0 && bottomMargin == 0);
+    }
 };
 
 // A floating-point RECT structure
@@ -237,17 +240,25 @@ struct FRECT {
     double  left = 0;
     double  right = 0;
     double  bottom = 0;
+    bool empty() const {
+        return (top == 0 && left == 0 && right == 0 && bottom == 0);
+    }
 };
 
 // A floating-point SIZE structure
 struct FSIZE {  
     double  cx = 0;
     double  cy = 0;
+    bool empty() const {
+        return (cx == 0 && cy == 0);
+    }
 };
 
 
 
-class ControlAnchorMap final {
+class ControlAnchorMap final 
+{
+
 public:
     // ======================== NEW CONTROL STRUCTURE =========================
 
@@ -267,6 +278,7 @@ public:
         unsigned int    uiSizedBorders = 0;                           // Flags for borders that have been sized (previous m_uiSizedBorders)
         int             childNestLevel = 0;                           // current nesting level of a child window inside a parent->children hierarchy
         RECTSIZER       controlSizer = {};                            // controls minimum and maximum sizes for all controls
+        OFFSETRECT      additionalMargins = {};                       // additional sizing margins for that control
     };
 
     // ========================= CLASS METHODS ==============================
@@ -277,8 +289,8 @@ public:
     // ======================================================================
     ControlAnchorMap() :
         m_bInitialized(0), m_bUsedDefaultEntry(0), m_globalParent(nullptr),
-        m_nDefaultFlags(0), m_hWndSizeGrip(0), m_isSorted(false), m_globalSizer(),
-        m_previousWindowSize()
+        m_nDefaultFlags(0), m_hWndSizeGrip(0), m_isSorted(false), 
+        m_globalSizer(), m_previousWindowSize()
     {
         m_clrBackground = GetSysColor(COLOR_BTNFACE);
     };
@@ -290,7 +302,8 @@ public:
     // ANCHOR_MAP_CHILDWINDOW macro.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool addChildWindow(HWND window, unsigned int flags, const std::string& name);
+    bool addChildWindow(HWND window, unsigned int flags, 
+        const std::string& name);
 #else
     bool addChildWindow(HWND window, unsigned int flags);
 #endif
@@ -301,7 +314,8 @@ public:
     // ANCHOR_MAP_ENTRY and ANCHOR_MAP_DYNAMICCONTROL macros.
     // ======================================================================
 #ifdef DEBUG_ANCHORLIB
-    bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name);
+    bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags, 
+        const std::string& name);
 #else
     bool addControl(HWND parent, unsigned int ctrlID, unsigned int flags);
 #endif
@@ -426,7 +440,8 @@ public:
     // ======================================================================
     // Displaces the given marginRect in the X and Y axis.
     // ======================================================================
-    static void moveOffsetRect(OFFSETRECT& marginRect, const POINT& displacement)
+    static void moveOffsetRect(OFFSETRECT& marginRect, 
+        const POINT& displacement)
     {
         marginRect.leftMargin += displacement.x;
         marginRect.rightMargin += displacement.x;
@@ -459,7 +474,8 @@ public:
     // Inverts a margin (offset) rectangle reference. Flags are:
     // INVERT_HORIZONTAL, INVERT_VERTICAL, INVERT_BOTH.
     // ======================================================================
-    static void invertOffsetRect(OFFSETRECT& marginRect, int flags = INVERT_BOTH)
+    static void invertOffsetRect(OFFSETRECT& marginRect, 
+        int flags = INVERT_BOTH)
     {
         OFFSETRECT resultOffset = marginRect;
         if (flags & INVERT_HORIZONTAL)
@@ -481,7 +497,8 @@ public:
     // 1 if (a > b). Returns -2 on invalid flags. Flags are:
     // RECT_COMPARE_VERTICAL, RECT_COMPARE_HORIZONTAL, RECT_COMPARE_BOTH.
     // ======================================================================
-    static int compareRects(const RECT& a, const RECT& b, int flags = RECT_COMPARE_BOTH)
+    static int compareRects(const RECT& a, const RECT& b, 
+        int flags = RECT_COMPARE_BOTH)
     {
         if (flags == RECT_COMPARE_VERTICAL)
             return ((a.bottom - a.top) < (b.bottom - b.top)) ? -1 : ((a.bottom - a.top) == (b.bottom - b.top)) ? 0 : 1;
@@ -498,7 +515,8 @@ public:
     // 1 if (a > b). Returns -2 on invalid flags. Flags are:
     // RECT_COMPARE_VERTICAL, RECT_COMPARE_HORIZONTAL, RECT_COMPARE_BOTH.
     // ======================================================================
-    static int compareOffsetRects(const OFFSETRECT& a, const OFFSETRECT& b, int flags = RECT_COMPARE_BOTH)
+    static int compareOffsetRects(const OFFSETRECT& a, const OFFSETRECT& b, 
+        int flags = RECT_COMPARE_BOTH)
     {
         if (flags == RECT_COMPARE_VERTICAL)
             return ((a.bottomMargin - a.topMargin) < (b.bottomMargin - b.topMargin)) ? -1 : ((a.bottomMargin - a.topMargin) == (b.bottomMargin - b.topMargin)) ? 0 : 1;
@@ -513,7 +531,8 @@ public:
     // ======================================================================
     // Applies the margins from an OFFSETRECT into a RECT struct.
     // ======================================================================
-    static void applyMargins(const OFFSETRECT& margins, RECT& target, int marginFlags = MARGIN_ALL) {
+    static void applyMargins(RECT& target, const OFFSETRECT& margins,
+        int marginFlags = MARGIN_ALL) {
         if (marginFlags & MARGIN_LEFT)
             target.left += margins.leftMargin;
         if (marginFlags & MARGIN_TOP)
@@ -569,7 +588,7 @@ public:
     // rectangles. Makes more sense for a smaller rectangle inside a big one 
     // and when you want margins to expand instead of contract.
     // This is when you want object margins to expand instead of contract.
-    // It's the same to call (calculateMargins(B, A) x -1)  instead of (A, B).
+    // It's the same to call calculateMargins(B, A)  instead of (A, B).
     // ======================================================================
     static OFFSETRECT calculateReverseMargins(const RECT& a, const RECT& b) 
     {
@@ -584,7 +603,8 @@ public:
     // RETURNS: false if the dialog or the control aren't found for the given 
     // module.    
     // ======================================================================
-    static bool calculateOriginalMargins(HINSTANCE parent, int dialogID, int controlID, OFFSETRECT& output);
+    static bool calculateOriginalMargins(HINSTANCE parent, int dialogID, 
+        int controlID, OFFSETRECT& output);
 
     // ======================================================================
     // Calculate the original margin OFFSETS of a given control inside a 
@@ -594,36 +614,78 @@ public:
     // RETURNS: false if the dialog or the control aren't found for the given 
     // module.    
     // ======================================================================
-    static bool calculateOriginalMargins(HWND parent, HWND childControl, OFFSETRECT& output);
+    static bool calculateOriginalMargins(HWND parent, HWND childControl, 
+        OFFSETRECT& output);
 
     // ======================================================================
-    // Reposits the targetControl inside a targetWindow client area, given 
+    // Reposits the targetControl inside its current (resized) window, given 
     // you provide a pointer to the ORIGINAL design-time window (eg: one just 
     // created with CreateDialogEx functions and the original control ID 
     // inside that window, considering the provided docking/anchoring flags 
-    // for the control.
+    // for the control. You may also specify additional margins (offsets)
+    // for the control repositioning.
+    // ----------------------------------------------------------------------
+    // Usually called when you need to fit a child dialog window inside a
+    // control (like a tab control) and then reposition all of that child 
+    // dialog's controls inside the newly resized window. This function will
+    // read design-time information about that control and then recalculate 
+    // where it should be in the resized-to-fit window, considering the
+    // specified anchors and (optional) additional margins.
     // ======================================================================
-    static bool repositControl(HWND targetControl, HWND targetWindow, HWND originalWindow,
-        HWND originalControl, int flags, const OFFSETRECT& additionalMargins = {0,0,0,0});
+    static bool repositControl(HWND targetControl, HWND originalWindow,
+        HWND originalControl, int flags = ANF_TOPLEFT, 
+        const OFFSETRECT& additionalMargins = {0,0,0,0});
 
     // ======================================================================
-    // Reposits the targetControl inside a targetWindow client area, given 
+    // Reposits the targetControl inside its current (resized) window, given 
     // you provide a pointer to the ORIGINAL design-time window (eg: one just 
     // created with CreateDialogEx functions and the original control ID 
     // inside that window, considering the provided docking/anchoring flags 
-    // for the control.
+    // for the control. You may also specify additional margins (offsets)
+    // for the control repositioning.
+    // ----------------------------------------------------------------------
+    // Usually called when you need to fit a child dialog window inside a
+    // control (like a tab control) and then reposition all of that child 
+    // dialog's controls inside the newly resized window. This function will
+    // read design-time information about that control and then recalculate 
+    // where it should be in the resized-to-fit window, considering the
+    // specified anchors and (optional) additional margins.
     // ======================================================================
-    static bool repositControl(HWND targetControl, HWND targetWindow, HWND originalWindow,
-        int originalControlID, int flags, const OFFSETRECT& additionalMargins = { 0,0,0,0 });
+    static bool repositControl(HWND targetControl, HWND originalWindow,
+        int originalControlID, int flags = ANF_TOPLEFT, 
+        const OFFSETRECT& additionalMargins = { 0,0,0,0 });
 
     // ======================================================================
-    // Repositis the targetControl inside a targetWindow, given you provide
-    // information about the ORIGINAL design-time window (eg: the Dialog 
-    // within a given HMODULE and the original control ID inside that dialog,
-    // considering the provided docking/anchoring flags for the control.
+    // Repositis the targetControl inside its current (resized) window, given 
+    // you provide information about the ORIGINAL design-time window 
+    // (eg: the Dialog within a given HMODULE and the original control ID 
+    // inside that dialog, considering the provided docking/anchoring flags 
+    // for the control. You may also specify additional margins (offsets)
+    // for the control repositioning.
+    // ----------------------------------------------------------------------
+    // Usually called when you need to fit a child dialog window inside a
+    // control (like a tab control) and then reposition all of that child 
+    // dialog's controls inside the newly resized window. This function will
+    // read design-time information about that control and then recalculate 
+    // where it should be in the resized-to-fit window, considering the
+    // specified anchors and (optional) additional margins.
+    // ----------------------------------------------------------------------
+    // Remark: This method will create an internal temporary Dialog object 
+    // to retrieve informations about the control. So, if you are repositi-
+    // oning several controls, consider creating the temporary original de-
+    // sign time dialog yourself with function:
+    //  HWND myOriginalDialog = CreateDialog(originalModule, 
+    //       MAKEINTRESOURCE(originalDialogID), windowParent, 0);
+    // and then calling one of the other overloaded repositControl methods 
+    // for economy of CPU time and resources.
+    // 
+    // After finishing using the temporary dialog, call:
+    //     DestroyWindow(myOriginalDialog) 
+    // to free resources.
     // ======================================================================
-    static bool repositControl(HWND targetControl, HWND targetWindow, HINSTANCE originalModule,
-        int originalDialogID, int originalControlID, int flags, const OFFSETRECT& additionalMargins = { 0,0,0,0 });
+    static bool repositControl(HWND targetControl, HINSTANCE originalModule,
+        int originalDialogID, int originalControlID, int flags = ANF_TOPLEFT, 
+        const OFFSETRECT& additionalMargins = { 0,0,0,0 });
 
 private:
 

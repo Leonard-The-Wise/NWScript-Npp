@@ -75,12 +75,18 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size24x24));
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size24x24));
 
+			// Icons for buttons
+			HBITMAP hErrorsBmp = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16);
+			HBITMAP hWarningBmp = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16);
+			HBITMAP hInfoBmp = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16);
+
+			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
+			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
+
 #ifndef POSTINITSETUP
 			SetupDockingAnchors();
 #endif
-			// Default tab to display
 			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
-
 			// Default tab selected item
 			TabCtrl_SetCurSel(_mainTabHwnd, 1);
 		}
@@ -95,6 +101,27 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 		case WM_COMMAND:
 		{
 
+		}
+
+		case WM_NOTIFY:
+		{
+			if (wParam != IDC_TABLOGGER)
+				break;
+
+			if (_mainTabHwnd)
+			{
+				int tabSelection = TabCtrl_GetCurSel(_mainTabHwnd);
+				if (tabSelection == 0)
+				{
+					ShowWindow(_errorDlgHwnd, SW_NORMAL);
+					ShowWindow(_consoleDlgHwnd, SW_HIDE);
+				}
+				else
+				{
+					ShowWindow(_errorDlgHwnd, SW_HIDE);
+					ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+				}
+			}
 		}
 
 		default:
@@ -130,19 +157,16 @@ void LoggerDialog::SetupDockingAnchors()
 	ScreenToClient(originalLoggerDlg, &loggerWindow);
 	GetClientRect(originalLoggerDlg, &loggerClient);
 
-#ifdef POSTINITSETUP
 	// Now grab the original margins...
 	OFFSETRECT loggerMargins = ControlAnchorMap::calculateMargins(loggerWindow, loggerClient);
 	// turn it upside down (cause we want the window title to become the bottom expansion)...
 	ControlAnchorMap::invertOffsetRect(loggerMargins, INVERT_VERTICAL);
 	// displace it on the Y axis twice the current top (because we got a negative top margin now)...
 	ControlAnchorMap::moveOffsetRect(loggerMargins, { 0, -loggerMargins.topMargin * 2 });
-#else
-	OFFSETRECT loggerMargins = { 0,0,0,0 };
-#endif
+
 	// And then resize and reposition the TAB control into the new sized docked window while keeping the original offsets...
 	// ding!
-	ControlAnchorMap::repositControl(_mainTabHwnd, _hSelf, originalLoggerDlg, IDC_TABLOGGER, ANF_ALL, loggerMargins);
+	ControlAnchorMap::repositControl(_mainTabHwnd, originalLoggerDlg, IDC_TABLOGGER, ANF_ALL, loggerMargins);
 
 	// (now get rid of the extra window)
 	DestroyWindow(originalLoggerDlg);
@@ -153,38 +177,42 @@ void LoggerDialog::SetupDockingAnchors()
 	GetClientRect(_mainTabHwnd, &rcTabClient);
 	TabCtrl_AdjustRect(_mainTabHwnd, false, &rcTabClient);
 
-	// And since we don't want our child windowses completely overlapping
-#ifdef POSTINITSETUP
-	// Investigating why TabCtrl_AdjustRect() don't give accurate margins...
-	// meanwhile we displace the rectangles.
-	ControlAnchorMap::moveRect(rcTabClient, { 3 , 3 });
-	// and apply a *small* extra right/bottom margin...
-	ControlAnchorMap::applyMargins({ 1, 1, -4, -5 }, rcTabClient);
-#endif
+	// And since we don't want our child windowses completely overlapping the Tab borders
+	// apply a *small* extra margin to them...
+	ControlAnchorMap::applyMargins(rcTabClient, { 1, 1, -1, -2 });
+
 	// Now accomodate windowses inside the tab control
 	SetWindowPos(_consoleDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
 		rcTabClient.right, rcTabClient.bottom, SWP_NOREDRAW | SWP_NOZORDER);
 	SetWindowPos(_errorDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
 		rcTabClient.right, rcTabClient.bottom, SWP_NOREDRAW | SWP_NOZORDER);
 
+	// Create temporary handlers for resource economy...
+	HWND originalConsoleDlg = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, 0);
+	HWND originalErrorsDlg = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, 0);
+
 	// Reposition tabbed child controls on their destination windowses
 	// maintaining original proportions.
 		// Console window items
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_LBLCONSOLE), _consoleDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_LBLCONSOLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), _consoleDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_LBLCONSOLE), 
+		originalConsoleDlg, IDC_LBLCONSOLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), 
+		originalConsoleDlg, IDC_TXTCONSOLE, ANF_ALL);
 		// Errors window items
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTERRORSTOGGLE), _errorDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTWARNINGSTOGGLE), _errorDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTMESSGESTOGGLE), _errorDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_ERRORGROUPBOX), _errorDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
-	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_LSTERRORS), _errorDlgHwnd,
-		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
+	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), 
+		originalErrorsDlg, IDC_BTERRORSTOGGLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE),
+		originalErrorsDlg, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTMESSGESTOGGLE), 
+		originalErrorsDlg, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_ERRORGROUPBOX), 
+		originalErrorsDlg, IDC_ERRORGROUPBOX, ANF_ALL);
+	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS), 
+		originalErrorsDlg, IDC_LSTERRORS, ANF_ALL);
+
+	// Remove temporary objects
+	DestroyWindow(originalConsoleDlg);
+	DestroyWindow(originalErrorsDlg);
 
 	// initialize anchors for auto-resize and mark ready for WM_SIZE processing
 	InitAnchors();
