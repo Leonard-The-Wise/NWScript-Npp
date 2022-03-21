@@ -129,17 +129,20 @@ NERDY STATISTICS:\r\n\
 
 using namespace NWScriptPlugin;
 
-constexpr const RECTSIZER mainWindowSize = { {652, 562 }, {1024, 768} };
+// Anchoring and size restriction informations
 
-constexpr const RECTSIZER lblVersion = { { 397, 0 } };
-constexpr const RECTSIZER lblCopyright = { { 397, 0 } };
-constexpr const RECTSIZER lblCredits = { { 397, 114 } };
+constexpr const RECTSIZER mainWindowSize = { {638, 555 }, {1024, 768} };
+constexpr const RECTSIZER lblPluginName = { { 251, 0 } };
+constexpr const RECTSIZER lblVersion = { { 251, 0 } };
+constexpr const RECTSIZER lblCopyright = { { 251, 0 } };
+constexpr const RECTSIZER lblCredits = { { 251, 114 } };
 constexpr const RECTSIZER lnkHomepageSize = { { 490, 0 } };
-constexpr const RECTSIZER txtAboutSize = { { 608, 243 } };
+constexpr const RECTSIZER txtAboutSize = { { 607, 200 } };
 
 BEGIN_ANCHOR_MAP(AboutDialog)
 	ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(mainWindowSize)
 #ifdef DEBUG_ANCHORLIB
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLPLUGINNAME, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Plugin Name Label")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Version")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Copyright")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Credits")
@@ -154,6 +157,7 @@ BEGIN_ANCHOR_MAP(AboutDialog)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM)
 #endif
+	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLPLUGINNAME), lblPluginName)
 	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLVERSION), lblVersion)
 	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLCOPYRIGHT), lblCopyright)
 	ANCHOR_MAP_ADDSIZERESTRICTION(GetDlgItem(_hSelf, IDC_LBLSPECIALCREDITS), lblCredits)

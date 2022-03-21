@@ -26,6 +26,8 @@
 // **      . moved MOST global variables that restricted the class to some fixed 
 // **        behaviors (mostly dificulting support for child windowses) to individual 
 // **        per-control items;
+// **      . controls and windowses can now be added/removed dynamically so you may
+// **        alter the anchoring for your controls on the fly.
 // **   - Added support for child windowses inside containers in the same windows. 
 // **         (Like windowsews inside tabbed controls that won't auto-move or 
 // **          auto-resize if the original control resized and all children windows 
@@ -89,11 +91,17 @@
 //   the original POINT-using ScreenToClient API to a new one supporting RECT
 //   structures (this is just an alias call to ControlAnchorMap::screenToClientEx).
 // 
-// - And don't forget to call macro ANCHOR_MAP_RESETANCHORS() on your window destruction
-//   call (this is NOT on your class destructor, it's the Window's... like when you call
-//   DestroyWindow() API, cause it will need to reinitialize after). Assertions crashes
-//   will (kindly) remember you, so you won't spend a day trying to find why suddenly your
-//   anchors are not working anymore... :)
+// - You may add/remove controls from docking dynamically now, use the aforementioned
+//   ANCHOR_MAP_CHILDWINDOW() and ANCHOR_MAP_ENTRY() macros inside your code to add controls.
+//   And if your control is created without a proper resource ID, call ANCHOR_MAP_DYNAMICCONTROL()
+//   to add it to the list instead of ANCHOR_MAP_ENTRY() because that macro makes our functions
+//   ignores Control IDs.
+//   [Dynamic windowses are still managed by ANCHOR_MAP_CHILDWINDOW()].
+// 
+//   Call macro ANCHOR_MAP_REMOVE(hWnd) to remove an item or ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd)
+//   to remove an item restrictor. If you plan on clearing or rebuilding the list, use 
+//   ANCHOR_MAP_RESETANCHORS() instead. 
+//   Remark: operations here are NOT thread-safe, unless your application is thread safe itself.
 // 
 //   ===== EXTRAS =====
 // 
@@ -159,7 +167,10 @@ bool ControlAnchorMap::addChildWindow(HWND window, unsigned int flags)
 // ======================================================================
 // Adds a control for docking/anchoring. You must call this before calling
 // initialize() A call to this function is wrapped within the 
-// ANCHOR_MAP_ENTRY function.
+// ANCHOR_MAP_ENTRY function. If ctrlID == -1 you get an overrided 
+// behavior - add a control without an ID, the HWND "parent" field becomes
+// the control's HWND and the parent is now determined dynamically.
+// See macro ANCHOR_MAP_DYNAMICCONTROL for more info.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
 bool ControlAnchorMap::addControl(HWND parent, unsigned int ctrlID, unsigned int flags, const std::string& name)
@@ -627,8 +638,10 @@ int ControlAnchorMap::FindWindow(HWND hWnd) {
 }
 
 // ======================================================================
-// Adds a control or window for docking/anchoring. Internal use...
-// Call addControl or addChildWindow instead.
+// Adds a control or window for docking/anchoring. Internal use only...
+// Call addControl() or addChildWindow(), or better, use the macros
+// ANCHOR_MAP_ENTRY(), ANCHOR_MAP_DYNAMICCONTROL(), and 
+// ANCHOR_MAP_ENTRY_RANGE() for a better usage comprehension.
 // ======================================================================
 #ifdef DEBUG_ANCHORLIB
 bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsigned int nIDCtrl, bool isChildWindow, const std::string& nControlName)
@@ -647,7 +660,8 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
 #endif
     HWND controlWindowHwnd;
 
-    newCtrl.nCtrlID = nIDCtrl;
+    newCtrl.nCtrlID = nIDCtrl;     // this information as a storage field is (almost) unused now... maybe remove it in the future.
+                                   // nIDCtrl is basically used only to retrieve control info inside this function.
     newCtrl.nFlags = nFlags;
     newCtrl.isChildWindow = isChildWindow;
 
@@ -662,10 +676,24 @@ bool ControlAnchorMap::AddObject(HWND windowOrParent, unsigned int nFlags, unsig
     }
     else
     {
-        // For child window dialog items, the "windowOrParent" field is the parent, so we grab the GetDlgItem instead...
-        controlWindowHwnd = ::GetDlgItem(windowOrParent, newCtrl.nCtrlID);
-        assert(controlWindowHwnd != NULL); // no control here should have a nul parent
-        newCtrl.hWndParent = windowOrParent;
+        // nIDCtrl == -1 is an override behavior... add a control without an ID, so the 
+        // "windowOrParent" is now the handle for the control window instead of a handle 
+        //  to the parent. See macro ANCHOR_MAP_DYNAMICCONTROL for reference.
+        if (nIDCtrl == -1)
+        {
+            controlWindowHwnd = windowOrParent;
+            HWND newParent = GetParent(windowOrParent);
+            assert(newParent != NULL);
+            newCtrl.hWndParent = newParent;
+            newCtrl.nCtrlID = 0;
+        }
+        else
+        {
+            // For child window dialog items, the "windowOrParent" field is the parent, so we grab the GetDlgItem instead...
+            controlWindowHwnd = ::GetDlgItem(windowOrParent, newCtrl.nCtrlID);
+            assert(controlWindowHwnd != NULL); // no control here should have a nul parent
+            newCtrl.hWndParent = windowOrParent;
+        }
     }
 
     // Assign the HWND determined above to the control
