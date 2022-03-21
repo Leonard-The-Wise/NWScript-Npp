@@ -16,23 +16,30 @@ using namespace NWScriptPlugin;
 
 #define POSTINITSETUP
 
-// From AnchorMap.h MACROS...
 BEGIN_ANCHOR_MAP(LoggerDialog)
-
 #ifdef DEBUG_ANCHORLIB
-	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL, "Dialog Control: Tab Logger Control (main window child)")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL, "Dialog Control: TABLOGGER (main window child)")
 	ANCHOR_MAP_CHILDWINDOW(_consoleDlgHwnd, ANF_ALL, "Dialog Box: Console")
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT, "Dialog Control: LBLCONSOLE (console child)")
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL, "Dialog Control: TXTCONSOLE (console child)")
 	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL, "Dialog Box: Error")
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTERRORSTOGGLE, ANF_TOPLEFT, "Dialog Control: BTERRORSTOGGLE (errors child)")
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT, "Dialog Control: BTWARNINGSTOGGLE (errors child)")
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT, "Dialog Control: BTMESSGESTOGGLE (errors child)")
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL, "Dialog Control: ERRORGROUPBOX (errors child)")
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL, "Dialog Control: LSTERRORS (errors child)")
 #else
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL)
 	ANCHOR_MAP_CHILDWINDOW(_consoleDlgHwnd, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL)
 	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL)
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTERRORSTOGGLE, ANF_TOPLEFT)
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT)
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT)
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL)
+	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL)
 #endif
-
 END_ANCHOR_MAP(_hSelf)
 
 
@@ -68,14 +75,14 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size24x24));
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size24x24));
 
-			// Default tab selected item
-			TabCtrl_HighlightItem(_mainTabHwnd, 1, 1);
-
 #ifndef POSTINITSETUP
 			SetupDockingAnchors();
 #endif
 			// Default tab to display
 			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+
+			// Default tab selected item
+			TabCtrl_SetCurSel(_mainTabHwnd, 1);
 		}
 		
 		case WM_SIZE:
@@ -162,9 +169,21 @@ void LoggerDialog::SetupDockingAnchors()
 
 	// Reposition tabbed child controls on their destination windowses
 	// maintaining original proportions.
+		// Console window items
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_LBLCONSOLE), _consoleDlgHwnd,
 		_hInst, IDD_LOGGER_CONSOLE, IDC_LBLCONSOLE, ANF_TOPLEFT);
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), _consoleDlgHwnd,
+		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
+		// Errors window items
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTERRORSTOGGLE), _errorDlgHwnd,
+		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTWARNINGSTOGGLE), _errorDlgHwnd,
+		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTMESSGESTOGGLE), _errorDlgHwnd,
+		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_TOPLEFT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_ERRORGROUPBOX), _errorDlgHwnd,
+		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_LSTERRORS), _errorDlgHwnd,
 		_hInst, IDD_LOGGER_CONSOLE, IDC_TXTCONSOLE, ANF_ALL);
 
 	// initialize anchors for auto-resize and mark ready for WM_SIZE processing
