@@ -230,7 +230,7 @@ bool ControlAnchorMap::screenToClientEx(HWND hWnd, RECT* pRect)
 
 void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
 {
-    int     iCtrl = 0;
+    size_t     iCtrl = 0;
     HWND    hWndCtrl = NULL;
     RECT    rcMaxBR = {};
     SIZE    sz1 = {};
@@ -376,7 +376,7 @@ intptr_t ControlAnchorMap::handleSizers()
     std::vector<int> controlGroupNum;
     HWND hCurrent = m_Controls[0].hWndParent;
     int groupCount = 0;
-    for (int i = 0; i < m_Controls.size(); i++)
+    for (size_t i = 0; i < m_Controls.size(); i++)
     {
         if (hCurrent == m_Controls[i].hWndParent)
             groupCount++;
@@ -398,8 +398,8 @@ intptr_t ControlAnchorMap::handleSizers()
     m_invalidated = false;
 
     // Now processes all control groups
-    int curPosition = 0;
-    for (int i = 0; i < controlGroupNum.size(); i++)
+    size_t curPosition = 0;
+    for (size_t i = 0; i < controlGroupNum.size(); i++)
     {
         int countDefer = controlGroupNum[i];
         hWdp = BeginDeferWindowPos(countDefer);
@@ -619,7 +619,7 @@ UINT ControlAnchorMap::applySizer(FSIZE& target, const SIZER& sizer, int flags) 
 
 int ControlAnchorMap::findWindow(HWND hWnd) {
 
-    for (int i = 0; i < m_Controls.size(); i++)
+    for (size_t i = 0; i < m_Controls.size(); i++)
         if (m_Controls[i].hWnd == hWnd) return i;
     return(-1);
 
@@ -934,7 +934,7 @@ int CALLBACK ControlAnchorMap::initDefaultControl(HWND hWnd, LPARAM lParam)
     assert(pMap != NULL);              // something bad happened to your class instance...
 
     // do not add the control if it is already within our list
-    for (int iCtrl = 0; iCtrl < pMap->m_Controls.size(); iCtrl++)
+    for (size_t iCtrl = 0; iCtrl < pMap->m_Controls.size(); iCtrl++)
         if (pMap->m_Controls[iCtrl].hWnd == hWnd)
             return static_cast<int>(true);
 

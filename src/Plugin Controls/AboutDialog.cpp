@@ -185,7 +185,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 			// Set user fonts. Try to keep same font for all.
 			HFONT hTitleFont = NULL;
-			int fontIndex = 0;
+			size_t fontIndex = 0;
 			while (fontIndex < std::size(fontFamilies) && !hTitleFont)
 			{
 				hTitleFont = ::CreateFont(16, 10, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
