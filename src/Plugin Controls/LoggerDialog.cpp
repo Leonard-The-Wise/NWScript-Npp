@@ -75,17 +75,13 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size24x24));
 			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size24x24));
 
-			// Add headers for List control
-
-
-
 			// Icons for buttons
 			HBITMAP hErrorsBmp = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16);
 			HBITMAP hWarningBmp = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16);
 			HBITMAP hInfoBmp = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16);
 
-			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
-			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
+			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
+			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
 
 #ifndef POSTINITSETUP
 			SetupDockingAnchors();
