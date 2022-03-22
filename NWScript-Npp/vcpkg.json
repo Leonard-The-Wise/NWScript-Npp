@@ -1,5 +1,0 @@
-{
-  "name": "nwscripttools",
-  "version-string":  "0.7.0",
-  "dependencies": [ "pcre2" ]
-}
