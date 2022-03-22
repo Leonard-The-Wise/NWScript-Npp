@@ -263,7 +263,7 @@ void Plugin::SetNotepadData(NppData data)
     // _logConsole.create() resets some masks of windowdata, hence we set them after...
     _dockingData = {};
     _logConsole.create(&_dockingData);
-    Messenger().SendNppMessage<void>(NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
+    //Messenger().SendNppMessage<void>(NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
     _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
     _dockingData.hIconTab = _dockingIcon;
