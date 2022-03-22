@@ -343,15 +343,6 @@
     <ProjectReference Include="..\lib\NscLib\NscLib.vcxproj">
       <Project>{9d6bac40-e346-4e23-b0ea-960dd98fea37}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-16-static.vcxproj">
-      <Project>{452a0049-4b9c-40c1-b337-c551c0c9357e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-32-static.vcxproj">
-      <Project>{e0b821ec-8168-4f7a-a40e-9acc97e77f54}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-8-static.vcxproj">
-      <Project>{1df4d158-6062-478b-aea1-84c235593f3d}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
