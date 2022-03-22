@@ -8,8 +8,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NWScript-Npp", "NWScript-Np
 		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37} = {9D6BAC40-E346-4E23-B0EA-960DD98FEA37}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{50BE8F36-2B6A-47FC-8D93-6989E9FBB67F}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NscLib", "lib\NscLib\NscLib.vcxproj", "{9D6BAC40-E346-4E23-B0EA-960DD98FEA37}"
 EndProject
 Global
@@ -39,9 +37,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37} = {50BE8F36-2B6A-47FC-8D93-6989E9FBB67F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7EFC17C7-02C9-446F-948B-EE3097ED0939}
