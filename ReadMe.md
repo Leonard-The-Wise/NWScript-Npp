@@ -58,11 +58,11 @@ All files under this project are provided under the [`GPL v3.0 License`](license
 
 For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the following way:
 	
-- **`lib`**: All linked library submodules found here. I got one thing there: my ***personal port*** for `NWScript Compiler` called [`NscLib`](https://github.com/Leonard-The-Wise/NscLib) (because it's only the library without the executable). The project depends on other libraries, but those are installed/managed by [`vcpkg`](https://vcpkg.io/). Those are listed on the [`vcpkg.json manifest`] of the project. For now, I link against static versions of [`PCRE2`] and [`wxWidgets`]. Hence, to build my code from source you need this. Follow these (easy) steps:
+- **`lib`**: All linked library submodules found here. I got one thing there: my ***personal port*** for `NWScript Compiler` called [`NscLib`](https://github.com/Leonard-The-Wise/NscLib) (because it's only the library without the executable). The project depends on other libraries, but those are installed/managed by [`vcpkg`](https://vcpkg.io/). Those are listed on the [`vcpkg.json manifest`](NWScript-Npp/vcpkg.json) of the project. For now, I link against static versions of [`PCRE2`] and [`wxWidgets`]. Hence, to build my code from source you need this. Follow these (easy) steps:
 	
-	- Install vcpkg. Just follow [`this guide`](https://vcpkg.io/en/getting-started.html)
-	- Don't forget the `vcpkg integrate install` part... if your Visual Studio is opened, close and reopen.
-	- Done. Since the project already includes the manifest (mentioned above) to compile, the first time you build the project, all dependencies will automatically install.
+	- Install vcpkg. Just follow [`this guide`](https://vcpkg.io/en/getting-started.html).
+	- Don't forget the `vcpkg integrate install` part. If your Visual Studio was opened while you installed, close and reopen.
+	- Done. Since the project already includes the manifest (mentioned above) to compile, the first time you build the project, all dependencies will automatically be downloaded and installed.
 
 - **`Custom Lexers`**: Here you'll write your new custom Lexers (example: [`LexNWScript.cpp`](src/Lexers/LexNWScript.cpp)) and edit/place them inside [`LexerCatalogue.cpp`](src/Lexers/LexerCatalogue.cpp) `InstalledLexers[]` static object for the code to auto-initialize it upon plugin load. Something like this:
 	
