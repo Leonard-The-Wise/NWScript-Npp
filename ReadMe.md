@@ -58,11 +58,12 @@ All files under this project are provided under the [`GPL v3.0 License`](license
 
 For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the following way:
 	
-- **`lib`**: All linked library submodules found here. I got one thing there: my ***personal port*** for `NWScript Compiler` called [`NscLib`](https://github.com/Leonard-The-Wise/NscLib) (because it's only the library without the executable). The project depends on other libraries, but those are installed/managed by [`vcpkg`](https://vcpkg.io/). Those are listed on the [`vcpkg.json manifest`](NWScript-Npp/vcpkg.json) of the project. For now, I link against static versions of [`PCRE2`] and [`wxWidgets`]. Hence, to build my code from source you need this. Follow these (easy) steps:
+- **`lib`**: All linked library submodules found here. I got one thing there: my ***personal port*** for `NWScript Compiler` called [`NscLib`](https://github.com/Leonard-The-Wise/NscLib) (because it's only the library without the executable). The project depends on other libraries, but those are installed/managed by [`vcpkg`](https://vcpkg.io/). Those are listed on the [`vcpkg.json manifest`](NWScript-Npp/vcpkg.json) of the project. For now, I link against static versions of `PCRE2` and ~~`wxWidgets`~~ (not this time, since static version of wxwidgets on vcpkg is completely broken). Hence, to build my code from source you need this. Follow these steps:
 	
 	- Install vcpkg. Just follow [`this guide`](https://vcpkg.io/en/getting-started.html).
 	- Don't forget the `vcpkg integrate install` part.
-	- Done. The first time you build the project, all dependencies will be automatically installed. You may need to restart Visual Studio after building to update Intellisense.	
+	- ~~Done. The first time you build the project, all dependencies will be automatically installed. You may need to restart Visual Studio after building to update Intellisense.~~
+	   - Not done. You have to download wxwidgets from the original website, build the (static) library yourself and then define a windows environment variable called `wxWidgetsInstall` pointing to the exact install root of wxwidgets - all because vcpkg version of the static library is broken - and we aren't dynamically linking this, since we want a single DLL to deploy. Then and only then you are really done. PS: if you got time and patience to test whether Microsoft will fix the vcpkg, you can reintegrate it instead of installing wx yourself. Since I had to spend an entire DAY crashing code only to figure out their package version is broken, I myself don't have nor the time nor the patience for that anymore.
 
 - **`Custom Lexers`**: Here you'll write your new custom Lexers (example: [`LexNWScript.cpp`](src/Lexers/LexNWScript.cpp)) and edit/place them inside [`LexerCatalogue.cpp`](src/Lexers/LexerCatalogue.cpp) `InstalledLexers[]` static object for the code to auto-initialize it upon plugin load. Something like this:
 	
