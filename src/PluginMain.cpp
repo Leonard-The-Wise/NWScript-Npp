@@ -18,7 +18,6 @@
 //#include <locale>
 //#include <cwchar>
 //#include <Shlwapi.h>
-#include <wx/wxprec.h>
 
 #include "menuCmdID.h"
 

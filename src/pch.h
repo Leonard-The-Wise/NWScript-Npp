@@ -2,6 +2,8 @@
 
 #pragma once
 
+
+
 #include <Windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
@@ -34,6 +36,18 @@
 
 #include <tchar.h>
 #include <assert.h>
+
+#pragma warning (push)
+#pragma warning (disable: 6011 26439 26451 26495 26812)  // LOTS of warnings...
+#ifdef _W64
+#define __w64 // get rid of retarded wxwidgets error
+//#include <wx/wx.h>
+#undef __w64
+#define __w64 __w64 
+#else 
+#include <wx/wx.h>
+#endif
+#pragma warning (pop)
 
 #include "jpcre2.hpp"
 #include "Nsc.h"

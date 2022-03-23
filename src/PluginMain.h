@@ -253,6 +253,7 @@ namespace NWScriptPlugin {
 		tTbData _dockingData;  // needs persistent info for docking data
 		HICON _dockingIcon;    // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
+		//wxWindow _MainWindow;
 
 		// Internal handles
 
