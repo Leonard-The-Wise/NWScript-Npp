@@ -181,6 +181,15 @@
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\NWScriptForms.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\AboutDialogEx.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\LoggerDialogEx.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -262,6 +271,15 @@
     </ClCompile>
     <ClCompile Include="..\src\Utils\AnchorMap.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\NWScriptForms.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\AboutDialogEx.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\LoggerDialogEx.cpp">
+      <Filter>Plugin Dialogs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

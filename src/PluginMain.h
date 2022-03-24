@@ -20,6 +20,9 @@
 #include "NWScriptCompiler.h"
 
 #include "LoggerDialog.h"
+#include "AboutDialogEx.h"
+#include "LoggerDialogEx.h"
+
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -154,7 +157,8 @@ namespace NWScriptPlugin {
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr) {}
+			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr),
+			_PseudoApp(nullptr), _AboutDialog(nullptr), _logConsoleEx(nullptr) {}
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer.isPluginLang; }
@@ -169,6 +173,8 @@ namespace NWScriptPlugin {
 		// Load current Notepad++ Language Lexer when language changed.
 		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
 		void LoadNotepadLexer();
+		// Initializes wxWidgets pseudo-app handler
+		void InitWxWidgets();
 
 		// ### Initialization -> Menu handling
 		
@@ -250,10 +256,16 @@ namespace NWScriptPlugin {
 		LineIndentor _indentor;
 		NWScriptCompiler _compiler;
 		LoggerDialog _logConsole;
-		tTbData _dockingData;  // needs persistent info for docking data
-		HICON _dockingIcon;    // needs persistent info for docking data
+		tTbData _dockingData;			// needs persistent info for docking data
+		HICON _dockingIcon;				// needs persistent info for docking data
+		generic_string _dockingTitle;   // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
-		//wxWindow _MainWindow;
+
+		// wxWindows
+		wxWindow _MainWindow;
+		std::unique_ptr<wxApp> _PseudoApp;
+		std::unique_ptr<AboutDialogEx> _AboutDialog;
+		std::unique_ptr<LoggerDialogEx> _logConsoleEx;
 
 		// Internal handles
 

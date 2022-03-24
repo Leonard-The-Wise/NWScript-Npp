@@ -33,104 +33,113 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-#define wxIDB_NWSCRIPTLOGO 10000
-#define wxIDC_LBLVERSION 10001
-#define wxIDC_LBLCOPYRIGHT 10002
-#define wxIDC_LNKHOMEPAGE 10003
-#define wxIDC_TXTABOUT 10004
-#define wxIDOK 10005
-#define wxIDTOGGLEERRORS 10006
-#define wxIDTOGGLEWARNINGS 10007
-#define wxIDTOGGLEMESSAGES 10008
-#define wxIDC_LSTERRORS 10009
-
-///////////////////////////////////////////////////////////////////////////////
-/// Class AboutDialog
-///////////////////////////////////////////////////////////////////////////////
-class AboutDialog : public wxDialog
+namespace NWScriptPlugin
 {
-	private:
+	#define wxIDB_NWSCRIPTLOGO 10000
+	#define wxIDC_LBLVERSION 10001
+	#define wxIDC_LBLCOPYRIGHT 10002
+	#define wxIDC_LNKHOMEPAGE 10003
+	#define wxIDC_TXTABOUT 10004
+	#define wxIDOK 10005
+	#define wxIDTOGGLEERRORS 10006
+	#define wxIDTOGGLEWARNINGS 10007
+	#define wxIDTOGGLEMESSAGES 10008
+	#define wxIDC_LSTERRORS 10009
 
-	protected:
-		wxStaticBitmap* m_bitmap2;
-		wxStaticText* lblTitle;
-		wxStaticText* lblVersion;
-		wxStaticText* lblCopyright;
-		wxStaticText* lblSpecialThanks;
-		wxStaticText* lblSpecialThanksText;
-		wxStaticText* lblHomepage;
-		wxHyperlinkCtrl* lnkHomepage;
-		wxRichTextCtrl* txtAbout;
-		wxButton* btOk;
+	///////////////////////////////////////////////////////////////////////////////
+	/// Class wxAboutDialog
+	///////////////////////////////////////////////////////////////////////////////
+	class wxAboutDialog : public wxDialog
+	{
+		private:
 
-	public:
+		protected:
+			wxStaticBitmap* m_bitmap2;
+			wxStaticText* lblTitle;
+			wxStaticText* lblVersion;
+			wxStaticText* lblCopyright;
+			wxStaticText* lblSpecialThanks;
+			wxStaticText* lblSpecialThanksText;
+			wxStaticText* lblHomepage;
+			wxHyperlinkCtrl* lnkHomepage;
+			wxRichTextCtrl* txtAbout;
+			wxButton* btOk;
 
-		AboutDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About NWScript Tools Plugin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 656,550 ), long style = wxDEFAULT_DIALOG_STYLE );
-
-		~AboutDialog();
-
-};
-
-///////////////////////////////////////////////////////////////////////////////
-/// Class ConsoleWindow
-///////////////////////////////////////////////////////////////////////////////
-class ConsoleWindow : public wxFrame
-{
-	private:
-
-	protected:
-		wxNotebook* tabConsole;
-
-		// Virtual event handlers, override them in your derived class
-		virtual void OnPageChanged( wxNotebookEvent& event ) { event.Skip(); }
+			// Virtual event handlers, override them in your derived class
+			virtual void OnKeyPress( wxKeyEvent& event ) { event.Skip(); }
+			virtual void OnBtOkClose( wxCommandEvent& event ) { event.Skip(); }
 
 
-	public:
+		public:
 
-		ConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Tools Compiler"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 701,300 ), long style = wxCAPTION|wxFRAME_FLOAT_ON_PARENT|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
+			wxAboutDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About NWScript Tools Plugin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 656,550 ), long style = wxDEFAULT_DIALOG_STYLE );
 
-		~ConsoleWindow();
+			~wxAboutDialog();
 
-};
+	};
 
-///////////////////////////////////////////////////////////////////////////////
-/// Class ErrorsPanel
-///////////////////////////////////////////////////////////////////////////////
-class ErrorsPanel : public wxPanel
-{
-	private:
+	///////////////////////////////////////////////////////////////////////////////
+	/// Class wxConsoleWindow
+	///////////////////////////////////////////////////////////////////////////////
+	class wxConsoleWindow : public wxFrame
+	{
+		private:
 
-	protected:
-		wxToggleButton* m_toggleBtn1;
-		wxToggleButton* m_toggleBtn2;
-		wxToggleButton* m_toggleBtn3;
-		wxListCtrl* m_listCtrl1;
+		protected:
+			wxNotebook* tabConsole;
 
-	public:
+			// Virtual event handlers, override them in your derived class
+			virtual void OnPageChanged( wxNotebookEvent& event ) { event.Skip(); }
 
-		ErrorsPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 729,278 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
 
-		~ErrorsPanel();
+		public:
 
-};
+			wxConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Tools Compiler"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 701,300 ), long style = wxCAPTION|wxFRAME_FLOAT_ON_PARENT|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
 
-///////////////////////////////////////////////////////////////////////////////
-/// Class ConsolePanel
-///////////////////////////////////////////////////////////////////////////////
-class ConsolePanel : public wxPanel
-{
-	private:
+			~wxConsoleWindow();
 
-	protected:
-		wxStaticText* m_staticText7;
-		wxToolBar* m_toolBar1;
-		wxRichTextCtrl* m_richText2;
+	};
 
-	public:
+	///////////////////////////////////////////////////////////////////////////////
+	/// Class wxErrorsPanel
+	///////////////////////////////////////////////////////////////////////////////
+	class wxErrorsPanel : public wxPanel
+	{
+		private:
 
-		ConsolePanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+		protected:
+			wxToggleButton* m_toggleBtn1;
+			wxToggleButton* m_toggleBtn2;
+			wxToggleButton* m_toggleBtn3;
+			wxListCtrl* m_listCtrl1;
 
-		~ConsolePanel();
+		public:
 
-};
+			wxErrorsPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 729,278 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+
+			~wxErrorsPanel();
+
+	};
+
+	///////////////////////////////////////////////////////////////////////////////
+	/// Class wxConsolePanel
+	///////////////////////////////////////////////////////////////////////////////
+	class wxConsolePanel : public wxPanel
+	{
+		private:
+
+		protected:
+			wxStaticText* m_staticText7;
+			wxToolBar* m_toolBar1;
+			wxRichTextCtrl* m_richText2;
+
+		public:
+
+			wxConsolePanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+
+			~wxConsolePanel();
+
+	};
+
+} // namespace NWScriptPlugin
 

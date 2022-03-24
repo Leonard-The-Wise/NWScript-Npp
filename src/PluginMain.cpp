@@ -38,6 +38,8 @@
 #include "UsersPreferencesDialog.h"
 #include "WarningDialog.h"
 
+#include "AboutDialogEx.h"
+
 #include "XMLGenStrings.h"
 #include "VersionInfoEx.h"
 
@@ -258,11 +260,28 @@ void Plugin::SetNotepadData(NppData data)
     _logConsole.init(DllHModule(), NotepadHwnd());
 
     // Docking dialog data
+}
 
-    // _logConsole.create() resets some masks of windowdata, hence we set them after...
+// Initializes wxWidgets app. 
+// Thanks https://simon.rozman.si/computers/wxwidgets/wxwidgets-dll-plugin
+// for tips on how to config that for a plugin.
+void Plugin::InitWxWidgets()
+{
+    _PseudoApp = std::make_unique<wxApp>();   // Need a wxApp to use the widgets, even not having a main function
+    wxEntryStart(DllHModule());               // Also need an Entry point defined, even if we already past that.
+
+    _MainWindow.SetHWND(reinterpret_cast<WXHWND>(NotepadHwnd()));
+    _MainWindow.AdoptAttributesFromHWND();
+    wxTopLevelWindows.Append(&_MainWindow);
+
+    _logConsoleEx = std::make_unique<LoggerDialogEx>(&_MainWindow);
+
     _dockingData = {};
-    _logConsole.create(&_dockingData);
-    Messenger().SendNppMessage<void>(NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
+    _dockingData.hClient = _logConsoleEx->getHWND();
+    _dockingTitle = _logConsoleEx->getTitle(); 
+    _dockingData.pszName = _dockingTitle.data();
+
+    // additional info
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
     _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
     _dockingData.hIconTab = _dockingIcon;
@@ -272,7 +291,7 @@ void Plugin::SetNotepadData(NppData data)
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
-    _logConsole.display(false);
+    //_logConsoleEx->doDialog(false);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -299,6 +318,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         LoadNotepadLexer();
 
         SetupPluginMenuItems();
+        InitWxWidgets();
         _isReady = true;
 
         // Auto call a function that required restart during the previous session (because of privilege elevation)
@@ -1741,7 +1761,7 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 PLUGINCOMMAND Plugin::ToggleConsole()
 {
     //Instance()._logConsole.display(!Instance()._logConsole.isVisible());
-    Instance()._logConsole.doDialog(!Instance()._logConsole.isVisible());
+    Instance()._logConsoleEx->doDialog(!Instance()._logConsoleEx->isVisible());
 }
 
 //-------------------------------------------------------------
@@ -1928,6 +1948,38 @@ PLUGINCOMMAND Plugin::OnlineHelp()
     ShellExecute(NULL, L"open", PLUGIN_ONLINEHELP, L"", L"", WM_SHOWWINDOW);
 }
 
+
+// Opens About Box
+PLUGINCOMMAND Plugin::AboutMe()
+{
+    ::SendMessage(Instance()._logConsole.getHSelf(), WM_SIZE, 0, 0);
+
+    std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
+
+    // Initialize some user information
+    std::map<generic_string, generic_string> replaceStrings;
+    replaceStrings.insert({ TEXT("%PLUGINXMLFILE%"), Instance()._pluginPaths["PluginLexerConfigFilePath"] });
+    replaceStrings.insert({ TEXT("%AUTOCOMPLETEFILE%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"] });
+    replaceStrings.insert({ TEXT("%AUTOCOMPLETEDIR%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path() });
+
+    DWORD bIsAutoIndentOn = Instance().Messenger().SendNppMessage<DWORD>(NPPM_ISAUTOINDENTON);
+
+    // Diagnostic data.
+    if (Instance()._needPluginAutoIndent)
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), TEXT("Use the built-in auto-indentation.") });
+    else
+    {
+        generic_string autoindent = TEXT("Automatic. Currently set to ["); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("]"));
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
+    }
+    replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
+
+    if (!Instance()._AboutDialog)
+        Instance()._AboutDialog = std::make_unique<AboutDialogEx>(&Instance()._MainWindow);
+
+    Instance()._AboutDialog->doDialog();
+}
+#ifdef OLDCODE
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
@@ -1969,5 +2021,5 @@ PLUGINCOMMAND Plugin::AboutMe()
     if (!aboutDialog.isVisible())
         aboutDialog.doDialog();
 }
-
+#endif
 #pragma endregion Plugin User Interfacing and Menu Commands

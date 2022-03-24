@@ -5,13 +5,14 @@
 // PLEASE DO *NOT* EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
-#include <wx/wxprec.h>
+#include "pch.h"
 
 #include "NWScriptForms.h"
 
 ///////////////////////////////////////////////////////////////////////////
+using namespace NWScriptPlugin;
 
-AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
+wxAboutDialog::wxAboutDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 	this->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Mono") ) );
@@ -22,7 +23,7 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	wxBoxSizer* bSizer5;
 	bSizer5 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_bitmap2 = new wxStaticBitmap( this, wxIDB_NWSCRIPTLOGO, wxBitmap( wxT("IDB_NWSCRIPTLOGO"), wxBITMAP_TYPE_RESOURCE ), wxDefaultPosition, wxDefaultSize, 0 );
+	m_bitmap2 = new wxStaticBitmap( this, wxIDB_NWSCRIPTLOGO, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer5->Add( m_bitmap2, 0, wxALL, 5 );
 
 	wxBoxSizer* bSizer10;
@@ -108,20 +109,28 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	bSizer8->Add( btOk, 0, wxALIGN_CENTER|wxBOTTOM|wxTOP, 10 );
 
 
-	bSizer1->Add( bSizer8, 0, wxALIGN_CENTER|wxEXPAND, 5 );
+	bSizer1->Add( bSizer8, 0, wxALIGN_CENTER, 5 );
 
 
 	this->SetSizer( bSizer1 );
 	this->Layout();
 
 	this->Centre( wxBOTH );
+
+	// Connect Events
+	this->Connect( wxEVT_KEY_UP, wxKeyEventHandler( wxAboutDialog::OnKeyPress ) );
+	btOk->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( wxAboutDialog::OnBtOkClose ), NULL, this );
 }
 
-AboutDialog::~AboutDialog()
+wxAboutDialog::~wxAboutDialog()
 {
+	// Disconnect Events
+	this->Disconnect( wxEVT_KEY_UP, wxKeyEventHandler( wxAboutDialog::OnKeyPress ) );
+	btOk->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( wxAboutDialog::OnBtOkClose ), NULL, this );
+
 }
 
-ConsoleWindow::ConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
+wxConsoleWindow::wxConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
@@ -131,12 +140,12 @@ ConsoleWindow::ConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& t
 	wxBoxSizer* bSizer9;
 	bSizer9 = new wxBoxSizer( wxVERTICAL );
 
-	tabConsole = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_BOTTOM|wxBORDER_SIMPLE );
+	tabConsole = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_BOTTOM );
 
-	bSizer9->Add( tabConsole, 1, wxEXPAND | wxALL, 5 );
+	bSizer9->Add( tabConsole, 1, wxEXPAND | wxALL, 3 );
 
 
-	bSizer8->Add( bSizer9, 1, wxALL|wxEXPAND, 5 );
+	bSizer8->Add( bSizer9, 1, wxALL|wxEXPAND, 3 );
 
 
 	this->SetSizer( bSizer8 );
@@ -145,17 +154,17 @@ ConsoleWindow::ConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& t
 	this->Centre( wxBOTH );
 
 	// Connect Events
-	tabConsole->Connect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( ConsoleWindow::OnPageChanged ), NULL, this );
+	tabConsole->Connect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( wxConsoleWindow::OnPageChanged ), NULL, this );
 }
 
-ConsoleWindow::~ConsoleWindow()
+wxConsoleWindow::~wxConsoleWindow()
 {
 	// Disconnect Events
-	tabConsole->Disconnect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( ConsoleWindow::OnPageChanged ), NULL, this );
+	tabConsole->Disconnect( wxEVT_COMMAND_NOTEBOOK_PAGE_CHANGED, wxNotebookEventHandler( wxConsoleWindow::OnPageChanged ), NULL, this );
 
 }
 
-ErrorsPanel::ErrorsPanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
+wxErrorsPanel::wxErrorsPanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
 	wxBoxSizer* bSizer10;
 	bSizer10 = new wxBoxSizer( wxVERTICAL );
@@ -203,11 +212,11 @@ ErrorsPanel::ErrorsPanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, c
 	this->Layout();
 }
 
-ErrorsPanel::~ErrorsPanel()
+wxErrorsPanel::~wxErrorsPanel()
 {
 }
 
-ConsolePanel::ConsolePanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
+wxConsolePanel::wxConsolePanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxVERTICAL );
@@ -250,6 +259,6 @@ ConsolePanel::ConsolePanel( wxWindow* parent, wxWindowID id, const wxPoint& pos,
 	this->Layout();
 }
 
-ConsolePanel::~ConsolePanel()
+wxConsolePanel::~wxConsolePanel()
 {
 }
