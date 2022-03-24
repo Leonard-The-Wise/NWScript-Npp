@@ -23,8 +23,8 @@ wxAboutDialog::wxAboutDialog( wxWindow* parent, wxWindowID id, const wxString& t
 	wxBoxSizer* bSizer5;
 	bSizer5 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_bitmap2 = new wxStaticBitmap( this, wxIDB_NWSCRIPTLOGO, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer5->Add( m_bitmap2, 0, wxALL, 5 );
+	bmpLogo = new wxStaticBitmap( this, wxIDB_NWSCRIPTLOGO, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer5->Add( bmpLogo, 0, wxALL, 5 );
 
 	wxBoxSizer* bSizer10;
 	bSizer10 = new wxBoxSizer( wxVERTICAL );
@@ -130,7 +130,7 @@ wxAboutDialog::~wxAboutDialog()
 
 }
 
-wxConsoleWindow::wxConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
+wxConsoleWindow::wxConsoleWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
@@ -140,12 +140,12 @@ wxConsoleWindow::wxConsoleWindow( wxWindow* parent, wxWindowID id, const wxStrin
 	wxBoxSizer* bSizer9;
 	bSizer9 = new wxBoxSizer( wxVERTICAL );
 
-	tabConsole = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_BOTTOM );
+	tabConsole = new wxNotebook( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_BOTTOM|wxBORDER_DEFAULT|wxFULL_REPAINT_ON_RESIZE );
 
 	bSizer9->Add( tabConsole, 1, wxEXPAND | wxALL, 3 );
 
 
-	bSizer8->Add( bSizer9, 1, wxALL|wxEXPAND, 3 );
+	bSizer8->Add( bSizer9, 1, wxBOTTOM|wxEXPAND|wxTOP, 3 );
 
 
 	this->SetSizer( bSizer8 );
@@ -175,22 +175,22 @@ wxErrorsPanel::wxErrorsPanel( wxWindow* parent, wxWindowID id, const wxPoint& po
 	wxBoxSizer* bSizer12;
 	bSizer12 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_toggleBtn1 = new wxToggleButton( this, wxIDTOGGLEERRORS, wxT("(0) Errors"), wxDefaultPosition, wxDefaultSize, 0 );
+	btShowErrors = new wxToggleButton( this, wxIDTOGGLEERRORS, wxT("(0) Errors"), wxDefaultPosition, wxDefaultSize, 0 );
 
-	m_toggleBtn1->SetBitmap( wxNullBitmap );
-	m_toggleBtn1->SetMinSize( wxSize( 120,27 ) );
+	btShowErrors->SetBitmap( wxNullBitmap );
+	btShowErrors->SetMinSize( wxSize( 120,27 ) );
 
-	bSizer12->Add( m_toggleBtn1, 0, wxALL, 5 );
+	bSizer12->Add( btShowErrors, 0, wxALL, 5 );
 
-	m_toggleBtn2 = new wxToggleButton( this, wxIDTOGGLEWARNINGS, wxT("(0) Warnings"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_toggleBtn2->SetMinSize( wxSize( 120,27 ) );
+	btShowWarnings = new wxToggleButton( this, wxIDTOGGLEWARNINGS, wxT("(0) Warnings"), wxDefaultPosition, wxDefaultSize, 0 );
+	btShowWarnings->SetMinSize( wxSize( 120,27 ) );
 
-	bSizer12->Add( m_toggleBtn2, 0, wxALL, 5 );
+	bSizer12->Add( btShowWarnings, 0, wxALL, 5 );
 
-	m_toggleBtn3 = new wxToggleButton( this, wxIDTOGGLEMESSAGES, wxT("(0) Messages"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_toggleBtn3->SetMinSize( wxSize( 120,27 ) );
+	btShowMessages = new wxToggleButton( this, wxIDTOGGLEMESSAGES, wxT("(0) Messages"), wxDefaultPosition, wxDefaultSize, 0 );
+	btShowMessages->SetMinSize( wxSize( 120,27 ) );
 
-	bSizer12->Add( m_toggleBtn3, 0, wxALL, 5 );
+	bSizer12->Add( btShowMessages, 0, wxALL, 5 );
 
 
 	bSizer11->Add( bSizer12, 0, wxEXPAND, 5 );
@@ -227,26 +227,21 @@ wxConsolePanel::wxConsolePanel( wxWindow* parent, wxWindowID id, const wxPoint& 
 	wxBoxSizer* bSizer16;
 	bSizer16 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_staticText7 = new wxStaticText( this, wxID_ANY, wxT("Console Output"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText7 = new wxStaticText( this, wxID_ANY, wxT("Console Output:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText7->Wrap( -1 );
-	m_staticText7->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Mono") ) );
-	m_staticText7->SetMinSize( wxSize( 150,-1 ) );
+	m_staticText7->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, true, wxT("Cascadia Mono") ) );
+	m_staticText7->SetMinSize( wxSize( 150,20 ) );
 
 	bSizer16->Add( m_staticText7, 0, wxALL, 5 );
 
-	m_toolBar1 = new wxToolBar( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL );
-	m_toolBar1->Realize();
 
-	bSizer16->Add( m_toolBar1, 0, wxEXPAND, 5 );
-
-
-	bSizer15->Add( bSizer16, 0, wxEXPAND, 5 );
+	bSizer15->Add( bSizer16, 0, wxFIXED_MINSIZE, 5 );
 
 	wxBoxSizer* bSizer17;
 	bSizer17 = new wxBoxSizer( wxVERTICAL );
 
-	m_richText2 = new wxRichTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS );
-	bSizer17->Add( m_richText2, 1, wxEXPAND | wxALL, 5 );
+	txtConsole = new wxRichTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY|wxBORDER_THEME|wxHSCROLL|wxVSCROLL );
+	bSizer17->Add( txtConsole, 1, wxEXPAND | wxALL, 5 );
 
 
 	bSizer15->Add( bSizer17, 1, wxEXPAND, 5 );

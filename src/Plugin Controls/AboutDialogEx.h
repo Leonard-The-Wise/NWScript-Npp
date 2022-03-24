@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NWScriptForms.h"
+#include "PluginControlsRC.h"
 
 namespace NWScriptPlugin {
 
@@ -8,8 +9,14 @@ namespace NWScriptPlugin {
 	public:
 
 
-		AboutDialogEx(wxWindow* parent) :
-			wxAboutDialog(parent) {			
+		AboutDialogEx(HINSTANCE hInst, wxWindow* parent) :
+			_hInst(hInst), wxAboutDialog(parent) {
+			_hSelf = this->GetHWND();
+
+			HBITMAP NWLogo = reinterpret_cast<HBITMAP>(LoadImage(hInst, MAKEINTRESOURCE(IDB_NWSCRIPTLOGO), IMAGE_BITMAP, 0, 0, 0));
+			
+			//b.
+			//bmpLogo->SetBitmap(b);
 		}
 
 		void doDialog(bool toShow = true) {
@@ -26,6 +33,8 @@ namespace NWScriptPlugin {
 				this->Show(false);
 		}
 
-
+	private:
+		HINSTANCE _hInst;
+		HWND _hSelf;
 	};
 }

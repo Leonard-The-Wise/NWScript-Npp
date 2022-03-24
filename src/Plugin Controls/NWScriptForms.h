@@ -25,11 +25,9 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/notebook.h>
-#include <wx/frame.h>
 #include <wx/tglbtn.h>
 #include <wx/listctrl.h>
 #include <wx/panel.h>
-#include <wx/toolbar.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +52,7 @@ namespace NWScriptPlugin
 		private:
 
 		protected:
-			wxStaticBitmap* m_bitmap2;
+			wxStaticBitmap* bmpLogo;
 			wxStaticText* lblTitle;
 			wxStaticText* lblVersion;
 			wxStaticText* lblCopyright;
@@ -81,7 +79,7 @@ namespace NWScriptPlugin
 	///////////////////////////////////////////////////////////////////////////////
 	/// Class wxConsoleWindow
 	///////////////////////////////////////////////////////////////////////////////
-	class wxConsoleWindow : public wxFrame
+	class wxConsoleWindow : public wxDialog
 	{
 		private:
 
@@ -94,7 +92,7 @@ namespace NWScriptPlugin
 
 		public:
 
-			wxConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Tools Compiler"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 701,300 ), long style = wxCAPTION|wxFRAME_FLOAT_ON_PARENT|wxRESIZE_BORDER|wxTAB_TRAVERSAL );
+			wxConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Panel 2.0"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 551,360 ), long style = wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxFULL_REPAINT_ON_RESIZE );
 
 			~wxConsoleWindow();
 
@@ -108,14 +106,14 @@ namespace NWScriptPlugin
 		private:
 
 		protected:
-			wxToggleButton* m_toggleBtn1;
-			wxToggleButton* m_toggleBtn2;
-			wxToggleButton* m_toggleBtn3;
+			wxToggleButton* btShowErrors;
+			wxToggleButton* btShowWarnings;
+			wxToggleButton* btShowMessages;
 			wxListCtrl* m_listCtrl1;
 
 		public:
 
-			wxErrorsPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 729,278 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+			wxErrorsPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 729,278 ), long style = wxFULL_REPAINT_ON_RESIZE, const wxString& name = wxEmptyString );
 
 			~wxErrorsPanel();
 
@@ -130,12 +128,11 @@ namespace NWScriptPlugin
 
 		protected:
 			wxStaticText* m_staticText7;
-			wxToolBar* m_toolBar1;
-			wxRichTextCtrl* m_richText2;
+			wxRichTextCtrl* txtConsole;
 
 		public:
 
-			wxConsolePanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+			wxConsolePanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxFULL_REPAINT_ON_RESIZE, const wxString& name = wxEmptyString );
 
 			~wxConsolePanel();
 

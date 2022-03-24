@@ -9,16 +9,22 @@ namespace NWScriptPlugin {
 
 
 		LoggerDialogEx(wxWindow* parent) :
-			wxConsoleWindow(parent) {
-			//_ErrorPanel = std::make_unique<wxErrorsPanel>(this);
-			//_ErrorPanel->Show();
+			wxConsoleWindow(parent) 
+		{
+			//this->AdoptAttributesFromHWND();
+			_ErrorPanel = std::make_unique<wxErrorsPanel>(dynamic_cast<wxWindow*>(tabConsole));
+			_ConsolePanel = std::make_unique<wxConsolePanel>(dynamic_cast<wxWindow*>(tabConsole));
+			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ErrorPanel.get()), "Errors", true);
+			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ConsolePanel.get()), "Console", false);			
+			//_ErrorPanel->AdoptAttributesFromHWND();
+			//_ConsolePanel->AdoptAttributesFromHWND();
 		}
 
 		void doDialog(bool toShow = true) {
 			this->Show(toShow);
 		}
 
-		bool isVisible() {
+		virtual bool isVisible() {
 			return this->isVisible();
 		}
 
@@ -32,6 +38,7 @@ namespace NWScriptPlugin {
 		}
 
 	protected:
-		//std::unique_ptr<wxErrorsPanel> _ErrorPanel;
+		std::unique_ptr<wxErrorsPanel> _ErrorPanel;
+		std::unique_ptr<wxConsolePanel> _ConsolePanel;
 	};
 }

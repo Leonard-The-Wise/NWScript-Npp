@@ -271,7 +271,7 @@ void Plugin::InitWxWidgets()
     wxEntryStart(DllHModule());               // Also need an Entry point defined, even if we already past that.
 
     _MainWindow.SetHWND(reinterpret_cast<WXHWND>(NotepadHwnd()));
-    _MainWindow.AdoptAttributesFromHWND();
+    //_MainWindow.AdoptAttributesFromHWND();
     wxTopLevelWindows.Append(&_MainWindow);
 
     _logConsoleEx = std::make_unique<LoggerDialogEx>(&_MainWindow);
@@ -1975,7 +1975,7 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
 
     if (!Instance()._AboutDialog)
-        Instance()._AboutDialog = std::make_unique<AboutDialogEx>(&Instance()._MainWindow);
+        Instance()._AboutDialog = std::make_unique<AboutDialogEx>(Instance().DllHModule(), & Instance()._MainWindow);
 
     Instance()._AboutDialog->doDialog();
 }
