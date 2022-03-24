@@ -7,14 +7,17 @@
 
 #pragma once
 
+
 #include "Common.h"
+#include "DockingDlgInterface.h"
+
 #include "NWScriptForms.h"
 
 namespace NWScriptPlugin {
 
+
 	class LoggerDialog : wxConsoleWindow {
 	public:
-
 
 		LoggerDialog(wxWindow* parent) :
 			wxConsoleWindow(parent) 
@@ -25,6 +28,28 @@ namespace NWScriptPlugin {
 			_ConsolePanel = std::make_unique<wxConsolePanel>(dynamic_cast<wxWindow*>(tabConsole));
 			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ErrorPanel.get()), "Errors", false);
 			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ConsolePanel.get()), "Console", true);
+
+			// Main list icons
+			_listIcons.Add(getStockIconWx(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16));
+			_listIcons.Add(getStockIconWx(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16));
+			_listIcons.Add(getStockIconWx(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16));
+
+
+			//Set icons to buttons
+			wxWindow* button = _ErrorPanel->FindWindowById(wxIDTOGGLEERRORS);
+			((wxToggleButton*)button)->SetBitmap(getStockIconBitmapWx(SHSTOCKICONID::SIID_ERROR, 
+				IconSize::Size16x16), wxDirection::wxLEFT);			
+			button = _ErrorPanel->FindWindowById(wxIDTOGGLEWARNINGS);
+			((wxToggleButton*)button)->SetBitmap(getStockIconBitmapWx(SHSTOCKICONID::SIID_WARNING,
+				IconSize::Size16x16), wxDirection::wxLEFT);
+			button = _ErrorPanel->FindWindowById(wxIDTOGGLEMESSAGES);
+			((wxToggleButton*)button)->SetBitmap(getStockIconBitmapWx(SHSTOCKICONID::SIID_INFO,
+				IconSize::Size16x16), wxDirection::wxLEFT);
+
+			// Create tab columns
+			
+			
+
 		}
 
 		void doDialog(bool toShow = true) {
@@ -46,8 +71,10 @@ namespace NWScriptPlugin {
 		}
 
 	protected:
+		wxImageList _listIcons;
 		HWND _hSelf;
 		HWND _hParent;
+		wxIcon _error, _warning, _info;
 		std::unique_ptr<wxErrorsPanel> _ErrorPanel;
 		std::unique_ptr<wxConsolePanel> _ConsolePanel;
 	};

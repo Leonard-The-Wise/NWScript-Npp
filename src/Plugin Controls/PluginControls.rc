@@ -56,7 +56,7 @@ BEGIN
     CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,71,113,204,12
     EDITTEXT        IDC_TXTABOUT,7,126,304,94,ES_MULTILINE | ES_READONLY | NOT WS_BORDER | WS_VSCROLL,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,11
-    CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
+    CONTROL         VK_NUMPAD5,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
     CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,121,9,188,14
     CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,119,39,195,8
     CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,122,56,193,54
@@ -416,8 +416,6 @@ END
 // Bitmap
 //
 
-IDB_NWSCRIPTLOGO        BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\NWScript.bmp"
-
 IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
 
 
@@ -431,6 +429,14 @@ IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\
 IDI_NWSCRIPTFILE96      ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\NWScript-File.ico"
 
 IDI_SETTINGS            ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\Settings.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_NWSCRIPTLOGO        PNG                     "D:\\Projetos\\NWScript Plugin\\Media\\NWScriptLogo.png"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

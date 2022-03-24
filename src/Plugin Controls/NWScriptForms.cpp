@@ -177,7 +177,7 @@ wxErrorsPanel::wxErrorsPanel( wxWindow* parent, wxWindowID id, const wxPoint& po
 	btShowErrors = new wxToggleButton( this, wxIDTOGGLEERRORS, wxT("(0) Errors"), wxDefaultPosition, wxDefaultSize, 0 );
 
 	btShowErrors->SetBitmap( wxNullBitmap );
-	btShowErrors->SetMinSize( wxSize( 120,27 ) );
+	btShowErrors->SetMinSize( wxSize( 80,27 ) );
 
 	bSizer12->Add( btShowErrors, 0, wxALL, 5 );
 

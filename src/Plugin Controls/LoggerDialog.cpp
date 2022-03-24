@@ -7,3 +7,10 @@
 
 
 #include "pch.h"
+
+#include "LoggerDialog.h"
+
+
+
+
+

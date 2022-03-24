@@ -22,7 +22,7 @@ namespace NWScriptPlugin {
 			_hInst(hInst), wxAboutDialog(parent) {
 			_hSelf = this->GetHWND();
 			
-			bmpLogo->SetBitmap(resourceBitmap(IDB_NWSCRIPTLOGO));
+			bmpLogo->SetBitmap(resourcePNG(IDB_NWSCRIPTLOGO));
 			this->connectKeyDownEvent(this);
 		}
 

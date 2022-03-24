@@ -261,7 +261,19 @@ namespace NWScriptPluginCommons {
 
     wxBitmap getStockIconBitmapWx(SHSTOCKICONID stockIconID, IconSize iconSize)
     {
-        return NULL;
+        wxBitmap ret;
+        ret.CopyFromIcon(getStockIconWx(stockIconID, iconSize));
+        return ret;
+    }
+
+    wxBitmap loadPNGFromResource(HMODULE module, int idResource, wxString resType)
+    {
+        auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), resType.wc_str());
+        size_t _size = SizeofResource(module, hResource);
+        auto hMemory = LoadResource(module, hResource);
+        LPVOID ptr = LockResource(hMemory);
+        wxBitmap my_bitmap = wxBitmap::NewFromPNGData(ptr, _size);
+        return my_bitmap;
     }
 
     generic_string getSystemFolder(GUID folderID)

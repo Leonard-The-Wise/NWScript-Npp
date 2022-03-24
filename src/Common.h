@@ -48,6 +48,7 @@ struct tstat : stat {};
 
 #define resourceBitmap(name) wxBitmap(L"#" + std::to_wstring(name), wxBITMAP_TYPE_BMP_RESOURCE)
 #define resourceIcon(name) wxIcon(L"#" + std::to_wstring(name), wxBITMAP_TYPE_ICON_RESOURCE)
+#define resourcePNG(name) wxBitmap(L"#" + std::to_wstring(name), wxBITMAP_TYPE_PNG_RESOURCE)
 
 
 // Constants for NWScript file names
@@ -129,6 +130,9 @@ namespace NWScriptPluginCommons {
 
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID);
+
+    // Loads a PNG file from resources
+    wxBitmap loadPNGFromResource(HMODULE module, int idResource, wxString resType);
 
     // Converts a File Link into an actual filename
     void resolveLinkFile(generic_string& linkFilePath);

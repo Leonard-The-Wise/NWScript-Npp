@@ -298,9 +298,6 @@
     <Image Include="..\Media\Sample-Colorization.jpg">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="..\Media\NWScript.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\Here-be-Dragons.bmp">
       <Filter>Resource Files</Filter>
     </Image>
@@ -314,6 +311,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\Settings.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScriptLogo.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScriptLogo.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

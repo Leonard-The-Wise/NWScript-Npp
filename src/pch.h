@@ -68,6 +68,7 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 #include <wx/notebook.h>
+#include <wx/imagpng.h>
 #include <wx/frame.h>
 #include <wx/tglbtn.h>
 #include <wx/listctrl.h>

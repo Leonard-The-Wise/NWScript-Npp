@@ -361,7 +361,8 @@
     <Image Include="..\Media\Here-be-Dragons.bmp" />
     <Image Include="..\Media\NWScript File.bmp" />
     <Image Include="..\Media\NWScript-File.ico" />
-    <Image Include="..\Media\NWScript.bmp" />
+    <Image Include="..\Media\NWScriptLogo.bmp" />
+    <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />
     <Image Include="..\Media\Settings.ico" />

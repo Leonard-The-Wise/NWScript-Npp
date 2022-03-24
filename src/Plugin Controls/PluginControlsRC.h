@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by PluginControls.rc
 //
-#define IDB_NWSCRIPTLOGO                101
 #define IDD_ABOUT                       102
 #define IDB_HEREBEDRAGONS               103
 #define IDD_HEREBEDRAGONS               104
@@ -12,14 +11,14 @@
 #define IDD_COMPILERSETTINGS            117
 #define IDD_BATCHPROCESS                120
 #define IDD_PROCESSFILES                127
-#define IDI_ICON1                       129
 #define IDI_SETTINGS                    129
 #define IDD_USERSPREFERENCES            130
 #define IDD_LOGGER                      132
 #define IDD_LOGGER_ERRORS               134
 #define IDD_LOGGER_CONSOLE              136
-#define IDD_DIALOG1                     138
 #define IDD_EMPTY                       138
+#define IDB_PNG1                        145
+#define IDB_NWSCRIPTLOGO                145
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -92,7 +91,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           101
