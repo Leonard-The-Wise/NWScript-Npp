@@ -9,12 +9,11 @@
 //#include <Windows.h>
 //#include <Commctrl.h>
 //#include <sstream>
+//
 //#include "jpcre2.hpp"
 
 //#include "PluginMain.h"
-
 #include "AboutDialog.h"
-
 
 #include "PluginControlsRC.h"
 
@@ -130,39 +129,135 @@ NERDY STATISTICS:\r\n\
 
 using namespace NWScriptPlugin;
 
-void AboutDialog::UpdateInfo() {
+// Anchoring and size restriction informations
 
-    // Get version from module's binary file
-    VersionInfoEx versionInfo = VersionInfoEx::getLocalVersion();
-    generic_stringstream sVersion = {};
-    sVersion << "Version " << versionInfo.shortString().c_str() << " (build " << versionInfo.build() << ")";
+constexpr const RECTSIZER mainWindowSize = { {653, 562 }, {1024, 768} };
+constexpr const RECTSIZER lblPluginName = { { 251, 0 } };
+constexpr const RECTSIZER lblVersion = { { 251, 0 } };
+constexpr const RECTSIZER lblCopyright = { { 251, 0 } };
+constexpr const RECTSIZER lblCredits = { { 251, 114 } };
+constexpr const RECTSIZER lnkHomepageSize = { { 490, 0 } };
+constexpr const RECTSIZER txtAboutSize = { { 607, 200 } };
 
-    lblVersion->SetLabel(sVersion.str().c_str());
-    txtAbout->AppendText(wxString(replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str()));
-    lnkHomepage->SetURL(_homePath);
-    lnkHomepage->SetLabel(_homePath);
+BEGIN_ANCHOR_MAP(AboutDialog)
+	ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(mainWindowSize)
+#ifdef DEBUG_ANCHORLIB
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLPLUGINNAME, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Plugin Name Label")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Version")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Copyright")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Credits")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Link to Homepage")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL, "Editor About")
+	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM, "Ok Button")
+#else
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLPLUGINNAME, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL)
+	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM)
+#endif
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_LBLPLUGINNAME, lblPluginName)
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_LBLVERSION, lblVersion)
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_LBLCOPYRIGHT, lblCopyright)
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_LBLSPECIALCREDITS, lblCredits)
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_LNKHOMEPAGE, lnkHomepageSize)
+	ANCHOR_MAP_ADDSIZERESTRICTION(_hSelf, IDC_TXTABOUT, txtAboutSize)
+END_ANCHOR_MAP(_hSelf)
 
 
+// Use one of these fonts to display text. Crescent order.
+static const generic_string fontFamilies[] = {
+	L"Cascadia Code", L"Cascadia Mono", L"Consolas", L"Droid Sans Mono", L"Inconsolata", L"Courier New" L"monospace", L"Monaco", L"Menlo", L"Fixedsys"
+};
+
+intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case WM_INITDIALOG:
+		{
+			// Get version from module's binary file
+			VersionInfoEx versionInfo = VersionInfoEx::getLocalVersion();
+			generic_stringstream sVersion = {};
+			sVersion << "Version " << versionInfo.shortString().c_str() << " (build " << versionInfo.build() << ")";
+
+			// Set user fonts. Try to keep same font for all.
+			HFONT hTitleFont = NULL;
+			size_t fontIndex = 0;
+			while (fontIndex < std::size(fontFamilies) && !hTitleFont)
+			{
+				hTitleFont = ::CreateFont(16, 10, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
+				if (!hTitleFont)
+					fontIndex++;
+			}
+
+			HFONT hHomepageFont = CreateFont(14, 8, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
+
+			if (hTitleFont)
+				::SendMessage(GetDlgItem(_hSelf, IDC_LBLPLUGINNAME), WM_SETFONT, reinterpret_cast<WPARAM>(hTitleFont), 0);
+			if (hHomepageFont)
+				::SendMessage(GetDlgItem(_hSelf, IDC_LBLHOMEPAGE), WM_SETFONT, reinterpret_cast<WPARAM>(hHomepageFont), 0);
+
+			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
+			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
+			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
+
+			InitAnchors();
+
+			return TRUE;
+		}
+
+		case WM_COMMAND:
+		{
+			switch (wParam)
+			{
+			case IDCANCEL:
+			case IDOK:
+				display(false);
+				destroy();
+				return TRUE;
+			}
+		}
+
+		case WM_SIZE:
+			ANCHOR_MAP_HANDLESIZERS();
+
+		case WM_GETMINMAXINFO:
+			ANCHOR_MAP_HANDLERESTRICTORS(wParam, lParam);
+
+		case WM_NOTIFY:
+		{
+			if (wParam == IDC_LNKHOMEPAGE)
+			{
+				NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
+				switch (nmhdr->code)
+				{
+				case NM_CLICK:
+				case NM_RETURN:
+					PNMLINK pNMLink = (PNMLINK)lParam;
+					LITEM link = pNMLink->item;
+
+					ShellExecute(NULL, L"open", link.szUrl, NULL, NULL, SW_SHOW);
+					return TRUE;
+				}
+			}
+		}
+	}
+
+	// Signals done processing messages
+	return FALSE;
 }
 
-
-void AboutDialog::connectKeyDownEvent(wxWindow* pclComponent)
+void AboutDialog::doDialog()
 {
-    if (pclComponent)
-    {
-        pclComponent->Connect(wxID_ANY,
-            wxEVT_KEY_DOWN,
-            wxKeyEventHandler(AboutDialog::OnKeyPress),
-            (wxObject*)NULL,
-            this);
+	// Create from resource
+	if (!isCreated())
+		create(IDD_ABOUT);
 
-        wxWindowListNode* pclNode = pclComponent->GetChildren().GetFirst();
-        while (pclNode)
-        {
-            wxWindow* pclChild = pclNode->GetData();
-            this->connectKeyDownEvent(pclChild);
-
-            pclNode = pclNode->GetNext();
-        }
-    }
+	//Show and centralize
+	goToCenter();
 }

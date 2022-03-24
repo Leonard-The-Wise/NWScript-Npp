@@ -7,65 +7,48 @@
 
 #pragma once
 
-#define USE_ANF_SCREEN_TO_CLIENT
-
-#include "AnchorMap.h"
 #include "Common.h"
-#include "DockingDlgInterface.h"
-#include "PluginControlsRC.h"
+#include "NWScriptForms.h"
 
 namespace NWScriptPlugin {
 
-	class LoggerDialog : public DockingDlgInterface
-	{
+	class LoggerDialog : wxConsoleWindow {
 	public:
-		LoggerDialog() : DockingDlgInterface(IDD_LOGGER) {};
 
-		// Notepad calls this on registering the class...
-		// so, DON'T use it directly UNLESS on your class initialization routines
-		// [to override Notepad++ auto-show docked dialogs on initialization for instance, 
-		// you may call display(false) to reverse that behavior].
-		// On normal uses, call doDialog() instead because we must setup anchors first...
-		// read the SetupDockingAnchors() implementation description on LoggerDialog.cpp for more
-		// info.
-		virtual void display(bool toShow = true) 
+
+		LoggerDialog(wxWindow* parent) :
+			wxConsoleWindow(parent) 
 		{
-			DockingDlgInterface::display(toShow);
-			if (toShow)
-				::SetFocus(::GetDlgItem(_hSelf, IDC_TABLOGGER));
-		};
-
-		void doDialog(bool toShow = true)
-		{
-			// To work with notepad++ drawing mechanisms, we reverse the process...
-			// usually we would first setup anchors and display our dialog, but here
-			// we first SHOW the window, so all the drawing messages pass through
-			display(toShow);
-
-			// and ONLY THEN we setup anchors... (this is only required on DockingDialogs)
-			// or else we may get some unexpected control sizes as a result.
-			if (!anchorsPrepared && toShow)
-				SetupDockingAnchors();
-			anchorsPrepared = toShow;
+			_hParent = parent->GetHWND();
+			_hSelf = this->GetHWND();
+			_ErrorPanel = std::make_unique<wxErrorsPanel>(dynamic_cast<wxWindow*>(tabConsole));
+			_ConsolePanel = std::make_unique<wxConsolePanel>(dynamic_cast<wxWindow*>(tabConsole));
+			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ErrorPanel.get()), "Errors", false);
+			tabConsole->AddPage(dynamic_cast<wxWindow*>(_ConsolePanel.get()), "Console", true);
 		}
 
-		void setParent(HWND parent2set) 
-		{
-			_hParent = parent2set;
-		};
+		void doDialog(bool toShow = true) {
+			// Here we must communicate with parent (Notepad++)
+			::SendMessage(_hParent, toShow ? NPPM_DMMSHOW : NPPM_DMMHIDE, 0, (LPARAM)_hSelf);
+		}
 
+		bool isVisible() {
+			return (::IsWindowVisible(_hSelf) ? true : false); // query status by ordinary HWND here
+		}
+
+		generic_string getTitle() {
+			generic_string t = this->GetTitle().ToStdWstring();
+			return t;
+		}
+
+		HWND getHWND() {
+			return reinterpret_cast<HWND>(this->GetHWND());
+		}
 
 	protected:
-		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-	private:
-		DECLARE_ANCHOR_MAP()
-
-		bool anchorsPrepared = false;
-		void SetupDockingAnchors();
-
-		HWND _mainTabHwnd = nullptr;
-		HWND _errorDlgHwnd = nullptr;
-		HWND _consoleDlgHwnd = nullptr;
-		HIMAGELIST _iconList = nullptr;
+		HWND _hSelf;
+		HWND _hParent;
+		std::unique_ptr<wxErrorsPanel> _ErrorPanel;
+		std::unique_ptr<wxConsolePanel> _ConsolePanel;
 	};
 }

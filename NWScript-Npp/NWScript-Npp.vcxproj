@@ -127,7 +127,6 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -155,7 +154,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -180,7 +178,6 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -208,7 +205,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -248,11 +244,9 @@
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\pch.h" />
     <ClInclude Include="..\src\Plugin Controls\AboutDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\AboutDialogEx.h" />
     <ClInclude Include="..\src\Plugin Controls\BatchProcessingDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\CompilerSettingsDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h" />
-    <ClInclude Include="..\src\Plugin Controls\LoggerDialogEx.h" />
     <ClInclude Include="..\src\Plugin Controls\NWScriptForms.h" />
     <ClInclude Include="..\src\Plugin Controls\PathAccessDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\FileParseSummaryDialog.h" />
@@ -314,11 +308,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\AboutDialogEx.cpp" />
     <ClCompile Include="..\src\Plugin Controls\BatchProcessingDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\CompilerSettingsDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp" />
-    <ClCompile Include="..\src\Plugin Controls\LoggerDialogEx.cpp" />
     <ClCompile Include="..\src\Plugin Controls\NWScriptForms.cpp" />
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />

@@ -70,7 +70,7 @@ namespace NWScriptPlugin
 
 		public:
 
-			wxAboutDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About NWScript Tools Plugin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 656,550 ), long style = wxDEFAULT_DIALOG_STYLE );
+			wxAboutDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("About NWScript Tools Plugin"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 656,550 ), long style = wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxWANTS_CHARS );
 
 			~wxAboutDialog();
 
@@ -92,7 +92,7 @@ namespace NWScriptPlugin
 
 		public:
 
-			wxConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Panel 2.0"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 551,360 ), long style = wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxFULL_REPAINT_ON_RESIZE );
+			wxConsoleWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("NWScript Compiler Window"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 551,360 ), long style = wxCAPTION|wxDEFAULT_DIALOG_STYLE|wxFULL_REPAINT_ON_RESIZE );
 
 			~wxConsoleWindow();
 

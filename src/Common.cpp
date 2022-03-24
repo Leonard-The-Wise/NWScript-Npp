@@ -200,6 +200,13 @@ namespace NWScriptPluginCommons {
         return hIcon;
     }
 
+    wxIcon getStockIconWx(SHSTOCKICONID stockIconID, IconSize iconSize)
+    {
+        wxIcon icon;
+        icon.CreateFromHICON(getStockIcon(stockIconID, iconSize));
+        return icon;
+    }
+
     // Converts a HICON to HBITMAP, preserving transparency channels
     // Extracted from example here:
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
@@ -250,6 +257,11 @@ namespace NWScriptPluginCommons {
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize) {
         return iconToBitmap(getStockIcon(stockIconID, iconSize));
+    }
+
+    wxBitmap getStockIconBitmapWx(SHSTOCKICONID stockIconID, IconSize iconSize)
+    {
+        return NULL;
     }
 
     generic_string getSystemFolder(GUID folderID)
@@ -662,6 +674,7 @@ namespace NWScriptPluginCommons {
         else
             return generic_string(TEXT(""));
     }
+
 
 #pragma warning(pop)
 

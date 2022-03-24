@@ -123,9 +123,6 @@
     <ClInclude Include="..\src\Utils\tinyxml2.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h">
-      <Filter>Plugin Dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\WarningDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
@@ -178,16 +175,13 @@
     <ClInclude Include="..\src\Utils\AnchorMap.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
-      <Filter>Plugin Dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\NWScriptForms.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\AboutDialogEx.h">
+    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\LoggerDialogEx.h">
+    <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
   </ItemGroup>
@@ -222,9 +216,6 @@
     <ClCompile Include="..\src\PluginMessenger.cpp" />
     <ClCompile Include="..\src\Utils\tinyxml2.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp">
-      <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\WarningDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
@@ -266,19 +257,16 @@
     <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
-      <Filter>Plugin Dialogs</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Utils\AnchorMap.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\NWScriptForms.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\AboutDialogEx.cpp">
+    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\LoggerDialogEx.cpp">
+    <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
   </ItemGroup>

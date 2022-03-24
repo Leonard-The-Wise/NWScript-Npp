@@ -2,6 +2,10 @@
 
 #pragma once
 
+#pragma comment (lib, "version")           // Must use to enable VersionFromResource
+#pragma comment (lib, "comctl32")          // Must use to create Image List controls
+#pragma comment (lib, "shlwapi")           // Must use to load icons from Shell Stock objects
+#pragma comment (lib, "rpcrt4")            // Link with wxwidgets
 
 #include <Windows.h>
 #include <windowsx.h>

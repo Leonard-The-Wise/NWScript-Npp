@@ -12,6 +12,7 @@
 
 #include "Common.h"
 #include "Notepad_plus_msgs.h"
+#include "DockingDlgInterface.h"
 
 #include "PluginMessenger.h"
 #include "LineIndentor.h"
@@ -19,9 +20,8 @@
 #include "NWScriptParser.h"
 #include "NWScriptCompiler.h"
 
+#include "AboutDialog.h"
 #include "LoggerDialog.h"
-#include "AboutDialogEx.h"
-#include "LoggerDialogEx.h"
 
 
 typedef void(PLUGININTERNALS);
@@ -255,7 +255,6 @@ namespace NWScriptPlugin {
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
 		NWScriptCompiler _compiler;
-		LoggerDialog _logConsole;
 		tTbData _dockingData;			// needs persistent info for docking data
 		HICON _dockingIcon;				// needs persistent info for docking data
 		generic_string _dockingTitle;   // needs persistent info for docking data
@@ -264,8 +263,8 @@ namespace NWScriptPlugin {
 		// wxWindows
 		wxWindow _MainWindow;
 		std::unique_ptr<wxApp> _PseudoApp;
-		std::unique_ptr<AboutDialogEx> _AboutDialog;
-		std::unique_ptr<LoggerDialogEx> _logConsoleEx;
+		std::unique_ptr<AboutDialog> _AboutDialog;
+		std::unique_ptr<LoggerDialog> _logConsoleEx;
 
 		// Internal handles
 

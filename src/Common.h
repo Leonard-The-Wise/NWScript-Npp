@@ -46,6 +46,10 @@ struct tstat : stat {};
 #endif
 #endif
 
+#define resourceBitmap(name) wxBitmap(L"#" + std::to_wstring(name), wxBITMAP_TYPE_BMP_RESOURCE)
+#define resourceIcon(name) wxIcon(L"#" + std::to_wstring(name), wxBITMAP_TYPE_ICON_RESOURCE)
+
+
 // Constants for NWScript file names
 const std::string textScriptSuffix = ".nss";
 const std::string compiledScriptSuffix = ".ncs";
@@ -109,6 +113,9 @@ namespace NWScriptPluginCommons {
     // Retrieves an HICON from the standard Windows libraries
     HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
 
+    // Retrieves an HICON from the standard Windows libraries into the wxWidgets format
+    wxIcon getStockIconWx(SHSTOCKICONID stockIconID, IconSize iconSize);
+
     // Converts a HICON to HBITMAP, preserving transparency channels
     // Extracted from example here:
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
@@ -116,6 +123,9 @@ namespace NWScriptPluginCommons {
 
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize);
+
+    // Retrieves an HICON from the standard Windows libraries and convert it to a wxBitmap
+    wxBitmap getStockIconBitmapWx(SHSTOCKICONID stockIconID, IconSize iconSize);
 
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID);

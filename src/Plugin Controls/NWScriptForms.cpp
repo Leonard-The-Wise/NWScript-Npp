@@ -14,7 +14,7 @@ using namespace NWScriptPlugin;
 
 wxAboutDialog::wxAboutDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
-	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetSizeHints( wxSize( 656,550 ), wxDefaultSize );
 	this->SetFont( wxFont( 10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Cascadia Mono") ) );
 
 	wxBoxSizer* bSizer1;
@@ -80,19 +80,18 @@ wxAboutDialog::wxAboutDialog( wxWindow* parent, wxWindowID id, const wxString& t
 
 	bSizer6->Add( lblHomepage, 0, wxALIGN_CENTER_VERTICAL|wxALL|wxFIXED_MINSIZE|wxLEFT, 5 );
 
-	lnkHomepage = new wxHyperlinkCtrl( this, wxIDC_LNKHOMEPAGE, wxT("https://github.com/Leonard-The-Wise/NWScript-Npp"), wxT("https://github.com/Leonard-The-Wise/NWScript-Npp"), wxDefaultPosition, wxSize( 510,-1 ), wxHL_DEFAULT_STYLE );
+	lnkHomepage = new wxHyperlinkCtrl( this, wxIDC_LNKHOMEPAGE, wxT("https://github.com/Leonard-The-Wise/NWScript-Npp"), wxT("https://github.com/Leonard-The-Wise/NWScript-Npp"), wxDefaultPosition, wxSize( -1,-1 ), wxHL_DEFAULT_STYLE );
 	lnkHomepage->SetFont( wxFont( 10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
-	lnkHomepage->SetMinSize( wxSize( 500,-1 ) );
 
-	bSizer6->Add( lnkHomepage, 1, wxALIGN_CENTER_VERTICAL|wxALL|wxFIXED_MINSIZE, 5 );
+	bSizer6->Add( lnkHomepage, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	bSizer1->Add( bSizer6, 0, wxALIGN_CENTER|wxLEFT|wxSHAPED, 10 );
+	bSizer1->Add( bSizer6, 0, wxALIGN_CENTER, 10 );
 
 	wxBoxSizer* bSizer7;
 	bSizer7 = new wxBoxSizer( wxVERTICAL );
 
-	txtAbout = new wxRichTextCtrl( this, wxIDC_TXTABOUT, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_AUTO_URL|wxTE_READONLY|wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS );
+	txtAbout = new wxRichTextCtrl( this, wxIDC_TXTABOUT, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_AUTO_URL|wxTE_READONLY|wxHSCROLL|wxVSCROLL );
 	bSizer7->Add( txtAbout, 1, wxEXPAND | wxALL, 5 );
 
 

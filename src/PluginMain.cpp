@@ -29,7 +29,6 @@
 
 #include "NWScriptParser.h"
 
-#include "AboutDialog.h"
 #include "BatchProcessingDialog.h"
 #include "CompilerSettingsDialog.h"
 #include "FileParseSummaryDialog.h"
@@ -37,8 +36,6 @@
 #include "ProcessFilesDialog.h"
 #include "UsersPreferencesDialog.h"
 #include "WarningDialog.h"
-
-#include "AboutDialogEx.h"
 
 #include "XMLGenStrings.h"
 #include "VersionInfoEx.h"
@@ -256,10 +253,6 @@ void Plugin::SetNotepadData(NppData data)
     if (_settings.compilerSettingsCreated)
         _compiler.appendSettings(&_settings);
 
-    // Initializes the log console
-    _logConsole.init(DllHModule(), NotepadHwnd());
-
-    // Docking dialog data
 }
 
 // Initializes wxWidgets app. 
@@ -274,7 +267,7 @@ void Plugin::InitWxWidgets()
     //_MainWindow.AdoptAttributesFromHWND();
     wxTopLevelWindows.Append(&_MainWindow);
 
-    _logConsoleEx = std::make_unique<LoggerDialogEx>(&_MainWindow);
+    _logConsoleEx = std::make_unique<LoggerDialog>(&_MainWindow);
 
     _dockingData = {};
     _dockingData.hClient = _logConsoleEx->getHWND();
@@ -291,7 +284,7 @@ void Plugin::InitWxWidgets()
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
-    //_logConsoleEx->doDialog(false);
+    _logConsoleEx->doDialog(false);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -1952,7 +1945,9 @@ PLUGINCOMMAND Plugin::OnlineHelp()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    ::SendMessage(Instance()._logConsole.getHSelf(), WM_SIZE, 0, 0);
+    // Create dialog if not exists...
+    if (!Instance()._AboutDialog)
+        Instance()._AboutDialog = std::make_unique<AboutDialog>(Instance().DllHModule(), &Instance()._MainWindow);
 
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 
@@ -1974,8 +1969,11 @@ PLUGINCOMMAND Plugin::AboutMe()
     }
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
 
-    if (!Instance()._AboutDialog)
-        Instance()._AboutDialog = std::make_unique<AboutDialogEx>(Instance().DllHModule(), & Instance()._MainWindow);
+    // Set replace strings
+    Instance()._AboutDialog->setReplaceStrings(replaceStrings);
+    // Set homepath dir...
+    Instance()._AboutDialog->setHomePath(PLUGIN_HOMEPATH);
+    Instance()._AboutDialog->UpdateInfo();
 
     Instance()._AboutDialog->doDialog();
 }
