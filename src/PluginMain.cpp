@@ -153,6 +153,10 @@ void Plugin::PluginInit(HANDLE hModule)
     Instance()._pluginLexerConfigFile = Instance()._pluginPaths["PluginPath"].stem();
     Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
+    // Install PNG handler support 
+    wxPNGHandler* png_Handler = new wxPNGHandler;
+    wxImage::AddHandler(png_Handler);
+
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
 }
@@ -1807,6 +1811,7 @@ PLUGINCOMMAND Plugin::CompilerSettings()
     compilerSettings.doDialog();
 }
 
+// Opens the user's preferences.
 PLUGINCOMMAND Plugin::UserPreferences()
 {
     static UsersPreferencesDialog userPreferences = {};
@@ -1940,7 +1945,6 @@ PLUGINCOMMAND Plugin::OnlineHelp()
 {
     ShellExecute(NULL, L"open", PLUGIN_ONLINEHELP, L"", L"", WM_SHOWWINDOW);
 }
-
 
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()

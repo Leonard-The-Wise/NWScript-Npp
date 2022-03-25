@@ -142,14 +142,9 @@ void AboutDialog::UpdateInfo() {
     lnkHomepage->SetURL(_homePath);
     lnkHomepage->SetLabel(_homePath);
 
-    wxPNGHandler* png_Handler = new wxPNGHandler;
-    wxImage::AddHandler(png_Handler);
-
     wxBitmap teste = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO, "PNG");
     bmpLogo->SetBitmap(teste);
-    //bmpLogo->SetBitmap(wxBITMAP_PNG(IDB_NWSCRIPTLOGO));
 }
-
 
 void AboutDialog::connectKeyDownEvent(wxWindow* pclComponent)
 {

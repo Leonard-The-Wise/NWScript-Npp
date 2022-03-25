@@ -259,6 +259,7 @@ namespace NWScriptPluginCommons {
         return iconToBitmap(getStockIcon(stockIconID, iconSize));
     }
 
+    // Retrieves an HICON from the standard Windows libraries and convert it to a Wx Bitmap
     wxBitmap getStockIconBitmapWx(SHSTOCKICONID stockIconID, IconSize iconSize)
     {
         wxBitmap ret;
@@ -266,6 +267,7 @@ namespace NWScriptPluginCommons {
         return ret;
     }
 
+    // Load a PNG from resource (since the built-in macros are not working properly here)
     wxBitmap loadPNGFromResource(HMODULE module, int idResource, wxString resType)
     {
         auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), resType.wc_str());
