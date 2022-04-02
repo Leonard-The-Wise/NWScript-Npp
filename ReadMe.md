@@ -4,7 +4,7 @@
 
 # NWScript Tools for Notepad++ 
 
-## What's this all about?
+## What is this plugin?
 
 Well, since there's not much functionality to User-Defined Languages in [`Notepad++`](https://notepad-plus-plus.org/) I decided to create a custom `Lexer` to support [`Bioware's NWScript language`](https://en.wikipedia.org/wiki/NWScript).
 
