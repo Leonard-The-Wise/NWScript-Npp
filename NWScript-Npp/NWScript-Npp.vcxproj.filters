@@ -299,9 +299,6 @@
     <Image Include="..\Media\NWScriptLogo.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\ImportSettings.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\UserBuild.png">
       <Filter>Resource Files</Filter>
     </Image>
@@ -341,22 +338,10 @@
     <Image Include="..\Media\png-icons\SettingsGroup.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\png-icons\ShowAssignedConfigurations.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\png-icons\UndoCheckBoxList.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\png-icons\UserBuild.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\png-icons\UserBuildRemove.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\png-icons\WelcomeWebTutorial.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\png-icons\Restart.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\HereBeDragons.png">
@@ -365,55 +350,10 @@
     <Image Include="..\Media\icons-png\About-Dialog-Ico.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\icons-png\AboutBox.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\ClearWindow.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\CompilableFile.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\CompileBatch.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\DarkTheme.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\DependancyGraph.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\DisassembleCode.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\ImmediateWindow.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\ImportSettings.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\RepeatLastRun.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\Report.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\SettingsGroup.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\icons-png\ShowAssignedConfigurations.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\icons-png\UndoCheckBoxList.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\UserBuild.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\icons-png\UserBuildRemove.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\icons-png\Restart.png">
