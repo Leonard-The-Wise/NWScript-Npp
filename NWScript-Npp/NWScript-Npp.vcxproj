@@ -97,19 +97,39 @@
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <VcpkgTriplet>x86-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+    <VcpkgUseStatic>false</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+    <VcpkgUseStatic>false</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgEnabled>true</VcpkgEnabled>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -124,10 +144,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -135,7 +158,6 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -149,18 +171,18 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
@@ -174,23 +196,22 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\PCRE2\vstudio\include;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>version.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
       <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(SolutionDir)IncrementBuild.ps1" "$(SolutionDir)src\ProjectVersion.h"</Command>
@@ -262,14 +283,20 @@
     <ClCompile Include="..\src\Lexers\Lexlib\CharacterSet.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Lexers\Lexlib\WordList.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
     <ClCompile Include="..\src\LineIndentor.cpp" />
@@ -281,6 +308,8 @@
     <ClCompile Include="..\src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\BatchProcessingDialog.cpp" />
@@ -305,10 +334,14 @@
     <ClCompile Include="..\src\Utils\tinyxml2.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Utils\Utf8_16.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Utils\VersionInfoEx.cpp" />
     <ClCompile Include="..\src\WarningDialog.cpp" />
@@ -318,6 +351,7 @@
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\OnlineHelp.docx" />
     <None Include="..\Media\UnityTest.nss" />
     <None Include="..\Publish.Dll.To.Notepad.targets" />
     <None Include="..\ReadMe.md" />
@@ -328,13 +362,49 @@
     </Xml>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\Media\Here-be-Dragons.bmp" />
-    <Image Include="..\Media\NWScript File.bmp" />
-    <Image Include="..\Media\NWScript-File.ico" />
-    <Image Include="..\Media\NWScript.bmp" />
+    <Image Include="..\Media\HereBeDragons.png" />
+    <Image Include="..\Media\icons-png\About-Dialog-Ico.png" />
+    <Image Include="..\Media\icons-png\AboutBox.png" />
+    <Image Include="..\Media\icons-png\ClearWindow.png" />
+    <Image Include="..\Media\icons-png\CompilableFile.png" />
+    <Image Include="..\Media\icons-png\CompileBatch.png" />
+    <Image Include="..\Media\icons-png\DarkTheme.png" />
+    <Image Include="..\Media\icons-png\DependancyGraph.png" />
+    <Image Include="..\Media\icons-png\DisassembleCode.png" />
+    <Image Include="..\Media\icons-png\ImmediateWindow.png" />
+    <Image Include="..\Media\icons-png\ImportSettings.png" />
+    <Image Include="..\Media\icons-png\RepeatLastRun.png" />
+    <Image Include="..\Media\icons-png\Report.png" />
+    <Image Include="..\Media\icons-png\Restart.png" />
+    <Image Include="..\Media\icons-png\SettingsGroup.png" />
+    <Image Include="..\Media\icons-png\ShowAssignedConfigurations.png" />
+    <Image Include="..\Media\icons-png\UndoCheckBoxList.png" />
+    <Image Include="..\Media\icons-png\UserBuild.png" />
+    <Image Include="..\Media\icons-png\UserBuildRemove.png" />
+    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png" />
+    <Image Include="..\Media\ImportSettings.png" />
+    <Image Include="..\Media\NWScriptLogo.png" />
+    <Image Include="..\Media\png-icons\AboutBox.png" />
+    <Image Include="..\Media\png-icons\ClearWindow.png" />
+    <Image Include="..\Media\png-icons\CompilableFile.png" />
+    <Image Include="..\Media\png-icons\CompileBatch.png" />
+    <Image Include="..\Media\png-icons\DarkTheme.png" />
+    <Image Include="..\Media\png-icons\DependancyGraph.png" />
+    <Image Include="..\Media\png-icons\DisassembleCode.png" />
+    <Image Include="..\Media\png-icons\ImmediateWindow.png" />
+    <Image Include="..\Media\png-icons\ImportSettings.png" />
+    <Image Include="..\Media\png-icons\RepeatLastRun.png" />
+    <Image Include="..\Media\png-icons\Report.png" />
+    <Image Include="..\Media\png-icons\Restart.png" />
+    <Image Include="..\Media\png-icons\SettingsGroup.png" />
+    <Image Include="..\Media\png-icons\ShowAssignedConfigurations.png" />
+    <Image Include="..\Media\png-icons\UndoCheckBoxList.png" />
+    <Image Include="..\Media\png-icons\UserBuild.png" />
+    <Image Include="..\Media\png-icons\UserBuildRemove.png" />
+    <Image Include="..\Media\png-icons\WelcomeWebTutorial.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />
-    <Image Include="..\Media\Settings.ico" />
+    <Image Include="..\Media\UserBuild.png" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
@@ -342,15 +412,6 @@
   <ItemGroup>
     <ProjectReference Include="..\lib\NscLib\NscLib.vcxproj">
       <Project>{9d6bac40-e346-4e23-b0ea-960dd98fea37}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-16-static.vcxproj">
-      <Project>{452a0049-4b9c-40c1-b337-c551c0c9357e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-32-static.vcxproj">
-      <Project>{e0b821ec-8168-4f7a-a40e-9acc97e77f54}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\lib\PCRE2\vstudio\libpcre2-8-static.vcxproj">
-      <Project>{1df4d158-6062-478b-aea1-84c235593f3d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

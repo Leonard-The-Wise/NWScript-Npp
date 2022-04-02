@@ -12,6 +12,7 @@
 
 #include "Common.h"
 #include "Notepad_plus_msgs.h"
+#include "DockingDlgInterface.h"
 
 #include "PluginMessenger.h"
 #include "LineIndentor.h"
@@ -20,6 +21,7 @@
 #include "NWScriptCompiler.h"
 
 #include "LoggerDialog.h"
+
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -154,7 +156,7 @@ namespace NWScriptPlugin {
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr) {}
+			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr)	{}
 
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer.isPluginLang; }
@@ -169,6 +171,8 @@ namespace NWScriptPlugin {
 		// Load current Notepad++ Language Lexer when language changed.
 		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
 		void LoadNotepadLexer();
+		// Initializes the compiler Log.
+		void InitCompilerLog();
 
 		// ### Initialization -> Menu handling
 		
@@ -180,6 +184,8 @@ namespace NWScriptPlugin {
 		bool SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a plugin menu Icon to a given stock Shell Icon
 		bool SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
+		// Set a plugin menu Icon from a PNG resource
+		bool SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 
@@ -249,10 +255,12 @@ namespace NWScriptPlugin {
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
 		NWScriptCompiler _compiler;
-		LoggerDialog _logConsole;
-		tTbData _dockingData;  // needs persistent info for docking data
-		HICON _dockingIcon;    // needs persistent info for docking data
+		tTbData _dockingData;			// needs persistent info for docking data
+		HICON _dockingIcon;				// needs persistent info for docking data
+		generic_string _dockingTitle;   // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
+
+		LoggerDialog _logConsole;
 
 		// Internal handles
 

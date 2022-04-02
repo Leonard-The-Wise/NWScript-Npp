@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>OnlineHelp</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+      padding: .2em .4em;
+      background-color: var(--color-neutral-muted);
+      border-radius: 6px;
+      box-sizing: border-box;	  
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="nwscript-tools-for-notepad-help">NWScript Tools for Notepad++
+Help</h1>
+<h2 id="plugin-usage">PLUGIN USAGE:</h2>
+<h3 id="automatic-syntax-highlighting">Automatic Syntax
+Highlighting</h3>
+<ul>
+<li>To see the colored syntax of NWScript files, select NWScript
+Language from Languages menu.</li>
+</ul>
+<h3 id="auto-indentation-support">Auto-Indentation support:</h3>
+<ul>
+<li>This plugin adds features to support auto-indentation for NWScript
+language. In <code>Notepad++</code> versions <code>8.3.2</code> and
+bellow, chose the option <code>Use Auto-Indentation</code> to enable the
+plugin's built-in auto-indentation support. You'll need to disable
+Notepad++ Auto-Indentation in user preferences to avoid any
+conflicts.</li>
+</ul>
+<p>This feature is automatic on <code>Notepad++ 8.3.3</code> and beyond
+so this menu option won't show anymore for users with up-to-date
+versions.</p>
+<h3 id="menu-option---compile-script">Menu option - “Compile
+script”:</h3>
+<ul>
+<li>Compiles the current opened document into the
+<code>Output Directory</code> set in
+<code>Compiler Settings</code>.</li>
+</ul>
+<h3 id="menu-option---disassemble-file">Menu option - “Disassemble
+file”:</h3>
+<ul>
+<li>Disassembles a compiled NWscript file from the disk and put results
+into the <code>Output Directory</code> set in
+<code>Compiler Settings</code>.</li>
+</ul>
+<h3 id="menu-option---batch-processing">Menu option - “Batch
+processing”:</h3>
+<ul>
+<li>Opens the Batch-processing dialog box. Batch processing enables to
+compile/disassemble multiple files at once.</li>
+</ul>
+<h3 id="menu-option---run-last-batch">Menu option - “Run last
+batch”:</h3>
+<ul>
+<li>Runs the last successful batch operation in this session.</li>
+</ul>
+<h3 id="menu-option---fetch-preprocessor-output">Menu option - “Fetch
+preprocessor output”:</h3>
+<ul>
+<li>Runs a compile preprocessing phase on current script and display the
+results in a new document for the user. Useful to view what final text
+the compiler will ACTUALLY use to compile the script. This will replace
+whatever <code>#include</code> directives you have in your script with
+the ACTUAL <code>#included</code> file content, recursing if
+necessary... so the results of preprocessing can get really large real
+quickly.</li>
+</ul>
+<h3 id="menu-option---view-script-dependencies">Menu option - “View
+Script Dependencies”:</h3>
+<ul>
+<li>Parse the script file's dependencies and display to the user as a
+new human-readable document. NOTICE: This is <code>NOT</code> the same
+of <code>generate makefile (.d) dependencies file</code> option on the
+Compiler Settings. That one must be used instead if you are exporting
+scripts to makebuild projects. Also, the Compiler Settings will generate
+makefile dependencies in batch operations also... this option here will
+only display dependencies on a single file.</li>
+</ul>
+<h3 id="menu-option---compiler-settings">Menu option - “Compiler
+settings”:</h3>
+<ul>
+<li>Opens the compiler settings. This is required when compiling scripts
+(if you try to compile anything before setting configurations here you
+will be prompted to configure first). All settings are persisted
+automatically upon closing <code>Notepad++</code>.</li>
+<li>Also, to compile a script, you <strong>MUST</strong> have at least
+the <code>nwscript.nss</code> file present in one of your compilation
+paths (except for the <code>output directory</code>). If you set the
+plugin to a Neverwinter Nights installation path, that will be
+automatically loaded for you, so you won't have to worry about
+that.</li>
+<li><code>Neverwinter Nights 1</code> support any version of the
+original game and also the <code>Enhanced Edition</code> version.</li>
+<li>Same for the <code>Neverwinter Nights 2</code>.</li>
+</ul>
+<p><strong>Some considerations</strong>:</p>
+<ul>
+<li>The option to run on strict mode is set to enable some stock
+compiler unsafe conditions that were possible on older versions of the
+compiler library. The recommended option is to leave this turned
+<code>OFF</code>, unless you know what you're doing.</li>
+<li>Also, the default compilation is set to
+<code>Game Target Version</code> = <code>174</code>. This is the default
+option for <code>Neverwinter Nights 2</code>,
+<code>Enhanced Edition</code>, <code>Gold</code>, etc., only older
+versions will use <code>169</code>. (Default = <code>174</code>).</li>
+<li>If you want faster compilation times for a large number of files,
+recommended to use <code>batch operations</code>, since that will cache
+game resources and treat the batch as a whole project, preserving
+include header files already parsed in memory to speed up the
+process.</li>
+<li>Options to disable <code>\”</code> and <code>\\</code> processing
+were added in <code>NWN:EE</code> versions.</li>
+</ul>
+<h3 id="menu-option---users-preferences">Menu option - “User's
+Preferences”:</h3>
+<ul>
+<li>Opens the User's Preferences window. Here you may chose to:</li>
+<li>Auto-open files disassembled files upon disassemble (default
+<code>ON</code>);</li>
+<li>Auto-open Debug Symbols on compilations (default
+<code>ON</code>);</li>
+<li>And also to auto-install Dark Theme support on Notepad++ upgrades if
+previously installed - see Menu Option <code>Install Dark Theme</code>
+bellow (default <code>OFF</code>).</li>
+</ul>
+<p><strong>Remarks</strong></p>
+<ul>
+<li>To be able to auto-install the <code>Dark Theme</code> when
+<code>Notepad++</code> changes version, you'll either be asked to run
+<code>Notepad++</code> with <code>Admin privileges</code>, or if you
+don't want to do that, you'll have to manually provide write permissions
+on the following path (depending on which build you use), if that file
+is located on a secure path (like <code>%ProgramFiles%</code>):</li>
+</ul>
+<pre><code>%NotepadInstallPath%\themes\DarkTheme.xml</code></pre>
+<p>If you cancel one auto-install attempt (because you refused to run
+<code>Notepad++</code> as <code>Administrator</code>), no other attempts
+will be made until the next version of <code>Notepad++</code> - given,
+of course that the <code>Auto-Install</code> option is still checked
+when version changes.</p>
+<h3 id="menu-option---install-dark-theme">Menu option - “Install Dark
+Theme”:</h3>
+<ul>
+<li>Installs Dark Theme support if not already present. When
+installation is detected, this option won't show up.</li>
+</ul>
+<p><strong>Remarks</strong></p>
+<ul>
+<li>Since the <code>DarkTheme.xml</code> file used for the
+<code>Dark Mode</code> (User Preferences) is distributed within each
+release of a new <code>Notepad++</code>, it is probable that when
+upgrading your <code>Notepad++</code> version, this file will be
+overwritten, hence, uninstalling the plugin's patch (if you did install
+the plugin's <code>Dark Theme</code> before). We can't change the stock
+<code>DarkTheme.xml</code>, because that one is made for all built-in
+<code>Notepad++</code> languages, and we are a plugin... so the only
+option is to re-patch this file in each and every <code>Notepad++</code>
+upgrade. Fortunately we have the option to <code>auto-install</code>
+this theme everytime <code>Notepad++</code> upgrades - the plugin will
+detect if the file has been modified and a previous installation was
+done, and will auto-install the feature upon <code>Notepad++</code>
+<code>post-upgrade initialization</code>. For more information, see
+above for the option to auto-install the Dark Theme in
+<code>User's Preferences</code>.</li>
+</ul>
+<h3 id="menu-option---import-nwscript-definitions">Menu option - “Import
+NWScript definitions”:</h3>
+<ul>
+<li>With this option, you may import a new <code>nwscript.nss</code> to
+replace the current engine definitions like constants, functions and
+engine structures to use with syntax coloring and highlighting and also
+this enables the <code>Auto Complete</code> functions to them. This will
+overwrite any previous engine definitions present on the plugin
+configuration.</li>
+</ul>
+<h3 id="menu-option---import-user-defined-tokens">Menu option - “Import
+user-defined tokens”:</h3>
+<ul>
+<li>With this option, you may import new
+<code>user-defined functions</code> and <code>constants</code> from any
+<code>.nss</code> file to enable <code>color-syntax highlighting</code>
+and <code>auto-completion</code> to them.</li>
+</ul>
+<p>Please notice that only
+<strong><code>FUNCTION DECLARATIONS</code></strong> and
+<strong><code>GLOBAL CONSTANTS</code></strong> will be imported by this
+process. And if you already have any <code>user-defined functions</code>
+and <code>constants</code> previously imported or in use, don't worry,
+they will be preserved, as long as you did <strong>NOT</strong> put them
+manually inside the <code>reserved sections</code> of the <a
+href="https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/src/Lexers/Config/NWScript-Npp.xml"><code>XML configuration</code></a>
+file. So I advise you to <strong>NEVER</strong> edit that file manually.
+Like, <em><strong>ever</strong></em>!!!</p>
+<h3 id="menu-option---reset-user-defined-tokens">Menu option - “Reset
+user-defined tokens”:</h3>
+<ul>
+<li>This will clear ANY <code>user-defined functions</code> and
+<code>constants</code> previously imported to the plugin's
+configurations. Usefu when you are done working in a project and want
+all your symbols to be clear, so you can start anew.</li>
+</ul>
+<h3 id="menu-option---reset-editor-colors">Menu option - “Reset editor
+colors”:</h3>
+<ul>
+<li>This will reset all editor <code>color styles</code> to the
+<code>default values</code> - eihter for <code>light</code> and
+<code>dark</code> themes. No functions or constants definitions will be
+ereased in the process. The main purpose of this function is to correct
+a known <code>Notepad++</code> behavior that changes your
+<code>Npp-Plugin.xml</code> stylers when you change themes inside the
+<code>Settings -&gt; Style Configurator</code> dialog box. Since
+<code>Notepad++</code> must edit the plugin styler directly to save the
+settings, that will overwrite whichever colors it had before, with no
+custom theme support. Hence, it is handy to have a <code>reset</code>
+option so when you change back themes you won't need to manually set ALL
+of the stylers manually again.</li>
+</ul>
+<h3 id="menu-option---about-me">Menu option - “About me”:</h3>
+<ul>
+<li>Opens the <code>About Dialog Box</code> (yeah, really!). 🙄</li>
+</ul>
+<h2 id="remarks">REMARKS:</h2>
+<ul>
+<li>If you noticed the <code>SHIELD</code> icons near some menu options,
+that's because if you want to use that option you must either run
+Notepad++ with administrator privileges OR you may also manually provide
+write permissions to the option's required files, because they are
+located in a secured path like %ProgramFiles% or so. Don't worry, you
+will be notified of which file you need to provide permissions to for
+each operation.</li>
+</ul>
+<p>Options that requires elevated privileges will usually access these
+files bellow, in a combination of one or more files for each option:</p>
+<pre><code>   - %ProgramFiles%\Notepad++\themes\DarkTheme.xml
+   - %ProgramFiles%\Notepad++\functions\nwscript.xml
+   - %ProgramFiles%\Notepad++\plugins\Config\NWScript-Npp.xml</code></pre>
+<p>So, unless you don't want to keep being bugged about files
+permissions, you can set write permission on those files permanently by
+going into the <code>Windows Explorer</code>, selecting the file's
+<code>Properties</code>, <code>Security tab</code>, selecting your
+<code>Username</code> and then marking all permission options avaliable.
+Then magically, the shield icons will vanish from your interface
+(requires a <code>Notepad++</code> restart).</p>
+<h2 id="final-considerations">FINAL CONSIDERATIONS:</h2>
+<ul>
+<li>Any bug report or improvement request must be done <a
+href="https://github.com/Leonard-The-Wise/NWScript-Npp/issues"><code>here</code></a>,
+so I can keep track of all changes. No email requests, forum messages or
+personal communications will be taken in consideration for that. Please
+be noticed.</li>
+</ul>
+<h2 id="extra-copyright-info">EXTRA COPYRIGHT INFO:</h2>
+<p>Copyright notices for the embbeded version of the <a
+href="https://github.com/nwneetools/nwnsc"><code>NWScript Compiler Library</code></a>:</p>
+<p>Portions copyright (C) 2008-2015 <code>Skywing</code><br> Portions
+copyright (C) 2002-2003, <code>Edward T. Smith</code><br> Portions
+copyright (C) 2003, <code>The Open Knights Consortium</code><br> Adapted
+for Neverwinter Nights Enhanced Edition and cross platform use by:
+<code>Glorwinger</code> and <code>Jakkn</code><br> Readaptations and
+tweaks for Windows GUI applications usage by:
+<code>Leonard-The-Wise</code><br></p>
+</body>
+</html>

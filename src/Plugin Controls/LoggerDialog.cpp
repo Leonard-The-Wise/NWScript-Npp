@@ -7,14 +7,15 @@
 
 
 #include "pch.h"
-#pragma comment (lib, "comctl32")          // Must use to create Image List controls
+//#pragma comment (lib, "comctl32")          // Must use to create Image List controls (moved to pch.h)
 
 #include "LoggerDialog.h"
 
+#define IDM_ERRORTOGGLE 4001
+#define IDM_WARNINGTOGGLE 4002
+#define IDM_MESSAGETOGGLE 4003
 
 using namespace NWScriptPlugin;
-
-#define POSTINITSETUP
 
 BEGIN_ANCHOR_MAP(LoggerDialog)
 #ifdef DEBUG_ANCHORLIB
@@ -23,9 +24,6 @@ BEGIN_ANCHOR_MAP(LoggerDialog)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT, "Dialog Control: LBLCONSOLE (console child)")
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL, "Dialog Control: TXTCONSOLE (console child)")
 	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL, "Dialog Box: Error")
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTERRORSTOGGLE, ANF_TOPLEFT, "Dialog Control: BTERRORSTOGGLE (errors child)")
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT, "Dialog Control: BTWARNINGSTOGGLE (errors child)")
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT, "Dialog Control: BTMESSGESTOGGLE (errors child)")
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL, "Dialog Control: ERRORGROUPBOX (errors child)")
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL, "Dialog Control: LSTERRORS (errors child)")
 #else
@@ -34,9 +32,6 @@ BEGIN_ANCHOR_MAP(LoggerDialog)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL)
 	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL)
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTERRORSTOGGLE, ANF_TOPLEFT)
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT)
-	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL)
 #endif
@@ -66,62 +61,99 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			TabCtrl_InsertItem(_mainTabHwnd, 1, &tie);
 
 			// Create our child dialogs
-			_consoleDlgHwnd = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, 0);
-			_errorDlgHwnd = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, 0);
+			_consoleDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
+			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
 			// Create an image list to associate with errors and warnings, etc
-			_iconList = ImageList_Create(24, 24, ILC_COLOR32, 3, 1);
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_ERROR, IconSize::Size24x24));
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size24x24));
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size24x24));
+			_iconList = ImageList_Create(16, 16, ILC_COLOR32, 3, 1);
+			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16));
 
-			// Icons for buttons
-			HBITMAP hErrorsBmp = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16);
-			HBITMAP hWarningBmp = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16);
-			HBITMAP hInfoBmp = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16);
+			// Create toolbar
+			int ImageListID = 0;
+			_toolBar = CreateWindowEx(TBSTYLE_EX_MIXEDBUTTONS, TOOLBARCLASSNAME, 
+				NULL, WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_LIST | CCS_NOPARENTALIGN | CCS_NODIVIDER,
+				6, 11, 360, 25,	_errorDlgHwnd, NULL, _hInst, NULL);
+			SendMessage(_toolBar, TB_SETIMAGELIST, (WPARAM)ImageListID, (LPARAM)_iconList);
 
-			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
-			::SendMessage(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hErrorsBmp));
+			const int numButtons = 3;
+			BYTE buttonStyles = BTNS_AUTOSIZE | BTNS_CHECK;
+			TBBUTTON tbButtons[numButtons] =
+			{
+//				{ -1, 0, 0, BTNS_SEP, {0}, 0, (INT_PTR)L"" },
+				{ MAKELONG(0, ImageListID), IDM_ERRORTOGGLE,   TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Errors" },
+				{ MAKELONG(1, ImageListID), IDM_WARNINGTOGGLE, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Warnings"},
+				{ MAKELONG(2, ImageListID), IDM_MESSAGETOGGLE, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Messages"}
+			};
 
-#ifndef POSTINITSETUP
+			// Add buttons.
+			SendMessage(_toolBar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+			SendMessage(_toolBar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tbButtons);
+
+			// Resize the toolbar, and then show it.
+			TBMETRICS tbM;
+			tbM.cbSize = sizeof(tbM);
+			tbM.cxButtonSpacing = 6;
+			tbM.dwMask = TBMF_BUTTONSPACING;
+			SendMessage(_toolBar, TB_SETMETRICS, 0, (LPARAM)&tbM);
+			ShowWindow(_toolBar, TRUE);
+
+			// Setup anchors
 			SetupDockingAnchors();
-#endif
-			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+
+			// Add columns to listview
+			SetupListView();
+
 			// Default tab selected item
 			TabCtrl_SetCurSel(_mainTabHwnd, 1);
+			// Show default window (Console)
+			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+
+			break;
 		}
 		
 		case WM_SIZE:
 		{
 			// Do auto-resize to controls
 			if (anchorsPrepared)
-				return handleSizers();
+				std::ignore = handleSizers();
+			ResizeList();
+			break;
 		}
 
 		case WM_COMMAND:
 		{
-
+			switch (wParam)
+			{
+				case IDCANCEL:
+					display(false);
+					break;
+			}
+			break;
 		}
 
 		case WM_NOTIFY:
 		{
-			if (wParam != IDC_TABLOGGER)
-				break;
-
-			if (_mainTabHwnd)
+			if (wParam == IDC_TABLOGGER)
 			{
-				int tabSelection = TabCtrl_GetCurSel(_mainTabHwnd);
-				if (tabSelection == 0)
+				if (_mainTabHwnd)
 				{
-					ShowWindow(_errorDlgHwnd, SW_NORMAL);
-					ShowWindow(_consoleDlgHwnd, SW_HIDE);
-				}
-				else
-				{
-					ShowWindow(_errorDlgHwnd, SW_HIDE);
-					ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+					int tabSelection = TabCtrl_GetCurSel(_mainTabHwnd);
+					if (tabSelection == 0)
+					{
+						ShowWindow(_errorDlgHwnd, SW_NORMAL);
+						ShowWindow(_consoleDlgHwnd, SW_HIDE);
+					}
+					else
+					{
+						ShowWindow(_errorDlgHwnd, SW_HIDE);
+						ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+					}
 				}
 			}
+
+			break;
 		}
 
 		default:
@@ -131,13 +163,161 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 	return FALSE;
 }
 
-// Moved all repositioning code from WM_INITIALIZE to this function.
-// The reason is simple: Notepad++ will MESS UP with our control's
-// lengths if we initialize anchors before displaying a docked window
-// because it does SEVERAL repositionings and movins internally to create
-// the docked window... so we wait until it finishes internal processing
-// and THEN we properly resize our controls to fit the docked dialog
-// and then initialize anchors... (yeah, took SOME time to figure that out)
+// Proxy Errors and Console subdialogs messages
+INT_PTR LoggerDialog::dlgProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case WM_INITDIALOG:
+		{
+			LoggerDialog* pLoggerDlg = reinterpret_cast<LoggerDialog*>(lParam);
+			::SetWindowLongPtr(hWnd, GWLP_USERDATA, static_cast<LONG_PTR>(lParam));
+			pLoggerDlg->childrenDlgProc(message, wParam, lParam);
+			return TRUE;
+		}
+
+		default:
+		{
+			LoggerDialog* pLoggerDlg = reinterpret_cast<LoggerDialog*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
+			if (!pLoggerDlg)
+				return FALSE;
+			return pLoggerDlg->childrenDlgProc(message, wParam, lParam);
+		}
+	}
+}
+
+intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case WM_COMMAND:
+		{
+			switch (wParam)
+			{
+				case IDCANCEL:
+				{
+					display(false);
+					break;
+				}
+
+				case IDC_BTERRORSTOGGLE:
+				{
+					break;
+				}
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+
+void LoggerDialog::ResizeList()
+{
+	// Calculate Description column size
+	HWND listErrorsHWND = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+	LV_COLUMN adjustColumn;
+	ZeroMemory(&adjustColumn, sizeof(adjustColumn));
+
+	RECT rcList;
+	GetClientRect(listErrorsHWND, &rcList);
+	rcList.right;
+
+	// Get column sizes
+	size_t lstWidth = ListView_GetColumnWidth(listErrorsHWND, 0);
+	lstWidth += ListView_GetColumnWidth(listErrorsHWND, 1);
+	lstWidth += ListView_GetColumnWidth(listErrorsHWND, 2);
+	lstWidth += ListView_GetColumnWidth(listErrorsHWND, 4);
+	lstWidth += ListView_GetColumnWidth(listErrorsHWND, 5);
+	lstWidth += ListView_GetColumnWidth(listErrorsHWND, 6);
+
+	// Set "Description" column width
+	size_t finalSize = rcList.right - lstWidth;
+	ListView_SetColumnWidth(listErrorsHWND, 3, finalSize);
+
+	//Auto-size last column
+	ListView_SetColumnWidth(listErrorsHWND, 6, LVSCW_AUTOSIZE);
+}
+
+void LoggerDialog::SetupListView()
+{
+	HWND listErrorsHWND = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+	TCHAR columnName[64];
+
+	// Extended Styles
+	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT);
+
+	// Column generics
+	LV_COLUMN newColumn;
+	ZeroMemory(&newColumn, sizeof(newColumn));
+	ZeroMemory(columnName, std::size(columnName));
+	newColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_ORDER | LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH;
+	newColumn.fmt = LVCFMT_FIXED_WIDTH | LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_FIXED_RATIO;
+	newColumn.pszText = columnName;
+
+	// First column (a dummy empty one)
+	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_FIXED_WIDTH;
+	newColumn.cx = 25;
+	ListView_InsertColumn(listErrorsHWND, 0, &newColumn);
+
+	// Icon of message
+	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_FIXED_WIDTH | LVCFMT_IMAGE | LVCFMT_CENTER;
+	ListView_InsertColumn(listErrorsHWND, 1, &newColumn);
+
+	// Message Code
+	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_MINWIDTH |LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_LEFT;
+	newColumn.cxMin = 93;
+	newColumn.cxDefault = 95;
+	newColumn.cxIdeal = 95;
+	newColumn.cx = 95;
+	memcpy(columnName, TEXT("Code"), std::size(TEXT("Code")) * sizeof(TCHAR));
+	newColumn.cchTextMax = std::size(TEXT("Code"));
+	ListView_InsertColumn(listErrorsHWND, 2, &newColumn);
+
+	// Message Description
+	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_MINWIDTH | LVCF_DEFAULTWIDTH | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_LEFT;
+	newColumn.cxMin = 90;
+	newColumn.cxDefault = 300;
+	newColumn.cx = 300;
+	memcpy(columnName, TEXT("Description"), std::size(TEXT("Description")) * sizeof(TCHAR));
+	newColumn.cchTextMax = std::size(TEXT("Description"));
+	ListView_InsertColumn(listErrorsHWND, 3, &newColumn);
+
+	// File
+	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_LEFT;
+	newColumn.cxDefault = 120;
+	newColumn.cxIdeal = 120;
+	newColumn.cx = 120;
+	memcpy(columnName, TEXT("File"), std::size(TEXT("File")) * sizeof(TCHAR));
+	newColumn.cchTextMax = std::size(TEXT("File"));
+	ListView_InsertColumn(listErrorsHWND, 4, &newColumn);
+
+	// Line
+	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_LEFT;
+	newColumn.cxDefault = 80;
+	newColumn.cxIdeal = 80;
+	newColumn.cx = 80;
+	memcpy(columnName, TEXT("Line"), std::size(TEXT("Line")) * sizeof(TCHAR));
+	newColumn.cchTextMax = std::size(TEXT("Line"));
+	ListView_InsertColumn(listErrorsHWND, 5, &newColumn);
+
+	// Last column (a dummy empty terminator)
+	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_RIGHT;
+	newColumn.cx = 25;
+	ListView_InsertColumn(listErrorsHWND, 6, &newColumn);
+
+	// Do a first resize to fit the window...
+	ResizeList();
+}
+
+// Setup the docking anchors
 void LoggerDialog::SetupDockingAnchors() 
 {
 	RECT rcTabClient;
@@ -199,12 +379,6 @@ void LoggerDialog::SetupDockingAnchors()
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), 
 		originalConsoleDlg, IDC_TXTCONSOLE, ANF_ALL);
 		// Errors window items
-	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTERRORSTOGGLE), 
-		originalErrorsDlg, IDC_BTERRORSTOGGLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTWARNINGSTOGGLE),
-		originalErrorsDlg, IDC_BTWARNINGSTOGGLE, ANF_TOPLEFT);
-	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_BTMESSGESTOGGLE), 
-		originalErrorsDlg, IDC_BTMESSGESTOGGLE, ANF_TOPLEFT);
 	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_ERRORGROUPBOX), 
 		originalErrorsDlg, IDC_ERRORGROUPBOX, ANF_ALL);
 	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS), 

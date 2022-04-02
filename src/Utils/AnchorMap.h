@@ -72,13 +72,15 @@
 //   controls. This will auto-call InvalidateRect and UpdateWindow after to ensure screen 
 //   redrawings (this happens only if a control changed size). Also this macro 
 //   will return the MessageProc immediately, hence put it at the of your WM_SIZE processing 
-//   handler.
+//   handler. Or if you don't want to return immediately and must do something after 
+//   HandleSizers, don't call the macro, call the auto-generated handleSizers() method instead.
 // 
 // - Within your WM_GETMINMAXINFO handler, put the ANCHOR_MAP_HANDLERESTRICTORS(wParam, 
 //   lParam) macro if you have any GLOBAL WINDOW size restrictor active. Child windowses 
 //   and other Controls are handled within ANCHOR_MAP_HANDLESIZERS() already.
 //   Same rules apply here: put it in the END of WM_GETMINMAXINFO message processing 
-//   section or equivalent.
+//   section or equivalent.Or if you don't want to return: 
+//      m_bpfxAnchorMap.handleRestrictors(wParam, lParam) instead.
 //
 // - If you DECLARE_ANCHOR_MAP() in your class, you can then put the macro 
 //   ANCHOR_MAP_EREASEBACKGROUND() to handle WM_EREASEBKGND messages to use a
@@ -128,7 +130,7 @@
 
 #pragma once
 
-#define DEBUG_ANCHORLIB       // Enables user-defined names field for controls to better debug this class
+//#define DEBUG_ANCHORLIB       // Enables user-defined names field for controls to better debug this class
 
 
     // ===================== Anchoring / Docking flags ======================

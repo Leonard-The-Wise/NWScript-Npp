@@ -123,9 +123,6 @@
     <ClInclude Include="..\src\Utils\tinyxml2.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h">
-      <Filter>Plugin Dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\WarningDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
@@ -154,7 +151,6 @@
     <ClInclude Include="..\src\Utils\jpcre2.hpp">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\XMLGenStrings.h" />
     <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -178,9 +174,13 @@
     <ClInclude Include="..\src\Utils\AnchorMap.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\AboutDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\LoggerDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -213,9 +213,6 @@
     <ClCompile Include="..\src\PluginMessenger.cpp" />
     <ClCompile Include="..\src\Utils\tinyxml2.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp">
-      <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\WarningDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
@@ -257,11 +254,14 @@
     <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Utils\AnchorMap.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\LoggerDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Utils\AnchorMap.cpp">
-      <Filter>Utils</Filter>
+    <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp">
+      <Filter>Plugin Dialogs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -282,6 +282,7 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
+    <None Include="..\Media\OnlineHelp.docx" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
@@ -292,22 +293,130 @@
     <Image Include="..\Media\Sample-Colorization.jpg">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="..\Media\NWScript.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\Here-be-Dragons.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="..\Media\NWScript File.bmp">
+    <Image Include="..\Media\NWScriptLogo.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\NWScript-File.ico">
+    <Image Include="..\Media\ImportSettings.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\Settings.ico">
+    <Image Include="..\Media\UserBuild.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\AboutBox.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\ClearWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\CompilableFile.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\CompileBatch.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\DarkTheme.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\DependancyGraph.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\DisassembleCode.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\ImmediateWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\ImportSettings.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\RepeatLastRun.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\Report.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\SettingsGroup.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\ShowAssignedConfigurations.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\UndoCheckBoxList.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\UserBuild.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\UserBuildRemove.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\WelcomeWebTutorial.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\png-icons\Restart.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\HereBeDragons.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\About-Dialog-Ico.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\AboutBox.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ClearWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\CompilableFile.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\CompileBatch.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DarkTheme.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DependancyGraph.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DisassembleCode.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ImmediateWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ImportSettings.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\RepeatLastRun.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\Report.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\SettingsGroup.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ShowAssignedConfigurations.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\UndoCheckBoxList.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\UserBuild.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\UserBuildRemove.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\Restart.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

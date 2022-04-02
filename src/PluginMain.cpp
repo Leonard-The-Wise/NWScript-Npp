@@ -1,7 +1,7 @@
 /** @file PluginMain.cpp
  * Controls the Plugin functions, processes all Plugin messages
  * 
- * The ACTUAL DLL Entry point is defined in PluginInterface.cpp
+ * Although this is the main object, the actual DLL Entry point is defined in PluginInterface.cpp
  * 
  **/
  // Copyright (C) 2022 - Leonardo Silva 
@@ -18,7 +18,6 @@
 //#include <locale>
 //#include <cwchar>
 //#include <Shlwapi.h>
-
 
 #include "menuCmdID.h"
 
@@ -43,6 +42,8 @@
 #include "VersionInfoEx.h"
 
 #pragma warning (disable : 6387)
+
+#define DEBUG_AUTO_INDENT_833     // Uncomment to test auto-indent with message
 
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
@@ -255,15 +256,16 @@ void Plugin::SetNotepadData(NppData data)
     if (_settings.compilerSettingsCreated)
         _compiler.appendSettings(&_settings);
 
-    // Initializes the log console
-    _logConsole.init(DllHModule(), NotepadHwnd());
+}
 
-    // Docking dialog data
-
-    // _logConsole.create() resets some masks of windowdata, hence we set them after...
+// Initializes the compiler log screen.
+void Plugin::InitCompilerLog() 
+{
     _dockingData = {};
+    
+    // additional info
+    _logConsole.init(DllHModule(), NotepadHwnd());
     _logConsole.create(&_dockingData);
-    Messenger().SendNppMessage<void>(NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_logConsole.getHSelf()));
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
     _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
     _dockingData.hIconTab = _dockingIcon;
@@ -273,7 +275,7 @@ void Plugin::SetNotepadData(NppData data)
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
-    _logConsole.display(false);
+    //_logConsole.doDialog(false);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -437,14 +439,14 @@ void Plugin::SetAutoIndentSupport()
     {
         Instance()._needPluginAutoIndent = false;
 
+#ifndef DEBUG_AUTO_INDENT_833
         // Remove the "Use Auto-Indent" menu command and the following separator.
         RemovePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT);
-
         // Since the dash does not have an ID, got to the previous position.
         RemovePluginMenuItem(PLUGINMENU_DASH1 - 1, true);
-
         // Auto-adjust the settings
         Instance().Settings().enableAutoIndentation = false;
+#endif
     }
     else
         Instance()._needPluginAutoIndent = true;
@@ -712,6 +714,27 @@ bool Plugin::SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUnc
 
 }
 
+bool Plugin::SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
+{
+
+    HMENU hMenu = GetNppMainMenu();
+    if (hMenu)
+    {
+        HBITMAP hIconBmp = loadPNGFromResource(DllHModule(), resourceID);
+        bool bSuccess = false;
+        if (bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
+        if (bSetToUncheck && !bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
+        if (!bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
+        return bSuccess;
+    }
+
+    return false;
+}
+
+
 bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
 {
     HMENU hMenu = GetNppMainMenu();
@@ -740,6 +763,12 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fLexerPerm = PathWritePermission::UndeterminedError;
     PathWritePermission fDarkThemePerm = PathWritePermission::UndeterminedError;
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
+
+    //Setup icons for menus items that can be overriden later (because of UAC permissions)
+    SetPluginMenuItemPNG(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -778,20 +807,27 @@ void Plugin::SetupPluginMenuItems()
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
             SetPluginStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
     }
-
-    // Setup icons for compiler, settings, user's preferences, about me...
-    SetPluginStockMenuItemIcon(PLUGINMENU_COMPILESCRIPT, SHSTOCKICONID::SIID_DOCASSOC, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGS, true, false);
-    SetPluginStockMenuItemIcon(PLUGINMENU_USERPREFERENCES, SHSTOCKICONID::SIID_USERS, true, false);
-    SetPluginStockMenuItemIcon(PLUGINMENU_ONLINEHELP, SHSTOCKICONID::SIID_HELP, true, false);
-    SetPluginStockMenuItemIcon(PLUGINMENU_ABOUTME, SHSTOCKICONID::SIID_INFO, true, false);
-
+    
+    // Setup icons for the rest of items
+    SetPluginMenuItemPNG(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
+    SetPluginMenuItemPNG(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
+    
     // Menu run last batch: initially disabled
     EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
 }
 
 #pragma endregion Plugin menu handling
 
+// Check permissions on files.
 Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generic_string>& paths, RestartFunctionHook iFunctionToCallIfRestart)
 {
     struct stCheckedPaths {
@@ -1655,9 +1691,11 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
             MF_BYCOMMAND | ((bEnableAutoIndent) ? MF_CHECKED : MF_UNCHECKED));
     }
 
+#ifndef DEBUG_AUTO_INDENT_833
     // Already accepted the warning, either on this session or a previous one
     if (Instance().Settings().autoIndentationWarningAccepted)
         return;
+#endif
 
     // Warning user of function: only once in a session (and perhaps in a lifetime if INI file doesn't change)
     if (bEnableAutoIndent && !bAutoIndentationWarningShown)
@@ -1670,7 +1708,9 @@ PLUGINCOMMAND Plugin::SwitchAutoIndent()
         if (!warningDialog.isVisible())
             warningDialog.doDialog();
 
+#ifndef DEBUG_AUTO_INDENT_833
         bAutoIndentationWarningShown = true;
+#endif
     }
 }
 
@@ -1741,8 +1781,15 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 // Toggles the log console
 PLUGINCOMMAND Plugin::ToggleConsole()
 {
-    //Instance()._logConsole.display(!Instance()._logConsole.isVisible());
-    Instance()._logConsole.doDialog(!Instance()._logConsole.isVisible());
+    if (!Instance()._logConsole.isCreated())
+    {
+        Instance().InitCompilerLog();
+        SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
+        return; // Creation shows log too.
+    }
+
+    Instance()._logConsole.display(!Instance()._logConsole.isVisible());
+    SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
 }
 
 //-------------------------------------------------------------
@@ -1795,6 +1842,7 @@ PLUGINCOMMAND Plugin::CompilerSettings()
     compilerSettings.doDialog();
 }
 
+// Opens the user's preferences.
 PLUGINCOMMAND Plugin::UserPreferences()
 {
     static UsersPreferencesDialog userPreferences = {};

@@ -47,20 +47,20 @@ END
 // Dialog
 //
 
-IDD_ABOUT DIALOGEX 0, 0, 318, 246
+IDD_ABOUT DIALOGEX 0, 0, 329, 246
 STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,226,50,14
-    CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,71,113,204,12
-    EDITTEXT        IDC_TXTABOUT,7,126,304,94,ES_MULTILINE | ES_READONLY | NOT WS_BORDER | WS_VSCROLL,WS_EX_TRANSPARENT | WS_EX_STATICEDGE
-    LTEXT           "Homepage:",IDC_LBLHOMEPAGE,28,113,38,11
-    CONTROL         IDB_NWSCRIPTLOGO,IDC_PCTLOGO,"Static",SS_BITMAP | WS_BORDER,7,7,111,102
-    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,121,9,188,14
-    CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,119,39,195,8
-    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,122,56,193,54
-    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,121,23,189,8
+    DEFPUSHBUTTON   "OK",IDOK,133,226,50,14
+    CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,89,114,204,12
+    LTEXT           "Homepage:",IDC_LBLHOMEPAGE,46,114,38,11
+    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,138,9,184,14
+    CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,138,44,184,8
+    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,138,61,184,54
+    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,138,28,184,8
+    CONTROL         "",IDC_PCTLOGO,"Static",SS_BITMAP,7,8,11,10
+    CONTROL         "",IDC_TXTABOUT,"RichEdit20W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,125,315,95
 END
 
 IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208
@@ -68,8 +68,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_SYSMENU
 EXSTYLE WS_EX_TRANSPARENT
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         IDB_HEREBEDRAGONS,IDC_HEREBEDRAGONS,"Static",SS_BITMAP,0,0,400,208
-    CONTROL         "",IDC_CHKOK,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,196,178,13,12,WS_EX_TRANSPARENT
+    CONTROL         "",IDC_HEREBEDRAGONS,"Static",SS_BITMAP,0,0,15,13
+    CONTROL         "",IDC_CHKOK,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,198,177,13,12,WS_EX_TRANSPARENT
 END
 
 IDD_PATHACCESSDIALOG DIALOGEX 0, 0, 309, 139
@@ -211,25 +211,16 @@ IDD_LOGGER_ERRORS DIALOGEX 0, 0, 497, 135
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "(0) Errors",IDC_BTERRORSTOGGLE,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,6,4,78,16
-    CONTROL         "(0) Warnings",IDC_BTWARNINGSTOGGLE,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,87,4,73,16
-    CONTROL         "(0) Messages",IDC_BTMESSGESTOGGLE,"Button",BS_AUTOCHECKBOX | BS_PUSHLIKE | WS_TABSTOP,164,4,76,16
-    GROUPBOX        "Errors List",IDC_ERRORGROUPBOX,3,22,490,110
-    LISTBOX         IDC_LSTERRORS,7,34,481,91,LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Errors List",IDC_ERRORGROUPBOX,"Button",BS_DEFCOMMANDLINK | BS_ICON,4096,3,22,490
+    CONTROL         "",IDC_LSTERRORS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,3,28,490,100,WS_EX_STATICEDGE
 END
 
-IDD_LOGGER_CONSOLE DIALOGEX 0, 0, 428, 126
+IDD_LOGGER_CONSOLE DIALOGEX 0, 0, 497, 135
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 10, "Consolas", 400, 0, 0x0
 BEGIN
-    EDITTEXT        IDC_TXTCONSOLE,3,18,422,105,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL,WS_EX_STATICEDGE
+    EDITTEXT        IDC_TXTCONSOLE,3,23,490,105,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL,WS_EX_STATICEDGE
     LTEXT           "Console Output",IDC_LBLCONSOLE,6,6,57,8
-END
-
-IDD_EMPTY DIALOGEX 0, 0, 309, 176
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_SYSMENU
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
 END
 
 
@@ -244,7 +235,7 @@ BEGIN
     IDD_ABOUT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 311
+        RIGHTMARGIN, 322
         TOPMARGIN, 113
         BOTTOMMARGIN, 240
     END
@@ -324,14 +315,6 @@ BEGIN
         TOPMARGIN, 2
         BOTTOMMARGIN, 123
     END
-
-    IDD_EMPTY, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 302
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 169
-    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -343,16 +326,7 @@ END
 
 IDD_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
-    0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 100, 100,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0
+    0
 END
 
 IDD_HEREBEDRAGONS AFX_DIALOG_LAYOUT
@@ -405,32 +379,61 @@ BEGIN
     0
 END
 
-IDD_EMPTY AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_HEREBEDRAGONS       PNG                     "..\\Media\\HereBeDragons.png"
+
+IDB_NWSCRIPTLOGO        PNG                     "..\\Media\\NWScriptLogo.png"
+
+IDI_ABOUTBOX            PNG                     "..\\Media\\icons-png\\AboutBox.png"
+
+IDI_CLEARWINDOW         PNG                     "..\\Media\\icons-png\\ClearWindow.png"
+
+IDI_COMPILEFILE         PNG                     "..\\Media\\icons-png\\CompilableFile.png"
+
+IDI_COMPILEBATCH        PNG                     "..\\Media\\icons-png\\CompileBatch.png"
+
+IDI_DARKTHEME           PNG                     "..\\Media\\icons-png\\DarkTheme.png"
+
+IDI_DEPENCENCYGROUP     PNG                     "..\\Media\\icons-png\\DependancyGraph.png"
+
+IDI_DISASSEMBLECODE     PNG                     "..\\Media\\icons-png\\DisassembleCode.png"
+
+IDI_IMMEDIATEWINDOW     PNG                     "..\\Media\\icons-png\\ImmediateWindow.png"
+
+IDI_IMPORTSETTINGS      PNG                     "..\\Media\\icons-png\\ImportSettings.png"
+
+IDI_REPEATLASTRUN       PNG                     "..\\Media\\icons-png\\RepeatLastRun.png"
+
+IDI_REPORT              PNG                     "..\\Media\\icons-png\\Report.png"
+
+IDI_SETTINGSGROUP       PNG                     "..\\Media\\icons-png\\SettingsGroup.png"
+
+IDI_SHOWASSIGNEDCONFIGURATION PNG                     "..\\Media\\icons-png\\ShowAssignedConfigurations.png"
+
+IDI_UNDOCHECKBOXLIST    PNG                     "..\\Media\\icons-png\\UndoCheckBoxList.png"
+
+IDI_USERBUILD           PNG                     "..\\Media\\icons-png\\UserBuild.png"
+
+IDI_USERBUILDREMOVE     PNG                     "..\\Media\\icons-png\\UserBuildRemove.png"
+
+IDI_WEBWELCOMETUTORIAL  PNG                     "..\\Media\\icons-png\\WelcomeWebTutorial.png"
+
+IDI_RESTART             PNG                     "..\\Media\\icons-png\\Restart.png"
+
+IDI_ABOUTDIALOGWINDOWICO PNG                     "..\\Media\\icons-png\\About-Dialog-Ico.png"
 
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Bitmap
+// DOCX
 //
 
-IDB_NWSCRIPTLOGO        BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\NWScript.bmp"
-
-IDB_HEREBEDRAGONS       BITMAP                  "D:\\Projetos\\NWScript Plugin\\Media\\Here-be-Dragons.bmp"
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_NWSCRIPTFILE96      ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\NWScript-File.ico"
-
-IDI_SETTINGS            ICON                    "D:\\Projetos\\NWScript Plugin\\Media\\Settings.ico"
+IDR_ABOUTDOC            DOCX                    "..\\Media\\OnlineHelp.docx"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

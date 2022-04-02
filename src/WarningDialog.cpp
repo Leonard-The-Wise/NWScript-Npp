@@ -24,6 +24,10 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 	{
 		case WM_INITDIALOG:
 		{
+			// Warning dialog background
+			HBITMAP hWarning = loadPNGFromResource(_hInst, IDB_HEREBEDRAGONS);
+			::SendMessage(GetDlgItem(_hSelf, IDC_HEREBEDRAGONS), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hWarning));
+
 			return TRUE;
 		}
 

@@ -22,7 +22,7 @@
 #pragma once
 
 #ifdef _MSC_VER
-#pragma warning(disable: 4514) // nreferenced inline function has been removed
+#pragma warning(disable: 4514) // referenced inline function has been removed
 #endif
 
 #include <Windows.h>

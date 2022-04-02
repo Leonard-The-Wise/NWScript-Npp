@@ -22,116 +22,11 @@
 // #include "ProjectVersion.h"
 #include "VersionInfoEx.h"
 
-
-#define ABOUT_TEXT TEXT( \
-"** For a more detailed and formated version of the help text, please visit the web page on the \"Online Help\" menu. **\r\n\
-\r\n\
-** Diagnostics information and some use statistics are avaliable at the end of this text. **\r\n\
-\r\n\
-PLUGIN USAGE:\r\n\
---------------------------\r\n\
-• Editor Syntax Highlighting:\r\n\
-   - Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
-\r\n\
-• Using Auto-Indentation:\r\n\
-   - For Notepad++ 8.3.2 and bellow, chose the option \"Use Auto-Indentation\" to enable the plugin's built-in auto-indentation support. \
-You'll need to disable Notepad++ Auto-Indentation in user preferences to avoid any conflicts. This feature is automatic on Notepad++ 8.3.3 \
-and beyond so this menu option won't show anymore for users with up-to-date versions.\r\n\
-\r\n\
-• Menu - \"Compile script\":\r\n\
-   - Compiles the current opened document into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
-\r\n\
-• Menu - \"Disassemble file\":\r\n\
-   - Disassembles a compiled NWscript file from the disk and put results into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
-\r\n\
-• Menu - \"Batch processing\":\r\n\
-   - Opens the Batch-processing dialog box.\r\n\
-\r\n\
-• Menu - \"Run last batch\":\r\n\
-   - Runs the last successful batch operation in this session.\r\n\
-\r\n\
-• Menu - \"Fetch preprocessor output\":\r\n\
-   - Runs a compile preprocessing phase on current script and display the results in a new document for the user. \
-Useful to view what final text the compiler will ACTUALLY use to compile the script.\r\n\
-\r\n\
-• Menu - \"View Script Dependencies\":\r\n\
-   - Parse the script file's dependencies and display to the user as a new human-readable document.\r\n\
-\r\n\
-• Menu - \"Compiler settings\":\r\n\
-   - Opens the compiler settings.\r\n\
-\r\n\
-• Menu - \"User's Preferences\":\r\n\
-   - Opens the user's preferences dialog.\r\n\
-\r\n\
-• Menu - \"Install Dark Theme\":\r\n\
-   - Installs Dark Theme support if not already present. (When installation is detected, this option won't show up).\r\n\
-\r\n\
-• Menu - \"Import NWScript definitions\":\r\n\
-   - With this option, you may import a new \"nwscript.nss\" to replace the current engine definitions like constants, functions and engine \
-structures to use with syntax coloring and highlighting and also this enables the Auto Complete functions to them. This will overwrite any \
-previous engine definitions present on the plugin configuration.\r\n\
-\r\n\
-• Menu - \"Import user-defined tokens\":\r\n\
-   - With this option, you may import new user-defined functions and constants from any .nss file to enable color-syntax highlighting and auto-completion to them. \
-Please notice that only function DECLARATIONS and GLOBAL CONSTANTS will be imported in this process. \
-And if you have any user-defined functions and constants previously imported or in use, don't worry, they will be preserved, as long as you did NOT \
-put them manually inside the reserved sections of the XML configuration file. So I advise you to NEVER edit that file manually. Like, ever!\r\n\
-\r\n\
-• Menu - \"Reset user-defined tokens\":\r\n\
-   - This will clear ANY user-defined functions and constants previously imported to the plugin's configurations.\r\n\
-\r\n\
-• Menu - \"Reset editor colors\":\r\n\
-   - This will reset all editor color styles to the default values - eihter for light and dark themes. No function or constants definitions will be ereased in the process.\r\n\
-\r\n\
-• Menu - \"About me\":\r\n\
-   - Self reference ®. :)\r\n\
-\r\n\
-\r\n\
-REMARKS:\r\n\
---------------------------\r\n\
-• If you noticed the SHIELD icons near some menu options, that's because if you want to use that option you must either run Notepad++ with\
-administrator privileges OR you may also manually provide write permissions to the option's required files (you'll be notified of which file you\
-need to provide permissions to for each option.\r\n\
-\r\n\
-\r\n\
-EXTRA COPYRIGHT INFO:\r\n\
---------------------------\r\n\
-\r\n\
-Copyright notices for embbeded version of the NWScript Compiler Library:\r\n\
-\r\n\
-  Portions Copyright (C) 2008-2015 Skywing\r\n\
-  Portions copyright (C) 2002-2003, Edward T. Smith\r\n\
-  Portions copyright (C) 2003, The Open Knights Consortium\r\n\
-  Adapted for Neverwinter Nights Enhanced Edition and cross platform use by: Glorwinger and Jakkn\r\n\
-  Readapted for Windows GUI applications by: Leonard-The-Wise\r\n\
-\r\n\
-\r\n\
-SELF-DIAGNOSTICS:\r\n\
---------------------------\r\n\
-  - Auto-Indentation: %NWSCRIPTINDENT%\r\n\
-  - Dark Mode Theme:  %DARKTHEMESUPPORT%\r\n\
-\r\n\
-\r\n\
-NERDY STATISTICS:\r\n\
---------------------------\r\n\
-  - Number of compilations attempts: %COMPILEATTEMPTS%\r\n\
-  - Successful compilations:         %COMPILESUCCESSES%\r\n\
-  - Failed compilations:             %COMPILESFAILED%\r\n\
-\r\n\
-  - NWscript defined structures:     %engineStructures%\r\n\
-  - NWScript defined functions:      %engineFunctionCount%\r\n\
-  - NWScript defined constants:      %engineConstants%\r\n\
-  - User defined structures:         %userStructures%\r\n\
-  - User defined functions:          %userFunctionCount%\r\n\
-  - User defined constants:          %userConstants%\r\n\
-\r\n\
-")
-
 using namespace NWScriptPlugin;
 
 // Anchoring and size restriction informations
 
-constexpr const RECTSIZER mainWindowSize = { {653, 562 }, {1024, 768} };
+constexpr const RECTSIZER mainWindowSize = { {675, 562 }, {1024, 768} };
 constexpr const RECTSIZER lblPluginName = { { 251, 0 } };
 constexpr const RECTSIZER lblVersion = { { 251, 0 } };
 constexpr const RECTSIZER lblCopyright = { { 251, 0 } };
@@ -146,6 +41,7 @@ BEGIN_ANCHOR_MAP(AboutDialog)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Version")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Copyright")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Credits")
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Label Homepage")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT, "Link to Homepage")
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL, "Editor About")
 	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM, "Ok Button")
@@ -154,7 +50,8 @@ BEGIN_ANCHOR_MAP(AboutDialog)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLVERSION, ANF_TOP | ANF_LEFT | ANF_RIGHT)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLCOPYRIGHT, ANF_TOP | ANF_LEFT | ANF_RIGHT)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLSPECIALCREDITS, ANF_TOP | ANF_LEFT | ANF_RIGHT)
-	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP | ANF_LEFT | ANF_RIGHT)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LBLHOMEPAGE, ANF_TOP)
+	ANCHOR_MAP_ENTRY(_hSelf, IDC_LNKHOMEPAGE, ANF_TOP)
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TXTABOUT, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_hSelf, IDOK, ANF_BOTTOM)
 #endif
@@ -185,16 +82,16 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 			// Set user fonts. Try to keep same font for all.
 			HFONT hTitleFont = NULL;
-			int fontIndex = 0;
+			size_t fontIndex = 0;
 			while (fontIndex < std::size(fontFamilies) && !hTitleFont)
 			{
-				hTitleFont = ::CreateFont(16, 10, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				hTitleFont = ::CreateFont(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
 				if (!hTitleFont)
 					fontIndex++;
 			}
 
-			HFONT hHomepageFont = CreateFont(14, 8, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+			HFONT hHomepageFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
 
 			if (hTitleFont)
@@ -203,8 +100,15 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 				::SendMessage(GetDlgItem(_hSelf, IDC_LBLHOMEPAGE), WM_SETFONT, reinterpret_cast<WPARAM>(hHomepageFont), 0);
 
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
-			::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
 			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
+
+			//::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
+
+			HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO);
+			::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+
+			HICON hAbout = loadPNGFromResourceIcon(_hInst, IDI_ABOUTDIALOGWINDOWICO);
+			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
 
 			InitAnchors();
 
@@ -221,6 +125,19 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 				destroy();
 				return TRUE;
 			}
+		}
+
+		case WM_CTLCOLORSTATIC:
+		{
+			if ((HWND)lParam == GetDlgItem(_hSelf, IDC_TXTABOUT))
+			{
+
+				//SetBkMode((HDC)wParam, TRANSPARENT);
+				SetTextColor((HDC)wParam, RGB(0, 0, 0));
+				return (LRESULT)((HBRUSH)GetStockObject(WHITE_BRUSH));
+			}
+			else  // this is some other static control, do not touch it!!
+				return DefWindowProc(_hSelf, message, wParam, lParam);
 		}
 
 		case WM_SIZE:

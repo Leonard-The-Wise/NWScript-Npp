@@ -120,6 +120,12 @@ namespace NWScriptPluginCommons {
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID);
 
+    // Load a PNG file from resources.
+    HBITMAP loadPNGFromResource(HMODULE module, int idResource);
+
+    // Load a PNG from resources and convert into an HICON.
+    HICON loadPNGFromResourceIcon(HMODULE module, int idResource);
+
     // Converts a File Link into an actual filename
     void resolveLinkFile(generic_string& linkFilePath);
 

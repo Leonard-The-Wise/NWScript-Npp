@@ -4,7 +4,8 @@
  * Original idea extracted from simple example here:
  * https://iq.direct/blog/336-code-sample-retrieve-c-application-version-from-vs-version-resource.html
  * 
- * To use this file, you MUST add "version.lib" to your project Linker's "Aditional Dependencies"
+ * To use this file, you MUST add "version.lib" to your linker dependencies
+ * (that's what the pragma comment down there does)
  * 
  **/
  // Copyright (C) 2022 - Leonardo Silva 
@@ -12,6 +13,7 @@
 
 #pragma once
 
+#pragma comment (lib, "version")
 #include <Windows.h>
 
 // If version resource renamed, change VS_VERSION_INFO to point to the new resource ID

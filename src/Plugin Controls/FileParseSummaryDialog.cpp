@@ -26,11 +26,11 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 	case WM_INITDIALOG:
 	{
 		// Sets the dialog icon from code cause Resource Editor won't work transparencies
-		HICON NWSCRIPTFILE = reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_NWSCRIPTFILE96),
-			IMAGE_ICON, 96, 96, LR_DEFAULTCOLOR));
-		::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE,
-			static_cast<WPARAM>(IMAGE_BITMAP),
-			reinterpret_cast<LPARAM>(iconToBitmap(NWSCRIPTFILE)));
+		//HICON NWSCRIPTFILE = reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_NWSCRIPTFILE96),
+		//	IMAGE_ICON, 96, 96, LR_DEFAULTCOLOR));
+		//::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE,
+		//	static_cast<WPARAM>(IMAGE_BITMAP),
+		//	reinterpret_cast<LPARAM>(iconToBitmap(NWSCRIPTFILE)));
 
 		// Set the font style and colors for File Summary and Keep Results labels
 		// Set bold font for warning

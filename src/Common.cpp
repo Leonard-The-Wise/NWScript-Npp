@@ -252,6 +252,92 @@ namespace NWScriptPluginCommons {
         return iconToBitmap(getStockIcon(stockIconID, iconSize));
     }
 
+    // Load a PNG from resources and convert into an HBITMAP.
+    HBITMAP loadPNGFromResource(HMODULE module, int idResource)
+    {
+        HBITMAP retval = NULL;
+        ULONG_PTR token = 0;
+        Gdiplus::GdiplusStartupInput input = NULL;
+        Gdiplus::GdiplusStartup(&token, &input, NULL);
+
+        if (token != 0)
+        {
+            // Load resource
+            auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
+            size_t _size = SizeofResource(module, hResource);
+            auto hMemory = LoadResource(module, hResource);
+            LPVOID ptr = LockResource(hMemory);
+
+            // copy image bytes into a real hglobal memory handle
+            hMemory = ::GlobalAlloc(GHND, _size);
+            if (hMemory)
+            {
+                void* pBuffer = ::GlobalLock(hMemory);
+                memcpy(pBuffer, ptr, _size);
+            }
+
+            // Create stream
+            IStream* pStream = nullptr;
+            HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+            if (SUCCEEDED(hr))
+            {
+                Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
+                bmp->GetHBITMAP(Gdiplus::Color::Transparent, &retval);
+                delete bmp;
+                Gdiplus::GdiplusShutdown(token);
+                pStream->Release();
+            }
+
+            if (hMemory)
+                GlobalFree(hMemory);
+        }
+
+        return retval;
+    }
+
+    // Load a PNG from resources and convert into an HICON.
+    HICON loadPNGFromResourceIcon(HMODULE module, int idResource)
+    {
+        HICON retval = NULL;
+        ULONG_PTR token = 0;
+        Gdiplus::GdiplusStartupInput input = NULL;
+        Gdiplus::GdiplusStartup(&token, &input, NULL);
+
+        if (token != 0)
+        {
+            // Load resource
+            auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
+            size_t _size = SizeofResource(module, hResource);
+            auto hMemory = LoadResource(module, hResource);
+            LPVOID ptr = LockResource(hMemory);
+
+            // copy image bytes into a real hglobal memory handle
+            hMemory = ::GlobalAlloc(GHND, _size);
+            if (hMemory)
+            {
+                void* pBuffer = ::GlobalLock(hMemory);
+                memcpy(pBuffer, ptr, _size);
+            }
+
+            // Create stream
+            IStream* pStream = nullptr;
+            HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+            if (SUCCEEDED(hr))
+            {
+                Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
+                bmp->GetHICON(&retval);
+                delete bmp;
+                Gdiplus::GdiplusShutdown(token);
+                pStream->Release();
+            }
+
+            if (hMemory)
+                GlobalFree(hMemory);
+        }
+
+        return retval;
+    }
+
     generic_string getSystemFolder(GUID folderID)
     {
 
@@ -662,6 +748,7 @@ namespace NWScriptPluginCommons {
         else
             return generic_string(TEXT(""));
     }
+
 
 #pragma warning(pop)
 

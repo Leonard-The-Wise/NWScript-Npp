@@ -1,12 +1,12 @@
 /** @file xmlgenstring.h
  * Define some XML headers and comments for file generation.
  *
+ * 
+ * Copyright (C) 2022 - Leonardo Silva 
+ * The License.txt file describes the conditions under which this software may be distributed.
  **/
- // Copyright (C) 2022 - Leonardo Silva 
- // The License.txt file describes the conditions under which this software may be distributed.
-
+ 
 #pragma once
-
 
 // Some comments for the XML auto-generation features
 #define XMLDOCHEADER R"(
@@ -121,3 +121,112 @@ The License.txt file on the plugin homepage describes the conditions under which
 	</LexerStyles>
 </NotepadPlus>
 )"
+
+
+#define ABOUT_TITLE TEXT("ABOUT THIS PLUGIN\r\n\
+=====================================\r\n")
+
+#define ABOUT_TEXT TEXT( \
+"\r\n\
+** For a more detailed and formated version of the help text, please visit the web page on the \"Online Help\" menu. **\r\n\
+\r\n\
+** Diagnostics information and some use statistics are avaliable at the end of this text. **\r\n\
+\r\n\
+USAGE:\r\n\
+--------------------------\r\n\
+• Editor Syntax Highlighting:\r\n\
+   - Select NWScript Language from Languages menu to enable syntax highlighting.\r\n\
+\r\n\
+• Using Auto-Indentation:\r\n\
+   - For Notepad++ 8.3.2 and bellow, chose the option \"Use Auto-Indentation\" to enable the plugin's built-in auto-indentation support. \
+You'll need to disable Notepad++ Auto-Indentation in user preferences to avoid any conflicts. This feature is automatic on Notepad++ 8.3.3 \
+and beyond so this menu option won't show anymore for users with up-to-date versions.\r\n\
+\r\n\
+• Menu - \"Compile script\":\r\n\
+   - Compiles the current opened document into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
+\r\n\
+• Menu - \"Disassemble file\":\r\n\
+   - Disassembles a compiled NWscript file from the disk and put results into the \"Output Directory\" set in \"Compiler Settings\".\r\n\
+\r\n\
+• Menu - \"Batch processing\":\r\n\
+   - Opens the Batch-processing dialog box.\r\n\
+\r\n\
+• Menu - \"Run last batch\":\r\n\
+   - Runs the last successful batch operation in this session.\r\n\
+\r\n\
+• Menu - \"Fetch preprocessor output\":\r\n\
+   - Runs a compile preprocessing phase on current script and display the results in a new document for the user. \
+Useful to view what final text the compiler will ACTUALLY use to compile the script.\r\n\
+\r\n\
+• Menu - \"View Script Dependencies\":\r\n\
+   - Parse the script file's dependencies and display to the user as a new human-readable document.\r\n\
+\r\n\
+• Menu - \"Compiler settings\":\r\n\
+   - Opens the compiler settings.\r\n\
+\r\n\
+• Menu - \"User's Preferences\":\r\n\
+   - Opens the user's preferences dialog.\r\n\
+\r\n\
+• Menu - \"Install Dark Theme\":\r\n\
+   - Installs Dark Theme support if not already present. (When installation is detected, this option won't show up).\r\n\
+\r\n\
+• Menu - \"Import NWScript definitions\":\r\n\
+   - With this option, you may import a new \"nwscript.nss\" to replace the current engine definitions like constants, functions and engine \
+structures to use with syntax coloring and highlighting and also this enables the Auto Complete functions to them. This will overwrite any \
+previous engine definitions present on the plugin configuration.\r\n\
+\r\n\
+• Menu - \"Import user-defined tokens\":\r\n\
+   - With this option, you may import new user-defined functions and constants from any .nss file to enable color-syntax highlighting and auto-completion to them. \
+Please notice that only function DECLARATIONS and GLOBAL CONSTANTS will be imported in this process. \
+And if you have any user-defined functions and constants previously imported or in use, don't worry, they will be preserved, as long as you did NOT \
+put them manually inside the reserved sections of the XML configuration file. So I advise you to NEVER edit that file manually. Like, ever!\r\n\
+\r\n\
+• Menu - \"Reset user-defined tokens\":\r\n\
+   - This will clear ANY user-defined functions and constants previously imported to the plugin's configurations.\r\n\
+\r\n\
+• Menu - \"Reset editor colors\":\r\n\
+   - This will reset all editor color styles to the default values - eihter for light and dark themes. No function or constants definitions will be ereased in the process.\r\n\
+\r\n\
+• Menu - \"About me\":\r\n\
+   - Self reference ®. :)\r\n\
+\r\n\
+\r\n\
+REMARKS:\r\n\
+--------------------------\r\n\
+• If you noticed the SHIELD icons near some menu options, that's because if you want to use that option you must either run Notepad++ with\
+administrator privileges OR you may also manually provide write permissions to the option's required files (you'll be notified of which file you\
+need to provide permissions to for each option.\r\n\
+\r\n\
+\r\n\
+EXTRA COPYRIGHT INFO:\r\n\
+--------------------------\r\n\
+\r\n\
+Copyright notices for embbeded version of the NWScript Compiler Library:\r\n\
+\r\n\
+  Portions Copyright (C) 2008-2015 Skywing\r\n\
+  Portions copyright (C) 2002-2003, Edward T. Smith\r\n\
+  Portions copyright (C) 2003, The Open Knights Consortium\r\n\
+  Adapted for Neverwinter Nights Enhanced Edition and cross platform use by: Glorwinger and Jakkn\r\n\
+  Readapted for Windows GUI applications by: Leonard-The-Wise\r\n\
+\r\n\
+\r\n\
+SELF-DIAGNOSTICS:\r\n\
+--------------------------\r\n\
+  - Auto-Indentation: %NWSCRIPTINDENT%\r\n\
+  - Dark Mode Theme:  %DARKTHEMESUPPORT%\r\n\
+\r\n\
+\r\n\
+NERDY STATISTICS:\r\n\
+--------------------------\r\n\
+  - Number of compilations attempts: %COMPILEATTEMPTS%\r\n\
+  - Successful compilations:         %COMPILESUCCESSES%\r\n\
+  - Failed compilations:             %COMPILESFAILED%\r\n\
+\r\n\
+  - NWscript defined structures:     %engineStructures%\r\n\
+  - NWScript defined functions:      %engineFunctionCount%\r\n\
+  - NWScript defined constants:      %engineConstants%\r\n\
+  - User defined structures:         %userStructures%\r\n\
+  - User defined functions:          %userFunctionCount%\r\n\
+  - User defined constants:          %userConstants%\r\n\
+\r\n\
+")

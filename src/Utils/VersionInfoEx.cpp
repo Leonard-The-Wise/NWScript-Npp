@@ -5,6 +5,7 @@
  * https://iq.direct/blog/336-code-sample-retrieve-c-application-version-from-vs-version-resource.html
  *
  * To use this file, you MUST add "version.lib" to your project Linker's "Aditional Dependencies"
+ * (the VersionInfo.h header already do that for you)
  *
  **/
  // Copyright (C) 2022 - Leonardo Silva 
