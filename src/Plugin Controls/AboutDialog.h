@@ -38,6 +38,8 @@ namespace NWScriptPlugin {
 
 		DECLARE_ANCHOR_MAP()
 
+		void LoadAboutTextEditor();
+
 		generic_string _homePath;
 		std::map<generic_string, generic_string> _replaceStrings;
 	};

@@ -282,7 +282,9 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
-    <None Include="..\Media\OnlineHelp.docx" />
+    <None Include="..\Media\OnlineHelp.docx">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
@@ -357,6 +359,51 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\icons-png\Restart.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\AboutBox.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ClearWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\CompilableFile.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\CompileBatch.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DarkTheme.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DependancyGraph.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\DisassembleCode.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ImmediateWindow.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\ImportSettings.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\RepeatLastRun.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\Report.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\SettingsGroup.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\UndoCheckBoxList.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\UserBuild.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

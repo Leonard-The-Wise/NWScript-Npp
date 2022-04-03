@@ -364,9 +364,24 @@
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
     <Image Include="..\Media\icons-png\About-Dialog-Ico.png" />
+    <Image Include="..\Media\icons-png\AboutBox.png" />
+    <Image Include="..\Media\icons-png\ClearWindow.png" />
+    <Image Include="..\Media\icons-png\CompilableFile.png" />
+    <Image Include="..\Media\icons-png\CompileBatch.png" />
+    <Image Include="..\Media\icons-png\DarkTheme.png" />
+    <Image Include="..\Media\icons-png\DependancyGraph.png" />
+    <Image Include="..\Media\icons-png\DisassembleCode.png" />
+    <Image Include="..\Media\icons-png\ImmediateWindow.png" />
+    <Image Include="..\Media\icons-png\ImportSettings.png" />
+    <Image Include="..\Media\icons-png\RepeatLastRun.png" />
+    <Image Include="..\Media\icons-png\Report.png" />
     <Image Include="..\Media\icons-png\Restart.png" />
+    <Image Include="..\Media\icons-png\SettingsGroup.png" />
     <Image Include="..\Media\icons-png\ShowAssignedConfigurations.png" />
+    <Image Include="..\Media\icons-png\UndoCheckBoxList.png" />
+    <Image Include="..\Media\icons-png\UserBuild.png" />
     <Image Include="..\Media\icons-png\UserBuildRemove.png" />
+    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png" />
     <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\png-icons\AboutBox.png" />
     <Image Include="..\Media\png-icons\ClearWindow.png" />

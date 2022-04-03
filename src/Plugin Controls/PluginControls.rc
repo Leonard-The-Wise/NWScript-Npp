@@ -53,14 +53,14 @@ CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,133,226,50,14
-    CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,89,114,204,12
+    CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,89,114,204,9
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,46,114,38,11
     CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,138,9,184,14
     CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,138,44,184,8
     CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,138,61,184,54
     CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,138,28,184,8
     CONTROL         "",IDC_PCTLOGO,"Static",SS_BITMAP,7,8,11,10
-    CONTROL         "",IDC_TXTABOUT,"RichEdit20W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,125,315,95
+    CONTROL         "",IDC_TXTABOUT,"RichEdit20W",ES_MULTILINE | ES_READONLY | WS_BORDER | WS_VSCROLL | WS_TABSTOP,7,125,315,95
 END
 
 IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208
@@ -433,7 +433,7 @@ IDI_ABOUTDIALOGWINDOWICO PNG                     "..\\..\\Media\\icons-png\\Abou
 // DOCX
 //
 
-IDR_ABOUTDOC            DOCX                    "..\\..\\Media\\OnlineHelp.docx"
+IDR_ABOUTDOC            RTF                    "..\\..\\Media\\OnlineHelp.rtf"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

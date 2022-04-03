@@ -13,6 +13,7 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 #include <gdiplus.h>
+#include <Richedit.h>
 
 #include <string>
 #include <sstream>

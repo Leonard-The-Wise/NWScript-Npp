@@ -69,6 +69,45 @@ static const generic_string fontFamilies[] = {
 	L"Cascadia Code", L"Cascadia Mono", L"Consolas", L"Droid Sans Mono", L"Inconsolata", L"Courier New" L"monospace", L"Monaco", L"Menlo", L"Fixedsys"
 };
 
+DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, PLONG pcb)
+{
+	IStream* pstm = (IStream*)dwCookie;
+	DWORD fail = FAILED(pstm->Read(lpBuff, cb, (ULONG*)pcb));
+	return fail;
+}
+
+void AboutDialog::LoadAboutTextEditor()
+{
+	// Load resource
+	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(IDR_ABOUTDOC), L"RTF");
+	size_t _size = SizeofResource(_hInst, hResource);
+	auto hMemory = LoadResource(_hInst, hResource);
+	LPVOID ptr = LockResource(hMemory);
+
+	// copy image bytes into a real hglobal memory handle
+	hMemory = ::GlobalAlloc(GHND, _size);
+	if (hMemory)
+	{
+		void* pBuffer = ::GlobalLock(hMemory);
+		memcpy(pBuffer, ptr, _size);
+	}
+
+	// Create stream
+	IStream* pStream = nullptr;
+	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+	if (SUCCEEDED(hr))
+	{
+		EDITSTREAM es = { (DWORD_PTR)pStream, 0, EditStreamCallback };
+		HWND editControl = GetDlgItem(_hSelf, IDC_TXTABOUT);
+		SendMessage(editControl, EM_AUTOURLDETECT, AURL_ENABLEURL, 0);
+		SendMessage(editControl, EM_EXLIMITTEXT, 0, -1);
+		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+	}
+
+	if (hMemory)
+		GlobalFree(hMemory);
+}
+
 intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -102,6 +141,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
 
+			LoadAboutTextEditor();
 			//::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
 
 			HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO);
@@ -178,3 +218,5 @@ void AboutDialog::doDialog()
 	//Show and centralize
 	goToCenter();
 }
+
+
