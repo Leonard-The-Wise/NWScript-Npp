@@ -363,43 +363,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
-    <Image Include="..\Media\icons-png\About-Dialog-Ico.png" />
-    <Image Include="..\Media\icons-png\AboutBox.png" />
-    <Image Include="..\Media\icons-png\ClearWindow.png" />
-    <Image Include="..\Media\icons-png\CompilableFile.png" />
-    <Image Include="..\Media\icons-png\CompileBatch.png" />
-    <Image Include="..\Media\icons-png\DarkTheme.png" />
-    <Image Include="..\Media\icons-png\DependancyGraph.png" />
-    <Image Include="..\Media\icons-png\DisassembleCode.png" />
-    <Image Include="..\Media\icons-png\ImmediateWindow.png" />
-    <Image Include="..\Media\icons-png\ImportSettings.png" />
-    <Image Include="..\Media\icons-png\RepeatLastRun.png" />
-    <Image Include="..\Media\icons-png\Report.png" />
-    <Image Include="..\Media\icons-png\Restart.png" />
-    <Image Include="..\Media\icons-png\SettingsGroup.png" />
-    <Image Include="..\Media\icons-png\ShowAssignedConfigurations.png" />
-    <Image Include="..\Media\icons-png\UndoCheckBoxList.png" />
-    <Image Include="..\Media\icons-png\UserBuild.png" />
-    <Image Include="..\Media\icons-png\UserBuildRemove.png" />
-    <Image Include="..\Media\icons-png\WelcomeWebTutorial.png" />
     <Image Include="..\Media\NWScriptLogo.png" />
-    <Image Include="..\Media\png-icons\AboutBox.png" />
-    <Image Include="..\Media\png-icons\ClearWindow.png" />
-    <Image Include="..\Media\png-icons\CompilableFile.png" />
-    <Image Include="..\Media\png-icons\CompileBatch.png" />
-    <Image Include="..\Media\png-icons\DarkTheme.png" />
-    <Image Include="..\Media\png-icons\DependancyGraph.png" />
-    <Image Include="..\Media\png-icons\DisassembleCode.png" />
-    <Image Include="..\Media\png-icons\ImmediateWindow.png" />
-    <Image Include="..\Media\png-icons\ImportSettings.png" />
-    <Image Include="..\Media\png-icons\RepeatLastRun.png" />
-    <Image Include="..\Media\png-icons\Report.png" />
-    <Image Include="..\Media\png-icons\SettingsGroup.png" />
-    <Image Include="..\Media\png-icons\UndoCheckBoxList.png" />
-    <Image Include="..\Media\png-icons\WelcomeWebTutorial.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />
-    <Image Include="..\Media\UserBuild.png" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />

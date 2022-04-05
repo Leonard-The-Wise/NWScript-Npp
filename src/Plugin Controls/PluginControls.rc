@@ -389,43 +389,43 @@ IDB_HEREBEDRAGONS       PNG                     "..\\..\\Media\\HereBeDragons.pn
 
 IDB_NWSCRIPTLOGO        PNG                     "..\\..\\Media\\NWScriptLogo.png"
 
-IDI_ABOUTBOX            PNG                     "..\\..\\Media\\icons-png\\AboutBox.png"
+IDI_ABOUTBOX            ICON                     "..\\..\\Media\\icons\\AboutBox.ico"
 
-IDI_CLEARWINDOW         PNG                     "..\\..\\Media\\icons-png\\ClearWindow.png"
+IDI_CLEARWINDOW         ICON                     "..\\..\\Media\\icons\\ClearWindow.ico"
 
-IDI_COMPILEFILE         PNG                     "..\\..\\Media\\icons-png\\CompilableFile.png"
+IDI_COMPILEFILE         ICON                     "..\\..\\Media\\icons\\CompilableFile.ico"
 
-IDI_COMPILEBATCH        PNG                     "..\\..\\Media\\icons-png\\CompileBatch.png"
+IDI_COMPILEBATCH        ICON                     "..\\..\\Media\\icons\\CompileBatch.ico"
 
-IDI_DARKTHEME           PNG                     "..\\..\\Media\\icons-png\\DarkTheme.png"
+IDI_DARKTHEME           ICON                     "..\\..\\Media\\icons\\DarkTheme.ico"
 
-IDI_DEPENCENCYGROUP     PNG                     "..\\..\\Media\\icons-png\\DependancyGraph.png"
+IDI_DEPENCENCYGROUP     ICON                     "..\\..\\Media\\icons\\DependancyGraph.ico"
 
-IDI_DISASSEMBLECODE     PNG                     "..\\..\\Media\\icons-png\\DisassembleCode.png"
+IDI_DISASSEMBLECODE     ICON                     "..\\..\\Media\\icons\\DisassembleCode.ico"
 
-IDI_IMMEDIATEWINDOW     PNG                     "..\\..\\Media\\icons-png\\ImmediateWindow.png"
+IDI_IMMEDIATEWINDOW     ICON                     "..\\..\\Media\\icons\\ImmediateWindow.ico"
 
-IDI_IMPORTSETTINGS      PNG                     "..\\..\\Media\\icons-png\\ImportSettings.png"
+IDI_IMPORTSETTINGS      ICON                     "..\\..\\Media\\icons\\ImportSettings.ico"
 
-IDI_REPEATLASTRUN       PNG                     "..\\..\\Media\\icons-png\\RepeatLastRun.png"
+IDI_REPEATLASTRUN       ICON                     "..\\..\\Media\\icons\\RepeatLastRun.ico"
 
-IDI_REPORT              PNG                     "..\\..\\Media\\icons-png\\Report.png"
+IDI_REPORT              ICON                     "..\\..\\Media\\icons\\Report.ico"
 
-IDI_SETTINGSGROUP       PNG                     "..\\..\\Media\\icons-png\\SettingsGroup.png"
+IDI_SETTINGSGROUP       ICON                     "..\\..\\Media\\icons\\SettingsGroup.ico"
 
-IDI_SHOWASSIGNEDCONFIGURATION PNG                     "..\\..\\Media\\icons-png\\ShowAssignedConfigurations.png"
+IDI_SHOWASSIGNEDCONFIGURATION ICON                     "..\\..\\Media\\icons\\ShowAssignedConfigurations.ico"
 
-IDI_UNDOCHECKBOXLIST    PNG                     "..\\..\\Media\\icons-png\\UndoCheckBoxList.png"
+IDI_UNDOCHECKBOXLIST    ICON                     "..\\..\\Media\\icons\\UndoCheckBoxList.ico"
 
-IDI_USERBUILD           PNG                     "..\\..\\Media\\icons-png\\UserBuild.png"
+IDI_USERBUILD           ICON                     "..\\..\\Media\\icons\\UserBuild.ico"
 
-IDI_USERBUILDREMOVE     PNG                     "..\\..\\Media\\icons-png\\UserBuildRemove.png"
+IDI_USERBUILDREMOVE     ICON                     "..\\..\\Media\\icons\\UserBuildRemove.ico"
 
-IDI_WEBWELCOMETUTORIAL  PNG                     "..\\..\\Media\\icons-png\\WelcomeWebTutorial.png"
+IDI_WEBWELCOMETUTORIAL  ICON                     "..\\..\\Media\\icons\\WelcomeWebTutorial.ico"
 
-IDI_RESTART             PNG                     "..\\..\\Media\\icons-png\\Restart.png"
+IDI_RESTART             ICON                     "..\\..\\Media\\icons\\Restart.ico"
 
-IDI_ABOUTDIALOGWINDOWICO PNG                     "..\\..\\Media\\icons-png\\About-Dialog-Ico.png"
+IDI_ABOUTDIALOGWINDOWICO ICON                     "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -765,10 +765,10 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
-    SetPluginMenuItemPNG(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -809,17 +809,17 @@ void Plugin::SetupPluginMenuItems()
     }
     
     // Setup icons for the rest of items
-    SetPluginMenuItemPNG(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
-    SetPluginMenuItemPNG(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
+    SetPluginMenuItemIcon(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
     
     // Menu run last batch: initially disabled
     EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);

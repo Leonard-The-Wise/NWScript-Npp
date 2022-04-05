@@ -43,6 +43,11 @@ namespace NWScriptPlugin {
 			TabCtrl_SetCurSel(_mainTabHwnd, 0);
 		}
 
+		void ClearConsole()
+		{
+
+		}
+
 	protected:
 		// Main window dialog procedure call
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);

@@ -211,7 +211,6 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 	return FALSE;
 }
 
-
 void LoggerDialog::ResizeList()
 {
 	// Calculate Description column size

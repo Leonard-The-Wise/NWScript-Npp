@@ -87,6 +87,7 @@ namespace NWScriptPluginCommons {
         return result;
     }
 
+    // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
     std::string replaceStringsA(const std::string& input, std::map<std::string, std::string>& replaceStrings)
     {
         typedef jpcre2::select<char> pcre2;
@@ -100,6 +101,7 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
+    // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
     std::wstring replaceStringsW(const std::wstring& input, std::map<std::wstring, std::wstring>& replaceStrings)
     {
         typedef jpcre2::select<wchar_t> pcre2;
@@ -338,6 +340,7 @@ namespace NWScriptPluginCommons {
         return retval;
     }
 
+    // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID)
     {
 
@@ -349,6 +352,7 @@ namespace NWScriptPluginCommons {
         return retVal;
     }
 
+    // Converts a File Link into an actual filename
     void resolveLinkFile(generic_string& linkFilePath)
     {
         IShellLink* psl;
@@ -389,6 +393,7 @@ namespace NWScriptPluginCommons {
         }
     }
 
+    // Checks if directory exist
     bool isValidDirectory(const TCHAR* sPath)
     {
         WIN32_FILE_ATTRIBUTE_DATA attributes = {};
@@ -405,11 +410,15 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
+    // Checks if directory exist
     bool isValidDirectoryS(const generic_string& sPath)
     {
         return isValidDirectory(sPath.c_str());
     }
 
+    // Returns the proper non back-slash ended directory name (eg: C:\Windows\ -> C:\Windows)
+    // Needed to canonicalize directory names, since then functions of NscLib will return names with or
+    // without ending backslashes.
     std::string properDirNameA(const std::string& dirName) {
         if (dirName.empty())
             return "";
@@ -419,6 +428,9 @@ namespace NWScriptPluginCommons {
         return retval;
     }
 
+    // Returns the proper non back-slash ended directory name (eg: C:\Windows\ -> C:\Windows)
+    // Needed to canonicalize directory names, since then functions of NscLib will return names with or
+    // without ending backslashes.
     std::wstring properDirNameW(const std::wstring& dirName) {
         if (dirName.empty())
             return L"";
@@ -428,6 +440,7 @@ namespace NWScriptPluginCommons {
         return retval;
     }
 
+    // Try to retrieve the Neverwinter's Home path
     generic_string getNwnHomePath(int CompilerVersion)
     {
         generic_string HomePath;
@@ -556,6 +569,7 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
+    // Loads a raw file into a string buffer
     bool fileToBuffer(const generic_string& filePath, std::string& sContents)
     {
         std::ifstream fileReadStream;
@@ -576,6 +590,7 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
+    // Saves a string buffer into a raw file 
     bool bufferToFile(const generic_string& filePath, const std::string& sContents)
     {
         std::ofstream s;
@@ -730,6 +745,7 @@ namespace NWScriptPluginCommons {
         return returnValue; // iterate in the upper stackframe
     }
 
+    // Returns the menu name for a given position inside a menu handle
     generic_string GetMenuItemName(HMENU menu, int position)
     {
         MENUITEMINFO menuInfo = {};
