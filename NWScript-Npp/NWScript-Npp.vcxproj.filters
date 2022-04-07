@@ -181,6 +181,9 @@
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
     <ClInclude Include="..\src\XMLGenStrings.h" />
+    <ClInclude Include="..\src\Utils\OleCallback.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -282,7 +285,7 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
-    <None Include="..\Media\OnlineHelp.docx">
+    <None Include="..\Media\OnlineHelp.rtf">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
@@ -302,6 +305,69 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\HereBeDragons.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\AboutBox.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\ClearWindow.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\CompilableFile.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\CompileBatch.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\DarkTheme.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\DependancyGraph.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\DisassembleCode.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\ImmediateWindow.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\ImportSettings.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\RepeatLastRun.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\Report.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\SettingsGroup.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\ShowAssignedConfigurations.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\UndoCheckBoxList.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\UserBuild.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\UserBuildRemove.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\WelcomeWebTutorial.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\Restart.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\About-Dialog-Ico.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\ErrorSquiggleActive.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\icons\WordWrap.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

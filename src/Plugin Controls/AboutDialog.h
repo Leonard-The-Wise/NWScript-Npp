@@ -12,6 +12,8 @@
 #include "AnchorMap.h"
 
 #include "Common.h"
+#include "OleCallback.h"
+
 
 
 namespace NWScriptPlugin {
@@ -39,8 +41,11 @@ namespace NWScriptPlugin {
 		DECLARE_ANCHOR_MAP()
 
 		void LoadAboutTextEditor();
+		void LaunchHyperlink(const ENLINK& link);
 
 		generic_string _homePath;
+		generic_string _aboutText;
+		OleCallback _oleCallback;
 		std::map<generic_string, generic_string> _replaceStrings;
 	};
 }

@@ -48,7 +48,7 @@ END
 //
 
 IDD_ABOUT DIALOGEX 0, 0, 329, 246
-STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
@@ -60,7 +60,7 @@ BEGIN
     CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,138,61,184,54
     CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,138,28,184,8
     CONTROL         "",IDC_PCTLOGO,"Static",SS_BITMAP,7,8,11,10
-    CONTROL         "",IDC_TXTABOUT,"RichEdit20W",ES_MULTILINE | ES_READONLY | WS_BORDER | WS_VSCROLL | WS_TABSTOP,7,125,315,95
+    CONTROL         "",IDC_TXTABOUT,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,125,315,95
 END
 
 IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208
@@ -219,8 +219,10 @@ IDD_LOGGER_CONSOLE DIALOGEX 0, 0, 497, 135
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 10, "Consolas", 400, 0, 0x0
 BEGIN
-    EDITTEXT        IDC_TXTCONSOLE,3,23,490,105,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL,WS_EX_STATICEDGE
-    LTEXT           "Console Output",IDC_LBLCONSOLE,6,6,57,8
+    LTEXT           "Console Output",IDC_LBLCONSOLE,6,7,57,8
+    PUSHBUTTON      "",IDC_BTCLEARCONSOLE,76,5,17,14,BS_BITMAP
+    CONTROL         "",IDC_BTTOGGLEWORDWRAP,"Button",BS_AUTOCHECKBOX | BS_BITMAP | BS_PUSHLIKE | WS_TABSTOP,98,5,17,14
+	CONTROL         "",IDC_TXTCONSOLE,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,3,23,490,105
 END
 
 
@@ -389,51 +391,63 @@ IDB_HEREBEDRAGONS       PNG                     "..\\..\\Media\\HereBeDragons.pn
 
 IDB_NWSCRIPTLOGO        PNG                     "..\\..\\Media\\NWScriptLogo.png"
 
-IDI_ABOUTBOX            ICON                     "..\\..\\Media\\icons\\AboutBox.ico"
 
-IDI_CLEARWINDOW         ICON                     "..\\..\\Media\\icons\\ClearWindow.ico"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
 
-IDI_COMPILEFILE         ICON                     "..\\..\\Media\\icons\\CompilableFile.ico"
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ABOUTBOX            ICON                    "..\\..\\Media\\icons\\AboutBox.ico"
 
-IDI_COMPILEBATCH        ICON                     "..\\..\\Media\\icons\\CompileBatch.ico"
+IDI_CLEARWINDOW         ICON                    "..\\..\\Media\\icons\\ClearWindow.ico"
 
-IDI_DARKTHEME           ICON                     "..\\..\\Media\\icons\\DarkTheme.ico"
+IDI_COMPILEFILE         ICON                    "..\\..\\Media\\icons\\CompilableFile.ico"
 
-IDI_DEPENCENCYGROUP     ICON                     "..\\..\\Media\\icons\\DependancyGraph.ico"
+IDI_COMPILEBATCH        ICON                    "..\\..\\Media\\icons\\CompileBatch.ico"
 
-IDI_DISASSEMBLECODE     ICON                     "..\\..\\Media\\icons\\DisassembleCode.ico"
+IDI_DARKTHEME           ICON                    "..\\..\\Media\\icons\\DarkTheme.ico"
 
-IDI_IMMEDIATEWINDOW     ICON                     "..\\..\\Media\\icons\\ImmediateWindow.ico"
+IDI_DEPENCENCYGROUP     ICON                    "..\\..\\Media\\icons\\DependancyGraph.ico"
 
-IDI_IMPORTSETTINGS      ICON                     "..\\..\\Media\\icons\\ImportSettings.ico"
+IDI_DISASSEMBLECODE     ICON                    "..\\..\\Media\\icons\\DisassembleCode.ico"
 
-IDI_REPEATLASTRUN       ICON                     "..\\..\\Media\\icons\\RepeatLastRun.ico"
+IDI_IMMEDIATEWINDOW     ICON                    "..\\..\\Media\\icons\\ImmediateWindow.ico"
 
-IDI_REPORT              ICON                     "..\\..\\Media\\icons\\Report.ico"
+IDI_IMPORTSETTINGS      ICON                    "..\\..\\Media\\icons\\ImportSettings.ico"
 
-IDI_SETTINGSGROUP       ICON                     "..\\..\\Media\\icons\\SettingsGroup.ico"
+IDI_REPEATLASTRUN       ICON                    "..\\..\\Media\\icons\\RepeatLastRun.ico"
 
-IDI_SHOWASSIGNEDCONFIGURATION ICON                     "..\\..\\Media\\icons\\ShowAssignedConfigurations.ico"
+IDI_REPORT              ICON                    "..\\..\\Media\\icons\\Report.ico"
 
-IDI_UNDOCHECKBOXLIST    ICON                     "..\\..\\Media\\icons\\UndoCheckBoxList.ico"
+IDI_SETTINGSGROUP       ICON                    "..\\..\\Media\\icons\\SettingsGroup.ico"
 
-IDI_USERBUILD           ICON                     "..\\..\\Media\\icons\\UserBuild.ico"
+IDI_SHOWASSIGNEDCONFIGURATION ICON                    "..\\..\\Media\\icons\\ShowAssignedConfigurations.ico"
 
-IDI_USERBUILDREMOVE     ICON                     "..\\..\\Media\\icons\\UserBuildRemove.ico"
+IDI_UNDOCHECKBOXLIST    ICON                    "..\\..\\Media\\icons\\UndoCheckBoxList.ico"
 
-IDI_WEBWELCOMETUTORIAL  ICON                     "..\\..\\Media\\icons\\WelcomeWebTutorial.ico"
+IDI_USERBUILD           ICON                    "..\\..\\Media\\icons\\UserBuild.ico"
 
-IDI_RESTART             ICON                     "..\\..\\Media\\icons\\Restart.ico"
+IDI_USERBUILDREMOVE     ICON                    "..\\..\\Media\\icons\\UserBuildRemove.ico"
 
-IDI_ABOUTDIALOGWINDOWICO ICON                     "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
+IDI_WEBWELCOMETUTORIAL  ICON                    "..\\..\\Media\\icons\\WelcomeWebTutorial.ico"
+
+IDI_RESTART             ICON                    "..\\..\\Media\\icons\\Restart.ico"
+
+IDI_ABOUTDIALOGWINDOWICO ICON                    "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
+
+IDI_ERRORSQUIGGLE       ICON                    "..\\..\\Media\\icons\\ErrorSquiggleActive.ico"
+
+IDI_WORDWRAP            ICON                    "..\\..\\Media\\icons\\WordWrap.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// DOCX
+// RTF
 //
 
-IDR_ABOUTDOC            RTF                    "..\\..\\Media\\OnlineHelp.rtf"
+IDR_ABOUTDOC            RTF                     "..\\..\\Media\\OnlineHelp.rtf"
 
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -78,13 +78,39 @@ void Settings::Load()
 	darkThemeInstallAttempt = GetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"));
 	notepadVersion = GetString(TEXT("Auto-Install"), TEXT("notepadVersion"));
 
+	// Plugin statistics
+	compileAttempts = GetNumber<int>(TEXT("User Statistics"), TEXT("compileAttempts"));
+	compileSuccesses = GetNumber<int>(TEXT("User Statistics"), TEXT("compileSuccesses"));
+	compileFails = GetNumber<int>(TEXT("User Statistics"), TEXT("compileFails"));
+	disassembledFiles = GetNumber<int>(TEXT("User Statistics"), TEXT("disassembledFiles"));
+	engineStructs = GetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"));
+	engineFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"));
+	engineConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"));
+	userStructures = GetNumber<int>(TEXT("User Statistics"), TEXT("userStructures"));
+	userFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"));
+	userConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"));
+
+	// Compiler window settings
+	compilerWindowSelectedTab = GetNumber<int>(TEXT("Compiler Window"), TEXT("compilerWindowSelectedTab"));
+	compilerWindowShowErrors = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowErrors"));
+	compilerWindowShowWarnings = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowWarnings"));
+	compilerWindowShowInfos = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowInfos"));
+	compilerWindowConsoleWordWrap = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleWordWrap"));
+
+
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
-	if (!isValidDirectoryS(neverwinterOneInstallDir))
+	if (!isValidDirectoryS(neverwinterOneInstallDir) && !isValidDirectoryS(neverwinterTwoInstallDir))
+	{
+		neverwinterOneInstallDir = TEXT("");
+		neverwinterTwoInstallDir = TEXT("");
+		compilerSettingsCreated = false;
+	}
+	if (!isValidDirectoryS(neverwinterOneInstallDir) && neverwinterInstallChoice == 0)
 	{
 		neverwinterOneInstallDir = TEXT("");
 		compilerSettingsCreated = false;
 	}
-	if (!isValidDirectoryS(neverwinterTwoInstallDir))
+	if (!isValidDirectoryS(neverwinterTwoInstallDir) && neverwinterInstallChoice == 1)
 	{
 		neverwinterTwoInstallDir = TEXT("");
 		compilerSettingsCreated = false;
@@ -107,7 +133,7 @@ void Settings::Load()
 		compilerSettingsCreated = false;
 	}
 
-	if (!isValidDirectoryS(outputCompileDir))
+	if (!isValidDirectoryS(outputCompileDir) && !useScriptPathToCompile)
 	{
 		outputCompileDir = TEXT("");
 		compilerSettingsCreated = false;
@@ -116,7 +142,8 @@ void Settings::Load()
 	if (!isValidDirectoryS(lastOpenedDir))
 		lastOpenedDir = TEXT("");
 
-	// We aren't checking batch compiling settings here, since the user will have to run the Dialog first to run a batch...
+	// We aren't checking batch operations settings here, 
+	// since the user will have to run the Dialog first to run a batch...
 
 }
 
@@ -166,6 +193,25 @@ void Settings::Save()
 	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemePreviouslyInstalled"), darkThemePreviouslyInstalled);
 	SetBoolean(TEXT("Auto-Install"), TEXT("darkThemeInstallAttempt"), darkThemeInstallAttempt);
 	SetString(TEXT("Auto-Install"), TEXT("notepadVersion"), notepadVersion.wstring());
+
+	// Plugin statistics
+	SetNumber<int>(TEXT("User Statistics"), TEXT("compileAttempts"), compileAttempts);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("compileSuccesses"), compileSuccesses);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("compileFails"), compileFails);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("disassembledFiles"), disassembledFiles);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"), engineStructs);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"), engineFunctionCount);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"), engineConstants);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("userStructures"), userStructures);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"), userFunctionCount);
+	SetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"), userConstants);
+
+	// Compiler window settings
+	SetNumber<int>(TEXT("Compiler Window"), TEXT("compilerWindowSelectedTab"), compilerWindowSelectedTab);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowErrors"), compilerWindowShowErrors);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowWarnings"), compilerWindowShowWarnings);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowInfos"), compilerWindowShowInfos);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleWordWrap"), compilerWindowConsoleWordWrap);
 
 	iniFilePath->write(*iniFile);
 }

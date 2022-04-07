@@ -13,7 +13,7 @@
 
 #define PREPROCESSORPARSE R"((?:[\w\s\\.\-\(\):]+)(?:[\w\s\\.\-\(\):]+)\((?:\d+)\):\s(?:\w+):\s(?:NSC6022): Preprocessed: (.*))"
 #define COMPILERREGEX R"((?<fileName>[\w\s\\.\-\(\):]+)\.(?<fileExt>[\w\s\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<code>NSC\d+):\s(?<message>.+))"
-#define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:(?<message>.+))"
+#define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:\s*(?<message>.+))"
 #define INCLUDESPARSEREGEX R"( ShowIncludes: Handled resource ([^\/]+)\/([^\\\n]+))"
 
 typedef jpcre2::select<char> pcre2;
@@ -31,10 +31,10 @@ static pcre2::RegexMatch includeFile(&includesRegex);
 
 using namespace NWScriptPlugin;
 
-void NWScriptLogger::log(generic_string message, LogType type, generic_string messageCode, generic_string fileName,
-	generic_string fileExt, generic_string lineNumber, bool merge)
+void NWScriptLogger::log(const generic_string& message, LogType type, const generic_string& messageCode,
+	const generic_string& fileName, const generic_string& fileExt, const generic_string& lineNumber)
 {
-	CompilerMessage newMessage = { type, messageCode, fileName, fileExt, lineNumber, message, merge };
+	CompilerMessage newMessage = { type, message, messageCode, fileName, fileExt, lineNumber};
 	compilerMessages.push_back(newMessage);
 
 	if (_messageCallback)
@@ -88,7 +88,7 @@ void NWScriptLogger::WriteTextV(const char* fmt, va_list ap)
 	{
 		log(namedGroup[0]["message"],
 			(namedGroup[0]["type"] == "Error") ? LogType::Error : (namedGroup[0]["type"] == "Warning") ? LogType::Warning : LogType::Info,
-			namedGroup[0]["code"], namedGroup[0]["fileName"], namedGroup[0]["fileExt"], namedGroup[0]["lineNumber"], false);
+			namedGroup[0]["code"], namedGroup[0]["fileName"], namedGroup[0]["fileExt"], namedGroup[0]["lineNumber"]);
 
 		return;
 	}

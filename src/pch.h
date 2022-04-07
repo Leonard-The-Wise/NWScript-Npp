@@ -14,6 +14,7 @@
 #include <Shlwapi.h>
 #include <gdiplus.h>
 #include <Richedit.h>
+#include <richole.h>
 
 #include <string>
 #include <sstream>
