@@ -271,6 +271,7 @@
     <ClInclude Include="..\src\Utils\FileInterface.h" />
     <ClInclude Include="..\src\Utils\jpcre2.hpp" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
+    <ClInclude Include="..\src\Utils\OleCallback.h" />
     <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
     <ClInclude Include="..\src\Utils\VersionInfoEx.h" />
@@ -351,7 +352,7 @@
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Media\OnlineHelp.docx" />
+    <None Include="..\Media\OnlineHelp.rtf" />
     <None Include="..\Media\UnityTest.nss" />
     <None Include="..\Publish.Dll.To.Notepad.targets" />
     <None Include="..\ReadMe.md" />
@@ -363,6 +364,27 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
+    <Image Include="..\Media\icons\About-Dialog-Ico.ico" />
+    <Image Include="..\Media\icons\AboutBox.ico" />
+    <Image Include="..\Media\icons\ClearWindow.ico" />
+    <Image Include="..\Media\icons\CompilableFile.ico" />
+    <Image Include="..\Media\icons\CompileBatch.ico" />
+    <Image Include="..\Media\icons\DarkTheme.ico" />
+    <Image Include="..\Media\icons\DependancyGraph.ico" />
+    <Image Include="..\Media\icons\DisassembleCode.ico" />
+    <Image Include="..\Media\icons\ErrorSquiggleActive.ico" />
+    <Image Include="..\Media\icons\ImmediateWindow.ico" />
+    <Image Include="..\Media\icons\ImportSettings.ico" />
+    <Image Include="..\Media\icons\RepeatLastRun.ico" />
+    <Image Include="..\Media\icons\Report.ico" />
+    <Image Include="..\Media\icons\Restart.ico" />
+    <Image Include="..\Media\icons\SettingsGroup.ico" />
+    <Image Include="..\Media\icons\ShowAssignedConfigurations.ico" />
+    <Image Include="..\Media\icons\UndoCheckBoxList.ico" />
+    <Image Include="..\Media\icons\UserBuild.ico" />
+    <Image Include="..\Media\icons\UserBuildRemove.ico" />
+    <Image Include="..\Media\icons\WelcomeWebTutorial.ico" />
+    <Image Include="..\Media\icons\WordWrap.ico" />
     <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />

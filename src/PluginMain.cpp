@@ -43,7 +43,7 @@
 
 #pragma warning (disable : 6387)
 
-#define DEBUG_AUTO_INDENT_833     // Uncomment to test auto-indent with message
+//#define DEBUG_AUTO_INDENT_833     // Uncomment to test auto-indent with message
 
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
@@ -75,8 +75,8 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_RESETUSERTOKENS 18
 #define PLUGINMENU_RESETEDITORCOLORS 19
 #define PLUGINMENU_DASH6 20
-#define PLUGINMENU_ONLINEHELP 21
-#define PLUGINMENU_ABOUTME 22
+// #define PLUGINMENU_ONLINEHELP 21
+#define PLUGINMENU_ABOUTME 21
 
 #define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
 #define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/OnlineHelp.md")
@@ -97,7 +97,7 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
-    {TEXT("Toggle compiler log window"), Plugin::ToggleConsole, 0, false, &toggleConsoleKey},
+    {TEXT("Toggle compiler log window"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
     {TEXT("---")},
     {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
@@ -108,7 +108,7 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Reset user-defined tokens"), Plugin::ResetUserTokens},
     {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
     {TEXT("---")},
-    {TEXT("Online Help"), Plugin::OnlineHelp},
+//    {TEXT("Online Help"), Plugin::OnlineHelp},
     {TEXT("About me"), Plugin::AboutMe},
 };
 
@@ -158,6 +158,9 @@ void Plugin::PluginInit(HANDLE hModule)
 
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
+
+    // Load latest Richedit library
+    LoadLibrary(TEXT("Msftedit.dll"));
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -252,20 +255,25 @@ void Plugin::SetNotepadData(NppData data)
     // Adjust menu "Use Auto-Indentation" checked or not before creation
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().enableAutoIndentation;
 
-    // Points the compiler to our global settings if valid configurations found
-    if (_settings.compilerSettingsCreated)
-        _compiler.appendSettings(&_settings);
+    // Points the compiler to our global settings
+    _compiler.appendSettings(&_settings);
+
+    // Initializes the compiler log window
+    InitCompilerLogWindow();
 
 }
 
-// Initializes the compiler log screen.
-void Plugin::InitCompilerLog() 
+// Initializes the compiler log window
+void Plugin::InitCompilerLogWindow()
 {
     _dockingData = {};
-    
+
+    // Register settings class to the window
+    _loggerWindow.appendSettings(&_settings);
+
     // additional info
-    _logConsole.init(DllHModule(), NotepadHwnd());
-    _logConsole.create(&_dockingData);
+    _loggerWindow.init(DllHModule(), NotepadHwnd());
+    _loggerWindow.create(&_dockingData);
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
     _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
     _dockingData.hIconTab = _dockingIcon;
@@ -275,8 +283,23 @@ void Plugin::InitCompilerLog()
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
-    //_logConsole.doDialog(false);
+    DisplayCompilerLogWindow(false);
+
+    // Set the compiler log callback
+    _compiler.setLoggerMessageCallback(WriteToCompilerLogCallback);
+
+    // Set the compiler log navigate callback (from errors list to main window)
+    _loggerWindow.SetNavigateFunctionCallback(NavigateToFile);
+
 }
+
+// Display / Hide the compiler log window
+void Plugin::DisplayCompilerLogWindow(bool toShow)
+{
+    Instance()._loggerWindow.display(toShow);
+    SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
+}
+
 
 #pragma endregion Plugin DLL Initialization
 
@@ -734,7 +757,6 @@ bool Plugin::SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUnch
     return false;
 }
 
-
 bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
 {
     HMENU hMenu = GetNppMainMenu();
@@ -818,7 +840,7 @@ void Plugin::SetupPluginMenuItems()
     SetPluginMenuItemIcon(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
+    //SetPluginMenuItemIcon(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
     SetPluginMenuItemIcon(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
     
     // Menu run last batch: initially disabled
@@ -1005,7 +1027,6 @@ bool Plugin::CheckScintillaDocument()
 
 void Plugin::DoImportDefinitions()
 {
-
     // TODO: Re-test code moving
 
     NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
@@ -1233,6 +1254,11 @@ void Plugin::DoImportDefinitions()
         _NWScriptParseResults.reset();
         return;
     }
+
+    // Save statistics.
+    Settings().engineStructs = _NWScriptParseResults->EngineStructuresCount;
+    Settings().engineFunctionCount = _NWScriptParseResults->FunctionsCount;
+    Settings().engineConstants = _NWScriptParseResults->ConstantsCount;
 
     // Close our results (for memory cleanup) and report back.
     _NWScriptParseResults.reset();
@@ -1591,7 +1617,16 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
         _compiler.setDestinationDirectory(outputDir);
     }
 
+    // Lock controls to compiler log window
+    _loggerWindow.LockControls(true);
+
     // TODO: Convert to multi-threaded operation
+
+    // Increment statistics
+    if (_compiler.getMode() == 0 && !_compiler.isFetchPreprocessorOnly() && !_compiler.isViewDependencies())
+        Settings().compileAttempts++;
+    if (_compiler.getMode() == 1)
+        Settings().disassembledFiles++;
 
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
@@ -1603,8 +1638,16 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 {
     NWScriptCompiler& compiler = Instance().Compiler();
 
+    // Unlock controls to compiler log window
+    Instance()._loggerWindow.LockControls(false);
+
     if (static_cast<int>(decision) == false)
+    {
+        Instance().Settings().compileFails++;
         return;
+    }
+
+    Instance().Settings().compileSuccesses++;
 
     // Options to generate symbols and auto display must be set.
     if (Instance().Settings().autoDisplayDebugSymbols && Instance().Settings().generateSymbols)
@@ -1621,6 +1664,9 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 void Plugin::DisassembleEndingCallback(HRESULT decision)
 {
     NWScriptCompiler& compiler = Instance().Compiler();
+
+    // Unlock controls to compiler log window
+    Instance()._loggerWindow.LockControls(false);
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -1649,6 +1695,9 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
 
+    // Unlock controls to compiler log window
+    Instance()._loggerWindow.LockControls(false);
+
     // Creates a new document...
     Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     // Sets the language to NWScript
@@ -1663,10 +1712,28 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
 
+    // Unlock controls to compiler log window
+    Instance()._loggerWindow.LockControls(false);
+
     // Creates a new document...
     Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     // Sets document data
     Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
+}
+
+// Write messages to the compiler window - called back from compiler logger
+void Plugin::WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& message)
+{
+    Instance()._loggerWindow.LogMessage(message, Instance()._compiler.getSourceFilePath());
+}
+
+// Receives notifications from Compiler Window to open files and navigato to text inside it
+void Plugin::NavigateToFile(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
+    const filesystem::path& filePath)
+{
+    // Search for the file name and see if it's already open in Notepad++.
+    // We can't just use the filePath that is saved, because
+
 }
 
 #pragma endregion Compiler Funcionality
@@ -1723,6 +1790,10 @@ PLUGINCOMMAND Plugin::CompileScript()
     if (!Instance().CheckScintillaDocument())
         return;
 
+    // Display and clear compiler log window
+    Instance().DisplayCompilerLogWindow(true);
+    Instance()._loggerWindow.reset();
+
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
     // Set mode to compile script
@@ -1741,6 +1812,10 @@ PLUGINCOMMAND Plugin::DisassembleFile()
         TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName, 
         properDirNameW(Instance().Settings().lastOpenedDir)))
     {
+        // Display and clear compiler log window
+        Instance().DisplayCompilerLogWindow(true);
+        Instance()._loggerWindow.reset();
+
         // Reset compiler cache and clear log so we catch all possible dependencies editions.
         Instance().Compiler().reset();
         // Set mode to disassemble script
@@ -1779,17 +1854,9 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 //-------------------------------------------------------------
 
 // Toggles the log console
-PLUGINCOMMAND Plugin::ToggleConsole()
+PLUGINCOMMAND Plugin::ToggleLogger()
 {
-    if (!Instance()._logConsole.isCreated())
-    {
-        Instance().InitCompilerLog();
-        SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
-        return; // Creation shows log too.
-    }
-
-    Instance()._logConsole.display(!Instance()._logConsole.isVisible());
-    SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
+    Instance().DisplayCompilerLogWindow(!Instance()._loggerWindow.isVisible());
 }
 
 //-------------------------------------------------------------
@@ -1800,6 +1867,10 @@ PLUGINCOMMAND Plugin::FetchPreprocessorText()
     // Do a check of the current script for the user.
     if (!Instance().CheckScintillaDocument())
         return;
+
+    // Display and clear compiler log window
+    Instance().DisplayCompilerLogWindow(true);
+    Instance()._loggerWindow.reset();
 
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
@@ -1819,6 +1890,10 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
     if (!Instance().CheckScintillaDocument())
         return;
 
+    // Display and clear compiler log window
+    Instance().DisplayCompilerLogWindow(true);
+    Instance()._loggerWindow.reset();
+
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
     // Tells compiler to only fetch preprocessed text
@@ -1827,7 +1902,6 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
     Instance().Compiler().setProcessingEndCallback(ViewDependenciesEndingCallback);
     // Pass the control to core function calling compile from current document
     Instance().DoCompileOrDisasm(TEXT(""), true);
-
 }
 
 //-------------------------------------------------------------
@@ -1980,7 +2054,7 @@ PLUGINCOMMAND Plugin::OnlineHelp()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    ::SendMessage(Instance()._logConsole.getHSelf(), WM_SIZE, 0, 0);
+    ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
 
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 
@@ -2000,10 +2074,23 @@ PLUGINCOMMAND Plugin::AboutMe()
         replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), TEXT("Use the built-in auto-indentation.") });
     else
     {
-        generic_string autoindent = TEXT("Automatic. Currently set to ["); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("]"));
+        generic_string autoindent = TEXT("Automatic. Currently set to [\\b "); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
         replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
     }
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
+
+    // Add user statistics
+    replaceStrings.insert({ TEXT("%COMPILEATTEMPTS%"), std::to_wstring(Instance().Settings().compileAttempts) });
+    replaceStrings.insert({ TEXT("%COMPILESUCCESSES%"), std::to_wstring(Instance().Settings().compileSuccesses) });
+    replaceStrings.insert({ TEXT("%COMPILESFAILED%"), std::to_wstring(Instance().Settings().compileFails) });
+    replaceStrings.insert({ TEXT("%DISASSEMBLEDFILES%"), std::to_wstring(Instance().Settings().disassembledFiles) });
+
+    replaceStrings.insert({ TEXT("%engineStructures%"), std::to_wstring(Instance().Settings().engineStructs) });
+    replaceStrings.insert({ TEXT("%engineFunctionCount%"), std::to_wstring(Instance().Settings().engineFunctionCount) });
+    replaceStrings.insert({ TEXT("%engineConstants%"), std::to_wstring(Instance().Settings().engineConstants) });
+    replaceStrings.insert({ TEXT("%userStructures%"), std::to_wstring(Instance().Settings().userStructures) });
+    replaceStrings.insert({ TEXT("%userFunctionCount%"), std::to_wstring(Instance().Settings().userFunctionCount) });
+    replaceStrings.insert({ TEXT("%userConstants%"), std::to_wstring(Instance().Settings().userConstants) });
 
     // Set replace strings
     aboutDialog.setReplaceStrings(replaceStrings); 

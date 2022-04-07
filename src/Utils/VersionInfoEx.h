@@ -14,7 +14,9 @@
 #pragma once
 
 #pragma comment (lib, "version")
+
 #include <Windows.h>
+#include "Common.h"
 
 // If version resource renamed, change VS_VERSION_INFO to point to the new resource ID
 #ifdef VS_VERSION_INFO

@@ -13,8 +13,6 @@
 //#include "jpcre2.hpp"
 
 //#include "PluginMain.h"
-#include "AboutDialog.h"
-
 #include "PluginControlsRC.h"
 
 // Using method to read project version straight from binaries to avoid constant 
@@ -22,11 +20,14 @@
 // #include "ProjectVersion.h"
 #include "VersionInfoEx.h"
 
+#include "AboutDialog.h"
+
+
 using namespace NWScriptPlugin;
 
 // Anchoring and size restriction informations
 
-constexpr const RECTSIZER mainWindowSize = { {675, 562 }, {1024, 768} };
+constexpr const RECTSIZER mainWindowSize = { {675, 562 } };
 constexpr const RECTSIZER lblPluginName = { { 251, 0 } };
 constexpr const RECTSIZER lblVersion = { { 251, 0 } };
 constexpr const RECTSIZER lblCopyright = { { 251, 0 } };
@@ -84,7 +85,7 @@ void AboutDialog::LoadAboutTextEditor()
 	auto hMemory = LoadResource(_hInst, hResource);
 	LPVOID ptr = LockResource(hMemory);
 
-	// copy image bytes into a real hglobal memory handle
+	// Copy image bytes into a real hglobal memory handle
 	hMemory = ::GlobalAlloc(GHND, _size);
 	if (hMemory)
 	{
@@ -92,20 +93,51 @@ void AboutDialog::LoadAboutTextEditor()
 		memcpy(pBuffer, ptr, _size);
 	}
 
-	// Create stream
+	// Make a raw string of resources
+	std::string rawText;
+	rawText.assign((char*)ptr, _size);
+
+	// Replace %VARIABLE% strings from raw text
+	generic_string rawTextW = replaceStringsW(str2wstr(rawText), _replaceStrings);
+
+	// Free memory allocated for resource
+	if (hMemory)
+		GlobalFree(hMemory);
+
+	// Now, redo the allocated space with the new size (with replaced texts) and copy modified text again
+	hMemory = ::GlobalAlloc(GHND, rawTextW.size());
+	if (hMemory)
+	{
+		void* pBuffer = ::GlobalLock(hMemory);
+		memcpy(pBuffer, wstr2str(rawTextW).c_str(), rawTextW.size());
+	}
+
+	// Create stream on hMemory
 	IStream* pStream = nullptr;
 	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
 	if (SUCCEEDED(hr))
 	{
+		// Set paramenters and load default text resource
 		EDITSTREAM es = { (DWORD_PTR)pStream, 0, EditStreamCallback };
 		HWND editControl = GetDlgItem(_hSelf, IDC_TXTABOUT);
+		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)&_oleCallback);
 		SendMessage(editControl, EM_AUTOURLDETECT, AURL_ENABLEURL, 0);
 		SendMessage(editControl, EM_EXLIMITTEXT, 0, -1);
+		SendMessage(editControl, EM_SETEVENTMASK, 0, ENM_LINK);
 		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+		
+		// Retrieve raw buffer from TXTABOUT for replace strings and later use with hyperlinks
+		GETTEXTLENGTHEX tl = { GTL_NUMCHARS, 1200 };
+		_aboutText.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, (WPARAM)&tl, 0) + 1);
+		GETTEXTEX tex = { (DWORD)_aboutText.size() * sizeof(TCHAR), GT_RAWTEXT, 1200, NULL, NULL};
+		SendMessage(editControl, EM_GETTEXTEX, (WPARAM)&tex, (LPARAM)_aboutText.data());
+
 	}
 
+	// Free memory allocated for resource again
 	if (hMemory)
 		GlobalFree(hMemory);
+
 }
 
 intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -167,19 +199,6 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			}
 		}
 
-		case WM_CTLCOLORSTATIC:
-		{
-			if ((HWND)lParam == GetDlgItem(_hSelf, IDC_TXTABOUT))
-			{
-
-				//SetBkMode((HDC)wParam, TRANSPARENT);
-				SetTextColor((HDC)wParam, RGB(0, 0, 0));
-				return (LRESULT)((HBRUSH)GetStockObject(WHITE_BRUSH));
-			}
-			else  // this is some other static control, do not touch it!!
-				return DefWindowProc(_hSelf, message, wParam, lParam);
-		}
-
 		case WM_SIZE:
 			ANCHOR_MAP_HANDLESIZERS();
 
@@ -188,18 +207,45 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 		case WM_NOTIFY:
 		{
-			if (wParam == IDC_LNKHOMEPAGE)
+			switch (wParam)
 			{
-				NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
-				switch (nmhdr->code)
+				case IDC_LNKHOMEPAGE:
 				{
-				case NM_CLICK:
-				case NM_RETURN:
-					PNMLINK pNMLink = (PNMLINK)lParam;
-					LITEM link = pNMLink->item;
+					NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
+					switch (nmhdr->code)
+					{
+						case NM_CLICK:
+						case NM_RETURN:
+							PNMLINK pNMLink = (PNMLINK)lParam;
+							LITEM link = pNMLink->item;
 
-					ShellExecute(NULL, L"open", link.szUrl, NULL, NULL, SW_SHOW);
-					return TRUE;
+							ShellExecute(NULL, L"open", link.szUrl, NULL, NULL, SW_SHOW);
+							return TRUE;
+					}
+				}
+
+				case IDC_TXTABOUT:
+				{
+					NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
+					switch (nmhdr->code)
+					{
+						case EN_LINK:
+						{
+							ENLINK* enLinkInfo = (ENLINK*)lParam;
+							if (enLinkInfo->msg == WM_SETCURSOR)
+							{
+								SetCursor(LoadCursor(NULL, IDC_HAND));
+							}
+
+							if (enLinkInfo->msg == WM_LBUTTONUP)
+							{
+								LaunchHyperlink(*enLinkInfo);
+							}
+
+							//ShellExecute(NULL, L"open", enLinkInfo->, NULL, NULL, SW_SHOW);
+							return TRUE;
+						}
+					}
 				}
 			}
 		}
@@ -207,6 +253,13 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 	// Signals done processing messages
 	return FALSE;
+}
+
+void AboutDialog::LaunchHyperlink(const ENLINK& link)
+{
+	// Get text range from raw string
+	generic_string url = _aboutText.substr(link.chrg.cpMin, link.chrg.cpMax);
+	ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOW);
 }
 
 void AboutDialog::doDialog()

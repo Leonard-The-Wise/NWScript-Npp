@@ -82,7 +82,7 @@ namespace NWScriptPlugin
 		}
 
 		// Sets function callback for receiving logger messages
-		void setLoggerMessageCallback(void (*MessageCallback)(NWScriptLogger::CompilerMessage&)) {
+		void setLoggerMessageCallback(void (*MessageCallback)(const NWScriptLogger::CompilerMessage&)) {
 			_logger.setMessageCallback(MessageCallback);
 		}
 
@@ -110,6 +110,18 @@ namespace NWScriptPlugin
 			_compilerMode = compilerMode;
 			_fetchPreprocessorOnly = false;
 			_makeDependencyView = false;
+		}
+
+		int getMode() const {
+			return _compilerMode;
+		}
+
+		bool isViewDependencies() const {
+			return _makeDependencyView;
+		}
+
+		bool isFetchPreprocessorOnly() const {
+			return _fetchPreprocessorOnly;
 		}
 
 		NWScriptLogger& logger() {

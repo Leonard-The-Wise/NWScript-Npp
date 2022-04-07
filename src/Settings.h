@@ -70,6 +70,27 @@ namespace NWScriptPlugin {
 		bool autoInstallDarkTheme = false;
 		generic_string lastOpenedDir;
 
+		// Plugin statistics
+		int compileAttempts = 0;
+		int compileSuccesses = 0;
+		int compileFails = 0;
+		int disassembledFiles = 0;
+
+		int engineStructs = 0;
+		int engineFunctionCount = 0;
+		int engineConstants = 0;
+		int userStructures = 0;
+		int userFunctionCount = 0;
+		int userConstants = 0;
+
+		// Compiler window settings
+		int compilerWindowSelectedTab = 1;
+		bool compilerWindowShowErrors = true;
+		bool compilerWindowShowWarnings = true;
+		bool compilerWindowShowInfos = false;
+		bool compilerWindowConsoleWordWrap = true;
+
+
 		std::string getChosenInstallDir() {
 			return neverwinterInstallChoice == 0 ? properDirNameA(wstr2str(neverwinterOneInstallDir)) : properDirNameA(wstr2str(neverwinterTwoInstallDir));
 		}

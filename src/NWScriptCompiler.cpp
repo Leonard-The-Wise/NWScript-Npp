@@ -43,8 +43,7 @@ bool NWScriptCompiler::initialize() {
     }
     catch (std::runtime_error& e)
     {
-        _logger.log("Failed to initialize the resources manager:", LogType::Critical, "NSC2001", true);
-        _logger.log(e.what(), LogType::Critical, true);
+        _logger.log("Failed to initialize the resources manager: " + std::string(e.what()), LogType::Critical, "NSC2001");
         return false;
     }
 
@@ -99,8 +98,6 @@ bool NWScriptCompiler::loadScriptResources()
 
 void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
 {
-    _logger.log("Initializing process...", LogType::ConsoleMessage);
-
     NWN::ResType fileResType;
     NWN::ResRef32 fileResRef;
     std::string inFileContents;
@@ -108,6 +105,9 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     // First check... is the compiler initialized?
     if (!isInitialized())
     {
+        _logger.log("Initializing compiler...", LogType::ConsoleMessage);
+        _logger.log("", LogType::ConsoleMessage);
+
         if (!initialize())
         {
             notifyCaller(false);
@@ -136,11 +136,6 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
             _includePaths.push_back(properDirNameA(wstr2str(s)) + "\\");
         }
 
-        if (_settings->compileMode == 0)
-            _logger.log("Compiling script:" + wstr2str(_sourcePath), LogType::Info);
-        else
-            _logger.log("Disassembling binary:" + wstr2str(_sourcePath), LogType::Info);
-
         // Acquire information about NWN Resource Type of the file. Warning of ignored result is incorrect.
 #pragma warning (push)
 #pragma warning (disable : 6031)
@@ -155,7 +150,7 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
         {
             if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
             {
-                _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Error, "NSC2002");
+                _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, "NSC2002");
                 notifyCaller(false);
                 return;
             }
@@ -232,7 +227,9 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
     {
     case NscResult_Failure:
     {
+        _logger.log("", LogType::ConsoleMessage);
         _logger.log("Compilation aborted with errors.", LogType::ConsoleMessage);
+        _logger.log("", LogType::ConsoleMessage);
         return false;
     }
 
@@ -246,7 +243,9 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
         break;
 
     default:
-        _logger.log("Unknown status code", LogType::ConsoleMessage);
+        _logger.log("", LogType::ConsoleMessage);
+        _logger.log("Unknown status code", LogType::Critical, "NSC2004");
+        _logger.log("", LogType::ConsoleMessage);
         return false;
     }
 
@@ -263,7 +262,9 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
     dataRef.assign(reinterpret_cast<char*>(&generatedCode[0]), generatedCode.size());
     if (!bufferToFile(outputPath, dataRef))
     {
-        _logger.log(TEXT("Error: could not write compiled output file: ") + outputPath, LogType::ConsoleMessage);
+        _logger.log("", LogType::ConsoleMessage);
+        _logger.log(TEXT("Could not write compiled output file: ") + outputPath, LogType::Critical, TEXT("NSC2005"));
+        _logger.log("", LogType::ConsoleMessage);
         return false;
     }
 
@@ -275,7 +276,9 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
         dataRef.assign(reinterpret_cast<char*>(&debugSymbols[0]), debugSymbols.size());
         if (!bufferToFile(outputPath, dataRef))
         {
-            _logger.log(TEXT("Error: could not write generated symbols output file: ") + outputPath, LogType::ConsoleMessage);
+            _logger.log("", LogType::ConsoleMessage);
+            _logger.log(TEXT("Could not write generated symbols output file: ") + outputPath, LogType::Critical, TEXT("NSC2006"));
+            _logger.log("", LogType::ConsoleMessage);
             return false;
         }
     }
@@ -298,7 +301,9 @@ bool NWScriptCompiler::disassembleBinary(bool fromMemory, std::string& fileConte
     // This is the way the library returns errors to us on that routine... :D
     if (generatedCode == "DISASSEMBLY ERROR: COMPILER INITIALIZATION FAILED!")
     {
-        _logger.log("Error disassembling file. Compiler Initialization failed!", LogType::Error);
+        _logger.log("", LogType::ConsoleMessage);
+        _logger.log("Disassembler - Compiler Initialization failed!", LogType::Critical, "NSC2007");
+        _logger.log("", LogType::ConsoleMessage);
         return false;
     }
 
@@ -315,7 +320,9 @@ bool NWScriptCompiler::disassembleBinary(bool fromMemory, std::string& fileConte
 
     if (!bufferToFile(outputPath, formatedCode.str()))
     {
-        _logger.log(TEXT("Error: could not write disassembled output file: ") + outputPath, LogType::ConsoleMessage);
+        _logger.log("", LogType::ConsoleMessage);
+        _logger.log(TEXT("Could not write disassembled output file: ") + outputPath, LogType::Critical, TEXT("NSC2008"));
+        _logger.log("", LogType::ConsoleMessage);
         return false;
     }
 
@@ -419,7 +426,9 @@ bool NWScriptCompiler::MakeDependenciesFile(const std::set<std::string>& depende
         generic_string outputPath = str2wstr(_destDir.string() + "\\" + _sourcePath.stem().string() + dependencyFileSuffix);
         if (!bufferToFile(outputPath, sdependencies.str()))
         {
-            _logger.log(TEXT("Error: could not write dependency file: ") + outputPath, LogType::ConsoleMessage);
+            _logger.log("", LogType::ConsoleMessage);
+            _logger.log(TEXT("Could not write dependency file: ") + outputPath, LogType::Critical, TEXT("NSC2009"));
+            _logger.log("", LogType::ConsoleMessage);
             return false;
         }
     }

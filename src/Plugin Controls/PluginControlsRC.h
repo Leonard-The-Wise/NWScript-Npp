@@ -3,7 +3,6 @@
 // Used by PluginControls.rc
 //
 #define IDD_ABOUT                       102
-#define IDD_ABOUT_OLD                   102
 #define IDB_HEREBEDRAGONS               103
 #define IDD_HEREBEDRAGONS               104
 #define IDD_PATHACCESSDIALOG            106
@@ -15,7 +14,6 @@
 #define IDD_LOGGER                      132
 #define IDD_LOGGER_ERRORS               134
 #define IDD_LOGGER_CONSOLE              136
-#define IDB_PNG1                        145
 #define IDB_NWSCRIPTLOGO                145
 #define IDI_ABOUTBOX                    148
 #define IDI_CLEARWINDOW                 149
@@ -33,15 +31,12 @@
 #define IDI_UNDOCHECKBOXLIST            161
 #define IDI_USERBUILD                   162
 #define IDI_USERBUILDREMOVE             163
-#define IDI_ICON1                       164
-#define IDI_WELCOMEWEB                  164
-#define IDI_WELCOMETUTORIAL             164
 #define IDI_WEBWELCOMETUTORIAL          164
 #define IDI_RESTART                     165
-#define IDB_PNG2                        167
 #define IDI_ABOUTDIALOGWINDOWICO        167
-#define IDR_DOCX1                       168
 #define IDR_ABOUTDOC                    168
+#define IDI_ERRORSQUIGGLE               169
+#define IDI_WORDWRAP                    174
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -82,7 +77,6 @@
 #define IDC_TXTOUTPUTDIR                1037
 #define IDSTART                         1038
 #define IDC_BTOUTPUTDIR                 1039
-#define IDSTART2                        1039
 #define IDC_TXTBATCHDIRSTART            1040
 #define IDC_TXTOUTPUTDIRBATCH           1041
 #define IDC_CHKRECURSIVE                1042
@@ -100,18 +94,11 @@
 #define IDC_CHKAUTOINSTALLDARKTHEME     1057
 #define IDC_TABLOGGER                   1060
 #define IDC_TXTCONSOLE                  1062
-#define IDC_BTERRORSTOGGLE              1064
-#define IDC_BTWARNINGSTOGGLE            1065
-#define IDC_BTMESSGESTOGGLE             1066
-#define IDC_BTMESSAGESTOGGLE            1066
 #define IDC_LSTERRORS                   1067
 #define IDC_ERRORGROUPBOX               1068
 #define IDC_LBLCONSOLE                  1069
-#define IDC_LIST1                       1071
-#define IDC_BUTTON1                     1072
-#define IDC_CHECK1                      1073
-#define IDC_MFCBUTTON1                  1074
-#define IDC_RICHEDIT21                  1075
+#define IDC_BTCLEARCONSOLE              1072
+#define IDC_BTTOGGLEWORDWRAP            1073
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -120,7 +107,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_RESOURCE_VALUE        175
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1076
 #define _APS_NEXT_SYMED_VALUE           101

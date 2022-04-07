@@ -10,10 +10,18 @@
 //#pragma comment (lib, "comctl32")          // Must use to create Image List controls (moved to pch.h)
 
 #include "LoggerDialog.h"
+#include "Common.h"
 
 #define IDM_ERRORTOGGLE 4001
 #define IDM_WARNINGTOGGLE 4002
 #define IDM_MESSAGETOGGLE 4003
+
+#define ERRORCOLUMN_ITEMID 0
+#define ERRORCOLUMN_MESSAGECODE 2
+#define ERRORCOLUMN_MESSAGETEXT 3
+#define ERRORCOLUMN_FILENAME 4
+#define ERRORCOLUMN_FILELINE 5
+
 
 using namespace NWScriptPlugin;
 
@@ -65,26 +73,30 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
 			// Create an image list to associate with errors and warnings, etc
-			_iconList = ImageList_Create(16, 16, ILC_COLOR32, 3, 1);
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16));
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16));
-			ImageList_AddIcon(_iconList, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16));
+			_iconList16x16 = ImageList_Create(16, 16, ILC_COLOR32, 4, 1);
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList16x16, LoadIcon(_hInst, MAKEINTRESOURCE(IDI_ERRORSQUIGGLE)));               // compiler error
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16));
 
 			// Create toolbar
 			int ImageListID = 0;
 			_toolBar = CreateWindowEx(TBSTYLE_EX_MIXEDBUTTONS, TOOLBARCLASSNAME, 
 				NULL, WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_LIST | CCS_NOPARENTALIGN | CCS_NODIVIDER,
-				6, 11, 360, 25,	_errorDlgHwnd, NULL, _hInst, NULL);
-			SendMessage(_toolBar, TB_SETIMAGELIST, (WPARAM)ImageListID, (LPARAM)_iconList);
+				6, 11, 360, 29,	_errorDlgHwnd, NULL, _hInst, NULL);
+			SendMessage(_toolBar, TB_SETIMAGELIST, (WPARAM)ImageListID, (LPARAM)_iconList16x16);
 
 			const int numButtons = 3;
 			BYTE buttonStyles = BTNS_AUTOSIZE | BTNS_CHECK;
+			BYTE errorToggle = TBSTATE_ENABLED | (_settings->compilerWindowShowErrors ? TBSTATE_CHECKED : (BYTE)0);
+			BYTE warningToggle = TBSTATE_ENABLED | (_settings->compilerWindowShowWarnings ? TBSTATE_CHECKED : (BYTE)0);
+			BYTE infoToggle = TBSTATE_ENABLED | (_settings->compilerWindowShowInfos ? TBSTATE_CHECKED : (BYTE)0);
+
 			TBBUTTON tbButtons[numButtons] =
 			{
-//				{ -1, 0, 0, BTNS_SEP, {0}, 0, (INT_PTR)L"" },
-				{ MAKELONG(0, ImageListID), IDM_ERRORTOGGLE,   TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Errors" },
-				{ MAKELONG(1, ImageListID), IDM_WARNINGTOGGLE, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Warnings"},
-				{ MAKELONG(2, ImageListID), IDM_MESSAGETOGGLE, TBSTATE_ENABLED, buttonStyles, {0}, 0, (INT_PTR)L"  (0) Messages"}
+				{ MAKELONG(0, ImageListID), IDM_ERRORTOGGLE, errorToggle, buttonStyles, {0}, 0, (INT_PTR)L" (0) Errors"},
+				{ MAKELONG(2, ImageListID), IDM_WARNINGTOGGLE, warningToggle, buttonStyles, {0}, 0, (INT_PTR)L" (0) Warnings"},
+				{ MAKELONG(3, ImageListID), IDM_MESSAGETOGGLE, infoToggle, buttonStyles, {0}, 0, (INT_PTR)L" (0) Messages"}
 			};
 
 			// Add buttons.
@@ -99,16 +111,28 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			SendMessage(_toolBar, TB_SETMETRICS, 0, (LPARAM)&tbM);
 			ShowWindow(_toolBar, TRUE);
 
+			// Setup icons to buttons in console log (LoadIcon is bugging, using LoadImage instead).
+			HBITMAP clearWindow = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_CLEARWINDOW), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
+			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
+			HBITMAP wordWrap = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_WORDWRAP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
+			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
+
+			// Set Toggle Word Wrap state (default is ON. If it's off, we need to rebuild the control)
+			CheckDlgButton(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, _settings->compilerWindowConsoleWordWrap);
+			if (!_settings->compilerWindowConsoleWordWrap)
+				ToggleWordWrap();
+
 			// Setup anchors
 			SetupDockingAnchors();
 
 			// Add columns to listview
 			SetupListView();
 
-			// Default tab selected item
-			TabCtrl_SetCurSel(_mainTabHwnd, 1);
-			// Show default window (Console)
-			ShowWindow(_consoleDlgHwnd, SW_NORMAL);
+			// Select saved tab
+			if (_settings->compilerWindowSelectedTab == 0)
+				switchToErrors();
+			else
+				switchToConsole();
 
 			break;
 		}
@@ -140,6 +164,7 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 				if (_mainTabHwnd)
 				{
 					int tabSelection = TabCtrl_GetCurSel(_mainTabHwnd);
+					_settings->compilerWindowSelectedTab = tabSelection;
 					if (tabSelection == 0)
 					{
 						ShowWindow(_errorDlgHwnd, SW_NORMAL);
@@ -200,10 +225,67 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 					break;
 				}
 
-				case IDC_BTERRORSTOGGLE:
+				case IDM_ERRORTOGGLE:
+				case IDM_WARNINGTOGGLE:
+				case IDM_MESSAGETOGGLE:
 				{
+					// Get changed states
+					_settings->compilerWindowShowErrors = ::SendMessage(_toolBar, TB_ISBUTTONCHECKED, IDM_ERRORTOGGLE, 0);
+					_settings->compilerWindowShowWarnings = ::SendMessage(_toolBar, TB_ISBUTTONCHECKED, IDM_WARNINGTOGGLE, 0);
+					_settings->compilerWindowShowInfos = ::SendMessage(_toolBar, TB_ISBUTTONCHECKED, IDM_MESSAGETOGGLE, 0);
+
+					// Rebuild errors list
+					RebuildErrorsList();
 					break;
 				}
+
+				case IDC_BTCLEARCONSOLE:
+				{
+					SetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, TEXT(""));
+					break;
+				}
+
+				case IDC_BTTOGGLEWORDWRAP:
+				{
+					ToggleWordWrap();
+					break;
+				}
+			}
+		}
+
+		case WM_NOTIFY:
+		{
+			if (wParam == IDC_LSTERRORS)
+			{
+				LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
+				NMHDR hdr = lpnmia->hdr;
+				if (hdr.code == NM_CLICK)
+				{
+    				// Invalid item or list is "locked" for user input at the time.
+					if (lpnmia->iItem < 0 || !_processInputForErrorList)
+						return FALSE;
+
+					HWND lstErrors = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+
+					// Gather the item ID stored previously
+					int messageItem = -1;
+					LVITEM itemInfo;
+					itemInfo.mask = LVIF_PARAM;
+					itemInfo.iItem = lpnmia->iItem;
+					ListView_GetItem(lstErrors, &itemInfo);
+					messageItem = static_cast<int>(itemInfo.lParam);
+
+					CompilerMessage& r = _errorsList[messageItem];
+
+					// Dispatch to Plugin for processing.
+					generic_string fileName = r.fileName.empty() ? TEXT("") : r.fileName + TEXT(".") + r.fileExt;
+					size_t lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
+
+					if (navigateToFileCallback)
+						navigateToFileCallback(fileName, lineNumber, r.messageText, r.filePath);
+
+					break;
+				}					
 			}
 		}
 	}
@@ -242,35 +324,39 @@ void LoggerDialog::SetupListView()
 {
 	HWND listErrorsHWND = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
 	TCHAR columnName[64];
+	ZeroMemory(columnName, std::size(columnName));
 
 	// Extended Styles
-	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT);
+	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT |
+		LVS_EX_SUBITEMIMAGES | LVS_EX_TWOCLICKACTIVATE | LVS_EX_JUSTIFYCOLUMNS | LVS_EX_UNDERLINEHOT);
+
+	// Associate icons list with errors list
+	ListView_SetImageList(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS), _iconList16x16, LVSIL_SMALL);
 
 	// Column generics
-	LV_COLUMN newColumn;
+	LVCOLUMN newColumn;
 	ZeroMemory(&newColumn, sizeof(newColumn));
-	ZeroMemory(columnName, std::size(columnName));
 	newColumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_ORDER | LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH;
 	newColumn.fmt = LVCFMT_FIXED_WIDTH | LVCFMT_LEFT | LVCFMT_IMAGE | LVCFMT_FIXED_RATIO;
 	newColumn.pszText = columnName;
 
+	// Column 0 is hidden (displays icon)
+	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
+	newColumn.fmt = LVCFMT_FIXED_WIDTH;
+	newColumn.cx = 0;
+	ListView_InsertColumn(listErrorsHWND, 0, &newColumn);
+
 	// First column (a dummy empty one)
 	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
 	newColumn.fmt = LVCFMT_FIXED_WIDTH;
-	newColumn.cx = 25;
-	ListView_InsertColumn(listErrorsHWND, 0, &newColumn);
-
-	// Icon of message
-	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
-	newColumn.fmt = LVCFMT_FIXED_WIDTH | LVCFMT_IMAGE | LVCFMT_CENTER;
+	newColumn.cx = 5;
 	ListView_InsertColumn(listErrorsHWND, 1, &newColumn);
 
 	// Message Code
-	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_MINWIDTH |LVCF_DEFAULTWIDTH | LVCF_IDEALWIDTH | LVCF_WIDTH;
+	newColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_MINWIDTH | LVCF_DEFAULTWIDTH | LVCF_WIDTH;
 	newColumn.fmt = LVCFMT_LEFT;
 	newColumn.cxMin = 93;
 	newColumn.cxDefault = 95;
-	newColumn.cxIdeal = 95;
 	newColumn.cx = 95;
 	memcpy(columnName, TEXT("Code"), std::size(TEXT("Code")) * sizeof(TCHAR));
 	newColumn.cchTextMax = std::size(TEXT("Code"));
@@ -392,3 +478,217 @@ void LoggerDialog::SetupDockingAnchors()
 	anchorsPrepared = true;
 }
 
+void LoggerDialog::LogMessage(const CompilerMessage& message, const generic_string& filePath)
+{
+	// Create a more complete version of the log message, appended the full file path.
+	// (because at the time of creation the logger don't have this info avaliable)
+	CompilerMessage fullMessage = message;
+	fullMessage.filePath = filePath;
+
+	if (message.messageType != LogType::ConsoleMessage)
+		_errorsList.push_back(fullMessage);
+
+	// Write message to console and/or errors list
+	WriteToErrorsList(message, false);
+
+	// Update counters
+	if (message.messageType == LogType::Critical || message.messageType == LogType::Error)
+		_errorCount++;
+	if (message.messageType == LogType::Warning)
+		_warningCount++;
+	if (message.messageType == LogType::Info)
+		_infoCount++;
+
+	UpdateToolButtonLabels();
+}
+
+void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole)
+{
+	HWND lstErrors = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+
+	// Write raw text to console
+	if (!ignoreConsole && message.messageType == LogType::ConsoleMessage)
+	{
+		AppendConsoleText(message.messageText + TEXT("\r\n"));
+		return;
+	}
+
+	// Format message
+	generic_string messageType = message.messageType == LogType::Error ? TEXT("Error") :
+		message.messageType == LogType::Warning ? TEXT("Warning") : TEXT("Info");
+	generic_string output = message.fileName + TEXT(".") + message.fileExt + TEXT("(") + message.lineNumber + TEXT("): ")
+		+ messageType + TEXT(": ") + message.messageCode + TEXT(": ") + message.messageText;
+
+	// Critical messages - override output message
+	if (message.messageType == LogType::Critical)
+		output = TEXT("Critical Error [") + message.messageCode + TEXT("]: ") + message.messageText;
+
+	// Pure infos -  override output message
+	if (message.messageType == LogType::Info && message.fileName.empty())
+		output = TEXT("Info: ") + message.messageText;
+
+	// Write message to console
+	if (!ignoreConsole)
+		AppendConsoleText(output + TEXT("\r\n"));
+
+	// Don't show filtered messages
+	if ((message.messageType == LogType::Critical || message.messageType == LogType::Error) && !_settings->compilerWindowShowErrors)
+		return;
+	if (message.messageType == LogType::Warning && !_settings->compilerWindowShowWarnings)
+		return;
+	if (message.messageType == LogType::Info && !_settings->compilerWindowShowInfos)
+		return;
+
+	// Retrieve the message index on list and store for future reference.
+	int itemIndex = 0;
+	for (; itemIndex < _errorsList.size(); itemIndex++)
+	{
+		if (_errorsList[itemIndex] == message)
+			break;
+	}
+
+	// Create the list item
+	size_t currentItem = ListView_GetItemCount(lstErrors);
+	LVITEM newItem;
+	ZeroMemory(&newItem, sizeof(LVITEM));
+	newItem.mask = LVIF_PARAM;
+	newItem.iItem = currentItem;
+	newItem.lParam = (LPARAM)itemIndex;
+	currentItem = ListView_InsertItem(lstErrors, &newItem);
+
+	// Update all visible columns
+	newItem.iItem = currentItem;
+	newItem.mask = LVIF_TEXT | LVIF_IMAGE;  // Icon column
+	newItem.iSubItem = ERRORCOLUMN_MESSAGECODE;
+	newItem.iImage = (int)message.messageType;
+	generic_string code = message.messageCode.empty() ? messageType : message.messageCode;
+	newItem.pszText = (LPWSTR)code.c_str();
+	ListView_SetItem(lstErrors, &newItem);
+	ListView_SetItemText(lstErrors, currentItem, ERRORCOLUMN_MESSAGETEXT, (LPWSTR)message.messageText.c_str());
+	generic_string fileName = message.fileName.empty() ? TEXT("-") : message.fileName + TEXT(".") + message.fileExt;
+	ListView_SetItemText(lstErrors, currentItem, ERRORCOLUMN_FILENAME, (LPWSTR)fileName.c_str());
+	generic_string lineNumber = message.lineNumber.empty() ? TEXT("-") : message.lineNumber;
+	ListView_SetItemText(lstErrors, currentItem, ERRORCOLUMN_FILELINE, (LPWSTR)lineNumber.c_str());
+
+}
+
+void LoggerDialog::AppendConsoleText(const generic_string& newText)
+{
+	size_t textLength = GetWindowTextLength(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE)) + 1;
+	std::unique_ptr<TCHAR[]> currentText = std::make_unique<TCHAR[]>(textLength);
+	ZeroMemory(currentText.get(), textLength * sizeof(TCHAR));
+	GetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, currentText.get(), textLength);
+
+	generic_string result = generic_string(currentText.get());
+	result.append(newText);
+
+	// Set the text in the edit control
+	SetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, result.c_str());
+}
+
+void LoggerDialog::RebuildErrorsList()
+{
+	// Clear current Errors List
+	ListView_DeleteAllItems(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS));
+
+	// Redo with filters (also ignore console messages)
+	for (CompilerMessage m : _errorsList)
+	{
+		if ((m.messageType == LogType::Critical || m.messageType == LogType::Error) && _settings->compilerWindowShowErrors)
+			WriteToErrorsList(m, true);
+		if (m.messageType == LogType::Warning && _settings->compilerWindowShowWarnings)
+			WriteToErrorsList(m, true);
+		if (m.messageType == LogType::Info && _settings->compilerWindowShowInfos)
+			WriteToErrorsList(m, true);
+	}
+
+	// Update tool buttons captions.
+	UpdateToolButtonLabels();
+}
+
+void LoggerDialog::UpdateToolButtonLabels()
+{
+	TBBUTTONINFO tbButton;
+	ZeroMemory(&tbButton, sizeof(TBBUTTONINFO));
+
+	tbButton.dwMask = TBIF_TEXT;
+	tbButton.cbSize = sizeof(TBBUTTONINFO);
+
+	// Errors count
+	generic_string labelText = TEXT(" ") + ((_settings->compilerWindowShowErrors || _errorCount == 0 ? TEXT("(") + std::to_wstring(_errorCount) + TEXT(") ") :
+		TEXT("(0 of ") + std::to_wstring(_errorCount) + TEXT(") ")) + TEXT("Errors"));
+	tbButton.pszText = (LPWSTR)labelText.c_str();
+	::SendMessage(_toolBar, TB_SETBUTTONINFO, IDM_ERRORTOGGLE, (LPARAM)&tbButton);
+
+	// Warnings count
+	labelText = TEXT(" ") + ((_settings->compilerWindowShowWarnings || _warningCount == 0 ? TEXT("(") + std::to_wstring(_warningCount) + TEXT(") ") :
+		TEXT("(0 of ") + std::to_wstring(_warningCount) + TEXT(") ")) + TEXT("Warnings"));
+	tbButton.pszText = (LPWSTR)labelText.c_str();
+	::SendMessage(_toolBar, TB_SETBUTTONINFO, IDM_WARNINGTOGGLE, (LPARAM)&tbButton);
+
+	// Messages (Info) count
+	labelText = TEXT(" ") + ((_settings->compilerWindowShowInfos || _infoCount == 0 ? TEXT("(") + std::to_wstring(_infoCount) + TEXT(") ") :
+		TEXT("(0 of ") + std::to_wstring(_infoCount) + TEXT(") ")) + TEXT("Messages"));
+	tbButton.pszText = (LPWSTR)labelText.c_str();
+	::SendMessage(_toolBar, TB_SETBUTTONINFO, IDM_MESSAGETOGGLE, (LPARAM)&tbButton);
+}
+
+void LoggerDialog::LockControls(bool toLock)
+{
+	// Processing of error list clicks (lock/unlock)
+	_processInputForErrorList = !toLock;
+
+	// Lock/unlock the toolbar
+	EnableWindow(_toolBar, !toLock);
+
+	// Enable/Disable clear window and word wrap;
+	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), !toLock);
+	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), !toLock);
+}
+
+// There's no toggle message to text boxes, we must recreate the control.
+// https://stackoverflow.com/questions/56781359/how-do-i-toggle-word-wrap-in-a-editbox
+void LoggerDialog::ToggleWordWrap()
+{
+	RECT editRect;
+	generic_string sTextBuffer;
+	HWND editControl = GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE);
+
+	// Retrieve text for swapping control
+	GETTEXTLENGTHEX tl = { GTL_NUMCHARS, 1200 };
+	sTextBuffer.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, (WPARAM)&tl, 0) + 1);
+	GETTEXTEX tex = { (DWORD)sTextBuffer.size() * sizeof(TCHAR), GT_RAWTEXT, 1200, NULL, NULL };
+	SendMessage(editControl, EM_GETTEXTEX, (WPARAM)&tex, (LPARAM)sTextBuffer.data());
+
+	// Get previous windows measures
+	GetWindowRect(editControl, &editRect);
+	ScreenToClient(_consoleDlgHwnd, &editRect);
+
+	// Destroy current Control (and remove from anchor map)
+	ANCHOR_MAP_REMOVE(editControl);
+	DestroyWindow(editControl);
+
+	// New edit will have or not WS_HCROLL style depending if word wrap is on.
+	_settings->compilerWindowConsoleWordWrap = IsDlgButtonChecked(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP);
+	DWORD defaultStyles = WS_CHILD | ES_SUNKEN | WS_VSCROLL | WS_TABSTOP | 0x804 | (_settings->compilerWindowConsoleWordWrap ? 0 : WS_HSCROLL);
+
+	// Using HMENU trick to preserve control ID.
+	// https://social.msdn.microsoft.com/Forums/vstudio/en-US/aa81f991-85c9-431a-8804-2a580aa6a293/assigning-a-control-id-to-a-win32-button?forum=vcgeneral
+	SetLastError(0);
+	editControl = CreateWindowEx(0, MSFTEDIT_CLASS, 0, defaultStyles, editRect.left, editRect.top, 
+		editRect.right - editRect.left, editRect.bottom - editRect.top, _consoleDlgHwnd, (HMENU)IDC_TXTCONSOLE, _hInst, 0);
+	DWORD test = GetLastError();
+
+	// Restore default font style
+	HFONT editFont = CreateFont(15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Consolas"));
+	::SendMessage(editControl, WM_SETFONT, reinterpret_cast<WPARAM>(editFont), 0);
+
+	// Redo visibility and anchor map
+	ShowWindow(editControl, SW_NORMAL);
+	ANCHOR_MAP_DYNAMICCONTROL(editControl, ANF_ALL);
+
+	// Restore old text
+	SETTEXTEX stex = { ST_DEFAULT, 1200 };
+	SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
+}

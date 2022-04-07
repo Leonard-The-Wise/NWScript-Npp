@@ -130,7 +130,7 @@ namespace NWScriptPlugin {
 		// Menu Command "Run last successful batch" function handler. 
 		static PLUGINCOMMAND RunLastBatch();
 		// Menu Command "Run last successful batch" function handler. 
-		static PLUGINCOMMAND ToggleConsole();
+		static PLUGINCOMMAND ToggleLogger();
 		// Menu Command "Fetch preprocessor text" function handler. 
 		static PLUGINCOMMAND FetchPreprocessorText();
 		// Menu Command "View Script Dependencies" function handler. 
@@ -171,8 +171,11 @@ namespace NWScriptPlugin {
 		// Load current Notepad++ Language Lexer when language changed.
 		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
 		void LoadNotepadLexer();
-		// Initializes the compiler Log.
-		void InitCompilerLog();
+		// Initializes the compiler log window
+		void InitCompilerLogWindow();
+		// Displays/Hides the compiler window
+		void DisplayCompilerLogWindow(bool toShow = true);
+
 
 		// ### Initialization -> Menu handling
 		
@@ -215,7 +218,11 @@ namespace NWScriptPlugin {
 		static void FetchPreprocessedEndingCallback(HRESULT decision);
 		// Receives notifications when a "Fetch preprocessed" menu command ends
 		static void ViewDependenciesEndingCallback(HRESULT decision);
-
+		// Receives log notification messages and write to the compiler window
+		static void WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& message);
+		// Receives notifications from Compiler Window to open files and navigato to text inside it
+		static void NavigateToFile(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
+			const filesystem::path& filePath = TEXT(""));
 
 		// ### XML config files management
 
@@ -260,7 +267,7 @@ namespace NWScriptPlugin {
 		generic_string _dockingTitle;   // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
-		LoggerDialog _logConsole;
+		LoggerDialog _loggerWindow;
 
 		// Internal handles
 
