@@ -55,7 +55,7 @@
 #define SCLEX_NWSCRIPT (SCLEX_USER + 100)
 #define SCLEX_NWSCRIPTNOCASE (SCLEX_USER + 101)
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 // Giving an unamed namespace to protect functions and classes here from collision
 namespace {

@@ -32,6 +32,9 @@
     <Filter Include="Precompiled Header">
       <UniqueIdentifier>{4277c788-dd29-40f9-bfa1-0e159b037504}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Custom Lexers\Lexilla">
+      <UniqueIdentifier>{b9b00af0-83ff-4e55-95ec-e74caaa7447c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -79,9 +82,6 @@
     </ClInclude>
     <ClInclude Include="..\src\Lexers\LexNWScript.h">
       <Filter>Custom Lexers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Lexers\Scintilla\SciLexer.h">
-      <Filter>Custom Lexers\Scintilla</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h">
       <Filter>Plugin Interface</Filter>
@@ -184,6 +184,12 @@
     <ClInclude Include="..\src\Utils\OleCallback.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexilla\Lexilla.h">
+      <Filter>Custom Lexers\Lexilla</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Lexers\Lexilla\SciLexer.h">
+      <Filter>Custom Lexers\Lexilla</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -265,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\AboutDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Lexers\Lexlib\LexAccessor.cxx">
+      <Filter>Custom Lexers\Lexlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -374,6 +383,9 @@
   <ItemGroup>
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt">
       <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\src\Lexers\Lexilla\License.txt">
+      <Filter>Custom Lexers\Lexilla</Filter>
     </Text>
   </ItemGroup>
 </Project>

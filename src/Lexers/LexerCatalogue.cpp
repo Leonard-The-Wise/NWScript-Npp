@@ -31,6 +31,16 @@ constexpr static LexerDefinition InstalledLexers[] = {
 
 constexpr const int InstalledLexersCount = (int)std::size(InstalledLexers);
 
+// To create different lexers, add other classes on this function.
+ILexer5* LexerCatalogue::CreateLexer(const char* name)
+{
+	std::string _name = name;
+	if (_name == InstalledLexers[0].lexerName)   
+		return new LexerNWScript(true); // The only supported option for this plugin.
+	else
+		return nullptr;
+}
+
 int LexerCatalogue::GetLexerCount() noexcept {
 	return InstalledLexersCount;
 }

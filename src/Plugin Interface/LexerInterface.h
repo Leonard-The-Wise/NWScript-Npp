@@ -26,3 +26,5 @@ extern "C" DLLAPI inline void WINAPI GetLexerStatusText(unsigned int index, WCHA
 
 extern "C" DLLAPI inline MyLexerFactoryFunction WINAPI GetLexerFactory(unsigned int index);
 
+extern "C" DLLAPI inline ILexer5 * WINAPI CreateLexer(const char* name);
+

@@ -34,3 +34,9 @@ extern "C" DLLAPI inline MyLexerFactoryFunction WINAPI GetLexerFactory(unsigned 
 {
 	return LexerCatalogue::GetLexerFactory(index);
 }
+
+extern "C" DLLAPI inline ILexer5 * WINAPI CreateLexer(const char* name)
+{
+	return LexerCatalogue::CreateLexer(name);
+}
+

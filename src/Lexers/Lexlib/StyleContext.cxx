@@ -8,6 +8,9 @@
 #include <cstdlib>
 #include <cassert>
 
+#include <string>
+#include <string_view>
+
 #include "ILexer.h"
 
 #include "LexAccessor.h"
@@ -15,7 +18,7 @@
 #include "StyleContext.h"
 #include "CharacterSet.h"
 
-using namespace Scintilla;
+using namespace Lexilla;
 
 bool StyleContext::MatchIgnoreCase(const char *s) {
 	if (MakeLowerCase(ch) != static_cast<unsigned char>(*s))
@@ -65,22 +68,9 @@ static void getRange(Sci_PositionU start,
 }
 
 void StyleContext::GetCurrent(char *s, Sci_PositionU len) {
-	getRange(styler.GetStartSegment(), currentPos - 1, styler, s, len);
-}
-
-static void getRangeLowered(Sci_PositionU start,
-		Sci_PositionU end,
-		LexAccessor &styler,
-		char *s,
-		Sci_PositionU len) {
-	Sci_PositionU i = 0;
-	while ((i < end - start + 1) && (i < len-1)) {
-		s[i] = MakeLowerCase(styler[start + i]);
-		i++;
-	}
-	s[i] = '\0';
+	styler.GetRange(styler.GetStartSegment(), currentPos, s, len);
 }
 
 void StyleContext::GetCurrentLowered(char *s, Sci_PositionU len) {
-	getRangeLowered(styler.GetStartSegment(), currentPos - 1, styler, s, len);
+	styler.GetRangeLowered(styler.GetStartSegment(), currentPos, s, len);
 }

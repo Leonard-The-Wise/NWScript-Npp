@@ -42,8 +42,10 @@ namespace LexerInterface {
 		static void GetLexerStatusText(unsigned int index, WCHAR* desc, int buflength);
 		// Gets auto-indent mode for lexer.
 		static ExternalLexerAutoIndentMode GetLexerIndentType(unsigned int index);
-		// ILexer5 interface implementing function. Must not be changed.
+		// ILexer5 interface implementing function. Compatibility with Notepad++ 8.3.3 and bellow.
 		static MyLexerFactoryFunction GetLexerFactory(unsigned int index);
+		// ILexer5 interface implementing function for Scintilla 5.2.1 and Lexilla 5.x (Notepad 8.3.4 or greater). 
+		static ILexer5* CreateLexer(const char* name);
 	};
 }
 
