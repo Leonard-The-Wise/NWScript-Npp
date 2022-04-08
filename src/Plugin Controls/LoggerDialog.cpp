@@ -335,7 +335,7 @@ void LoggerDialog::SetupListView()
 	ZeroMemory(columnName, std::size(columnName));
 
 	// Extended Styles
-	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT |
+	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT |
 		LVS_EX_SUBITEMIMAGES | LVS_EX_TWOCLICKACTIVATE | LVS_EX_JUSTIFYCOLUMNS | LVS_EX_UNDERLINEHOT);
 
 	// Associate icons list with errors list

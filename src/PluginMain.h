@@ -219,7 +219,7 @@ namespace NWScriptPlugin {
 		// Receives notifications when a "Fetch preprocessed" menu command ends
 		static void ViewDependenciesEndingCallback(HRESULT decision);
 		// Receives log notification messages and write to the compiler window
-		static void WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& message);
+		static void WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message);
 		// Receives notifications from Compiler Window to open files and navigato to text inside it
 		static void NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
 			const filesystem::path& filePath = TEXT(""));
@@ -278,6 +278,9 @@ namespace NWScriptPlugin {
 
 		// Settings instance
 		NWScriptPlugin::Settings _settings;
+
+		// Temporary stash to Scintilla document content to be used inside the compilation thread
+		std::string _tempFileContents;
 
 		// Meta Information about the plugin paths
 		// Information included:

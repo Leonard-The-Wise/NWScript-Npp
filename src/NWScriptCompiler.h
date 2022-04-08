@@ -134,7 +134,7 @@ namespace NWScriptPlugin
 		}
 
 
-		void processFile(bool fromMemory = false, char* fileContents = NULL);
+		void processFile(bool fromMemory, char* fileContents);
 
 	private:
 		std::unique_ptr<ResourceManager> _resourceManager;

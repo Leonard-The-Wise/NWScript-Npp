@@ -288,7 +288,7 @@ void Plugin::InitCompilerLogWindow()
     DisplayCompilerLogWindow(false);
 
     // Set the compiler log callback
-    _compiler.setLoggerMessageCallback(WriteToCompilerLogCallback);
+    _compiler.setLoggerMessageCallback(WriteToCompilerLog);
 
     // Set the compiler log navigate callback (from errors list to main window)
     _loggerWindow.SetNavigateFunctionCallback(NavigateToCode);
@@ -564,72 +564,6 @@ void Plugin::DetectDarkThemeInstall()
     if (_pluginDarkThemeIs == DarkThemeStatus::Installed && !_settings.darkThemePreviouslyInstalled)
         _settings.darkThemePreviouslyInstalled = true;
 }
-
-#ifdef INACTIVE_DEPRECATED // Another same-named much more efficient method found
-// Sets the current language to our plugin's lexer language by calling MENU commands.
-// Needs recursion to navigate here...
-bool Plugin::SetNotepadToPluginLexer(HMENU parent)
-{
-    // Notepad++ don't have support to set external lexer languages by message calling, so we
-    // do it by directly sending a "menu command" there...
-
-    MENUITEMINFO menuInfo = {};
-    HMENU currentMenu;
-
-    if (parent)
-        currentMenu = parent;
-    else
-        currentMenu = GetNppMainMenu();
-
-    int count = GetMenuItemCount(currentMenu);
-    if (count < 0)
-        return FALSE;
-
-    generic_string menuItemName;
-    generic_string lexerName = str2wstr(LexerCatalogue::GetLexerName(0));
-    TCHAR szString[256] = {};
-
-    int commandID = -1;
-
-    // Search for name
-    bool bFound = false;
-    for (int i = 0; i < count && !bFound; i++)
-    {
-        ZeroMemory(szString, sizeof(szString));
-        menuInfo.cch = 256;
-        menuInfo.fMask = MIIM_TYPE;
-        menuInfo.fType = MFT_STRING;
-        menuInfo.cbSize = sizeof(MENUITEMINFO);
-        menuInfo.dwTypeData = szString;
-        bool bSuccess = GetMenuItemInfo(currentMenu, i, MF_BYPOSITION, &menuInfo);
-        menuItemName = szString;
-
-        if (menuItemName == lexerName)
-        {
-            // Found name. Find command ID;
-            commandID = GetMenuItemID(currentMenu, i);
-            bFound = true;
-            break;
-        }
-
-        HMENU hSubMenu = GetSubMenu(currentMenu, i);
-        if (hSubMenu)
-        {
-            if (SetNotepadToPluginLexer(hSubMenu))
-                return TRUE;
-        }
-    }
-
-    // Dispatch command.
-    if (bFound)
-    {
-        Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, commandID);
-    }
-
-    return bFound;
-}
-
-#endif
 
 // Look for our language menu item among installed external languages and call it
 void Plugin::SetNotepadToPluginLexer()
@@ -1559,7 +1493,8 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 {
     fs::path scriptPath;
     fs::path outputDir;
-    std::string fileContents;
+
+    _tempFileContents.clear();
 
     scriptPath = filePath;
 
@@ -1576,8 +1511,8 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     {
         // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
         size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
-        fileContents.resize(size + 1);
-        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&fileContents[0]));
+        _tempFileContents.resize(size + 1);
+        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&_tempFileContents[0]));
 
         // And now, get the output filename
         TCHAR nameBuffer[MAX_PATH] = {0};
@@ -1622,8 +1557,6 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     // Lock controls to compiler log window
     _loggerWindow.LockControls(true);
 
-    // TODO: Convert to multi-threaded operation
-
     // Increment statistics
     if (_compiler.getMode() == 0 && !_compiler.isFetchPreprocessorOnly() && !_compiler.isViewDependencies())
         Settings().compileAttempts++;
@@ -1632,13 +1565,17 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
-    _compiler.processFile(fromCurrentScintilla, &fileContents[0]);
+    std::thread tProcessor (&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
+    tProcessor.detach();
 }
 
 // Receives notifications when a "Compile" menu command ends
 void Plugin::CompileEndingCallback(HRESULT decision) 
 {
     NWScriptCompiler& compiler = Instance().Compiler();
+
+    // Clear any content of temporary stash if exists
+    Instance()._tempFileContents.clear();
 
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
@@ -1650,6 +1587,8 @@ void Plugin::CompileEndingCallback(HRESULT decision)
     }
 
     Instance().Settings().compileSuccesses++;
+    WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
+    WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("File compiled successfully!") });
 
     // Options to generate symbols and auto display must be set.
     if (Instance().Settings().autoDisplayDebugSymbols && Instance().Settings().generateSymbols)
@@ -1723,8 +1662,8 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
     Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
 }
 
-// Write messages to the compiler window - called back from compiler logger
-void Plugin::WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& message)
+// Write messages to the compiler window - also called back from compiler logger
+void Plugin::WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message)
 {
     Instance()._loggerWindow.LogMessage(message, Instance()._compiler.getSourceFilePath());
 }

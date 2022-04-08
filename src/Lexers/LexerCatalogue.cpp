@@ -25,13 +25,9 @@ constexpr static LexerDefinition InstalledLexers[] = {
 };
 
 
-/*
-* END OF TASK
-*/
-
 constexpr const int InstalledLexersCount = (int)std::size(InstalledLexers);
 
-// To create different lexers, add other classes on this function.
+// To create different lexers for Notepad 8.3.4+ versions, add other classes on this function.
 ILexer5* LexerCatalogue::CreateLexer(const char* name)
 {
 	std::string _name = name;
@@ -40,6 +36,10 @@ ILexer5* LexerCatalogue::CreateLexer(const char* name)
 	else
 		return nullptr;
 }
+
+/*
+* END OF TASK
+*/
 
 int LexerCatalogue::GetLexerCount() noexcept {
 	return InstalledLexersCount;
