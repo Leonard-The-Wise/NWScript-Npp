@@ -20,6 +20,7 @@
 #include <sstream>
 #include <cwchar>
 #include <locale>
+#include <format>
 
 #include <stdexcept>
 #include <errhandlingapi.h>

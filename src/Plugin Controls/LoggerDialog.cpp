@@ -679,6 +679,10 @@ void LoggerDialog::LockControls(bool toLock)
 	// Enable/Disable clear window and word wrap;
 	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), !toLock);
 	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), !toLock);
+
+	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS), !toLock);
+	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS), !toLock);
+	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), !toLock);
 }
 
 // There's no toggle word wrap message to text boxes, we must recreate the control.

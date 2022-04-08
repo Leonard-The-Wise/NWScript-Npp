@@ -270,6 +270,7 @@ namespace NWScriptPlugin {
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
+		ULONGLONG _clockStart = 0;
 
 		// Internal (global) classes
 

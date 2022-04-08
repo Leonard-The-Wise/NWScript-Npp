@@ -1523,6 +1523,9 @@ void Plugin::BatchProcessDialogCallback(HRESULT decision)
         return;
     }
 
+    // Start counting ticks
+    Instance()._clockStart = GetTickCount64();
+
     if (!inst._processingFilesDialog.isCreated())
     {
         inst._processingFilesDialog.init(inst.DllHModule(), inst.NotepadHwnd());
@@ -1697,6 +1700,10 @@ void Plugin::CompileEndingCallback(HRESULT decision)
         //Sets language to NWScript (because color syntax WILL work for assembled symbols)
         Instance().SetNotepadToPluginLexer();
     }
+
+    // Mark compilation time.
+    double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Receives notifications when a "Disassemble" menu command ends
@@ -1719,6 +1726,10 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
         //Sets language to NWScript (because color syntax WILL work for assembled symbols)
         Instance().SetNotepadToPluginLexer();
     }
+
+    // Mark compilation time.
+    double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Receives notifications for each file processed
@@ -1779,6 +1790,10 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
 
         // Reset batch state
         inst.ResetBatchStates();
+
+        // Mark compilation time.
+        double durationFloat = (double)(GetTickCount64() - inst._clockStart) / (double)1000;
+        WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
     }
 }
 
@@ -1798,6 +1813,11 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
     Instance().SetNotepadToPluginLexer();
     // Sets document data
     Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
+
+    // Mark compilation time.
+    double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+
 }
 
 // Receives notifications when a "View Script Dependencies" menu command ends
@@ -1814,6 +1834,10 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
     Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
     // Sets document data
     Instance().Messenger().SendSciMessage<void>(SCI_SETTEXT, 0, reinterpret_cast<LPARAM>(Instance().Compiler().logger().getProcessorString().c_str()));
+
+    // Mark compilation time.
+    double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Write messages to the compiler window - also called back from compiler logger
@@ -1977,6 +2001,9 @@ PLUGINCOMMAND Plugin::CompileScript()
     if (!Instance().CheckScintillaDocument())
         return;
 
+    // Start counting ticks
+    Instance()._clockStart = GetTickCount64();
+
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
     Instance()._loggerWindow.reset();
@@ -1999,6 +2026,9 @@ PLUGINCOMMAND Plugin::DisassembleFile()
         TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName, 
         properDirNameW(Instance().Settings().lastOpenedDir)))
     {
+        // Start counting ticks
+        Instance()._clockStart = GetTickCount64();
+
         // Display and clear compiler log window
         Instance().DisplayCompilerLogWindow(true);
         Instance()._loggerWindow.reset();
@@ -2055,6 +2085,9 @@ PLUGINCOMMAND Plugin::FetchPreprocessorText()
     if (!Instance().CheckScintillaDocument())
         return;
 
+    // Start counting ticks
+    Instance()._clockStart = GetTickCount64();
+
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
     Instance()._loggerWindow.reset();
@@ -2076,6 +2109,9 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
     // Do a check of the current script for the user.
     if (!Instance().CheckScintillaDocument())
         return;
+
+    // Start counting ticks
+    Instance()._clockStart = GetTickCount64();
 
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
