@@ -22,6 +22,12 @@
 
 \pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Compiles the current opened document into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 . If no output directory is specified, the script current directory will be used as output instead.\par
 
+\pard\widctlpar\li480\sb36\sa36\qj\par
+
+\pard\widctlpar\sb36\sa36\qj\b Remarks\par
+
+\pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The plugin\rquote s version of the compiler now supports UTF-16 encoding. Previous versions only supported UTF-8. Although this support is primarily intended for convenience use only \endash  since UTF-16 is also part of Notepad++ standard editor. I don\rquote t really recommend using extended characters here, unless inside strings and it is untested whether the game can display them properly. So, use with caution.\par
+
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Disassemble file\rdblquote :\par
 
 \pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Disassembles a compiled \cf2\f2\fs20 NWscript file\cf0\f1\fs24  from the disk and put results into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 . If no output directory is specified, the file current directory will be used as output instead.\par
@@ -35,7 +41,7 @@
 
 \pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The same \cf2\f2\fs20 include folders\cf0\f1\fs24  on the \cf2\f2\fs20 compiler settings\cf0\f1\fs24  will be used to \cf2\f2\fs20 batch process\cf0\f1\fs24  files, also the \cf2\f2\fs20 Neverwinter Installation Paths\cf0\f1\fs24 , etc., and other options not exclusive for batch processing.\par
 \f3\'b7\tab\f1 When writing file filters, you may use any normal Windows file wildcards. Also, this field accepts a list of file filters separated by commas. \b Do not\b0  use spaces in between commas. Example of valid filter: \cf2\f2\fs20 *x.nss,nw_s0_*.nss,nw_s1_*.nss\cf0\f1\fs24 .\par
-\f3\'b7\tab\f1 File filters are saved separately for \b Compile\b0  and \b Disassemble\b0  mode, hence you may have 2 different sets, one for each \ul mode\ulnone .\par
+\f3\'b7\tab\f1 File filters are saved separately for \b Compile\b0  and \b Disassemble\b0  mode, hence you may have 2 different sets, one for each mode.\par
 
 \pard\widctlpar\sb36\sa36\qj\par
 
@@ -146,12 +152,12 @@ d5ba9a00dbecf50024a1e100bd8b5500eaddd00000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000002020202028f909192020202
-020202ef02020202898a8b8c8d8e02020202021102027680818283848586878802020200027677
-78797a7a737b7c7d7e7f02022e026b6c6d6e6f6f7071727374750202405d5e5f60616263646566
-6768696a02005051524b535455565758595a5b5c02004546474748494a4b4b4c4c4d4e4f020039
+0202020002020202898a8b8c8d8e02020202020002027680818283848586878802020280027677
+78797a7a737b7c7d7e7f020220026b6c6d6e6f6f7071727374750202205d5e5f60616263646566
+6768696a02735051524b535455565758595a5b5c02004546474748494a4b4b4c4c4d4e4f02f839
 31313a3b3c3d3e3f404142434402002d2e262f3031322b333435363738020023241b2525262627
-2728292a2b2c020015161718191a1b1c1d1e1f202122020002090a0b0c0d0e0f10111213140202
-0002020202030405060708020202020220040000002701ffff030000000000
+2728292a2b2c022e15161718191a1b1c1d1e1f202122020002090a0b0c0d0e0f10111213140202
+400202020203040506070802020202021c040000002701ffff030000000000
 } icons near some menu options, that's because if you want to use that option you must either run \cf2\f2\fs20 Notepad++\cf0\f1\fs24  with \cf2\f2\fs20 Administrator Privileges\cf0\f1\fs24  OR you may also manually provide write permissions to the option's required files, because they are located in a secured path like \cf2\f2\fs20 %ProgramFiles%\cf0\f1\fs24  or so. Don't worry, you will be notified of which file you need to provide permissions to for each operation.\par
 
 \pard\widctlpar\sb180\sa180\qj Options that requires elevated privileges will usually access these files bellow, in a combination of one or more files for each option:\par

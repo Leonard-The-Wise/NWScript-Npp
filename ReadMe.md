@@ -43,7 +43,7 @@ Settings -> Auto-Completion -> Auto-Indent (checkbox)
 
 -   Also while playing back a macro, especially the type-in ones, you'll want to disable the Plugin's auto-indent feature, as the plugin will not be able to detect a macro playback and will end messing-up any text typed within that macro.
 
-***`From Notepad++ version 8.3.3 and beyond`***:
+***`From Notepad++ version 8.3.3 to later`***:
 
 -   Those issues were fixed *(thanks [`@DonHo`](https://github.com/donho) for accepting my pull request)* and no longer a concern, the option to select the plugin built-in auto-indentation won't even show up as an option to it's users anymore. So I suggest you to always keep your `Notepad++` version up-to-date. *(if not possible because you use legacy plugins, well, just use the built-in auto-indent function then, it won't bite, I promise)*.
 
@@ -122,7 +122,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
 
 -   [`NWScript-Npp.vcxproj`](NWScript-Npp/NWScript-Npp.vcxproj) file sets the `<PlatformToolset>` to [`v143`](https://docs.microsoft.com/en-us/cpp/overview/visual-cpp-tools-and-features-in-visual-studio-editions?view=msvc-170) for using with [`Visual Studio 2022`](https://visualstudio.microsoft.com/vs/).
 
--   Also, we are targeting [`ISO C++ 20`](https://en.wikipedia.org/wiki/C%2B%2B20) standard here, although a [`C++ 17`](https://en.wikipedia.org/wiki/C%2B%2B17) would do just fine. Forget about [`C++ 14`](https://en.wikipedia.org/wiki/C%2B%2B14) - and probably bellow - since it can't handle some of my [`smart pointers`](https://en.cppreference.com/w/cpp/memory) usage, nor other peculiarities with libraries and won't even compile.
+-   Also, we are targeting [`ISO C++ 20`](https://en.wikipedia.org/wiki/C%2B%2B20) standard here, and since Visual Studio 2022 still don't support `std::format` on its `ICO C++20` implementation, we set the project to use `Preview features from the latest C++ working draft`.
 
 -   Interface functions required for NPP to use the lexer are all declared with:
 
@@ -139,9 +139,7 @@ For reutilization of the project, the `NWScript-Npp.vcxproj` is organized in the
 
     -   And if linking statically to a code, it will `#define` `DLLAPI` to nothing.
 
--   [`src/Lexers/Scintilla`](src/Lexers/Scintilla) is unmodified files copied from [`NPP\Scintilla\include`](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/scintilla/include), so you can overwrite those with more up-to-date versions in your own taste.
-
--   [`src/Lexers/Lexlib`](src/Lexers/Lexlib) contains required files copied from [`NPP\Scintilla\lexlib`](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/scintilla/lexlib) - unchanged other than ripping out some headers that were not required and perhaps `#pragma` disabling one warning or another. You can add more if your project needs and also overwrite those with newer versions too.
+-   [`src/Lexers/Scintilla`](src/Lexers/Scintilla), [`src/Lexers/Lexilla`](src/Lexers/Lexilla) and [`src/Lexers/Lexlib`](src/Lexers/Lexlib) are unmodified files copied from the Scintilla and Lexilla projects appended to Notepad++. You can update them with newer versions when needed.
 
 -   [`src/Lexers/Config/NWScript-Npp.xml`](src/Lexers/Config/NWScript-Npp.xml) defines the language keywords & styles. Required for the plugin and will be published on project build. When changing the `DLL` name, you MUST also change this to the exact name your `DLL` target gets, or else `Notepad++` will not recognize it. You'll also need to modify the `` and `` tags there and replace `name="NWScript"` to your `InstalledLexers[]` language name, or else it still won't link properly to `Notepad++` and no custom colors for your plugin. Also the `` attribute obviously points to which file extension your language is to be automatically associated with when opening under `Notepad++` and the `` attribute is what is displayed as the language name for the user when he goes to the `Settings -> Style Configurator` to customize the language colors.
 

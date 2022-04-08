@@ -222,6 +222,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 							ShellExecute(NULL, L"open", link.szUrl, NULL, NULL, SW_SHOW);
 							return TRUE;
 					}
+					break;
 				}
 
 				case IDC_TXTABOUT:
@@ -242,10 +243,10 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 								LaunchHyperlink(*enLinkInfo);
 							}
 
-							//ShellExecute(NULL, L"open", enLinkInfo->, NULL, NULL, SW_SHOW);
 							return TRUE;
 						}
 					}
+					break;
 				}
 			}
 		}
@@ -258,7 +259,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 void AboutDialog::LaunchHyperlink(const ENLINK& link)
 {
 	// Get text range from raw string
-	generic_string url = _aboutText.substr(link.chrg.cpMin, link.chrg.cpMax);
+	generic_string url = _aboutText.substr(link.chrg.cpMin, link.chrg.cpMax - link.chrg.cpMin);
 	ShellExecute(NULL, L"open", url.c_str(), NULL, NULL, SW_SHOW);
 }
 

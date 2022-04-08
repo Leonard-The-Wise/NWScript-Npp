@@ -10,6 +10,7 @@
 //#include <fstream>
 //#include "jpcre2.h"
 
+#include "Utf8_16.h"
 #include "NWScriptCompiler.h"
 #include "VersionInfoEx.h"
 
@@ -102,7 +103,17 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     NWN::ResRef32 fileResRef;
     std::string inFileContents;
 
-    // First check... is the compiler initialized?
+    // First check: safeguard from trying to recompile nwscript.nss
+    if (_stricmp(_sourcePath.filename().string().c_str(), "nwscript.nss") == 0 && _compilerMode == 0)
+    {
+        _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
+        _logger.log("Error: you can't explicitly compile any script named \"nwscript.nss\", this name is reserved for the main engine.", LogType::Critical, "NSC2010");
+        _logger.log("File ignored: " + _sourcePath.string() , LogType::Info);
+        notifyCaller(false);
+        return;
+    }
+
+    // Initialize the compiler if not already
     if (!isInitialized())
     {
         _logger.log("Initializing compiler...", LogType::ConsoleMessage);
@@ -161,6 +172,17 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
             notifyCaller(false);
             return;
         }
+    }
+
+    // Determines file encoding. Only a minimal sample is used here since
+    // we are not interested in capturing UTF-8 multibyte-like strings, only UTF-16 types.
+    constexpr const int blockSize = IS_TEXT_UNICODE_STATISTICS;
+    Utf8_16_Read utfConverter;
+    int encoding = utfConverter.determineEncoding((unsigned char*)inFileContents.c_str(), (blockSize > inFileContents.size()) ? inFileContents.size() : blockSize);
+    if (encoding == uni16BE || encoding == uni16LE || encoding == uni16BE_NoBOM || encoding == uni16LE_NoBOM)
+    {
+        std::ignore = utfConverter.convert(inFileContents.data(), inFileContents.size());
+        inFileContents.assign(utfConverter.getNewBuf(), utfConverter.getNewSize());
     }
 
     // Execute the process
