@@ -83,6 +83,12 @@ namespace NWScriptPlugin {
 			navigateToFileCallback = _navigateToFileCallback;
 		}
 
+		// HACK: To correct the file navigation issue, we store the current lineNumber being passed
+		// to navigateToFileCallback, so the timer on it can refer back to it.
+		int getCurrentNavigationLine() const {
+			return _currentLine;
+		}
+
 		void LogMessage(const CompilerMessage& message, const generic_string& filePath = TEXT(""));
 
 		void LockControls(bool toLock);
@@ -129,6 +135,10 @@ namespace NWScriptPlugin {
 
 		void (*navigateToFileCallback)(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
 			const filesystem::path& filePath) = nullptr;
+
+		// HACK: To correct the file navigation issue, we store the current lineNumber being passed
+		// to navigateToFileCallback, so the timer on it can refer back to it.
+		int _currentLine = 0;
 
 	};
 }

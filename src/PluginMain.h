@@ -221,8 +221,10 @@ namespace NWScriptPlugin {
 		// Receives log notification messages and write to the compiler window
 		static void WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& message);
 		// Receives notifications from Compiler Window to open files and navigato to text inside it
-		static void NavigateToFile(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
+		static void NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
 			const filesystem::path& filePath = TEXT(""));
+		// Reposition the navigation cursor assynchronously
+		static void CALLBACK RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime);
 
 		// ### XML config files management
 

@@ -43,7 +43,9 @@
 
 #pragma warning (disable : 6387)
 
-//#define DEBUG_AUTO_INDENT_833     // Uncomment to test auto-indent with message
+//#define DEBUG_AUTO_INDENT_833      // Uncomment to test auto-indent with message
+#define NAGIVATECALLBACKTIMER 0x800  // Temporary timer to schedule navigations
+
 
 using namespace NWScriptPlugin;
 using namespace LexerInterface;
@@ -289,7 +291,7 @@ void Plugin::InitCompilerLogWindow()
     _compiler.setLoggerMessageCallback(WriteToCompilerLogCallback);
 
     // Set the compiler log navigate callback (from errors list to main window)
-    _loggerWindow.SetNavigateFunctionCallback(NavigateToFile);
+    _loggerWindow.SetNavigateFunctionCallback(NavigateToCode);
 
 }
 
@@ -1728,13 +1730,102 @@ void Plugin::WriteToCompilerLogCallback(const NWScriptLogger::CompilerMessage& m
 }
 
 // Receives notifications from Compiler Window to open files and navigato to text inside it
-void Plugin::NavigateToFile(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
+void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
     const filesystem::path& filePath)
 {
-    // Search for the file name and see if it's already open in Notepad++.
-    // We can't just use the filePath that is saved, because
+    // Search for the file name.
+    // First comparison: the easy way - file is the same as the one being
+    // processed. Also, the compiler only returns lowercase names, so we
+    // compare with case insensitive.
+    generic_string finalPath;
+    if (_wcsicmp(str2wstr(filePath.filename().string()).c_str(), fileName.c_str()) == 0)
+        finalPath = filePath.c_str();
 
+    // Or the hard way...
+    else
+    {
+        // First search for filename inside the same folder as the script,
+        // Then search all include paths on the compiler settings.
+        // If still fails is because it's a script inside the Neverwinter
+        // path, so we don't open.
+        generic_string tempPath = str2wstr(filePath.parent_path().string()) + TEXT("\\") + fileName;
+        if (PathFileExists(tempPath.c_str()))
+            finalPath = tempPath;
+        else
+        {
+            for (const generic_string& s : Instance().Settings().getIncludeDirsV())
+            {
+                tempPath = s + TEXT("\\") + fileName;
+                if (PathFileExists(tempPath.c_str()))
+                {
+                    finalPath = tempPath;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (finalPath.empty())
+    {
+        MessageBox(Instance().NotepadHwnd(), (TEXT("Cannot open file: ") + fileName +
+            TEXT(". Maybe it's one of the Neverwinter original #includes that are compressed inside the Neverwinter folder.")).c_str(),
+            TEXT("Inaccessible file."), MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    PluginMessenger msg = Instance().Messenger();
+
+    // Open file into notepad. If already opened, it will get the focus.
+    bool success = msg.SendNppMessage<bool>(NPPM_DOOPEN, 0, (LPARAM)finalPath.c_str());
+
+    // Navigate to line
+    // HACK: For some reason, the normal operation won't work if the file doesn't have the focus.
+    // So we schedule the execution to happen assynchronously with the smallest possible time frame.
+    if (success)
+    {
+        SetTimer(Instance().NotepadHwnd(), NAGIVATECALLBACKTIMER, USER_TIMER_MINIMUM, (TIMERPROC)RunScheduledReposition);
+    }
 }
+
+void CALLBACK Plugin::RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
+{
+    PluginMessenger msg = Instance().Messenger();
+    int lineNum = Instance()._loggerWindow.getCurrentNavigationLine();
+
+    int currentPosition = msg.SendSciMessage<int>(SCI_GETCURRENTPOS);
+    int linePositionStart = msg.SendSciMessage<int>(SCI_POSITIONFROMLINE, lineNum - 1);
+    int linePositionEnd = msg.SendSciMessage<int>(SCI_GETLINEENDPOSITION, lineNum - 1);
+
+    bool isDownwards = currentPosition < linePositionEnd;
+
+    // Make sure target lines are unfolded
+    msg.SendSciMessage<void>(SCI_ENSUREVISIBLE, msg.SendSciMessage<int>(SCI_LINEFROMPOSITION, linePositionStart));
+    msg.SendSciMessage<void>(SCI_ENSUREVISIBLE, msg.SendSciMessage<int>(SCI_LINEFROMPOSITION, linePositionEnd));
+
+    // Jump-scroll to center, if current position is out of view. Repeat operation
+    // to ensure visibility on recent opened documents
+    msg.SendSciMessage<void>(SCI_SETVISIBLEPOLICY, CARET_JUMPS | CARET_EVEN);
+    msg.SendSciMessage<void>(SCI_ENSUREVISIBLEENFORCEPOLICY,
+        msg.SendSciMessage<int>(SCI_LINEFROMPOSITION, isDownwards ? linePositionEnd : linePositionStart));
+    // When going downward, the end position is important, otherwise the start
+    msg.SendSciMessage<void>(SCI_GOTOPOS, isDownwards ? linePositionEnd : linePositionStart);
+    msg.SendSciMessage<void>(SCI_SETVISIBLEPOLICY, CARET_EVEN);
+    msg.SendSciMessage<void>(SCI_ENSUREVISIBLEENFORCEPOLICY,
+        msg.SendSciMessage<int>(SCI_LINEFROMPOSITION, isDownwards ? linePositionEnd : linePositionStart));
+
+    msg.SendSciMessage<void>(SCI_SCROLLRANGE, linePositionStart, linePositionEnd);
+
+    msg.SendSciMessage<void>(SCI_GOTOPOS, linePositionEnd);
+    msg.SendSciMessage<void>(SCI_GOTOPOS, linePositionStart);
+
+    // Update Scintilla's knowledge about what column the caret is in, so that if user
+    // does up/down arrow as first navigation after the search result is selected,
+    // the caret doesn't jump to an unexpected column
+    Instance().Messenger().SendSciMessage<void>(SCI_CHOOSECARETX);
+
+    KillTimer(hwnd, NAGIVATECALLBACKTIMER);
+}
+
 
 #pragma endregion Compiler Funcionality
 

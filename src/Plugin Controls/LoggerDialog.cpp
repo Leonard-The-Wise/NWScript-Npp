@@ -259,7 +259,10 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 			{
 				LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
 				NMHDR hdr = lpnmia->hdr;
+#pragma warning (push)
+#pragma warning (disable : 26454)
 				if (hdr.code == NM_CLICK)
+#pragma warning (pop)
 				{
     				// Invalid item or list is "locked" for user input at the time.
 					if (lpnmia->iItem < 0 || !_processInputForErrorList)
@@ -279,11 +282,16 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
 					// Dispatch to Plugin for processing.
 					generic_string fileName = r.fileName.empty() ? TEXT("") : r.fileName + TEXT(".") + r.fileExt;
-					size_t lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
+					int lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
 
-					if (navigateToFileCallback)
+					// Only dispatch messages with valid line numbers
+					if (navigateToFileCallback && lineNumber > -1)
+					{
+						// HACK: To correct the file navigation issue, we store the current lineNumber being passed
+						// to navigateToFileCallback, so the timer on it can refer back to it.
+						_currentLine = lineNumber;
 						navigateToFileCallback(fileName, lineNumber, r.messageText, r.filePath);
-
+					}
 					break;
 				}					
 			}
@@ -646,7 +654,7 @@ void LoggerDialog::LockControls(bool toLock)
 	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), !toLock);
 }
 
-// There's no toggle message to text boxes, we must recreate the control.
+// There's no toggle word wrap message to text boxes, we must recreate the control.
 // https://stackoverflow.com/questions/56781359/how-do-i-toggle-word-wrap-in-a-editbox
 void LoggerDialog::ToggleWordWrap()
 {
