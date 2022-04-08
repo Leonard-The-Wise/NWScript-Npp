@@ -136,19 +136,19 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
             _includePaths.push_back(properDirNameA(wstr2str(s)) + "\\");
         }
 
-        // Acquire information about NWN Resource Type of the file. Warning of ignored result is incorrect.
-#pragma warning (push)
-#pragma warning (disable : 6031)
-        fileResType = _resourceManager->ExtToResType(wstr2str(_sourcePath).c_str());
-        fileResRef = _resourceManager->ResRef32FromStr(wstr2str(_sourcePath.stem()).c_str());
-#pragma warning (pop)
-
         // Create our compiler/disassembler
         _compiler = std::make_unique<NscCompiler>(*_resourceManager, _settings->useNonBiowareExtenstions);
         _compiler->NscSetIncludePaths(_includePaths);
         _compiler->NscSetCompilerErrorPrefix(SCRIPTERRORPREFIX);
         _compiler->NscSetResourceCacheEnabled(true);
     }
+
+    // Acquire information about NWN Resource Type of the file. Warning of ignored result is incorrect.
+#pragma warning (push)
+#pragma warning (disable : 6031)
+    fileResType = _resourceManager->ExtToResType(wstr2str(_sourcePath).c_str());
+    fileResRef = _resourceManager->ResRef32FromStr(wstr2str(_sourcePath.stem()).c_str());
+#pragma warning (pop)
 
     // Load file from disk if not from memory
     if (fromMemory)
