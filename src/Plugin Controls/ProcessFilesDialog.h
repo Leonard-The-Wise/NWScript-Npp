@@ -19,8 +19,22 @@ namespace NWScriptPlugin {
 
 		virtual void destroy() {};
 
+		void setInterruptFlag(std::atomic<bool>& interruptFlagVariable) {
+			_interruptFlagVariable = &interruptFlagVariable;
+		}
+
+		void setStatus(const generic_string& status) {
+			SetDlgItemText(_hSelf, IDC_LBLSTATUS, status.c_str());
+		}
+
+		void lockWindow(bool toLock) {
+			EnableWindow(_hSelf, !toLock);
+		}
+
+
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+		std::atomic<bool>* _interruptFlagVariable;
 	};
 
 }

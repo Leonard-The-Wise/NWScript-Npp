@@ -99,6 +99,10 @@
 #define IDC_LBLCONSOLE                  1069
 #define IDC_BTCLEARCONSOLE              1072
 #define IDC_BTTOGGLEWORDWRAP            1073
+#define IDC_BTFILTERERRORS              1074
+#define IDC_BTFILTERWARNINGS            1075
+#define IDC_BTTOGGLEWORDWRAP4           1077
+#define IDC_BTFILTERINFO                1077
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -109,7 +113,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        175
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1076
+#define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

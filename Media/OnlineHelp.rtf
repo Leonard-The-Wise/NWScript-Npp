@@ -1,8 +1,8 @@
-{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1046\deflangfe1046{\fonttbl{\f0\fswiss\fprq2\fcharset0 Calibri;}{\f1\froman\fprq2\fcharset0 Cambria;}{\f2\fmodern\fprq1\fcharset0 Consolas;}{\f3\fnil\fcharset1 Segoe UI Symbol;}{\f4\froman\fprq2\fcharset0 Times New Roman;}}
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1046\deflangfe1046{\fonttbl{\f0\fswiss\fprq2\fcharset0 Calibri;}{\f1\froman\fprq2\fcharset0 Cambria;}{\f2\fmodern\fprq1\fcharset0 Consolas;}{\f3\froman\fprq2\fcharset2 Symbol;}{\f4\fnil\fcharset1 Segoe UI Symbol;}{\f5\froman\fprq2\fcharset0 Times New Roman;}}
 {\colortbl ;\red79\green129\blue189;\red84\green141\blue212;\red192\green80\blue77;\red0\green0\blue255;\red178\green161\blue199;}
 {\stylesheet{ Normal;}{\s1 heading 1;}{\s2 heading 2;}{\s3 heading 3;}{\s4 heading 4;}}
 {\*\generator Riched20 10.0.22000}\viewkind4\uc1 
-\pard\keep\keepn\widctlpar\s1\sb480\qc\cf1\b\f0\fs32\lang1033 NWScript Tools for Notepad++ Help\par
+\pard\keep\keepn\widctlpar\s1\sb480\qc\cf1\b\f0\fs32\lang1033 NWScript Tools for Notepad++ User\rquote s Manual\par
 
 \pard\widctlpar\sb180\sa180\cf0\b0\f1\fs24\par
 
@@ -20,19 +20,28 @@
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Compile script\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Compiles the current opened document into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 .\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Compiles the current opened document into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 . If no output directory is specified, the script current directory will be used as output instead.\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Disassemble file\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Disassembles a compiled \cf2\f2\fs20 NWscript file\cf0\f1\fs24  from the disk and put results into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 .\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Disassembles a compiled \cf2\f2\fs20 NWscript file\cf0\f1\fs24  from the disk and put results into the \cf2\f2\fs20 Output Directory\cf0\f1\fs24  set in \cf2\f2\fs20 Compiler Settings\cf0\f1\fs24 . If no output directory is specified, the file current directory will be used as output instead.\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Batch processing\rdblquote :\par
 
 \pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the \cf2\f2\fs20 Batch-processing\cf0\f1\fs24  dialog box. Batch processing enables to compile/disassemble multiple files at once.\par
 
+\pard\widctlpar\sb36\sa36\qj\par
+\b Remarks\par
+
+\pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The same \cf2\f2\fs20 include folders\cf0\f1\fs24  on the \cf2\f2\fs20 compiler settings\cf0\f1\fs24  will be used to \cf2\f2\fs20 batch process\cf0\f1\fs24  files, also the \cf2\f2\fs20 Neverwinter Installation Paths\cf0\f1\fs24 , etc., and other options not exclusive for batch processing.\par
+\f3\'b7\tab\f1 When writing file filters, you may use any normal Windows file wildcards. Also, this field accepts a list of file filters separated by commas. \b Do not\b0  use spaces in between commas. Example of valid filter: \cf2\f2\fs20 *x.nss,nw_s0_*.nss,nw_s1_*.nss\cf0\f1\fs24 .\par
+\f3\'b7\tab\f1 File filters are saved separately for \b Compile\b0  and \b Disassemble\b0  mode, hence you may have 2 different sets, one for each \ul mode\ulnone .\par
+
+\pard\widctlpar\sb36\sa36\qj\par
+
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Run last batch\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Runs the \cf2\f2\fs20 last successful batch\cf0\f1\fs24  operation in this session.\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Runs the \cf2\f2\fs20 last successful batch\cf0\f1\fs24  operation in this session. This option is only enabled after a successful batch is processed on a given session.\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Fetch preprocessor output\rdblquote :\par
 
@@ -40,15 +49,13 @@
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote View Script Dependencies\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Parse the script file's dependencies and display to the user as a new human-readable document. NOTICE: This is \f2\fs22 NOT\f1\fs24  the same of \cf2\f2\fs20 generate makefile (.d) dependencies file\cf0\f1\fs24  option on the Compiler Settings. That one must be used instead if you are exporting scripts to makebuild projects. Also, the Compiler Settings will generate makefile dependencies in batch operations also... this option here will only display dependencies on a single file.\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Parse the script file's dependencies and display to the user as a new human-readable document. NOTICE: This is \f2\fs22 NOT\f1\fs24  the same of \cf2\f2\fs20 generate makefile (.d) dependencies file\cf0\f1\fs24  option on the Compiler Settings. That one must be used instead if you are exporting scripts to makebuild projects. Also, the Compiler Settings will generate makefile dependencies in batch operations if \cf2\f2\fs20 generate makefile (.d) dependencies file\cf0\f1\fs24  is set... this option here will only display dependencies on a single file inside a Notepad++ document window.\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Compiler settings\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the compiler settings. This is required when compiling scripts (if you try to compile anything before setting configurations here you will be prompted to configure first). All settings are persisted automatically upon closing \cf2\f2\fs20 Notepad++\cf0\f1\fs24 .\par
-
-\pard\widctlpar\fi-480\li480\sb36\sa36\bullet\tab Also, to compile a script, you \b MUST\b0  have at least the \cf2\f2\fs20 nwscript.nss\cf0\f1\fs24  file present in one of your compilation paths (except for the \cf2\f2\fs20 output directory\cf0\f1\fs24 ). If you set the plugin to a Neverwinter Nights installation path, that will be automatically loaded for you, so you won't have to worry about that.\par
-
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\f2\fs20\bullet\tab Neverwinter Nights 1\cf0\f1\fs24  support any version of the original game and also the \cf2\f2\fs20 Enhanced Edition\cf0\f1\fs24  version.\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the compiler settings. This is required when compiling scripts. If you try to compile anything before setting configurations here you will be prompted to configure first. All settings are persisted automatically upon closing \cf2\f2\fs20 Notepad++\cf0\f1\fs24 .\par
+\bullet\tab Also, to compile a script, you \b MUST\b0  have at least the \cf2\f2\fs20 nwscript.nss\cf0\f1\fs24  file present in one of your compilation paths (except for the \cf2\f2\fs20 output directory\cf0\f1\fs24 ). If you set the plugin to use a Neverwinter Nights installation path, that will be automatically loaded for you, so you won't have to worry about that.\par
+\cf2\f2\fs20\bullet\tab Neverwinter Nights 1\cf0\f1\fs24  support any version of the original game and also the \cf2\f2\fs20 Enhanced Edition\cf0\f1\fs24  version.\par
 \bullet\tab Same for the \cf2\f2\fs20 Neverwinter Nights 2\cf0\f1\fs24 .\par
 
 \pard\widctlpar\sb180\sa180\b Some considerations\b0 :\par
@@ -104,11 +111,11 @@
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote About me\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the \cf2\f2\fs20 About Dialog Box\cf0\f1\fs24  (yeah, really!). \f3\u-10179?\u-8636?\f1\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the \cf2\f2\fs20 About Dialog Box\cf0\f1\fs24  (yeah, really!). \f4\u-10179?\u-8636?\f1\par
 
 \pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 REMARKS:\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab\fs24 If you noticed the \cf2\f2\fs20 SHIELD\cf0\f1\fs24  {\pict{\*\picprop}\wmetafile8\picw397\pich370\picwgoal227\pichgoal214 
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab\fs24 If you noticed the \cf2\f2\fs20 SHIELD\cf0\f1\fs24  {\pict{\*\picprop}\wmetafile8\picw397\pich370\picwgoal225\pichgoal210 
 010009000003ba02000000009102000000000400000003010800050000000b0200000000050000
 000c020f001000030000001e000400000007010400040000000701040091020000410b2000cc00
 0e000f00000000000e000f0000000000280000000f0000000e0000000100080000000000000000
@@ -139,8 +146,8 @@ d5ba9a00dbecf50024a1e100bd8b5500eaddd00000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000
 000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000002020202028f909192020202
-0202025202020202898a8b8c8d8e02020202021102027680818283848586878802020200027677
-78797a7a737b7c7d7e7f020200026b6c6d6e6f6f7071727374750202405d5e5f60616263646566
+020202ef02020202898a8b8c8d8e02020202021102027680818283848586878802020200027677
+78797a7a737b7c7d7e7f02022e026b6c6d6e6f6f7071727374750202405d5e5f60616263646566
 6768696a02005051524b535455565758595a5b5c02004546474748494a4b4b4c4c4d4e4f020039
 31313a3b3c3d3e3f404142434402002d2e262f3031322b333435363738020023241b2525262627
 2728292a2b2c020015161718191a1b1c1d1e1f202122020002090a0b0c0d0e0f10111213140202

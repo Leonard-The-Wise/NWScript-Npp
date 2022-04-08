@@ -765,6 +765,47 @@ namespace NWScriptPluginCommons {
             return generic_string(TEXT(""));
     }
 
+    // Creates a file list from a starting directory with recurse options
+    // Sampled from: 
+    // https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+    // This version have a cancel flag for assynchronous interruptions
+    void createFilesList(std::vector<fs::path>& filesList, const generic_string& startingDir,
+        const generic_string& fileMask, bool recurse, std::atomic<bool>& cancelFlagVariable)
+    {
+
+        WIN32_FIND_DATA findData;
+
+        generic_string searchKey = startingDir + TEXT("\\") + fileMask;
+        HANDLE h = FindFirstFile(searchKey.c_str(), &findData);
+        if (h == INVALID_HANDLE_VALUE)
+            return;
+
+        while (true)
+        {
+            filesList.push_back(startingDir + TEXT("\\") + findData.cFileName);
+            if (!FindNextFile(h, &findData))
+                break;
+
+            if (cancelFlagVariable)
+                return;
+        }
+
+        if (recurse)
+        {
+            for (const auto& entry : fs::directory_iterator(startingDir))
+            {
+                if (cancelFlagVariable)
+                    return;
+
+                std::string s = entry.path().string().c_str();
+                std::string t = entry.path().filename().string().c_str();
+
+                if (entry.is_directory() && entry.path().filename().string() != "." && entry.path().filename().string() != "..")
+                    createFilesList(filesList, properDirNameW(entry.path().c_str()), fileMask, true, cancelFlagVariable);
+            }
+        }
+    }
+
 
 #pragma warning(pop)
 

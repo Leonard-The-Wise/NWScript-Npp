@@ -143,24 +143,24 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
         fileResRef = _resourceManager->ResRef32FromStr(wstr2str(_sourcePath.stem()).c_str());
 #pragma warning (pop)
 
-        inFileContents;
-        if (fromMemory)
-            inFileContents = fileContents;
-        else
-        {
-            if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
-            {
-                _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, "NSC2002");
-                notifyCaller(false);
-                return;
-            }
-        }
-
         // Create our compiler/disassembler
         _compiler = std::make_unique<NscCompiler>(*_resourceManager, _settings->useNonBiowareExtenstions);
         _compiler->NscSetIncludePaths(_includePaths);
         _compiler->NscSetCompilerErrorPrefix(SCRIPTERRORPREFIX);
         _compiler->NscSetResourceCacheEnabled(true);
+    }
+
+    // Load file from disk if not from memory
+    if (fromMemory)
+        inFileContents = fileContents;
+    else
+    {
+        if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
+        {
+            _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, "NSC2002");
+            notifyCaller(false);
+            return;
+        }
     }
 
     // Execute the process
@@ -171,19 +171,19 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
             _logger.log("Fetching preprocessor output for: " + _sourcePath.string(), LogType::ConsoleMessage);
         else
             _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
-        bSuccess = compileScript(fromMemory, inFileContents, fileResType, fileResRef);
+        bSuccess = compileScript(inFileContents, fileResType, fileResRef);
     }
     else
     {
         _logger.log("Disassembling binary: " + _sourcePath.string(), LogType::ConsoleMessage);
-        bSuccess = disassembleBinary(fromMemory, inFileContents, fileResType, fileResRef);
+        bSuccess = disassembleBinary(inFileContents, fileResType, fileResRef);
     }
 
     notifyCaller(bSuccess);
 }
 
 
-bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
+bool NWScriptCompiler::compileScript(std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     // We always ignore include files. And for our project, the compiler ALWAYS
@@ -290,7 +290,7 @@ bool NWScriptCompiler::compileScript(bool fromMemory, std::string& fileContents,
     return true;
 }
 
-bool NWScriptCompiler::disassembleBinary(bool fromMemory, std::string& fileContents,
+bool NWScriptCompiler::disassembleBinary(std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     std::string generatedCode;

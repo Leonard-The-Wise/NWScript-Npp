@@ -163,11 +163,11 @@ namespace NWScriptPlugin
 		bool loadScriptResources();
 
 		// Compile a plain text script into binary format
-		bool compileScript(bool fromMemory, std::string& fileContents,
+		bool compileScript(std::string& fileContents,
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		// Disassemble a binary file into a pcode assembly text format
-		bool disassembleBinary(bool fromMemory, std::string& fileContents,
+		bool disassembleBinary(std::string& fileContents,
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		// Dependencies files and views

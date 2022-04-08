@@ -39,6 +39,9 @@ BEGIN_ANCHOR_MAP(LoggerDialog)
 	ANCHOR_MAP_CHILDWINDOW(_consoleDlgHwnd, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_LBLCONSOLE, ANF_TOPLEFT)
 	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_TXTCONSOLE, ANF_ALL)
+	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_BTFILTERERRORS, ANF_TOPRIGHT)
+	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_BTFILTERWARNINGS, ANF_TOPRIGHT)
+	ANCHOR_MAP_ENTRY(_consoleDlgHwnd, IDC_BTFILTERINFO, ANF_TOPRIGHT)
 	ANCHOR_MAP_CHILDWINDOW(_errorDlgHwnd, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL)
@@ -116,11 +119,22 @@ intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
 			HBITMAP wordWrap = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_WORDWRAP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
+			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16);
+			HBITMAP warningFilter = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16);
+			HBITMAP infoFilter = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16);
+			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(errorFilter));
+			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(warningFilter));
+			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(infoFilter));
 
 			// Set Toggle Word Wrap state (default is ON. If it's off, we need to rebuild the control)
 			CheckDlgButton(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, _settings->compilerWindowConsoleWordWrap);
 			if (!_settings->compilerWindowConsoleWordWrap)
 				ToggleWordWrap();
+
+			// Set filters checkboxes (buttons) state
+			CheckDlgButton(_consoleDlgHwnd, IDC_BTFILTERERRORS, _settings->compilerWindowConsoleShowErrors);
+			CheckDlgButton(_consoleDlgHwnd, IDC_BTFILTERWARNINGS, _settings->compilerWindowConsoleShowWarnings);
+			CheckDlgButton(_consoleDlgHwnd, IDC_BTFILTERINFO, _settings->compilerWindowConsoleShowInfos);			
 
 			// Setup anchors
 			SetupDockingAnchors();
@@ -249,6 +263,15 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 				{
 					ToggleWordWrap();
 					break;
+				}
+
+				case IDC_BTFILTERERRORS:
+				case IDC_BTFILTERWARNINGS:
+				case IDC_BTFILTERINFO:
+				{
+					_settings->compilerWindowConsoleShowErrors = IsDlgButtonChecked(_consoleDlgHwnd, IDC_BTFILTERERRORS);
+					_settings->compilerWindowConsoleShowWarnings = IsDlgButtonChecked(_consoleDlgHwnd, IDC_BTFILTERWARNINGS);
+					_settings->compilerWindowConsoleShowInfos = IsDlgButtonChecked(_consoleDlgHwnd, IDC_BTFILTERINFO);
 				}
 			}
 		}
@@ -535,11 +558,18 @@ void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignore
 	if (message.messageType == LogType::Info && message.fileName.empty())
 		output = TEXT("Info: ") + message.messageText;
 
-	// Write message to console
+	// Write message to console 
 	if (!ignoreConsole)
-		AppendConsoleText(output + TEXT("\r\n"));
+	{
+		if ((message.messageType == LogType::Critical || message.messageType == LogType::Error) && _settings->compilerWindowConsoleShowErrors)
+			AppendConsoleText(output + TEXT("\r\n"));
+		if (message.messageType == LogType::Warning && _settings->compilerWindowConsoleShowWarnings)
+			AppendConsoleText(output + TEXT("\r\n"));
+		if (message.messageType == LogType::Info && _settings->compilerWindowConsoleShowInfos)
+			AppendConsoleText(output + TEXT("\r\n"));
+	}
 
-	// Don't show filtered messages
+	// Don't show filtered messages (error filters are different from console filters)
 	if ((message.messageType == LogType::Critical || message.messageType == LogType::Error) && !_settings->compilerWindowShowErrors)
 		return;
 	if (message.messageType == LogType::Warning && !_settings->compilerWindowShowWarnings)
@@ -582,16 +612,13 @@ void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignore
 
 void LoggerDialog::AppendConsoleText(const generic_string& newText)
 {
-	size_t textLength = GetWindowTextLength(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE)) + 1;
-	std::unique_ptr<TCHAR[]> currentText = std::make_unique<TCHAR[]>(textLength);
-	ZeroMemory(currentText.get(), textLength * sizeof(TCHAR));
-	GetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, currentText.get(), textLength);
-
-	generic_string result = generic_string(currentText.get());
-	result.append(newText);
-
-	// Set the text in the edit control
-	SetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, result.c_str());
+	CHARRANGE cr;
+	cr.cpMin = -1;
+	cr.cpMax = -1;
+	HWND editControl = GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE);
+	SendMessage(editControl, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
+	SendMessage(editControl, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(newText.c_str()));
+	SendMessage(editControl, WM_VSCROLL, SB_BOTTOM, 0);
 }
 
 void LoggerDialog::RebuildErrorsList()

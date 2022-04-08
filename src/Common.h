@@ -184,6 +184,13 @@ namespace NWScriptPluginCommons {
 
     // Returns the menu name for a given position inside a menu handle
     generic_string GetMenuItemName(HMENU menu, int position);
+
+    // Creates a file list from a starting directory with recurse options
+    // Sampled from: 
+    // https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+    // This version have a cancel flag for assynchronous interruptions
+    void createFilesList(std::vector<fs::path>& filesList, const generic_string& startingDir, 
+        const generic_string& fileMask, bool recurse, std::atomic<bool>& cancelFlagVariable);
 }
 
 using namespace NWScriptPluginCommons;

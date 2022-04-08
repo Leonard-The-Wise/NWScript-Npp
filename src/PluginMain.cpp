@@ -44,6 +44,7 @@
 #pragma warning (disable : 6387)
 
 //#define DEBUG_AUTO_INDENT_833      // Uncomment to test auto-indent with message
+#define USE_THREADS                  // Process compilations and batchs in multi-threaded operations
 #define NAGIVATECALLBACKTIMER 0x800  // Temporary timer to schedule navigations
 
 
@@ -86,6 +87,7 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 ShortcutKey compileScriptKey = { false, false, false, VK_F9 };
 ShortcutKey disassembleScriptKey = { true, false, false, VK_F9 };
 ShortcutKey batchScriptKey = { true, false, true, VK_F9 };
+ShortcutKey runLastBatchKey = { false, false, true, VK_F9 };
 ShortcutKey toggleConsoleKey = { true, false, false,  VK_OEM_COMMA };
 
 FuncItem Plugin::pluginFunctions[] = {
@@ -94,7 +96,7 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Compile script"), Plugin::CompileScript, 0, false, &compileScriptKey },
     {TEXT("Disassemble file..."), Plugin::DisassembleFile, 0, false, &disassembleScriptKey },
     {TEXT("Batch processing..."), Plugin::BatchProcessFiles, 0, false, &batchScriptKey },
-    {TEXT("Run last batch"), Plugin::RunLastBatch},
+    {TEXT("Run last batch"), Plugin::RunLastBatch, 0, false, &runLastBatchKey},
     {TEXT("---")},
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
@@ -624,6 +626,18 @@ HMENU Plugin::GetNppMainMenu()
     return ::GetMenu(Instance().NotepadHwnd());
 }
 
+bool Plugin::IsPluginMenuItemEnabled(int ID)
+{
+    HMENU hMenu = GetNppMainMenu();
+    if (hMenu)
+    {
+        UINT state = GetMenuState(hMenu, GetFunctions()[ID]._cmdID, MF_BYCOMMAND);
+        return state == MF_DISABLED || state == MF_GRAYED ? false : true;
+    }
+
+    return false;
+}
+
 void Plugin::EnablePluginMenuItem(int ID, bool enabled)
 {
     HMENU hMenu = GetNppMainMenu();
@@ -781,6 +795,38 @@ void Plugin::SetupPluginMenuItems()
     
     // Menu run last batch: initially disabled
     EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+}
+
+void Plugin::LockPluginMenu(bool toLock)
+{
+    static bool runLastBatchWasEnabled = false;
+
+    // Run last batch could be enabled or disabled before locking. Save the state
+    // and use when unlocking controls.
+    if (toLock)
+        runLastBatchWasEnabled = IsPluginMenuItemEnabled(PLUGINMENU_RUNLASTBATCH);
+    else
+    {
+        EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, runLastBatchWasEnabled);
+        runLastBatchWasEnabled = false;
+    }
+
+    EnablePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_COMPILESCRIPT, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_DISASSEMBLESCRIPT, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_BATCHPROCESSING, !toLock);
+    
+    EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_SHOWCONSOLE, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_SETTINGS, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_USERPREFERENCES, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_IMPORTDEFINITIONS, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_IMPORTUSERTOKENS, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_RESETUSERTOKENS, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_RESETEDITORCOLORS, !toLock);
+    EnablePluginMenuItem(PLUGINMENU_ABOUTME, !toLock);
 }
 
 #pragma endregion Plugin menu handling
@@ -1467,21 +1513,48 @@ void Plugin::ImportDefinitionsCallback(HRESULT decision)
 // Receives notifications from Batch Processing Dialog
 void Plugin::BatchProcessDialogCallback(HRESULT decision)
 {
-    // TODO: Move dialog to class since it will be controlled by multiple methods
-    static ProcessFilesDialog processing;
+    Plugin& inst = Instance();
 
     if ((int)decision == IDCANCEL || (int)decision == IDCLOSE)
-        return;
-
-    if (!processing.isCreated())
     {
-        processing.init(Instance().DllHModule(), Instance().NotepadHwnd());
+        // Disable the last batch option, since it may have changed
+        // and the user didn't run to test
+        inst.EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+        return;
     }
 
-    processing.doDialog();
+    if (!inst._processingFilesDialog.isCreated())
+    {
+        inst._processingFilesDialog.init(inst.DllHModule(), inst.NotepadHwnd());
+    }
 
-    // Enable run last batch menu
-    Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
+    // Setup interrupt flag
+    inst._processingFilesDialog.setInterruptFlag(inst._batchInterrupt);
+
+    // Reset batch state
+    inst.ResetBatchStates();
+
+    // Prepare compiler
+    inst.Compiler().reset();
+    inst.Compiler().setMode(inst._settings.batchCompileMode);
+    // Set callback to batch process
+    inst.Compiler().setProcessingEndCallback(BatchProcessFilesCallback);
+
+    // Display and clear compiler log window
+    inst._loggerWindow.reset();
+    inst.DisplayCompilerLogWindow(true);
+
+    // Initial status dialog
+    inst._processingFilesDialog.setStatus(TEXT("Building files list..."));
+    inst._processingFilesDialog.doDialog();
+
+    // The rest processes when file filters are done in separate thread
+#ifdef USE_THREADS
+    std::thread tBuilder (&Plugin::BuildFilesList, &inst);
+    tBuilder.detach();
+#else
+    inst.BuildFilesList();
+#endif
 }
 
 #pragma endregion Dialog Callbacks
@@ -1555,6 +1628,7 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     }
 
     // Lock controls to compiler log window
+    LockPluginMenu(true);
     _loggerWindow.LockControls(true);
 
     // Increment statistics
@@ -1565,8 +1639,31 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
+#ifdef USE_THREADS
     std::thread tProcessor (&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
     tProcessor.detach();
+#else
+    _compiler.processFile(fromCurrentScintilla, &_tempFileContents[0]);
+#endif
+}
+
+// Builds Batch File List
+void Plugin::BuildFilesList()
+{
+    std::vector<generic_string> fileFilters;
+    if (_settings.batchCompileMode == 0)
+        fileFilters = _settings.getFileFiltersCompileV();
+    else
+        fileFilters = _settings.getFileFiltersDisasmV();
+
+    // Iterate on all filters
+    for (const auto& entry : fileFilters)
+        createFilesList(_batchFilesToProcess, _settings.startingBatchFolder, entry, _settings.recurseSubFolders, _batchInterrupt);
+
+    // Kickstart the batch process. We may be creating a 3rd thread here, because
+    // batch will process on separate threads, but
+    // for now, I don't see a better way of doing this...
+    BatchProcessFilesCallback(static_cast<HRESULT>(static_cast<int>(true)));
 }
 
 // Receives notifications when a "Compile" menu command ends
@@ -1579,6 +1676,7 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
+    Instance().LockPluginMenu(false);
 
     if (static_cast<int>(decision) == false)
     {
@@ -1608,6 +1706,7 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
 
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
+    Instance().LockPluginMenu(false);
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -1625,19 +1724,73 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
 // Receives notifications for each file processed
 void Plugin::BatchProcessFilesCallback(HRESULT decision)
 {
-    if (static_cast<int>(decision) == static_cast<int>(false))
-        return;
+    Plugin& inst = Instance();
 
+    // Check for failed results
+    if (static_cast<int>(decision) == static_cast<int>(false) && !inst._settings.continueCompileOnFail)
+    {
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Failed to process file... batch processing stopped.") });
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Done.") });
+
+        inst._processingFilesDialog.display(false);
+        inst._loggerWindow.LockControls(false);
+        inst.LockPluginMenu(false);
+        return;
+    }
+
+    // Check for interruption requests.
+    if (inst._batchInterrupt)
+    {
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Batch processing interrupted by user's request.") });
+
+        inst._processingFilesDialog.display(false);
+        inst._loggerWindow.LockControls(false);
+        inst.LockPluginMenu(false);
+        return;
+    }
+
+    // Pick next (or first) file in line.
+    if (inst._batchCurrentFileIndex < inst._batchFilesToProcess.size())
+    {
+        generic_string nextFile = inst._batchFilesToProcess[inst._batchCurrentFileIndex];
+        inst._batchCurrentFileIndex++;
+
+        // Update status
+        inst._processingFilesDialog.setStatus(nextFile);
+
+        // This function will create a thread that will callback here again for next file...
+        inst.DoCompileOrDisasm(nextFile, false, true);
+    }
+    else
+    {
+        // Done processing, write messages to log, close processing dialog.
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Finished processing ") + 
+            to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.")});
+
+        inst._processingFilesDialog.display(false);
+
+        // Enable run last batch (after unlocking controls)
+        inst._loggerWindow.LockControls(false);
+        inst.LockPluginMenu(false);
+        Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
+
+        // Reset batch state
+        inst.ResetBatchStates();
+    }
 }
 
 // Receives notifications when a "Fetch preprocessed" menu command ends
 void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
 {
-    if (static_cast<int>(decision) == static_cast<int>(false))
-        return;
-
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
+    Instance().LockPluginMenu(false);
+
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
 
     // Creates a new document...
     Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
@@ -1650,11 +1803,12 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
 // Receives notifications when a "View Script Dependencies" menu command ends
 void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
 {
-    if (static_cast<int>(decision) == static_cast<int>(false))
-        return;
-
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
+    Instance().LockPluginMenu(false);
+
+    if (static_cast<int>(decision) == static_cast<int>(false))
+        return;
 
     // Creates a new document...
     Instance().Messenger().SendNppMessage<void>(NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
@@ -1670,7 +1824,7 @@ void Plugin::WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message)
 
 // Receives notifications from Compiler Window to open files and navigato to text inside it
 void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
-    const filesystem::path& filePath)
+    const fs::path& filePath)
 {
     // Search for the file name.
     // First comparison: the easy way - file is the same as the one being
@@ -1726,6 +1880,9 @@ void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, cons
     }
 }
 
+// Reposition the navigation cursor assynchronously.
+// This is required to fix a behavior of scintilla window not updating correctly the caret position 
+// (centralized on screen) when navigating to a different document, when this function is called in the same thread.
 void CALLBACK Plugin::RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
 {
     PluginMessenger msg = Instance().Messenger();
@@ -1860,7 +2017,7 @@ PLUGINCOMMAND Plugin::DisassembleFile()
 // Menu Command "Run last successful batch" function handler. 
 PLUGINCOMMAND Plugin::RunLastBatch()
 {
-
+    BatchProcessDialogCallback(static_cast<HRESULT>(static_cast<int>(true)));
 }
 
 // Opens the Plugin's Batch process files dialog

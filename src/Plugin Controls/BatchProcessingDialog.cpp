@@ -33,7 +33,7 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 			_tmpFiltersCompile = myset.getFileFiltersCompile();
 			_tmpFiltersDisasm = myset.getFileFiltersDisasm();
 
-			if (myset.compileMode == 0)
+			if (myset.batchCompileMode == 0)
 			{
 				::CheckRadioButton(_hSelf, IDC_RDCOMPILE, IDC_RDDISASM, IDC_RDCOMPILE);
 				SetDlgItemText(_hSelf, IDC_TXTBATCHFILTERS, _tmpFiltersCompile.c_str());
@@ -199,7 +199,7 @@ bool BatchProcessingDialog::keepSettings()
 	myset.recurseSubFolders = IsDlgButtonChecked(_hSelf, IDC_CHKRECURSIVE);
 	myset.continueCompileOnFail = IsDlgButtonChecked(_hSelf, IDC_CHKCONTINUEONFAIL);
 
-	myset.compileMode = IsDlgButtonChecked(_hSelf, IDC_RDCOMPILE) ? 0 : 1;
+	myset.batchCompileMode = IsDlgButtonChecked(_hSelf, IDC_RDCOMPILE) ? 0 : 1;
 
 	myset.useScriptPathToBatchCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIRBATCH);
 	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));

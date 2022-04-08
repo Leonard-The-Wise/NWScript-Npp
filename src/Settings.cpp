@@ -61,7 +61,7 @@ void Settings::Load()
 	startingBatchFolder = properDirNameW(GetString(TEXT("Batch Processing"), TEXT("startingBatchFolder")));
 	fileFiltersCompile = GetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"));
 	fileFiltersDisasm = GetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"));
-	compileMode = GetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"));
+	batchCompileMode = GetNumber<int>(TEXT("Batch Processing"), TEXT("batchCompileMode"));
 	recurseSubFolders = GetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"));
 	continueCompileOnFail = GetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"));
 	useScriptPathToBatchCompile = GetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"));
@@ -96,6 +96,9 @@ void Settings::Load()
 	compilerWindowShowWarnings = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowWarnings"));
 	compilerWindowShowInfos = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowInfos"));
 	compilerWindowConsoleWordWrap = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleWordWrap"));
+	compilerWindowConsoleShowErrors = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowErrors"));
+	compilerWindowConsoleShowWarnings = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"));
+	compilerWindowConsoleShowInfos = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"));
 
 
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
@@ -177,7 +180,7 @@ void Settings::Save()
 	SetString(TEXT("Batch Processing"), TEXT("startingBatchFolder"), startingBatchFolder);
 	SetString(TEXT("Batch Processing"), TEXT("fileFiltersCompile"), fileFiltersCompile);
 	SetString(TEXT("Batch Processing"), TEXT("fileFiltersDisasm"), fileFiltersDisasm);
-	SetNumber<int>(TEXT("Batch Processing"), TEXT("compileMode"), compileMode);
+	SetNumber<int>(TEXT("Batch Processing"), TEXT("batchCompileMode"), batchCompileMode);
 	SetBoolean(TEXT("Batch Processing"), TEXT("recurseSubFolders"), recurseSubFolders);
 	SetBoolean(TEXT("Batch Processing"), TEXT("continueCompileOnFail"), continueCompileOnFail);
 	SetBoolean(TEXT("Batch Processing"), TEXT("useScriptPathToBatchCompile"), useScriptPathToBatchCompile);
@@ -212,6 +215,9 @@ void Settings::Save()
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowWarnings"), compilerWindowShowWarnings);
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowShowInfos"), compilerWindowShowInfos);
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleWordWrap"), compilerWindowConsoleWordWrap);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowErrors"), compilerWindowConsoleShowErrors);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"), compilerWindowConsoleShowWarnings);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"), compilerWindowConsoleShowInfos);
 
 	iniFilePath->write(*iniFile);
 }

@@ -78,7 +78,7 @@ namespace NWScriptPlugin {
 		}
 
 		void SetNavigateFunctionCallback(void (*_navigateToFileCallback)(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
-			const filesystem::path& filePath))
+			const fs::path& filePath))
 		{
 			navigateToFileCallback = _navigateToFileCallback;
 		}
@@ -134,7 +134,7 @@ namespace NWScriptPlugin {
 		bool _processInputForErrorList = true;
 
 		void (*navigateToFileCallback)(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
-			const filesystem::path& filePath) = nullptr;
+			const fs::path& filePath) = nullptr;
 
 		// HACK: To correct the file navigation issue, we store the current lineNumber being passed
 		// to navigateToFileCallback, so the timer on it can refer back to it.

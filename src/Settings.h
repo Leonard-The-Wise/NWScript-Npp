@@ -58,7 +58,7 @@ namespace NWScriptPlugin {
 
 		// Batch process files settings
 		generic_string startingBatchFolder;
-		int compileMode = 0;
+		int batchCompileMode = 0;
 		bool recurseSubFolders = false;
 		bool continueCompileOnFail = false;
 		bool useScriptPathToBatchCompile = true;
@@ -89,6 +89,9 @@ namespace NWScriptPlugin {
 		bool compilerWindowShowWarnings = true;
 		bool compilerWindowShowInfos = false;
 		bool compilerWindowConsoleWordWrap = true;
+		bool compilerWindowConsoleShowErrors = false;
+		bool compilerWindowConsoleShowWarnings = true;
+		bool compilerWindowConsoleShowInfos = true;
 
 
 		std::string getChosenInstallDir() {

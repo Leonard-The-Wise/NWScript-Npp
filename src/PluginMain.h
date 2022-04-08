@@ -21,6 +21,7 @@
 #include "NWScriptCompiler.h"
 
 #include "LoggerDialog.h"
+#include "ProcessFilesDialog.h"
 
 
 typedef void(PLUGININTERNALS);
@@ -181,6 +182,8 @@ namespace NWScriptPlugin {
 		
 		// Removes a menu item by ID or position (this last one used for commands without IDs like separators)
 		void RemovePluginMenuItem(int ID, bool byPosition = false);
+		// Check Menu item enable state
+		bool IsPluginMenuItemEnabled(int ID);
 		// Enable/disable menu item
 		void EnablePluginMenuItem(int ID, bool enabled);
 		// Set a plugin menu Icon from resources
@@ -191,6 +194,8 @@ namespace NWScriptPlugin {
 		bool SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
+		// Lock/Unlock all of the plugin's options
+		void LockPluginMenu(bool toLock);
 
 		// ### Dialog Callback functions
 
@@ -205,6 +210,14 @@ namespace NWScriptPlugin {
 		bool CheckScintillaDocument();
 		// Compile/Disassemble script files, simple or batch operations.
 		void DoCompileOrDisasm(generic_string filePath = TEXT(""), bool fromCurrentScintilla = false, bool batchOperations = false);
+		// Reset batch processing states
+		void ResetBatchStates() {
+			_batchCurrentFileIndex = 0;
+			_batchInterrupt = 0;
+			_batchFilesToProcess.clear();
+		}
+		// Build the batch files list in async thread
+		void BuildFilesList();
 
 		// Some callback functions for different operations
 
@@ -222,7 +235,7 @@ namespace NWScriptPlugin {
 		static void WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message);
 		// Receives notifications from Compiler Window to open files and navigato to text inside it
 		static void NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
-			const filesystem::path& filePath = TEXT(""));
+			const fs::path& filePath = TEXT(""));
 		// Reposition the navigation cursor assynchronously
 		static void CALLBACK RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime);
 
@@ -270,6 +283,7 @@ namespace NWScriptPlugin {
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
 		LoggerDialog _loggerWindow;
+		ProcessFilesDialog _processingFilesDialog;
 
 		// Internal handles
 
@@ -281,6 +295,11 @@ namespace NWScriptPlugin {
 
 		// Temporary stash to Scintilla document content to be used inside the compilation thread
 		std::string _tempFileContents;
+
+		// Batch processing flags
+		std::vector<fs::path> _batchFilesToProcess;
+		int _batchCurrentFileIndex = 0;
+		std::atomic<bool> _batchInterrupt = false;
 
 		// Meta Information about the plugin paths
 		// Information included:

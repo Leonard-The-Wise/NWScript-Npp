@@ -48,3 +48,5 @@
 #include "tinyxml2.h"
 
 
+namespace fs = std::filesystem;
+

@@ -32,6 +32,7 @@ intptr_t CALLBACK ProcessFilesDialog::run_dlgProc(UINT message, WPARAM wParam, L
 		switch (wParam)
 		{
 		case IDCANCEL:
+			*_interruptFlagVariable = true;
 			display(false);
 			destroy();
 			return TRUE;
