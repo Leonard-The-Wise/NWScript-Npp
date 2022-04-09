@@ -1680,6 +1680,9 @@ void Plugin::CompileEndingCallback(HRESULT decision)
     Instance()._loggerWindow.LockControls(false);
     Instance().LockPluginMenu(false);
 
+    // Check if logger window need to switch to errors panel
+    Instance()._loggerWindow.checkSwitchToErrors();
+
     if (static_cast<int>(decision) == false)
     {
         Instance().Settings().compileFails++;
@@ -1702,7 +1705,7 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 
     // Mark compilation time.
     double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
-    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Receives notifications when a "Disassemble" menu command ends
@@ -1713,6 +1716,9 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
     Instance().LockPluginMenu(false);
+
+    // Check if logger window need to switch to errors panel
+    Instance()._loggerWindow.checkSwitchToErrors();
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -1728,7 +1734,7 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
 
     // Mark compilation time.
     double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
-    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Receives notifications for each file processed
@@ -1746,6 +1752,10 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         inst._processingFilesDialog.display(false);
         inst._loggerWindow.LockControls(false);
         inst.LockPluginMenu(false);
+
+        // Check if logger window need to switch to errors panel
+        Instance()._loggerWindow.checkSwitchToErrors();
+
         return;
     }
 
@@ -1787,12 +1797,15 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         inst.LockPluginMenu(false);
         Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
 
+        // Check if logger window need to switch to errors panel
+        Instance()._loggerWindow.checkSwitchToErrors();
+
         // Reset batch state
         inst.ResetBatchStates();
 
         // Mark compilation time.
         double durationFloat = (double)(GetTickCount64() - inst._clockStart) / (double)1000;
-        WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+        WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total execution time: {:.2f} seconds)\n"), durationFloat) });
     }
 }
 
@@ -1802,6 +1815,10 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
     Instance().LockPluginMenu(false);
+
+    // Check if logger window need to switch to errors panel
+    Instance()._loggerWindow.checkSwitchToErrors();
+
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -1815,7 +1832,7 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
 
     // Mark compilation time.
     double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
-    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total execution time: {:.2f} seconds)\n"), durationFloat) });
 
 }
 
@@ -1825,6 +1842,9 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
     // Unlock controls to compiler log window
     Instance()._loggerWindow.LockControls(false);
     Instance().LockPluginMenu(false);
+
+    // Check if logger window need to switch to errors panel
+    Instance()._loggerWindow.checkSwitchToErrors();
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -1836,7 +1856,7 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
 
     // Mark compilation time.
     double durationFloat = (double)(GetTickCount64() - Instance()._clockStart) / (double)1000;
-    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total Execution time: {:.2f} seconds)\n"), durationFloat) });
+    WriteToCompilerLog({ LogType::ConsoleMessage, std::format(TEXT("(total execution time: {:.2f} seconds)\n"), durationFloat) });
 }
 
 // Write messages to the compiler window - also called back from compiler logger

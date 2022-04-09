@@ -35,37 +35,6 @@ namespace NWScriptPlugin {
 				::SetFocus(::GetDlgItem(_hSelf, IDC_TABLOGGER));
 		}
 
-		void setParent(HWND parent2set) 
-		{
-			_hParent = parent2set;
-		}
-
-		void switchToConsole()
-		{
-			TabCtrl_SetCurSel(_mainTabHwnd, 1);
-			run_dlgProc(WM_NOTIFY, IDC_TABLOGGER, 0);
-		}
-
-		void switchToErrors()
-		{
-			TabCtrl_SetCurSel(_mainTabHwnd, 0);
-			run_dlgProc(WM_NOTIFY, IDC_TABLOGGER, 0);
-		}
-
-		void clearConsole()
-		{
-			SetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, L"");
-		}
-
-		void clearErrors()
-		{
-			ListView_DeleteAllItems(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS));
-			_errorsList.clear();
-			_errorCount = 0;
-			_warningCount = 0;
-			_infoCount = 0;
-		}
-
 		void reset()
 		{
 			clearConsole();
@@ -87,6 +56,11 @@ namespace NWScriptPlugin {
 		// to navigateToFileCallback, so the timer on it can refer back to it.
 		int getCurrentNavigationLine() const {
 			return _currentLine;
+		}
+
+		void checkSwitchToErrors()	{
+			if (_errorCount > 0)
+				switchToErrors();
 		}
 
 		void LogMessage(const CompilerMessage& message, const generic_string& filePath = TEXT(""));
@@ -115,6 +89,32 @@ namespace NWScriptPlugin {
 		void WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole = false);
 		void UpdateToolButtonLabels();
 		void ToggleWordWrap();
+
+		void switchToConsole()
+		{
+			TabCtrl_SetCurSel(_mainTabHwnd, 1);
+			run_dlgProc(WM_NOTIFY, IDC_TABLOGGER, 0);
+		}
+
+		void switchToErrors()
+		{
+			TabCtrl_SetCurSel(_mainTabHwnd, 0);
+			run_dlgProc(WM_NOTIFY, IDC_TABLOGGER, 0);
+		}
+
+		void clearConsole()
+		{
+			SetDlgItemText(_consoleDlgHwnd, IDC_TXTCONSOLE, L"");
+		}
+
+		void clearErrors()
+		{
+			ListView_DeleteAllItems(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS));
+			_errorsList.clear();
+			_errorCount = 0;
+			_warningCount = 0;
+			_infoCount = 0;
+		}
 
 		HWND _mainTabHwnd = nullptr;
 		HWND _errorDlgHwnd = nullptr;

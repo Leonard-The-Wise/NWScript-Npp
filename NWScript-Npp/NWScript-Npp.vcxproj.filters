@@ -297,7 +297,9 @@
     <None Include="..\Media\OnlineHelp.rtf">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\Media\OnlineHelp-Dark.rtf" />
+    <None Include="..\Media\OnlineHelp-Dark.rtf">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
