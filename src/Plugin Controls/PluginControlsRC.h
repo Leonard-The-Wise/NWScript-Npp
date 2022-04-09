@@ -37,6 +37,8 @@
 #define IDR_ABOUTDOC                    168
 #define IDI_ERRORSQUIGGLE               169
 #define IDI_WORDWRAP                    174
+#define IDR_RTF1                        175
+#define IDR_ABOUTDOCDARK                175
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -111,7 +113,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        175
+#define _APS_NEXT_RESOURCE_VALUE        176
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101

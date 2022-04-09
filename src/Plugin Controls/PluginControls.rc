@@ -452,6 +452,8 @@ IDI_WORDWRAP            ICON                    "..\\..\\Media\\icons\\WordWrap.
 
 IDR_ABOUTDOC            RTF                     "..\\..\\Media\\OnlineHelp.rtf"
 
+IDR_ABOUTDOCDARK        RTF                     "D:\\Projetos\\NWScript-Npp\\Media\\OnlineHelp-Dark.rtf"
+
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////
 

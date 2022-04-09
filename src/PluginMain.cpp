@@ -282,7 +282,6 @@ void Plugin::InitCompilerLogWindow()
     _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
     _dockingData.hIconTab = _dockingIcon;
     _dockingData.pszModuleName = _pluginFileName.c_str();
-    _dockingData.pszAddInfo = (TCHAR*)TEXT("No current log");
     _dockingData.dlgID = 0;
 
     // Register the dialog box with Notepad++

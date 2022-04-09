@@ -77,10 +77,10 @@ DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, PL
 	return fail;
 }
 
-void AboutDialog::LoadAboutTextEditor()
+void AboutDialog::LoadAboutTextEditor(int resourceID)
 {
 	// Load resource
-	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(IDR_ABOUTDOC), L"RTF");
+	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(resourceID), L"RTF");
 	size_t _size = SizeofResource(_hInst, hResource);
 	auto hMemory = LoadResource(_hInst, hResource);
 	LPVOID ptr = LockResource(hMemory);
@@ -173,8 +173,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
 
-			LoadAboutTextEditor();
-			//::SetDlgItemText(_hSelf, IDC_TXTABOUT, replaceStringsW(ABOUT_TEXT, _replaceStrings).c_str());
+			LoadAboutTextEditor(IDR_ABOUTDOC);
 
 			HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO);
 			::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));

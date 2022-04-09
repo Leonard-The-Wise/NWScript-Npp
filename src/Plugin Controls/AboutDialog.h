@@ -40,7 +40,7 @@ namespace NWScriptPlugin {
 
 		DECLARE_ANCHOR_MAP()
 
-		void LoadAboutTextEditor();
+		void LoadAboutTextEditor(int resourceID);
 		void LaunchHyperlink(const ENLINK& link);
 
 		generic_string _homePath;

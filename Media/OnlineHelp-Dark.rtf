@@ -1,0 +1,234 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1046\deflangfe1046{\fonttbl{\f0\fswiss\fprq2\fcharset0 Calibri;}{\f1\froman\fprq2\fcharset0 Cambria;}{\f2\fmodern\fprq1\fcharset0 Consolas;}{\f3\froman\fprq2\fcharset2 Symbol;}{\f4\fnil\fcharset1 Segoe UI Symbol;}{\f5\froman\fprq2\fcharset0 Times New Roman;}}
+{\colortbl ;\red240\green162\blue46;\red191\green191\blue191;\red242\green242\blue242;\red210\green159\blue15;\red0\green0\blue255;\red219\green193\blue167;}
+{\stylesheet{ Normal;}{\s1 heading 1;}{\s2 heading 2;}{\s3 heading 3;}{\s4 heading 4;}}
+{\*\generator Riched20 10.0.22000}\viewkind5\uc1\viewbksp1{\*\background 
+{\shp{\*\shpinst{\sp{\sn fillType}{\sv 0}}
+{\sp{\sn fillColor}{\sv 4210752}}
+{\sp{\sn fillBackColor}{\sv 0}}
+{\sp{\sn fillFocus}{\sv 0}}
+{\sp{\sn fillBlip}{\sv {\pict{\*\picprop}\wmetafile0 
+}}}}}}
+
+\pard\keep\keepn\widctlpar\s1\sb480\qc\cf1\b\f0\fs32\lang1033 NWScript Tools for Notepad++ User\rquote s Manual\par
+
+\pard\widctlpar\sb180\sa180\cf2\b0\f1\fs24\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 PLUGIN USAGE:\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\fs24 Automatic Syntax Highlighting\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab To see the colored syntax of \cf3\f2\fs20 NWScript files\cf2\f1\fs24 , select \cf3\f2\fs20 NWScript Language\cf2\f1\fs24  from Languages menu.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Auto-Indentation support:\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab This plugin adds features to support auto-indentation for \cf3\f2\fs20 NWScript\cf2\f1\fs24  language. In \cf3\f2\fs20 Notepad++\cf2\f1\fs24  versions \cf3\f2\fs20 8.3.2\cf2\f1\fs24  and bellow, chose the option \cf3\f2\fs20 Use Auto-Indentation\cf2\f1\fs24  to enable the plugin's built-in auto-indentation support. You'll need to disable \cf3\f2\fs20 Notepad++\cf2\f1\fs24  Auto-Indentation in user preferences to avoid any conflicts.\par
+
+\pard\widctlpar\sb180\sa180\qj This feature is automatic on \cf3\f2\fs20 Notepad++ 8.3.3\cf2\f1\fs24  and beyond so this menu option won't show anymore for users with up-to-date versions.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Compile script\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Compiles the current opened document into the \cf3\f2\fs20 Output Directory\cf2\f1\fs24  set in \cf3\f2\fs20 Compiler Settings\cf2\f1\fs24 . If no output directory is specified, the script current directory will be used as output instead.\par
+
+\pard\widctlpar\li480\sb36\sa36\qj\par
+
+\pard\widctlpar\sb36\sa36\qj\b Remarks\par
+
+\pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The plugin\rquote s version of the compiler now supports UTF-16 encoding. Previous versions only supported UTF-8. Although this support is primarily intended for convenience use only \endash  since UTF-16 is also part of Notepad++ standard editor. I don\rquote t really recommend using extended characters here, unless inside strings and it is untested whether the game can display them properly. So, use with caution.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Disassemble file\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Disassembles a compiled \cf3\f2\fs20 NWscript file\cf2\f1\fs24  from the disk and put results into the \cf3\f2\fs20 Output Directory\cf2\f1\fs24  set in \cf3\f2\fs20 Compiler Settings\cf2\f1\fs24 . If no output directory is specified, the file current directory will be used as output instead.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Batch processing\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Opens the \cf3\f2\fs20 Batch-processing\cf2\f1\fs24  dialog box. Batch processing enables to compile/disassemble multiple files at once.\par
+
+\pard\widctlpar\sb36\sa36\qj\par
+\b Remarks\par
+
+\pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The same \cf3\f2\fs20 include folders\cf2\f1\fs24  on the \cf3\f2\fs20 compiler settings\cf2\f1\fs24  will be used to \cf3\f2\fs20 batch process\cf2\f1\fs24  files, also the \cf3\f2\fs20 Neverwinter Installation Paths\cf2\f1\fs24 , etc., and other options not exclusive for batch processing.\par
+\f3\'b7\tab\f1 When writing file filters, you may use any normal Windows file wildcards. Also, this field accepts a list of file filters separated by commas. \b Do not\b0  use spaces in between commas. Example of valid filter: \cf3\f2\fs20 *x.nss,nw_s0_*.nss,nw_s1_*.nss\cf2\f1\fs24 .\par
+\f3\'b7\tab\f1 File filters are saved separately for \b Compile\b0  and \b Disassemble\b0  mode, hence you may have 2 different sets, one for each mode.\par
+
+\pard\widctlpar\sb36\sa36\qj\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Run last batch\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Runs the \cf3\f2\fs20 last successful batch\cf2\f1\fs24  operation in this session. This option is only enabled after a successful batch is processed on a given session.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Fetch preprocessor output\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Runs a compile preprocessing phase on current script and display the results in a new document for the user. Useful to view what final text the compiler will ACTUALLY use to compile the script. This will replace whatever \cf3\f2\fs20 #include\cf2\f1\fs24  directives you have in your script with the ACTUAL \cf3\f2\fs20 #included\cf2\f1\fs24  file content, recursing if necessary... so the results of preprocessing can get really large real quickly.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote View Script Dependencies\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Parse the script file's dependencies and display to the user as a new human-readable document. NOTICE: This is \f2\fs22 NOT\f1\fs24  the same of \cf3\f2\fs20 generate makefile (.d) dependencies file\cf2\f1\fs24  option on the Compiler Settings. That one must be used instead if you are exporting scripts to makebuild projects. Also, the Compiler Settings will generate makefile dependencies in batch operations if \cf3\f2\fs20 generate makefile (.d) dependencies file\cf2\f1\fs24  is set... this option here will only display dependencies on a single file inside a Notepad++ document window.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Compiler settings\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Opens the compiler settings. This is required when compiling scripts. If you try to compile anything before setting configurations here you will be prompted to configure first. All settings are persisted automatically upon closing \cf3\f2\fs20 Notepad++\cf2\f1\fs24 .\par
+\bullet\tab Also, to compile a script, you \b MUST\b0  have at least the \cf3\f2\fs20 nwscript.nss\cf2\f1\fs24  file present in one of your compilation paths (except for the \cf3\f2\fs20 output directory\cf2\f1\fs24 ). If you set the plugin to use a Neverwinter Nights installation path, that will be automatically loaded for you, so you won't have to worry about that.\par
+\cf3\f2\fs20\bullet\tab Neverwinter Nights 1\cf2\f1\fs24  support any version of the original game and also the \cf3\f2\fs20 Enhanced Edition\cf2\f1\fs24  version.\par
+\bullet\tab Same for the \cf3\f2\fs20 Neverwinter Nights 2\cf2\f1\fs24 .\par
+
+\pard\widctlpar\sb180\sa180\b Some considerations\b0 :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\bullet\tab Don\rquote t use the same file names on different \cf3\f2\fs20 Additional Include Paths\cf2\f1\fs24 , or else you may end up having unexpected behaviors \endash  like the wrong version of the file being used. If for example, you set to use the \cf3\f2\fs20 Neverwinter Nights Installation Folders\cf2\f1\fs24 , don\rquote t copy the original scripts to other include paths, because the first option will be considered and if you edit the copies outside the Neverwinter Folders, those edits won\rquote t be taken into account. In this case you should first disable using the \cf3\f2\fs20 Neverwinter Nights Installation Folders\cf2\f1\fs24  before editing the files. (\cf4\i It\rquote s not recommended to edit the original scripts anyway, but they are known to emit some compilation warnings, especially when including scripts that deal with spells, so some people do like changing them on their projects, hence I decided to leave this warning here\cf2\i0 ).\par
+\bullet\tab The option to run on strict mode is set to enable some stock compiler unsafe conditions that were possible on older versions of the compiler library. The recommended option is to leave this turned \cf3\f2\fs20 OFF\cf2\f1\fs24 , unless you know what you're doing.\par
+\bullet\tab Also, the default compilation is set to \cf3\f2\fs20 Game Target Version = 174\cf2\f1\fs24 . This is the default option for \cf3\f2\fs20 Neverwinter Nights 2\cf2\f1\fs24 , \cf3\f2\fs20 Enhanced Edition\cf2\f1\fs24 , \cf3\f2\fs20 Gold\cf2\f1\fs24 , etc., only older versions will use \cf3\f2\fs20 169\cf2\f1\fs24 . (Default = \cf3\f2\fs20 174\cf2\f1\fs24 ).\par
+\bullet\tab If you want faster compilation times for a large number of files, recommended to use \cf3\f2\fs20 batch operations\cf2\f1\fs24 , since that will cache game resources and treat the batch as a whole project, preserving include header files already parsed in memory to speed up the process.\par
+\bullet\tab Options to disable \cf3\f2\fs20\\\rdblquote\cf2\f1\fs24  and \cf3\f2\fs20\\\\\cf2\f1\fs24  processing were added in \cf3\f2\fs20 NWN:EE\cf2\f1\fs24  versions.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote User's Preferences\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Opens the \cf3\f2\fs20 User's Preferences\cf2\f1\fs24  window. Here you may chose to:\par
+\bullet\tab Auto-open files disassembled files upon disassemble (default \cf3\f2\fs20 ON\cf2\f1\fs24 );\par
+\bullet\tab Auto-open Debug Symbols on compilations (default \cf3\f2\fs20 ON\cf2\f1\fs24 );\par
+\bullet\tab And also to auto-install \cf3\f2\fs20 Dark Theme\cf2\f1\fs24  support on \cf3\f2\fs20 Notepad++ upgrades\cf2\f1\fs24  if previously installed - see Menu Option \cf3\f2\fs20 Install Dark Theme\cf2\f1\fs24  bellow (default \cf3\f2\fs20 OFF\cf2\f1\fs24 ).\par
+
+\pard\widctlpar\sb180\sa180\b Remarks\b0\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\bullet\tab To be able to auto-install the \cf3\f2\fs20 Dark Theme\cf2\f1\fs24  when \cf3\f2\fs20 Notepad++\cf2\f1\fs24  changes version, you'll either be asked to run \cf3\f2\fs20 Notepad++\cf2\f1\fs24  with \cf3\f2\fs20 Admin privileges\cf2\f1\fs24 , or if you don't want to do that, you'll have to manually provide write permissions on the following path (depending on which build you use), if that file is located on a secure path (like \cf3\f2\fs20 %ProgramFiles%\cf2\f1\fs24 ):\par
+
+\pard\widctlpar\sa200\cf0\f2\fs22\par
+
+\pard\widctlpar\li480\sa200\cf3\fs20 %NotepadInstallPath%\\themes\\DarkTheme.xml\par
+
+\pard\widctlpar\sb180\sa180\qj\cf2\f1\fs24 If you cancel the auto-install attempt (because you refused to run \cf3\f2\fs20 Notepad++\cf2\f1\fs24  as \cf3\f2\fs20 Administrator\cf2\f1\fs24 ), no other attempts will be made until the next version of \cf3\f2\fs20 Notepad++\cf2\f1\fs24  - given, of course that the \cf3\f2\fs20 Auto-Install\cf2\f1\fs24  option is still checked when version changes.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Install Dark Theme\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Installs \cf3\f2\fs20 Dark Theme\cf2\f1\fs24  support if not already present. When installation is detected, this option won't show up.\par
+
+\pard\widctlpar\sb180\sa180\b Remarks\b0\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\bullet\tab Since the \cf3\f2\fs20 DarkTheme.xml\cf2\f1\fs24  file used for the \cf3\f2\fs20 Dark Mode\cf2\f1\fs24  (\cf3\f2\fs20 User Preferences\cf2\f1\fs24 ) is distributed within each release of a new \cf3\f2\fs20 Notepad++\cf2\f1\fs24 , it is probable that when upgrading your \cf3\f2\fs20 Notepad++\cf2\f1\fs24  version, this file will be overwritten, hence, uninstalling the plugin's patch (if you did install the plugin's \cf3\f2\fs20 Dark Theme\cf2\f1\fs24  before). We can't change the stock \cf3\f2\fs20 DarkTheme.xml\cf2\f1\fs24 , because that one is made for all built-in \cf3\f2\fs20 Notepad++\cf2\f1\fs24  languages, and we are a plugin... so the only option is to re-patch this file in each and every \cf3\f2\fs20 Notepad++ upgrade\cf2\f1\fs24 . Fortunately we have the option to \cf3\f2\fs20 auto-install\cf2\f1\fs24  this theme everytime \cf3\f2\fs20 Notepad++\cf2\f1\fs24  upgrades - the plugin will detect if the file has been modified and a previous installation was done, and will \cf3\f2\fs20 auto-install\cf2\f1\fs24  the feature upon \cf3\f2\fs20 Notepad++ post-upgrade initialization\cf2\f1\fs24 . For more information, see above for the option to auto-install the Dark Theme in \cf3\f2\fs20 User's Preferences\cf2\f1\fs24 .\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Import NWScript definitions\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab With this option, you may import a new \cf3\f2\fs20 nwscript.nss\cf2\f1\fs24  to replace the current engine definitions like constants, functions and engine structures to use with syntax coloring and highlighting and also this enables the \cf3\f2\fs20 Auto Complete\cf2\f1\fs24  functions to them. This will overwrite any previous engine definitions present on the plugin configuration.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Import user-defined tokens\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab With this option, you may import new \cf3\f2\fs20 user-defined functions\cf2\f1\fs24  and \cf3\f2\fs20 constants\cf2\f1\fs24  from any \cf3\f2\fs20 .nss\cf2\f1\fs24  file to enable \cf3\f2\fs20 color-syntax highlighting\cf2\f1\fs24  and \cf3\f2\fs20 auto-completion\cf2\f1\fs24  to them.\par
+
+\pard\widctlpar\sb180\sa180\qj Please notice that only \b\f2\fs22 FUNCTION DECLARATIONS\b0\f1\fs24  and \b\f2\fs22 GLOBAL CONSTANTS\b0\f1\fs24  will be imported by this process. And if you already have any \cf3\f2\fs20 user-defined functions\cf2\f1\fs24  and \cf3\f2\fs20 constants\cf2\f1\fs24  previously imported or in use, don't worry, they will be preserved, as long as you did \b NOT\b0  put them manually inside the \cf3\f2\fs20 reserved sections\cf2\f1\fs24  of the {{\field{\*\fldinst{HYPERLINK "https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/src/Lexers/Config/NWScript-Npp.xml"}}{\fldrslt{\ul\cf5\cf6\ul XML configuration}}}}\f1\fs24  file. So I advise you to \b NEVER\b0  edit that file manually. Like, \b\i ever\b0\i0 !!!\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Reset user-defined tokens\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab This will clear ANY \cf3\f2\fs20 user-defined functions\cf2\f1\fs24  and \cf3\f2\fs20 constants\cf2\f1\fs24  previously imported to the plugin's configurations. Usefu when you are done working in a project and want all your symbols to be clear, so you can start anew.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Reset editor colors\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab This will reset all editor \cf3\f2\fs20 color styles\cf2\f1\fs24  to the \cf3\f2\fs20 default values\cf2\f1\fs24  - either for \cf3\f2\fs20 light\cf2\f1\fs24  and \cf3\f2\fs20 dark\cf2\f1\fs24  themes. No functions or constants definitions will be ereased in the process. The main purpose of this function is to correct a known \cf3\f2\fs20 Notepad++\cf2\f1\fs24  behavior that changes your \cf3\f2\fs20 Npp-Plugin.xml\cf2\f1\fs24  stylers when you change themes inside the \cf3\f2\fs20 Settings -> Style Configurator\cf2\f1\fs24  dialog box. Since \cf3\f2\fs20 Notepad++\cf2\f1\fs24  must edit the plugin styler directly to save the settings, that will overwrite whichever colors it had before, with no custom theme support. Hence, it is handy to have a \cf3\f2\fs20 reset\cf2\f1\fs24  option so when you change back themes you won't need to manually set ALL of the \cf3\f2\fs20 stylers\cf2\f1\fs24  manually again.\par
+
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote About me\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab Opens the \cf3\f2\fs20 About Dialog Box\cf2\f1\fs24  (yeah, really!). \f4\u-10179?\u-8636?\f1\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 REMARKS:\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab\fs24 If you noticed the \cf3\f2\fs20 SHIELD \cf2\f1\fs24{\pict{\*\picprop}\wmetafile8\picw423\pich423\picwgoal240\pichgoal240 
+010009000003ca0200000000a102000000000400000003010800050000000b0200000000050000
+000c0210001000030000001e0004000000070104000400000007010400a1020000410b2000cc00
+100010000000000010001000000000002800000010000000100000000100080000000000000000
+000000000000000000000000000000000000000000ffffff00404040006c696200b6995b00cb9d
+3d0003c9ee0042afc500545758004c4b4b006d6a6200a5906600d29c2d00e2a62900e7a9260002
+dcfd0002d4f80004c6ef00559faf00606c6f004b4b4c00ca9b3b00d29c2e00d69e2c00dba02900
+e6a72400e8a82300e7a7220000dafe0001dafe0000d5fc0001cef70004c3ef0003bceb0016b6e0
+00cf972d00e7a82300e6a52100e5a31f0000d7fe0001d7ff0001d6ff0000d5fe0000d4fe0004b5
+e700cb922b00e5a42000e5a21f00e4a11e00e4a01d00e39f1d0000d4ff0001d3fe0001d4ff0000
+d3ff0002d3ff0004b1e600c78d2a00e39e1c00e39d1b00e39c1a00e29c1a0000d2ff0001d2ff00
+02d1ff0000d0fe0000cffe0001d0ff0005ade500bf8c3600df9a1c00e29b1a00e19a1900e19917
+00e098170001cfff0002cfff0000ceff0002ceff0001c8fb0017a8da004c9fb80002c2f40000cf
+ff0000cdff0001cdff0000ccfe00df941400de921300de921200de911200de901100ce861800a1
+825c00606a6f0005b1ea0002cafe0000cbfe0002ccff0001cbff0000caff00dd901100dd8f1100
+dd8e1000dd8d0f00dc8c0f00b97721006b6762005596ac0004b7f10000c8fe0002c8ff0000c7ff
+00dc8d0f00db8b0e00dc8b0e00db890c00c37b1800997f6100359fc90003b4f10002c6ff0001c5
+ff0002c5ff00da880c00db870b00c1781700a57a49004b4b4b00439abf0005a8e90001bdfb0002
+c2ff00d9850a00d3810c00b7711a00a17c520061869800059ee30002b0f300c5771200ad691e00
+84776900545657002896ce009f7a5200615f5c0000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000000000000000000000000000000020202020202020202020202
+020202020202020202028f9091920202020202020202020202898a8b8c8d8e0202020202020202
+148182838485868788800202020202147778797a7b747c7d7e7f80020202026c6d6e6f70707172
+737475760202025e5f606162636465666768696a6b02025152534c5455565758595a5b5c5d0202
+4546474748494a4b4c4d4d4e4f5002023931313a3b3c3d3e3f404142434402022d2e262f303132
+2b333435363738020223241b25252626272728292a2b2c020215161718191a1b1c1d1e1f202122
+020202090a0b0c0d0e0f1011121314020202020202020304050607080202020202020202020202
+02020202020202020202040000002701ffff030000000000
+} icons near some menu options, that's because if you want to use that option you must either run \cf3\f2\fs20 Notepad++\cf2\f1\fs24  with \cf3\f2\fs20 Administrator Privileges\cf2\f1\fs24  OR you may also manually provide write permissions to the option's required files, because they are located in a secured path like \cf3\f2\fs20 %ProgramFiles%\cf2\f1\fs24  or so. Don't worry, you will be notified of which file you need to provide permissions to for each operation.\par
+
+\pard\widctlpar\sb180\sa180\qj Options that requires elevated privileges will usually access these files bellow, in a combination of one or more files for each option:\par
+
+\pard\keep\keepn\widctlpar\s4\sb200\cf1\i\f2\fs22    %ProgramFiles%\\Notepad++\\themes\\DarkTheme.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\functions\\nwscript.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\plugins\\Config\\NWScript-Npp.xml\f0\fs24\par
+
+\pard\widctlpar\sb180\sa180\qj\cf2\i0\f1 So, unless you don't want to keep being bugged about files permissions, you can set write permission on those files permanently by going into the \cf3\f2\fs20 Windows Explorer\cf2\f1\fs24 , selecting the file's \cf3\f2\fs20 Properties\cf2\f1\fs24 , \cf3\f2\fs20 Security tab\cf2\f1\fs24 , selecting your \cf3\f2\fs20 Username\cf2\f1\fs24  and then marking all \cf3\f2\fs20 permission options\cf2\f1\fs24  avaliable. Then magically, the \cf3\f2\fs20 shield icons\cf2\f1\fs24  will vanish from your interface (requires a \cf3\f2\fs20 Notepad++\cf2\f1\fs24  restart).\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 FINAL CONSIDERATIONS:\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf2\b0\f1\bullet\tab\fs24 Any bug report or improvement request must be done {{\field{\*\fldinst{HYPERLINK "https://github.com/Leonard-The-Wise/NWScript-Npp/issues"}}{\fldrslt{\ul\cf5\cf6\ul here}}}}\f1\fs24 , so I can keep track of all changes. No email requests, forum messages or personal communications will be taken in consideration for that. Please be noticed.\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 EXTRA COPYRIGHT INFO:\par
+
+\pard\widctlpar\sb180\sa180\qj\cf2\b0\f1\fs24 Copyright notices for the embbeded version of the {{\field{\*\fldinst{HYPERLINK "https://github.com/nwneetools/nwnsc"}}{\fldrslt{\ul\cf5\f2\fs22 NWScript Compiler Library}}}}\f1\fs24 :\par
+
+\pard\widctlpar\sb36\sa36 Portions copyright (C) 2008-2015 \cf3\f2\fs20 Skywing\cf2\f1\fs24  \par
+Portions copyright (C) 2002-2003, \cf3\f2\fs20 Edward T. Smith \cf2\f1\fs24\par
+Portions copyright (C) 2003, \cf3\f2\fs20 The Open Knights Consortium \cf2\f1\fs24\par
+
+\pard\widctlpar\sb36\sa36\qj Adapted for Neverwinter Nights Enhanced Edition and cross platform use by: \cf3\f2\fs20 Glorwinger\cf2\f1\fs24  and \cf3\f2\fs20 Jakkn\cf2\f1\fs24  \par
+Readaptations and tweaks for Windows GUI applications usage by: \cf3\f2\fs20 Leonard-The-Wise\par
+
+\pard\widctlpar\sb36\sa36\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 SELF-DIAGNOSTICS:\par
+
+\pard\widctlpar\sb36\sa36\cf2\b0\f1\fs24\par
+\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx2268\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Auto-Indentation:\cell\b0 %NWSCRIPTINDENT%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx2268\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Dark Mode Theme:\cell\b0 %DARKTHEMESUPPORT%\cell\row 
+\pard\widctlpar\sb36\sa36\par
+
+\pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 NERDY STATISTICS:\par
+
+\pard\widctlpar\li480\ri480\sb100\sa100\cf2\b0\f1\fs24\par
+\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Number of compilations attempts:\cell\b0 %COMPILEATTEMPTS%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Successful compilations:\cell\b0 %COMPILESUCCESSES%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Failed compilations:\cell\b0 %COMPILESFAILED%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b Disassembled Files\cell\b0 %DISASSEMBLEDFILES%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b\cell\b0\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b NWscript defined structures:\cell\b0 %engineStructures%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b NWScript defined functions:\cell\b0 %engineFunctionCount%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b NWScript defined constants:\cell\b0 %engineConstants%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b User defined structures:\cell\b0 %userStructures%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b User defined functions:\cell\b0 %userFunctionCount%\cell\row\trowd\trgaph108\trleft-108\trpaddl108\trpaddr108\trpaddfl3\trpaddfr3
+\cellx4381\cellx8870 
+\pard\intbl\widctlpar\sb36\sa36\b User defined constants:\cell\b0 %userConstants%\cell\row 
+\pard\widctlpar\sb36\sa36\par
+\par
+\par
+}
+ 

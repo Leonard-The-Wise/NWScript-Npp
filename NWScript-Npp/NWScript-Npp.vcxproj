@@ -357,6 +357,7 @@
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\OnlineHelp-Dark.rtf" />
     <None Include="..\Media\OnlineHelp.rtf" />
     <None Include="..\Media\UnityTest.nss" />
     <None Include="..\Publish.Dll.To.Notepad.targets" />
