@@ -3,7 +3,7 @@
  *
  * Original idea extracted from simple example here:
  * https://stackoverflow.com/questions/69767789/richedit-doesnt-show-pictures
- *
+ * Modified to use newer StgCreateStorageEx instead of old StgCreateDocfile.
  **/
 
 #pragma once
@@ -14,18 +14,19 @@ public:
     IStorage* pstorage;
     DWORD m_ref;
     int grfmode;
-    OleCallback() : grfmode(STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE | STGM_DELETEONRELEASE)
+    OleCallback() : grfmode(STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE)
     {
         pstorage = nullptr;
         m_ref = 0;        
+        std::ignore = StgCreateStorageEx(NULL, grfmode | STGM_DELETEONRELEASE, STGFMT_STORAGE, 0, 0, NULL, 
+            IID_IStorage, reinterpret_cast<void**>(&pstorage));
     }
 
     HRESULT STDMETHODCALLTYPE GetNewStorage(LPSTORAGE* lplpstg)
     {
         wchar_t name[256] = { 0 };
-        if (!pstorage)
-            (void)StgCreateDocfile(NULL, grfmode, 0, &pstorage);
-        return pstorage->CreateStorage(name, grfmode, 0, 0, lplpstg);
+        HRESULT pResult = pstorage->CreateStorage(name, grfmode, 0, 0, lplpstg);
+        return pResult;
     }
 
     HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** lplpObj)
