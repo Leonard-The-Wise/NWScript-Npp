@@ -25,6 +25,7 @@
 
 using namespace NWScriptPlugin;
 
+
 BEGIN_ANCHOR_MAP(LoggerDialog)
 #ifdef DEBUG_ANCHORLIB
 	ANCHOR_MAP_ENTRY(_hSelf, IDC_TABLOGGER, ANF_ALL, "Dialog Control: TABLOGGER (main window child)")
@@ -46,10 +47,9 @@ BEGIN_ANCHOR_MAP(LoggerDialog)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_ERRORGROUPBOX, ANF_ALL)
 	ANCHOR_MAP_ENTRY(_errorDlgHwnd, IDC_LSTERRORS, ANF_ALL)
 #endif
-END_ANCHOR_MAP(_hSelf)
+END_ANCHOR_MAP(_hSelf);
 
-
-intptr_t CALLBACK LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
+intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
@@ -274,6 +274,7 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 					_settings->compilerWindowConsoleShowInfos = IsDlgButtonChecked(_consoleDlgHwnd, IDC_BTFILTERINFO);
 				}
 			}
+			break;
 		}
 
 		case WM_NOTIFY:
@@ -731,3 +732,4 @@ void LoggerDialog::ToggleWordWrap()
 	SETTEXTEX stex = { ST_DEFAULT, 1200 };
 	SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
 }
+

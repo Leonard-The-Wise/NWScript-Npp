@@ -101,10 +101,13 @@ namespace NWScriptPluginCommons {
     std::wstring replaceStringsW(const std::wstring& input, std::map<std::wstring, std::wstring>& replaceStrings);
 
     // Opens a file dialog
-    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName, generic_string lastOpenedFolder = TEXT(""));
+    bool openFileDialog(HWND hOwnerWnd, std::vector<generic_string>& outSelectedFiles, 
+        const TCHAR* sFilters = TEXT("All files (*.*)\0*.*"), 
+        const generic_string& lastOpenedFolder = TEXT(""), bool multiFile = false);
 
     // Opens a folder selection dialog
-    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName);
+    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName, const generic_string& startPath, 
+        UINT flags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
 
     // Retrieves an HICON from the standard Windows libraries
     HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
@@ -191,7 +194,17 @@ namespace NWScriptPluginCommons {
     // This version have a cancel flag for assynchronous interruptions
     void createFilesList(std::vector<fs::path>& filesList, const generic_string& startingDir, 
         const generic_string& fileMask, bool recurse, std::atomic<bool>& cancelFlagVariable);
+
+    // Folder browsing function callback
+    // For changing default selected directory
+    // Extracted from: 
+    // https://stackoverflow.com/questions/6942150/why-folderbrowserdialog-dialog-does-not-scroll-to-selected-folder
+    int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+
+    // Folder browsing child enumeration function callback
+    BOOL CALLBACK EnumCallback(HWND hWndChild, LPARAM lParam);
 }
+
 
 using namespace NWScriptPluginCommons;
 

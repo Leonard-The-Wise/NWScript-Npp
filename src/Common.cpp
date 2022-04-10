@@ -116,28 +116,38 @@ namespace NWScriptPluginCommons {
     }
 
     // Opens a file dialog
-    bool openFileDialog(HWND hOwnerWnd, const TCHAR* sFilters, generic_string& outFileName, generic_string lastOpenedFolder)
+    bool openFileDialog(HWND hOwnerWnd, std::vector<generic_string>& outSelectedFiles, const TCHAR* sFilters,
+        const generic_string& lastOpenedFolder, bool multiFile)
     {
         OPENFILENAME ofn;
 
-        TCHAR sFileOpen[MAX_PATH];
+        std::unique_ptr<TCHAR[]> sFileOpen = std::make_unique<TCHAR[]>(MAX_PATH * 256);
         ZeroMemory(&ofn, sizeof(ofn));
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = hOwnerWnd;
-        ofn.lpstrFile = sFileOpen;
+        ofn.lpstrFile = sFileOpen.get();
         ofn.lpstrFile[0] = L'\0';
-        ofn.nMaxFile = MAX_PATH * sizeof(TCHAR);
+        ofn.nMaxFile = MAX_PATH * sizeof(TCHAR) * 256;
         ofn.lpstrFilter = sFilters;
         ofn.nFilterIndex = 1;
-        ofn.lpstrFileTitle = NULL;
+        ofn.lpstrFileTitle = multiFile ? reinterpret_cast<LPWSTR>(generic_string(TEXT("Select one or more files")).data()) 
+            : reinterpret_cast<LPWSTR>(generic_string(TEXT("Select file")).data());
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = lastOpenedFolder.c_str();
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | (multiFile ? OFN_ALLOWMULTISELECT : 0);
 
         if (!GetOpenFileName(&ofn))
         {
             DWORD nFail = CommDlgExtendedError();
-            if (nFail > 0)
+
+            if (nFail == 0x3003)
+            {
+                generic_stringstream sError;
+                sError << TEXT("You have selected too many files! Current buffer can support a maximum of ") <<
+                    MAX_PATH * 256 << TEXT(" characters for file selection. Please select less files the next time.");
+                MessageBox(hOwnerWnd, sError.str().c_str(), TEXT("NWScript Plugin Error"), MB_OK | MB_ICONEXCLAMATION| MB_APPLMODAL);
+            }
+            else
             {
                 generic_stringstream sError;
                 sError << TEXT("Error opening dialog box. Please report it to the plugin creator!\r\n") <<
@@ -148,22 +158,39 @@ namespace NWScriptPluginCommons {
             return false;
         }
 
-        outFileName.append(sFileOpen);
+        if (!multiFile)
+            outSelectedFiles.push_back(sFileOpen.get());
+        else
+        {
+            TCHAR* pFiles = sFileOpen.get();
+            generic_string path = pFiles;
+            pFiles += path.size() + 1;
+            for (; sFileOpen != 0; )
+            {
+                generic_string fileName = pFiles;
+                outSelectedFiles.push_back(path + TEXT("\\") + fileName);
+                pFiles += fileName.size() + 1;
+            }
+        }
 
         return true;
     }
 
     // Opens a folder selection dialog
-    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName)
+    bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName, const generic_string& startPath,
+        UINT flags)
     {
         BROWSEINFO b = { 0 };
+        LPITEMIDLIST pidlSelected;
         b.hwndOwner = hOwnerWnd;
         b.lpszTitle = TEXT("Select Folder");
-
-        LPITEMIDLIST pidl = SHBrowseForFolder(&b);
+        b.ulFlags = flags;
+        b.lpfn = BrowseCallbackProc;
+        b.lParam = reinterpret_cast<LPARAM>(startPath.c_str());
+        pidlSelected = SHBrowseForFolder(&b);
         TCHAR tszPath[MAX_PATH] = TEXT("");
 
-        if (SHGetPathFromIDList(pidl, tszPath) == TRUE)
+        if (SHGetPathFromIDList(pidlSelected, tszPath) == TRUE)
         {
             outFolderName = tszPath;
             return true;
@@ -806,6 +833,54 @@ namespace NWScriptPluginCommons {
         }
     }
 
+    // Folder browsing function callback
+    // For changing default selected directory
+    // Extracted from: 
+    // https://stackoverflow.com/questions/6942150/why-folderbrowserdialog-dialog-does-not-scroll-to-selected-folder
+    int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+    {
+        LPITEMIDLIST pidlNavigate;
+        switch (uMsg)
+        {
+            case BFFM_INITIALIZED:
+            {
+                pidlNavigate = (LPITEMIDLIST)lpData;
+                if (pidlNavigate != NULL)
+                    SendMessage(hwnd, BFFM_SETSELECTION, (WPARAM)TRUE, (LPARAM)pidlNavigate);
+
+                break;
+            }
+
+            case BFFM_SELCHANGED:
+            {
+                EnumChildWindows(hwnd, EnumCallback, 0);
+                break;
+            }
+        }
+        return 0;
+    }
+
+    // Folder browsing child enumeration callback
+    // For changing default selected directory
+    // Extracted from: 
+    // https://stackoverflow.com/questions/6942150/why-folderbrowserdialog-dialog-does-not-scroll-to-selected-folder
+    BOOL CALLBACK EnumCallback(HWND hWndChild, LPARAM lParam)
+    {
+        TCHAR szClass[MAX_PATH];
+        ZeroMemory(szClass, std::size(szClass) * sizeof(TCHAR));
+        HTREEITEM hNode;
+#pragma warning(push)
+#pragma warning(disable : 6386)
+        if (GetClassName(hWndChild, szClass, sizeof(szClass))
+            && _tcscmp(szClass, TEXT("SysTreeView32")) == 0) 
+        {
+#pragma warning(pop)
+            hNode = TreeView_GetSelection(hWndChild);
+            TreeView_EnsureVisible(hWndChild, hNode);
+            return FALSE;
+        }
+        return TRUE;       
+    }
 
 #pragma warning(pop)
 

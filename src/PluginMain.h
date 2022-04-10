@@ -199,7 +199,10 @@ namespace NWScriptPlugin {
 
 		// ### Dialog Callback functions
 
+		// Import engine definitions callback
 		static void ImportDefinitionsCallback(HRESULT decision);
+		// Import user tokens callback
+		static void ImportUserTokensCallback(HRESULT decision);
 		// Batch processing Dialog callback
 		static void BatchProcessDialogCallback(HRESULT decision);
 
@@ -243,6 +246,8 @@ namespace NWScriptPlugin {
 
 		// Import a parsed result from NWScript file definitions into our language XML file. Function HEAVY on error handling!
 		void DoImportDefinitions();
+		// Import a parsed result from User tokens definitions into our language XML file.
+		void DoImportUserTokens();
 		// Resets the Editor Colors
 		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
 		// Install Dark Theme
@@ -251,6 +256,8 @@ namespace NWScriptPlugin {
 		bool PatchDarkThemeXMLFile();
 		// Helper to patch the Default XML Styler. This is different, since we must preserve user information.
 		bool PatchDefaultThemeXMLFile();
+		// Helper to merge AutoComplete file
+		bool MergeAutoComplete();
 
 		// ### Dynamic Behavior
 

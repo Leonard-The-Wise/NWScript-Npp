@@ -92,8 +92,18 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 				case IDC_BTBATCHDIRSTART:
 				case IDC_BTOUTPUTDIRBATCH:
 				{
+					TCHAR tempBuffer[MAX_PATH] = {};
+					switch (wParam)
+					{
+					case IDC_BTBATCHDIRSTART:
+						GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, std::size(tempBuffer));
+						break;
+					case IDC_BTOUTPUTDIRBATCH:
+						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));
+						break;
+					}
 					generic_string newPath;
-					if (openFolderDialog(_hSelf, newPath))
+					if (openFolderDialog(_hSelf, newPath, generic_string(tempBuffer)))
 					{
 						switch (wParam)
 						{

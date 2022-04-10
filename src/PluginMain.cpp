@@ -128,6 +128,8 @@ const generic_string NotepadDefaultDarkThemeFile = TEXT("DarkModeDefault.xml");
 const generic_string NotepadAutoCompleteRootDir = TEXT("autoCompletion\\");
 // Default pseudo-batch file to create in case we need to restart notepad++
 const generic_string NotepadPseudoBatchRestartFile = TEXT("~doNWScriptNotepadRestart.bat");
+// Default NWScript results serialization file
+const generic_string NWScriptResultSerializationFile = TEXT("NWScript-KnownObjects.dat");
 
 // Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
 // this will ever change, so we made them constants here.
@@ -239,6 +241,12 @@ void Plugin::SetNotepadData(NppData data)
     path.append(TEXT("\\"));
     path.append(NotepadPseudoBatchRestartFile);
     _pluginPaths.insert({ "NotepadPseudoBatchRestartFile", fs::path(path) });
+
+    // Known NWScript structures
+    path = fName;
+    path.append(TEXT("\\"));
+    path.append(NWScriptResultSerializationFile);
+    _pluginPaths.insert({ "NWScriptResultSerializationFile", fs::path(path) });
 
     // Create settings instance and load all values
     _settings.InitSettings(sPluginConfigPath);
@@ -991,7 +999,8 @@ bool Plugin::CheckScintillaDocument()
             return false;
     }
 
-    // Check for it's existance (because the user might be opening a "dirty" memory file from previous session)
+    // Check for it's existance because the user might be opening a "dirty" memory file from previous session
+    // and so SCI_GETMODIFY won't detect it properly.
     if (!PathFileExists(scriptPath.c_str()))
     {
         // Call save again...
@@ -1008,8 +1017,6 @@ bool Plugin::CheckScintillaDocument()
 
 void Plugin::DoImportDefinitions()
 {
-    // TODO: Re-test code moving
-
     NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
     tinyxml2::XMLDocument nwscriptDoc;
 
@@ -1017,7 +1024,7 @@ void Plugin::DoImportDefinitions()
     // because unsorted results won't work for auto-complete
     generic_string kw = fixedPreProcInstructionSet;
     kw.append(TEXT(" ")).append(fixedInstructionSet).append(TEXT(" ")).append(fixedKeywordSet).append(TEXT(" ")).append(fixedObjKeywordSet);
-    myResults.AddSpacedStringAsKeywords(kw);
+    myResults.AddSpacedStringAsMember(kw, NWScriptParser::MemberID::Keyword);
     myResults.Sort();
 
     // Set some Timestamp headers
@@ -1048,39 +1055,30 @@ void Plugin::DoImportDefinitions()
     // comments and other possible pieces of information.
     stripXMLInfo(nwscriptDoc.FirstChild());
 
-    tinyxml2::XMLElement* notepadPlus = nwscriptDoc.RootElement();
-    if (notepadPlus == NULL)
+    // Navigate to Keywords
+    tinyxml2::XMLElement *notepadPlus, *languages, *language, *Keywords, *lexerStyles;
+    tinyxml2::XMLNode* lexerType;
+    notepadPlus = nwscriptDoc.RootElement();
+    if (notepadPlus)
     {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
-        errorStream << TEXT("Cannot find root XML node 'NotepadPlus'!\r\n");
-        errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        _NWScriptParseResults.reset();
-        return;
+        languages = notepadPlus->FirstChildElement("Languages");
+        if (languages)
+        {
+            language = languages->FirstChildElement("Language");
+            if (language)
+            {
+                Keywords = language->FirstChildElement("Keywords");
+            }
+        }
+
+        lexerStyles = notepadPlus->FirstChildElement("LexerStyles");
+        if (lexerStyles)
+            lexerType = lexerStyles->FirstChild();
     }
 
-    // Add new declaration and header
-    nwscriptDoc.InsertFirstChild(nwscriptDoc.NewDeclaration());
-    nwscriptDoc.InsertAfterChild(nwscriptDoc.FirstChild(), nwscriptDoc.NewComment(xmlHeaderComment.c_str()));
-
-    tinyxml2::XMLElement* languages = notepadPlus->FirstChildElement("Languages");
-    if (languages == NULL)
+    if (!notepadPlus || !languages || !language || !Keywords || !lexerStyles || !lexerType)
     {
         errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
-        errorStream << TEXT("Cannot find XML node 'Languages'!\r\n");
-        errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        _NWScriptParseResults.reset();
-        return;
-    }
-    // Add info on Languages
-    languages->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLANGUAGECOMMENT));
-
-    tinyxml2::XMLElement* language = languages->FirstChildElement("Language");
-    if (language == NULL)
-    {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
-        errorStream << TEXT("Cannot find root XML node 'Language'!\r\n");
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
@@ -1097,21 +1095,18 @@ void Plugin::DoImportDefinitions()
         _NWScriptParseResults.reset();
         return;
     }
+
+
+    // Add new declaration and header
+    nwscriptDoc.InsertFirstChild(nwscriptDoc.NewDeclaration());
+    nwscriptDoc.InsertAfterChild(nwscriptDoc.FirstChild(), nwscriptDoc.NewComment(xmlHeaderComment.c_str()));
+    // Add info on Languages
+    languages->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLANGUAGECOMMENT));
     // Add info on Keywords
     language->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINKEYWORDCOMMENT));
-
-    // Now we want just the Keywords for "type2" (Engine Structures), "type4  (Engine Constants) and "type6" (Function Names)
-    // Look for at least 1 keyword element
-    tinyxml2::XMLElement* Keywords = language->FirstChildElement("Keywords");
-    if (Keywords == NULL)
-    {
-        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
-        errorStream << TEXT("Cannot find root XML node 'Keywords'!\r\n");
-        errorStream << TEXT("File might be corrupted!\r\n");
-        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
-        _NWScriptParseResults.reset();
-        return;
-    }
+    // Add info on LexerStyles and LexerTypes
+    lexerStyles->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLEXERTYPECOMMENT));
+    lexerType->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINWORDSTYLECOMMENT));
 
     // Need to convert from wchar_t to char here...
     // We use a post-check to see whether all tags where updated. Also useful to avoid processing same tag twice 
@@ -1156,76 +1151,18 @@ void Plugin::DoImportDefinitions()
         return;
     }
 
-    //Now add comment info to LexerStyles. Here we don't manage errors since its only comments
-    tinyxml2::XMLElement* lexerStyles = notepadPlus->FirstChildElement("LexerStyles");
-    if (lexerStyles)
+    if (!_NWScriptParseResults->SerializeToFile(_pluginPaths["NWScriptResultSerializationFile"]))
     {
-        tinyxml2::XMLNode* lexerType = lexerStyles->FirstChild();
-        if (lexerType)
-            lexerType->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINWORDSTYLECOMMENT));
-        lexerStyles->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLEXERTYPECOMMENT));
-    }
-
-    // Now we overwrite autoComplete XML. We're doing this before saving the other
-    // so we do a more or less of a transactioned modification - if one fails, the other isn't saved.
-    std::string asciiFileAutoC = wstr2str(_pluginPaths["PluginAutoCompleteFilePath"]);
-    tinyxml2::XMLDocument nwscriptAutoc;
-    nwscriptAutoc.InsertFirstChild(nwscriptAutoc.NewDeclaration());
-    nwscriptAutoc.InsertEndChild(nwscriptAutoc.NewComment(xmlHeaderComment.c_str()));
-
-    tinyxml2::XMLNode* autocRoot = nwscriptAutoc.NewElement("NotepadPlus");
-    nwscriptAutoc.InsertEndChild(autocRoot);
-
-    autocRoot->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCLANGCOMMENT));
-    tinyxml2::XMLElement* autocNode = nwscriptAutoc.NewElement("AutoComplete");
-    autocNode->SetAttribute("language", LexerCatalogue::GetLexerName(0).c_str());
-    autocRoot->InsertEndChild(autocNode);
-
-    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCENVCOMMENT));
-    tinyxml2::XMLElement* environmentNode = nwscriptAutoc.NewElement("Environment");
-    environmentNode->SetAttribute("ignoreCase", "no"); environmentNode->SetAttribute("startFunc", "("); environmentNode->SetAttribute("stopFunc", ")");
-    environmentNode->SetAttribute("paramSeparator", ","); environmentNode->SetAttribute("terminal", ";"); environmentNode->SetAttribute("additionalWordChar", "");
-    autocNode->InsertEndChild(environmentNode);
-
-    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCSORTNOTICE));
-
-    // Now, we iterate through all parsing results and add their nodes to autocNode
-    for (NWScriptParser::ScriptMember m : myResults.Members)
-    {
-        tinyxml2::XMLElement* keyword = nwscriptAutoc.NewElement("KeyWord");
-        keyword->SetAttribute("name", wstr2str(m.sName).c_str());
-        if (m.mID == NWScriptParser::MemberID::Function)
-        {
-            keyword->SetAttribute("func", "yes");
-            tinyxml2::XMLElement* overload = nwscriptAutoc.NewElement("Overload");
-            overload->SetAttribute("retVal", wstr2str(m.sType).c_str());
-
-            for (NWScriptParser::ScriptParamMember p : m.params)
-            {
-                tinyxml2::XMLElement* param = nwscriptAutoc.NewElement("Param");
-                generic_string paramName = p.sType.c_str();
-                paramName.append(TEXT(" ")).append(p.sName);
-                if (!p.sDefaultValue.empty())
-                    paramName.append(TEXT("=")).append(p.sDefaultValue);
-                param->SetAttribute("name", wstr2str(paramName).c_str());
-
-                overload->InsertEndChild(param);
-            }
-            keyword->InsertEndChild(overload);
-        }
-        autocNode->InsertEndChild(keyword);
-    }
-
-    // Finally, save files...
-    error = nwscriptAutoc.SaveFile(asciiFileAutoC.c_str());
-    if (error)
-    {
-        errorStream << TEXT("Error while saving file: ") << _pluginPaths["PluginAutoCompleteFilePath"] << "! \r\n";
+        errorStream << TEXT("Error while saving file: ") << _pluginPaths["NWScriptResultSerializationFile"] << "! \r\n";
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
         return;
     }
+
+    if (!MergeAutoComplete())
+        return;
+
     error = nwscriptDoc.SaveFile(asciiFileStyler.c_str());
     if (error)
     {
@@ -1254,6 +1191,158 @@ void Plugin::DoImportDefinitions()
         SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
         Messenger().SendNppMessage(WM_CLOSE, 0, 0);
     }
+
+}
+
+void Plugin::DoImportUserTokens()
+{
+    NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
+    tinyxml2::XMLDocument nwscriptDoc;
+
+    // Set some Timestamp headers
+    char timestamp[128]; time_t currTime;  struct tm currTimeP;
+    time(&currTime);
+    errno_t error = localtime_s(&currTimeP, &currTime);
+    strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
+    std::string xmlHeaderComment = XMLDOCHEADER;
+    xmlHeaderComment.append(timestamp).append(".\n");
+
+    // Since TinyXML only accepts ASCII filenames, we do a crude conversion here...
+    std::string asciiFileStyler = wstr2str(_pluginPaths["PluginLexerConfigFilePath"]);
+    error = nwscriptDoc.LoadFile(asciiFileStyler.c_str());
+    generic_stringstream errorStream;
+    if (error)
+    {
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+
+    // Navigate to Keywords
+    tinyxml2::XMLElement* notepadPlus, * languages, * language, * Keywords, * lexerStyles, * lexerType, * WordsStyle;
+    notepadPlus = nwscriptDoc.RootElement();
+    if (notepadPlus)
+    {
+        languages = notepadPlus->FirstChildElement("Languages");
+        if (languages)
+        {
+            language = languages->FirstChildElement("Language");
+            if (language)
+            {
+                Keywords = language->FirstChildElement("Keywords");
+            }
+        }
+
+        lexerStyles = notepadPlus->FirstChildElement("LexerStyles");
+        if (lexerStyles)
+        {
+            lexerType = lexerStyles->FirstChildElement("LexerType");
+            if (lexerType)
+            {
+                WordsStyle = lexerType->FirstChildElement("WordsStyle");
+            }
+        }
+    }
+
+    if (!notepadPlus || !languages || !language || !Keywords || !lexerStyles || !lexerType || !WordsStyle)
+    {
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+
+    // We are only supporting our default lexer here
+    if (!lexerStyles->Attribute("name", LexerCatalogue::GetLexerName(0).c_str()))
+    {
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("LexerStyle name for ") << str2wstr(LexerCatalogue::GetLexerName(0)) << TEXT(" not found!\r\n");
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+
+    // Retrieve the current words from list
+    generic_string currentUserConstants, currentUserFunctions;
+    bool bType5 = false, bType7 = false;
+    while (WordsStyle)
+    {
+        if (WordsStyle->Attribute("keywordClass", "type5") && !bType5)
+        {
+            currentUserConstants = str2wstr(WordsStyle->GetText());
+            bType5 = true;
+        }
+        if (WordsStyle->Attribute("keywordClass", "type7") && !bType7)
+        {
+            currentUserFunctions = str2wstr(WordsStyle->GetText());
+            bType7 = true;
+        }
+        WordsStyle->NextSiblingElement("WordStyle");
+    }
+
+    if (!bType5 || !bType7)
+    {
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("The following keywordClass nodes could not be found!\r\n");
+        errorStream << TEXT("Nodes: [") << (!bType5 ? TEXT(" type5") : TEXT("")) << (!bType7 ? TEXT(" type7") : TEXT("")) << TEXT(" ]");
+        errorStream << TEXT("File might be corrupted!\r\n");
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+
+    _NWScriptParseResults->AddSpacedStringAsMember(currentUserConstants, NWScriptParser::MemberID::Constant);
+    _NWScriptParseResults->AddSpacedStringAsMember(currentUserFunctions, NWScriptParser::MemberID::Function);
+    _NWScriptParseResults->Sort();
+
+    // Now save new values
+    WordsStyle = lexerType->FirstChildElement("WordsStyle");
+    while (WordsStyle)
+    {
+        if (WordsStyle->Attribute("keywordClass", "type5") && !bType5)
+        {
+            WordsStyle->SetText(wstr2str(currentUserConstants).c_str());
+            bType5 = true;
+        }
+        if (WordsStyle->Attribute("keywordClass", "type7") && !bType7)
+        {
+            WordsStyle->SetText(wstr2str(currentUserFunctions).c_str());
+            bType7 = true;
+        }
+        WordsStyle->NextSiblingElement("WordStyle");
+    }
+
+    // Call helper function to strip all comments from document, since we're merging the file, not recreating it.
+    // We don't use nwscriptDoc.rootNode() here, since it will jump straight to the first ELEMENT node - ignoring
+    // comments and other possible pieces of information.
+    stripXMLInfo(nwscriptDoc.FirstChild());
+
+    // Add new declaration and header and rebuild document comments
+    nwscriptDoc.InsertFirstChild(nwscriptDoc.NewDeclaration());
+    nwscriptDoc.InsertAfterChild(nwscriptDoc.FirstChild(), nwscriptDoc.NewComment(xmlHeaderComment.c_str()));
+    lexerStyles->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLEXERTYPECOMMENT));
+    lexerType->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINWORDSTYLECOMMENT));
+    languages->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINLANGUAGECOMMENT));
+    language->InsertFirstChild(nwscriptDoc.NewComment(XMLPLUGINKEYWORDCOMMENT));
+
+    if (!_NWScriptParseResults->SerializeToFile(_pluginPaths["NWScriptResultSerializationFile"]))
+    {
+        errorStream << TEXT("Error while saving file: ") << _pluginPaths["NWScriptResultSerializationFile"] << "! \r\n";
+        errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+
+    if (!MergeAutoComplete())
+        return;
+
+    // TODO: FINISH PROCESSING.
 
 }
 
@@ -1491,6 +1580,95 @@ bool Plugin::PatchDarkThemeXMLFile()
     return true;
 }
 
+bool Plugin::MergeAutoComplete()
+{
+    NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
+
+    char timestamp[128]; time_t currTime;  struct tm currTimeP;
+    time(&currTime);
+    errno_t error = localtime_s(&currTimeP, &currTime);
+    strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
+    std::string xmlHeaderComment = XMLDOCHEADER;
+    xmlHeaderComment.append(timestamp).append(".\n");
+
+    std::string asciiFileAutoC = wstr2str(_pluginPaths["PluginAutoCompleteFilePath"]);
+    tinyxml2::XMLDocument nwscriptAutoc;
+    error = nwscriptAutoc.LoadFile(asciiFileAutoC.c_str());
+    generic_stringstream errorStream;
+    if (error)
+    {
+        errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
+        errorStream << TEXT("File might be corrupted!\r\n");
+        errorStream << TEXT("Error ID: ") << nwscriptAutoc.ErrorID();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return false;
+    }
+
+
+    // TODO: Merge file contents.
+#ifdef TODO_DONE
+    nwscriptAutoc.InsertFirstChild(nwscriptAutoc.NewDeclaration());
+    nwscriptAutoc.InsertEndChild(nwscriptAutoc.NewComment(xmlHeaderComment.c_str()));
+
+    tinyxml2::XMLNode* autocRoot = nwscriptAutoc.NewElement("NotepadPlus");
+    nwscriptAutoc.InsertEndChild(autocRoot);
+
+    autocRoot->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCLANGCOMMENT));
+    tinyxml2::XMLElement* autocNode = nwscriptAutoc.NewElement("AutoComplete");
+    autocNode->SetAttribute("language", LexerCatalogue::GetLexerName(0).c_str());
+    autocRoot->InsertEndChild(autocNode);
+
+    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCENVCOMMENT));
+    tinyxml2::XMLElement* environmentNode = nwscriptAutoc.NewElement("Environment");
+    environmentNode->SetAttribute("ignoreCase", "no"); environmentNode->SetAttribute("startFunc", "("); environmentNode->SetAttribute("stopFunc", ")");
+    environmentNode->SetAttribute("paramSeparator", ","); environmentNode->SetAttribute("terminal", ";"); environmentNode->SetAttribute("additionalWordChar", "");
+    autocNode->InsertEndChild(environmentNode);
+
+    autocNode->InsertEndChild(nwscriptAutoc.NewComment(XMLAUTOCSORTNOTICE));
+
+    // Now, we iterate through all parsing results and add their nodes to autocNode
+    for (NWScriptParser::ScriptMember m : myResults.Members)
+    {
+        tinyxml2::XMLElement* keyword = nwscriptAutoc.NewElement("KeyWord");
+        keyword->SetAttribute("name", wstr2str(m.sName).c_str());
+        if (m.mID == NWScriptParser::MemberID::Function)
+        {
+            keyword->SetAttribute("func", "yes");
+            tinyxml2::XMLElement* overload = nwscriptAutoc.NewElement("Overload");
+            overload->SetAttribute("retVal", wstr2str(m.sType).c_str());
+
+            for (NWScriptParser::ScriptParamMember p : m.params)
+            {
+                tinyxml2::XMLElement* param = nwscriptAutoc.NewElement("Param");
+                generic_string paramName = p.sType.c_str();
+                paramName.append(TEXT(" ")).append(p.sName);
+                if (!p.sDefaultValue.empty())
+                    paramName.append(TEXT("=")).append(p.sDefaultValue);
+                param->SetAttribute("name", wstr2str(paramName).c_str());
+
+                overload->InsertEndChild(param);
+            }
+            keyword->InsertEndChild(overload);
+        }
+        autocNode->InsertEndChild(keyword);
+    }
+
+    // Finally, save files...
+    error = nwscriptAutoc.SaveFile(asciiFileAutoC.c_str());
+    if (error)
+    {
+        errorStream << TEXT("Error while saving file: ") << _pluginPaths["PluginAutoCompleteFilePath"] << "! \r\n";
+        errorStream << TEXT("Error ID: ") << nwscriptAutoc.ErrorID();
+        MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
+        _NWScriptParseResults.reset();
+        return;
+    }
+#endif
+
+    return true;
+}
+
 #pragma endregion XML Config Files Management
 
 #pragma region
@@ -1507,6 +1685,19 @@ void Plugin::ImportDefinitionsCallback(HRESULT decision)
 
     // Calls the actual Import Definitions method
     Instance().DoImportDefinitions();
+}
+
+void Plugin::ImportUserTokensCallback(HRESULT decision)
+{
+    // Trash results for memory space in a cancel.
+    if (static_cast<int>(decision) == IDCANCEL || static_cast<int>(decision) == IDNO)
+    {
+        Instance()._NWScriptParseResults.reset();
+        return;
+    }
+
+    // Calls the actual Import Definitions method
+    Instance().DoImportUserTokens();
 }
 
 // Receives notifications from Batch Processing Dialog
@@ -1905,7 +2096,7 @@ void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, cons
     {
         MessageBox(Instance().NotepadHwnd(), (TEXT("Cannot open file: ") + fileName +
             TEXT(". Maybe it's one of the Neverwinter original #includes that are compressed inside the Neverwinter folder.")).c_str(),
-            TEXT("Inaccessible file."), MB_OK | MB_ICONINFORMATION);
+            TEXT("Inaccessible file."), MB_OK | MB_ICONEXCLAMATION);
         return;
     }
 
@@ -2040,9 +2231,9 @@ PLUGINCOMMAND Plugin::CompileScript()
 // Disassemble a compiled script file
 PLUGINCOMMAND Plugin::DisassembleFile()
 {
-    generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), 
-        TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"), nFileName, 
+    std::vector<generic_string> nFileName;
+    if (openFileDialog(Instance().NotepadHwnd(), nFileName,
+        TEXT("NWScript Compiled Files (*.ncs)\0*.ncs\0All Files (*.*)\0*.*"),
         properDirNameW(Instance().Settings().lastOpenedDir)))
     {
         // Start counting ticks
@@ -2059,7 +2250,7 @@ PLUGINCOMMAND Plugin::DisassembleFile()
         // Set our caller callback
         Instance().Compiler().setProcessingEndCallback(DisassembleEndingCallback);
         // Pass the control to core function calling disassemble from file
-        Instance().DoCompileOrDisasm(nFileName);
+        Instance().DoCompileOrDisasm(nFileName[0]);
     }
 }
 
@@ -2227,9 +2418,9 @@ You wish to Continue?)"
     }
     bWarnedUser = true;
 
-    generic_string nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), 
-        TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"), nFileName,
+    std::vector<generic_string> nFileName;
+    if (openFileDialog(Instance().NotepadHwnd(), nFileName,
+        TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"),
         properDirNameW(Instance().Settings().lastOpenedDir )))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
@@ -2238,7 +2429,14 @@ You wish to Continue?)"
         Instance()._NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
         NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
 
-        bool bSuccess = nParser.ParseFile(nFileName, myResults);
+        bool bSuccess = nParser.ParseFile(nFileName[0], myResults);
+        if (!bSuccess)
+        {
+            MessageBox(Instance().NotepadHwnd(), (TEXT("Error while parsing file \"") +
+                nFileName[0] + TEXT("\".\r\n- File may be inaccessible.")).c_str(),
+                TEXT("Error parsing file"), MB_ICONERROR | MB_OK);
+            return;
+        }
 
         // Last check for results: File empty?
         if (myResults.EngineStructuresCount == 0 && myResults.FunctionsCount == 0 && myResults.ConstantsCount == 0)
@@ -2262,6 +2460,63 @@ You wish to Continue?)"
 PLUGINCOMMAND Plugin::ImportUserTokens()
 {
 
+    // Initialize our results dialog
+    static FileParseSummaryDialog parseDialog = {};
+    if (!parseDialog.isCreated())
+        parseDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    // Someone called this twice!
+    if (parseDialog.isVisible())
+        return;
+
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+    // The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
+    if (PathFileExists(Instance()._pluginPaths["PluginAutoCompleteFilePath"].c_str()))
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+    else
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
+    std::vector<generic_string> nFileNames;
+    if (openFileDialog(Instance().NotepadHwnd(), nFileNames,
+        TEXT("NWScript Files (*.nss)\0*.nss\0All Files (*.*)\0*.*"), 
+        properDirNameW(Instance().Settings().lastOpenedDir), true))
+    {
+        // Opens the NWScript file and parse it. Keep the results for later use
+        NWScriptParser nParser(Instance().NotepadHwnd());
+
+        Instance()._NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
+        NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
+
+        bool bSuccess = nParser.ParseBatch(nFileNames, myResults);
+        if (!bSuccess)
+        {
+            MessageBox(Instance().NotepadHwnd(), TEXT("Error while parsing file(s).\r\nOne or more of the selected files might be inaccessible."),
+                TEXT("Error parsing file"), MB_ICONERROR | MB_OK);
+            return;
+        }
+
+        // Last check for results: File empty?
+        if (myResults.FunctionsCount == 0 && myResults.ConstantsCount == 0)
+        {
+            MessageBox(Instance().NotepadHwnd(), TEXT("File analysis didn't find anything to import!"), pluginName.c_str(),
+                MB_ICONEXCLAMATION | MB_OK);
+            return;
+        }
+
+        // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in ImportDefinitionsCallback.
+        parseDialog.setEngineStructuresCount(myResults.EngineStructuresCount);
+        parseDialog.setFunctionDefinitionsCount(myResults.FunctionsCount);
+        parseDialog.setConstantsCount(myResults.ConstantsCount);
+
+        parseDialog.setOkDialogCallback(&Plugin::ImportUserTokensCallback);
+        parseDialog.doDialog();
+    }
 }
 
 // Menu Command "Reset user-defined tokens" function handler. 

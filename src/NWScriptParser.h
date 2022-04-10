@@ -7,14 +7,7 @@
 
 #pragma once
 
-// #define USEADVANCEDENCODINGDETECTION
-
-//#include <iostream>
-#include <vector>
 #include "Common.h"
-
-//#pragma warning(push)
-//#pragma warning(disable : 6387 26495)
 
 namespace NWScriptPlugin {
 
@@ -26,6 +19,10 @@ namespace NWScriptPlugin {
 			generic_string sType;
 			generic_string sName;
 			generic_string sDefaultValue;
+			bool operator==(const ScriptParamMember& other)
+			{
+				return sType == other.sType && sName == other.sName && sDefaultValue == other.sDefaultValue;
+			}
 		};
 
 		struct ScriptMember {
@@ -34,6 +31,20 @@ namespace NWScriptPlugin {
 			generic_string sName;
 			generic_string sValue;
 			std::vector<ScriptParamMember> params;
+
+			bool operator==(const ScriptMember& other)
+			{
+				bool bEquals = mID == other.mID && sType == other.sType &&
+					sName == other.sName && sValue == other.sValue;
+				if (params.size() != other.params.size())
+					return false;
+				for (int i = 0; i < params.size(); i++)
+				{
+					if (params[i] != other.params[i])
+						return false;
+				}
+				return bEquals;
+			}
 		};
 
 		struct ScriptParseResults
@@ -58,7 +69,11 @@ namespace NWScriptPlugin {
 				return results;
 			}
 
-			void AddSpacedStringAsKeywords(const generic_string& sKWArray);
+			void AddSpacedStringAsMember(const generic_string& sKWArray, MemberID memberID);
+
+			bool SerializeToFile(generic_string filePath);
+
+			bool SerializeFromFile(generic_string filePath);
 
 			void Sort();
 		};
@@ -68,17 +83,13 @@ namespace NWScriptPlugin {
 		// Parse the Input file (ANSI or UNICODE) and if successful, returns a sorted members list from that file
 		bool ParseFile(const generic_string& sFileName, ScriptParseResults& outParseResults);
 
+		bool ParseBatch(const std::vector<generic_string>& sFilePaths, ScriptParseResults& outParseResults);
+
 	private:
 		HWND _hWnd;
+
 		// Transforms a raw FileContent pointer into a ScriptParseResults list (for ASCII and UTF-8 based contents)
-		void CreateNWScriptStructureA(const std::string& sFileContents, ScriptParseResults& outParseResults);
-		// Transforms a raw FileContent pointer into a ScriptParseResults list (for UTF-16 and wchar_t* contents)
-		void CreateNWScriptStructureW(const std::string& sFileContents, ScriptParseResults& outParseResults);
-
-#ifdef USEADVANCEDENCODINGDETECTION
-		int detectCodepage(char* buf, size_t len);
-#endif
-
+		void CreateNWScriptStructure(const std::string& sFileContents, ScriptParseResults& outParseResults);	
 	};
 
 };

@@ -191,8 +191,25 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				case IDC_BTSEARCHPATH:
 				case IDC_BTOUTPUTDIR:
 				{
+					TCHAR tempBuffer[MAX_PATH] = {};
+					switch (wParam)
+					{
+					case IDC_BTNWN1INSTALL:
+						GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
+						break;
+					case IDC_BTNWN2INSTALL:
+						GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
+						break;
+					case IDC_BTSEARCHPATH:
+						GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, std::size(tempBuffer));
+						break;
+					case IDC_BTOUTPUTDIR:
+						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
+						break;
+					}
+
 					generic_string newPath;
-					if (openFolderDialog(_hSelf, newPath))
+					if (openFolderDialog(_hSelf, newPath, generic_string(tempBuffer)))
 					{
 						switch (wParam)
 						{
