@@ -10,9 +10,32 @@
 #include <windowsx.h>
 #include <commctrl.h>
 #include <commdlg.h>
+#include <objidl.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
+
+// Bug with GDI+ include...
+// https://developercommunity.visualstudio.com/t/gdiplustypesh-does-not-compile-with-nominmax/727770
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define CUSTOM_MAX
+#endif
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define CUSTOM_MIN
+#endif
 #include <gdiplus.h>
+#ifdef CUSTOM_MAX
+#undef max
+#undef CUSTOM_MAX
+#endif
+#ifdef CUSTOM_MIN
+#undef min
+#undef CUSTOM_MIN
+#endif
+
+
+
 #include <Richedit.h>
 #include <richole.h>
 
@@ -47,6 +70,8 @@
 #include "jpcre2.hpp"
 #include "Nsc.h"
 #include "tinyxml2.h"
+
+
 
 
 namespace fs = std::filesystem;
