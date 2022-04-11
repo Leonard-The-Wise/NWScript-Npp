@@ -165,11 +165,21 @@ namespace NWScriptPluginCommons {
             TCHAR* pFiles = sFileOpen.get();
             generic_string path = pFiles;
             pFiles += path.size() + 1;
-            for (; sFileOpen != 0; )
+
+            if (!PathIsDirectory(path.c_str()))
+                outSelectedFiles.push_back(path.c_str());
+            else
             {
-                generic_string fileName = pFiles;
-                outSelectedFiles.push_back(path + TEXT("\\") + fileName);
-                pFiles += fileName.size() + 1;
+                for (; sFileOpen != 0; )
+                {
+                    generic_string fileName = pFiles;
+                    generic_string newPath = path + TEXT("\\") + fileName;
+                    if (!PathIsDirectory(newPath.c_str()) && PathFileExists(newPath.c_str()))
+                        outSelectedFiles.push_back(path + TEXT("\\") + fileName);
+                    else
+                        break;
+                    pFiles += fileName.size() + 1;
+                }
             }
         }
 

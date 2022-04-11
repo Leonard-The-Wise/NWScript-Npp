@@ -251,16 +251,47 @@ void NWScriptParser::ScriptParseResults::AddSpacedStringAsMember(const generic_s
 
 		// Don't add duplicates
 		if (std::find(Members.begin(), Members.end(), m) != Members.end())
+		{
+			switch (memberID)
+			{
+			case MemberID::EngineStruct:
+				EngineStructuresCount++;
+				break;
+			case MemberID::Function:
+				FunctionsCount++;
+				break;
+			case MemberID::Constant:
+				ConstantsCount++;
+				break;
+			}
 			Members.emplace_back(m);
+		}
 	}
 }
 
 bool NWScriptParser::ScriptParseResults::SerializeToFile(generic_string filePath)
 {
-	return true;
+	Buffer buffer;
+	ScriptParseResults res;
+
+	auto writtenSize = bitsery::quickSerialization<OutputAdapter>(buffer, *this);
+	std::string fileContents;
+	fileContents.assign((char*)buffer.data(), buffer.size());
+
+	return bufferToFile(filePath, fileContents);
 }
 
 bool NWScriptParser::ScriptParseResults::SerializeFromFile(generic_string filePath)
 {
+	Buffer buffer;
+
+	std::string fileContents;
+	if (!fileToBuffer(filePath, fileContents))
+		return false;
+
+	size_t writtenSize = fileContents.size();
+	buffer.assign(fileContents.begin(), fileContents.end());
+	auto state = bitsery::quickDeserialization<InputAdapter>({ buffer.begin(), writtenSize }, *this);
+
 	return true;
 }

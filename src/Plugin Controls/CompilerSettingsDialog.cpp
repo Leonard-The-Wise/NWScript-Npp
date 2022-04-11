@@ -11,8 +11,7 @@
 //#include <Commctrl.h>
 //#include <sstream>
 
-//#include "Nsc.h"
-
+#include "Nsc.h"
 #include "CompilerSettingsDialog.h"
 
 #include "PluginControlsRC.h"

@@ -68,7 +68,6 @@
 #include <assert.h>
 
 #include "jpcre2.hpp"
-#include "Nsc.h"
 #include "tinyxml2.h"
 
 
