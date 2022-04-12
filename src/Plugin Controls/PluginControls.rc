@@ -454,6 +454,14 @@ IDR_ABOUTDOC            RTF                     "..\\..\\Media\\OnlineHelp.rtf"
 
 IDR_ABOUTDOCDARK        RTF                     "..\\..\\Media\\OnlineHelp-Dark.rtf"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RCDATA
+//
+
+IDR_KNOWNOBJECTS        BIN                  "..\\..\\Media\\NWScript-Npp-EngineObjects.bin"
+
 #endif    // Portuguese (Brazil) resources
 /////////////////////////////////////////////////////////////////////////////
 

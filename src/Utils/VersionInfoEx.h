@@ -58,86 +58,86 @@ struct VersionInfoEx {
 		*this = VersionInfoEx(newVersion & 0xFFFF);
 	}
 
-	bool operator==(const VersionInfoEx& other) {
+	bool operator==(const VersionInfoEx& other) const {
 		return (((UINT64)_major << 48) + ((UINT64)_minor << 32) + ((UINT64)_patch << 16) + ((UINT64)_build)) ==
 			(((UINT64)other._major << 48) + ((UINT64)other._minor << 32) + ((UINT64)other._patch << 16) + ((UINT64)other._build));
 	}
-	bool operator==(const char* other) {
+	bool operator==(const char* other) const {
 		return *this == VersionInfoEx(other);
 	}
-	bool operator==(const TCHAR* other) {
+	bool operator==(const TCHAR* other) const {
 		return *this == VersionInfoEx(other);
 	}
-	bool operator==(const std::string& other) {
+	bool operator==(const std::string& other) const {
 		return *this == VersionInfoEx(other);
 	}
-	bool operator==(const std::wstring& other) {
+	bool operator==(const std::wstring& other) const {
 		return *this == VersionInfoEx(other);
 	}
 
-	bool operator>(const VersionInfoEx& other) {
+	bool operator>(const VersionInfoEx& other) const {
 		return (((UINT64)_major << 48) + ((UINT64)_minor << 32) + ((UINT64)_patch << 16) + ((UINT64)_build)) >
 		(((UINT64)other._major << 48) + ((UINT64)other._minor << 32) + ((UINT64)other._patch << 16) + ((UINT64)other._build));
 	}
-	bool operator>(const char* other) {
+	bool operator>(const char* other) const {
 		return *this > VersionInfoEx(other);
 	}
-	bool operator>(const TCHAR* other) {
+	bool operator>(const TCHAR* other) const {
 		return *this > VersionInfoEx(other);
 	}
-	bool operator>(const std::string& other) {
+	bool operator>(const std::string& other) const {
 		return *this > VersionInfoEx(other);
 	}
-	bool operator>(const std::wstring& other) {
+	bool operator>(const std::wstring& other) const {
 		return *this > VersionInfoEx(other);
 	}
 
-	bool operator<(const VersionInfoEx& other) {
+	bool operator<(const VersionInfoEx& other) const {
 		return (((UINT64)_major << 48) + ((UINT64)_minor << 32) + ((UINT64)_patch << 16) + ((UINT64)_build)) <
 		(((UINT64)other._major << 48) + ((UINT64)other._minor << 32) + ((UINT64)other._patch << 16) + ((UINT64)other._build));
 	}
-	bool operator<(const char* other) {
+	bool operator<(const char* other) const {
 		return *this < VersionInfoEx(other);
 	}
-	bool operator<(const TCHAR* other) {
+	bool operator<(const TCHAR* other) const {
 		return *this < VersionInfoEx(other);
 	}
-	bool operator<(const std::string& other) {
+	bool operator<(const std::string& other) const {
 		return *this < VersionInfoEx(other);
 	}
-	bool operator<(const std::wstring& other) {
+	bool operator<(const std::wstring& other) const {
 		return *this < VersionInfoEx(other);
 	}
 
-	bool operator<=(const VersionInfoEx& other) {
+	bool operator<=(const VersionInfoEx& other) const {
 		return !(*this > other);
 	}
-	bool operator<=(const char* other) {
+	bool operator<=(const char* other) const {
 		return !(*this > other);
 	}
-	bool operator<=(const TCHAR* other) {
+	bool operator<=(const TCHAR* other) const {
 		return !(*this > other);
 	}
-	bool operator<=(const std::string& other) {
+	bool operator<=(const std::string& other) const {
 		return !(*this > other);
 	}
-	bool operator<=(const std::wstring& other) {
+	bool operator<=(const std::wstring& other) const {
 		return !(*this > other);
 	}
 
-	bool operator>=(const VersionInfoEx& other) {
+	bool operator>=(const VersionInfoEx& other) const {
 		return !(*this < other);
 	}
-	bool operator>=(const char* other) {
+	bool operator>=(const char* other) const {
 		return !(*this < other);
 	}
-	bool operator>=(const TCHAR* other) {
+	bool operator>=(const TCHAR* other) const {
 		return !(*this < other);
 	}
-	bool operator>=(const std::string& other) {
+	bool operator>=(const std::string& other) const {
 		return !(*this < other);
 	}
-	bool operator>=(const std::wstring& other) {
+	bool operator>=(const std::wstring& other) const {
 		return !(*this < other);
 	}
 

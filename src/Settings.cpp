@@ -26,7 +26,9 @@ using namespace NWScriptPlugin;
 
 void Settings::Load()
 {
-	iniFilePath->read(*iniFile);
+	if (!iniFilePath->read(*iniFile))
+		MessageBox(_hParent, (TEXT("Could not read .ini file: ") + iniFilePathName + TEXT("\r\nYour configurations will not be saved.")).c_str(), 
+			TEXT("NWScript-Npp initialization"), MB_OK | MB_ICONERROR);
 
 	// Try to read if INI file was valid/existent prior to this load. If not, flush any unclear results, keep default values.
 	_bValidINI = GetBoolean(TEXT("Plugin Startup"), TEXT("_bValidINI"));
@@ -39,6 +41,8 @@ void Settings::Load()
 	// Load all settings variables from INI here
 	enableAutoIndentation = GetBoolean(TEXT("Plugin Functions"), TEXT("enableAutoIndentation"));
 	autoIndentationWarningAccepted = GetBoolean(TEXT("Plugin Functions"), TEXT("autoIndentationWarningAccepted"));
+	installedEngineKnownObjects = GetBoolean(TEXT("Plugin Functions"), TEXT("installedEngineKnownObjects"));
+
 	notepadRestartMode = static_cast<RestartMode>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartMode")));
 	notepadRestartFunction = static_cast<RestartFunctionHook>(GetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction")));
 
@@ -86,7 +90,6 @@ void Settings::Load()
 	engineStructs = GetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"));
 	engineFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"));
 	engineConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"));
-	userStructures = GetNumber<int>(TEXT("User Statistics"), TEXT("userStructures"));
 	userFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"));
 	userConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"));
 
@@ -158,6 +161,8 @@ void Settings::Save()
 	// Set all settings variables to INI here
 	SetBoolean(TEXT("Plugin Functions"), TEXT("enableAutoIndentation"), enableAutoIndentation);
 	SetBoolean(TEXT("Plugin Functions"), TEXT("autoIndentationWarningAccepted"), autoIndentationWarningAccepted);
+	SetBoolean(TEXT("Plugin Functions"), TEXT("installedEngineKnownObjects"), installedEngineKnownObjects);
+
 	SetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartMode"), static_cast<int>(notepadRestartMode));
 	SetNumber<int>(TEXT("Notepad Restart"), TEXT("notepadRestartFunction"), static_cast<int>(notepadRestartFunction));
 
@@ -205,7 +210,6 @@ void Settings::Save()
 	SetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"), engineStructs);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"), engineFunctionCount);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"), engineConstants);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("userStructures"), userStructures);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"), userFunctionCount);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"), userConstants);
 
@@ -219,7 +223,10 @@ void Settings::Save()
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"), compilerWindowConsoleShowWarnings);
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"), compilerWindowConsoleShowInfos);
 
-	iniFilePath->write(*iniFile);
+	if (!iniFilePath->write(*iniFile))
+		MessageBox(NULL,
+			(TEXT("Could not save the .ini file: ") + iniFilePathName).c_str(),
+			TEXT("NWScript-Npp shutdown"), MB_ICONERROR | MB_OK);
 }
 
 std::vector<generic_string> Settings::getIncludeDirsV() {

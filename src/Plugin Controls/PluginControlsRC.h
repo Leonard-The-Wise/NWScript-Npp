@@ -37,8 +37,8 @@
 #define IDR_ABOUTDOC                    168
 #define IDI_ERRORSQUIGGLE               169
 #define IDI_WORDWRAP                    174
-#define IDR_RTF1                        175
 #define IDR_ABOUTDOCDARK                175
+#define IDR_KNOWNOBJECTS                177
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -103,7 +103,6 @@
 #define IDC_BTTOGGLEWORDWRAP            1073
 #define IDC_BTFILTERERRORS              1074
 #define IDC_BTFILTERWARNINGS            1075
-#define IDC_BTTOGGLEWORDWRAP4           1077
 #define IDC_BTFILTERINFO                1077
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
@@ -113,7 +112,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        176
+#define _APS_NEXT_RESOURCE_VALUE        178
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101

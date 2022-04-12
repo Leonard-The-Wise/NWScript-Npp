@@ -291,6 +291,8 @@
     <ClCompile Include="..\src\Lexers\Lexlib\LexAccessor.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Lexers\Lexlib\StyleContext.cxx">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
@@ -357,6 +359,7 @@
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\NWScript-Npp-EngineObjects.bin" />
     <None Include="..\Media\OnlineHelp-Dark.rtf" />
     <None Include="..\Media\OnlineHelp.rtf" />
     <None Include="..\Media\UnityTest.nss" />

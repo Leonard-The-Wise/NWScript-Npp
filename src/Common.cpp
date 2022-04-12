@@ -140,6 +140,9 @@ namespace NWScriptPluginCommons {
         {
             DWORD nFail = CommDlgExtendedError();
 
+            if (nFail == 0)
+                return false;
+
             if (nFail == 0x3003)
             {
                 generic_stringstream sError;
@@ -291,6 +294,8 @@ namespace NWScriptPluginCommons {
         return iconToBitmap(getStockIcon(stockIconID, iconSize));
     }
 
+#pragma warning (push)
+#pragma warning (disable : 6387)
     // Load a PNG from resources and convert into an HBITMAP.
     HBITMAP loadPNGFromResource(HMODULE module, int idResource)
     {
@@ -376,6 +381,7 @@ namespace NWScriptPluginCommons {
 
         return retval;
     }
+#pragma warning (pop)
 
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID)
@@ -392,7 +398,7 @@ namespace NWScriptPluginCommons {
     // Converts a File Link into an actual filename
     void resolveLinkFile(generic_string& linkFilePath)
     {
-        IShellLink* psl;
+        IShellLink* psl = nullptr;
         WCHAR targetFilePath[MAX_PATH];
         WIN32_FIND_DATA wfd = {};
 
@@ -402,7 +408,7 @@ namespace NWScriptPluginCommons {
             hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
             if (SUCCEEDED(hres))
             {
-                IPersistFile* ppf;
+                IPersistFile* ppf = nullptr;
                 hres = psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
                 if (SUCCEEDED(hres))
                 {
@@ -509,7 +515,7 @@ namespace NWScriptPluginCommons {
 
             try
             {
-                char NameBuffer[MAX_PATH + 1];
+                char NameBuffer[MAX_PATH + 1] = {};
                 DWORD NameBufferSize;
                 bool FoundIt;
                 static const TCHAR* ValueNames[] =

@@ -25,28 +25,6 @@
 #include "Utf8_16.h"
 #include "NWScriptParser.h"
 
-
-//:://///////////////////////////////////////////////////////////
-// Comments on RegEx by the author...
-// I've built all regular expressions used here within this site:
-// https://regex101.com/
-// 
-// I'm not affiliated with them in anyway. In fact, I felt
-// like donating there for the fantastic debbuggin features
-// and testing they provided. Without their help, this task would
-// be exponentialy harder and time consuming.
-//:://///////////////////////////////////////////////////////////
-
-// Robust regex definitions are slower, but can handle object nesting, 
-// inline comments and validates functions parameters. But since PCRE2
-// engine was SO fast in parsing it, the performance degratation was all but
-// neglectable, so now we'll use ROBUST definitions always. We also optimized
-// the functions, stripping any comments from the file before parsing, so now
-// we don't need to check for inline comments inside declarations and function scoping,
-// so the performance bump was enormous, hence mitigating ALL overhead we had before.
-
-#define ROBUSTREGEXDEFINITIONS
-#ifdef ROBUSTREGEXDEFINITIONS
 const std::string BASEREGEX = R"((?(DEFINE)(?<word>[\w\d.\-]++)(?<string>"(?>\\.|[^"\\]*+)*+")(?<token>\g<word>|\g<string>)(?<tokenVector>\[\s*+(?>\g<validValue>(?=\])|\g<validValue>,(?=\g<validValue>))*+\])(?<object>\{\s*+(?>\g<validValue>(?=\})|\g<validValue>,(?=\g<validValue>))*+\})(?<validValue>\s*+(?>\g<token>|\g<tokenVector>|\g<object>)\s*+)(?'param'\s*+(?>const)?\s*+(?#paramType)\w+\s*+(?#paramName)\w+\s*+(?>=\s*+(?#paramDefaultValue)\g<validValue>)?\s*+)(?<fnContents>{(?:[^{"}]*+|\g<string>|\g<fnContents>)*})))";
 const std::string COMMENTSREGEX = R"((?(DEFINE)(?'commentLine'\/\/.*+)(?'comment'\/\*(?>\*\/|(?>(?>.|\n)(?!\*\/))*+)(?>(?>.|\n)(?=\*\/)\*\/)?)(?'cnotnull'(?>\g<commentLine>|\g<comment>)++)(?'c'\g<cnotnull>?))\g<cnotnull>)";
 const std::string ENGINESTRUCTREGEX = R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))";
@@ -55,13 +33,6 @@ const std::string FUNCTIONSDEFINITIONREGEX = BASEREGEX + R"(^\s*+\K(?>\w+)\s*+(?
 const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"(\s*+(?>const)?\s*+(?'type'\w+)\s*+(?'name'\w+)\s*+(?>=\s*+(?'defaultValue'\g<validValue>))?\s*+,?)";
 const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>const)?\s*+\K(?<type>\w+)\s*+(?<name>\w+)\s*+=\s*+(?<value>\g<validValue>)\s*+;)";
 const std::string KEYWORDREGEX = R"(#?\w+)";
-#else
-const std::string BASEREGEX(R"((?(DEFINE)(?<token>(?>("(?:\\.|[^"\\])*"|[\w\d.\-]+)))(?<tokenVector>(\[(?>\s*+(?>\g<token>|\g{5})\s*+,?)*+\s*+\]))(?<object>(\{(?>\s*+(?>\g<token>|\g<tokenVector>)\s*+,?)*+\s*+\}))))");
-const std::string ENGINESTRUCTREGEX(R"(^\s*+\K(?>#define)\s++(?>ENGINE_STRUCTURE_\d++)\s++(?<name>\w++))");
-const std::string FUNCTIONDECLARATIONREGEX(R"(^\s*+(?<type>(?!(?>return|if|else))\w++)\s++(?<name>\w+)\s*+\(\s*+(?<parametersString>(?>[\w\s=\-\.\[\]\,\{\}]|(?>"(?>\\.|[^"\\])*+")*+)*+)\)\s*+;)");
-const std::string FUNTIONPARAMETERREGEX = BASEREGEX + R"((?>const){0,1}\s*+(?<type>\w++)\s++(?<name>\w++)\s*+(?>=\s*+(?<defaultValue>(?>(?>\g<token>|\g<tokenVector>|\g<object>))))?,?)";
-const std::string CONSTANTREGEX = BASEREGEX + R"(^\s*+(?>const)?\s*+(?<type>\w++)\s++(?<name>\w++)\s*+=?\s*+(?<value>\g<token>|\g<tokenVector>|\g<object>)\s*+;)";
-#endif
 
 // We create and compile regexes only once during code initialization
 static const jpcre2::select<char>::Regex commentsRegEx(COMMENTSREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
@@ -70,24 +41,11 @@ static const jpcre2::select<char>::Regex functionsDeclarationRegEx(FUNCTIONDECLA
 static const jpcre2::select<char>::Regex functionsDefinitionRegEx(FUNCTIONSDEFINITIONREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 static const jpcre2::select<char>::Regex functionsParamRegEx(FUNTIONPARAMETERREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 static const jpcre2::select<char>::Regex constantsRegEx(CONSTANTREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-
-static const jpcre2::select<wchar_t>::Regex commentsRegExW(str2wstr(COMMENTSREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-static const jpcre2::select<wchar_t>::Regex engineStructRegExW(str2wstr(ENGINESTRUCTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-static const jpcre2::select<wchar_t>::Regex functionsDeclarationRegExW(str2wstr(FUNCTIONDECLARATIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-static const jpcre2::select<wchar_t>::Regex functionsDefinitionRegExW(str2wstr(FUNCTIONSDEFINITIONREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-static const jpcre2::select<wchar_t>::Regex functionsParamRegExW(str2wstr(FUNTIONPARAMETERREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-static const jpcre2::select<wchar_t>::Regex constantsRegExW(str2wstr(CONSTANTREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
-
-static const jpcre2::select<wchar_t>::Regex keywordImportW(str2wstr(KEYWORDREGEX), PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
+static const jpcre2::select<char>::Regex keywordImportW(KEYWORDREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 
 constexpr const int blockSize = 128 * 1024 + 4;
 
 using namespace NWScriptPlugin;
-
-void NWScriptParser::ScriptParseResults::Sort() {
-	std::sort(Members.begin(), Members.end(),
-		[](ScriptMember a, ScriptMember b) {  return a.sName < b.sName;});
-}
 
 bool NWScriptParser::ParseFile(const generic_string& sFileName, ScriptParseResults& outParseResults)
 {
@@ -162,8 +120,6 @@ void NWScriptParser::CreateNWScriptStructure(const std::string& sFileContents, S
 	if (lineCount == 0)
 		lineCount = std::count(sFileContents.begin(), sFileContents.end(), '\r');
 
-	outParseResults.Members.reserve(outParseResults.Members.size() + 1 + lineCount);
-
 	// First we strip all comments - even malformed ones, so we can use faster regexes for the rest
 	std::string cleanFile = pcre2::Regex(commentsRegEx).replace(sFileContents, "", "gm");
 	// And then we strip function definitions - so we don't catch any scoped variable.
@@ -183,8 +139,8 @@ void NWScriptParser::CreateNWScriptStructure(const std::string& sFileContents, S
 	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
-		n.mID = MemberID::EngineStruct; n.sName = str2wstr(captureGroup[i]["name"]);
-		outParseResults.Members.emplace_back(n);
+		n.mID = MemberID::EngineStruct; n.sName = captureGroup[i]["name"];
+		outParseResults.Members.insert(n);
 	}
 
 	regexMatch.setRegexObject(&functionsDeclarationRegEx);
@@ -205,15 +161,15 @@ void NWScriptParser::CreateNWScriptStructure(const std::string& sFileContents, S
 		for (size_t j = 0; j < nParams; j++)
 		{
 			ScriptParamMember s;
-			s.sType = str2wstr(captureSubGroup[j]["type"]); s.sName = str2wstr(captureSubGroup[j]["name"]);
-			s.sDefaultValue = str2wstr(captureSubGroup[j]["defaultValue"]);
+			s.sType = captureSubGroup[j]["type"]; s.sName = captureSubGroup[j]["name"];
+			s.sDefaultValue = captureSubGroup[j]["defaultValue"];
 			params.push_back(s);
 		}
 
 		NWScriptParser::ScriptMember Me;
-		Me.mID = MemberID::Function; Me.sType = str2wstr(captureGroup[i]["type"]);
-		Me.sName = str2wstr(captureGroup[i]["name"]); Me.params = params;
-		outParseResults.Members.emplace_back(Me);
+		Me.mID = MemberID::Function; Me.sType = captureGroup[i]["type"];
+		Me.sName = captureGroup[i]["name"]; Me.params = params;
+		outParseResults.Members.insert(Me);
 	}
 
 	regexMatch.setRegexObject(&constantsRegEx);
@@ -223,17 +179,15 @@ void NWScriptParser::CreateNWScriptStructure(const std::string& sFileContents, S
 	for (size_t i = 0; i < count; i++)
 	{
 		NWScriptParser::ScriptMember n;
-		n.mID = MemberID::Constant; n.sType = str2wstr(captureGroup[i]["type"]); n.sName = str2wstr(captureGroup[i]["name"]);
-		n.sValue = str2wstr(captureGroup[i]["value"]);;
-		outParseResults.Members.emplace_back(n);
+		n.mID = MemberID::Constant; n.sType = captureGroup[i]["type"]; n.sName = captureGroup[i]["name"];
+		n.sValue = captureGroup[i]["value"];
+		outParseResults.Members.insert(n);
 	}
-
-	outParseResults.Members.shrink_to_fit();
 }
 
-void NWScriptParser::ScriptParseResults::AddSpacedStringAsMember(const generic_string& sKWArray, MemberID memberID)
+void NWScriptParser::ScriptParseResults::AddSpacedStringAsKeywords(const std::string& sKWArray)
 {
-	typedef jpcre2::select<wchar_t> pcre2;
+	typedef jpcre2::select<char> pcre2;
 
 	pcre2::RegexMatch regexMatch(&keywordImportW);
 	pcre2::VecNum matches;
@@ -243,29 +197,12 @@ void NWScriptParser::ScriptParseResults::AddSpacedStringAsMember(const generic_s
 
 	size_t count = regexMatch.match();
 
-	Members.reserve(Members.size() + count);
 	for (size_t i = 0; i < count; i++)
 	{
 		ScriptMember m;
-		m.mID = memberID; m.sName = matches[i][0];
-
-		// Don't add duplicates
-		if (std::find(Members.begin(), Members.end(), m) != Members.end())
-		{
-			switch (memberID)
-			{
-			case MemberID::EngineStruct:
-				EngineStructuresCount++;
-				break;
-			case MemberID::Function:
-				FunctionsCount++;
-				break;
-			case MemberID::Constant:
-				ConstantsCount++;
-				break;
-			}
-			Members.emplace_back(m);
-		}
+		m.mID = MemberID::Keyword; m.sName = matches[i][0];
+		Members.insert(m);
+		KeywordCount++;
 	}
 }
 

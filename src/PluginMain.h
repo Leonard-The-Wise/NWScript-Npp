@@ -176,7 +176,8 @@ namespace NWScriptPlugin {
 		void InitCompilerLogWindow();
 		// Displays/Hides the compiler window
 		void DisplayCompilerLogWindow(bool toShow = true);
-
+		// Checkup Engine Known objects file
+		void CheckupEngineObjectsFile();
 
 		// ### Initialization -> Menu handling
 		
@@ -248,6 +249,8 @@ namespace NWScriptPlugin {
 		void DoImportDefinitions();
 		// Import a parsed result from User tokens definitions into our language XML file.
 		void DoImportUserTokens();
+		// Clear all user tokens
+		void DoResetUserTokens();
 		// Resets the Editor Colors
 		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
 		// Install Dark Theme
@@ -306,7 +309,7 @@ namespace NWScriptPlugin {
 
 		// Batch processing flags
 		std::vector<fs::path> _batchFilesToProcess;
-		int _batchCurrentFileIndex = 0;
+		size_t _batchCurrentFileIndex = 0;
 		std::atomic<bool> _batchInterrupt = false;
 
 		// Meta Information about the plugin paths

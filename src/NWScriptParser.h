@@ -12,6 +12,7 @@
 #include <bitsery/brief_syntax.h>
 #include <bitsery/brief_syntax/string.h>
 #include <bitsery/brief_syntax/vector.h>
+#include <bitsery/brief_syntax/set.h>
 
 #include "Common.h"
 
@@ -29,12 +30,27 @@ namespace NWScriptPlugin {
 		struct ScriptParamMember {
 			friend class bitsery::Access;
 
-			generic_string sType;
-			generic_string sName;
-			generic_string sDefaultValue;
-			bool operator==(const ScriptParamMember& other)
+			std::string sType;
+			std::string sName;
+			std::string sDefaultValue;
+			bool operator==(const ScriptParamMember& other) const
 			{
 				return sType == other.sType && sName == other.sName && sDefaultValue == other.sDefaultValue;
+			}
+
+			bool operator<(const ScriptParamMember& other) const
+			{
+				if (sName < other.sName)
+					return true;
+				if (sName > other.sName)
+					return false;
+				if (sType < other.sType)
+					return true;
+				if (sType > other.sType)
+					return false;
+				// We don't check params[i].sDefaultValue for this...
+
+				return false;
 			}
 
 		private:
@@ -48,19 +64,18 @@ namespace NWScriptPlugin {
 			friend class bitsery::Access;
 
 			MemberID mID = MemberID::Unknown;
-			generic_string sType;
-			generic_string sName;
-			generic_string sValue;
+			std::string sType;
+			std::string sName;
+			std::string sValue;
 			std::vector<ScriptParamMember> params;
-			bool bInternalEngine = true;
 
-			bool operator==(const ScriptMember& other)
+			bool operator==(const ScriptMember& other) const
 			{
 				bool bEquals = mID == other.mID && sType == other.sType &&
-					sName == other.sName && sValue == other.sValue && bInternalEngine == other.bInternalEngine;
+					sName == other.sName && sValue == other.sValue;
 				if (params.size() != other.params.size())
 					return false;
-				for (int i = 0; i < params.size(); i++)
+				for (size_t i = 0; i < params.size(); i++)
 				{
 					if (params[i] != other.params[i])
 						return false;
@@ -68,10 +83,48 @@ namespace NWScriptPlugin {
 				return bEquals;
 			}
 
+			bool operator<(const ScriptMember& other) const
+			{
+				if (sName < other.sName)
+					return true;
+				if (sName > other.sName)
+					return false;
+
+				if (sType < other.sType)
+					return true;
+				if (sType > other.sType)
+					return false;
+
+				if (sValue < other.sValue)
+					return true;
+				if (sValue > other.sValue)
+					return false;
+
+				if (params.size() < other.params.size())
+					return true;
+				if (params.size() > other.params.size())
+					return false;
+
+				for (size_t i = 0; i < params.size(); i++)
+				{
+					if (params[i].sType < other.params[i].sType)
+						return true;
+					if (params[i].sType > other.params[i].sType)
+						return false;
+					if (params[i].sName < other.params[i].sName)
+						return true;
+					if (params[i].sName > other.params[i].sName)
+						return false;
+					// We don't check params[i].sDefaultValue for this...
+				}
+
+				return false;
+			}
+
 		private:
 			template <typename S>
 			void serialize(S& s) {
-				s(mID, sType, sName, sValue, params, bInternalEngine);
+				s(mID, sType, sName, sValue, params);
 			}
 		};
 
@@ -83,14 +136,14 @@ namespace NWScriptPlugin {
 			int FunctionsCount = 0;
 			int ConstantsCount = 0;
 			int KeywordCount = 0;
-			std::vector<ScriptMember> Members;
+			std::set<ScriptMember, std::less<ScriptMember>> Members;
 
-			generic_string MembersAsSpacedString(MemberID memberType) {
-				generic_string results;
+			std::string MembersAsSpacedString(MemberID memberType) {
+				std::string results;
 				for (ScriptMember m : Members)
 				{
 					if (m.mID == memberType) {
-						results.append(m.sName);results.append(TEXT(" "));
+						results.append(m.sName);results.append(" ");
 					}
 				}
 				// Remove last space
@@ -99,13 +152,30 @@ namespace NWScriptPlugin {
 				return results;
 			}
 
-			void AddSpacedStringAsMember(const generic_string& sKWArray, MemberID memberID);
+			void RecountStructs() {
+				EngineStructuresCount = 0;
+				FunctionsCount = 0;
+				ConstantsCount = 0;
+				KeywordCount = 0;
+
+				for (ScriptMember s : Members)
+				{
+					if (s.mID == MemberID::Constant)
+						ConstantsCount++;
+					if (s.mID == MemberID::EngineStruct)
+						EngineStructuresCount++;
+					if (s.mID == MemberID::Function)
+						FunctionsCount++;
+					if (s.mID == MemberID::Keyword)
+						KeywordCount++;
+				}
+			}
+
+			void AddSpacedStringAsKeywords(const std::string& sKWArray);
 
 			bool SerializeToFile(generic_string filePath);
 
 			bool SerializeFromFile(generic_string filePath);
-
-			void Sort();
 
 		private:
 			template <typename S>
@@ -131,4 +201,3 @@ namespace NWScriptPlugin {
 
 };
 
-//#pragma warning(pop)

@@ -63,6 +63,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <set>
 
 #include <tchar.h>
 #include <assert.h>

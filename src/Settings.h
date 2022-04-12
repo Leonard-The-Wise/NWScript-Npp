@@ -21,6 +21,7 @@ namespace NWScriptPlugin {
 
 		void InitSettings(generic_string& sPluginConfigPath)
 		{
+			iniFilePathName = sPluginConfigPath;
 			iniFilePath = std::make_unique<INIFile>(sPluginConfigPath);
 			iniFile = std::make_unique<INIStructure>();
 			fileFiltersCompile = TEXT("*.nss");
@@ -32,6 +33,8 @@ namespace NWScriptPlugin {
 		bool enableAutoIndentation = false;
 		// Warning about Auto-Indentation conflict was accepted by user?
 		bool autoIndentationWarningAccepted = false;
+		// Has the plugin installed the Engine Known Objects files once already?
+		bool installedEngineKnownObjects = false;
 		// Has user setup a restart hook previously?
 		RestartMode notepadRestartMode = RestartMode::None;
 		// Which function called the restart?
@@ -79,7 +82,6 @@ namespace NWScriptPlugin {
 		int engineStructs = 0;
 		int engineFunctionCount = 0;
 		int engineConstants = 0;
-		int userStructures = 0;
 		int userFunctionCount = 0;
 		int userConstants = 0;
 
@@ -129,12 +131,18 @@ namespace NWScriptPlugin {
 		void setFileFiltersCompile(const std::vector<generic_string>& newFilters);
 		void setFileFiltersDisasm(const std::vector<generic_string>& newFilters);
 
+		void setNotepadHWND(HWND parent) {
+			_hParent = parent;
+		}
+
 		// Load values from .INI file
 		void Load();
 		// Save values to .INI file
 		void Save();
 
 	private:
+		HWND _hParent = nullptr;
+
 		// Used to self-check if ini was present and correctly loaded.
 		bool _bValidINI = false;
 		std::string NotepadVersion;
@@ -148,6 +156,7 @@ namespace NWScriptPlugin {
 		// Plugin config Directory (eg: %AppData%\Notepad++\plugins\config)
 		std::unique_ptr<INIFile> iniFilePath;
 		std::unique_ptr<INIStructure> iniFile;
+		generic_string iniFilePathName;
 
 		// Converts string to split list by RegEx
 		std::vector<generic_string> string2VectorRegex(const generic_string& target, const jpcre2::select<TCHAR>::Regex& separator);
