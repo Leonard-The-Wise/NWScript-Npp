@@ -22,9 +22,9 @@
 #define stringify(a) stringify_(a)
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 6
-#define VERSION_PATCH 8
-#define VERSION_BUILD 1456
+#define VERSION_MINOR 8
+#define VERSION_PATCH 9
+#define VERSION_BUILD 1500
 
 #define VERSION_STRING stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." \
 	stringify(VERSION_PATCH) "." stringify(VERSION_BUILD)
