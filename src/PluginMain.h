@@ -82,7 +82,7 @@ namespace NWScriptPlugin {
 		FuncItem* GetFunctions() const { return pluginFunctions; }
 		// Setup Notepad++ and Scintilla handles and finish initializing the
 		// plugin's objects that need a Windows Handle to work
-		void SetNotepadData(NppData data);
+		void SetNotepadData(NppData& data);
 
 		// Retrieves the unique Plugin's Instance
 		static Plugin& Instance() { return *_instance; }
@@ -150,8 +150,6 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND ResetUserTokens();
 		// Menu Command "Reset editor colors" function handler. 
 		static PLUGINCOMMAND ResetEditorColors();
-		// Menu Command "Online help" function handler. 
-		static PLUGINCOMMAND OnlineHelp();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 

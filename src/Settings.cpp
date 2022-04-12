@@ -26,9 +26,8 @@ using namespace NWScriptPlugin;
 
 void Settings::Load()
 {
-	if (!iniFilePath->read(*iniFile))
-		MessageBox(_hParent, (TEXT("Could not read .ini file: ") + iniFilePathName + TEXT("\r\nYour configurations will not be saved.")).c_str(), 
-			TEXT("NWScript-Npp initialization"), MB_OK | MB_ICONERROR);
+	// Read or CREATE ini config.
+	std::ignore = iniFilePath->read(*iniFile);
 
 	// Try to read if INI file was valid/existent prior to this load. If not, flush any unclear results, keep default values.
 	_bValidINI = GetBoolean(TEXT("Plugin Startup"), TEXT("_bValidINI"));
@@ -105,18 +104,18 @@ void Settings::Load()
 
 
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
-	if (!isValidDirectoryS(neverwinterOneInstallDir) && !isValidDirectoryS(neverwinterTwoInstallDir))
+	if (!isValidDirectoryS(neverwinterOneInstallDir) && !isValidDirectoryS(neverwinterTwoInstallDir) && !ignoreInstallPaths)
 	{
 		neverwinterOneInstallDir = TEXT("");
 		neverwinterTwoInstallDir = TEXT("");
 		compilerSettingsCreated = false;
 	}
-	if (!isValidDirectoryS(neverwinterOneInstallDir) && neverwinterInstallChoice == 0)
+	if (!isValidDirectoryS(neverwinterOneInstallDir) && neverwinterInstallChoice == 0 && !ignoreInstallPaths)
 	{
 		neverwinterOneInstallDir = TEXT("");
 		compilerSettingsCreated = false;
 	}
-	if (!isValidDirectoryS(neverwinterTwoInstallDir) && neverwinterInstallChoice == 1)
+	if (!isValidDirectoryS(neverwinterTwoInstallDir) && neverwinterInstallChoice == 1 && !ignoreInstallPaths)
 	{
 		neverwinterTwoInstallDir = TEXT("");
 		compilerSettingsCreated = false;

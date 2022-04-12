@@ -78,7 +78,6 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_RESETUSERTOKENS 18
 #define PLUGINMENU_RESETEDITORCOLORS 19
 #define PLUGINMENU_DASH6 20
-// #define PLUGINMENU_ONLINEHELP 21
 #define PLUGINMENU_ABOUTME 21
 
 #define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
@@ -112,7 +111,6 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Reset user-defined tokens"), Plugin::ResetUserTokens},
     {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
     {TEXT("---")},
-//    {TEXT("Online Help"), Plugin::OnlineHelp},
     {TEXT("About me"), Plugin::AboutMe},
 };
 
@@ -192,7 +190,7 @@ int Plugin::GetFunctionCount() const
 
 // Setup Notepad++ and Scintilla handles and finish initializing the
 // plugin's objects that need a Windows Handle to work
-void Plugin::SetNotepadData(NppData data)
+void Plugin::SetNotepadData(NppData& data)
 {
     _messageInstance.SetData(data);
     _indentor.SetMessenger(_messageInstance);
@@ -418,7 +416,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         SetRestartHook(RestartMode::None);
         break;
     }
-    case NPPN_BEFORESHUTDOWN:
+    case NPPN_SHUTDOWN:
     {
         _isReady = false;
         Settings().Save();
@@ -1423,12 +1421,6 @@ void Plugin::DoResetUserTokens()
 {
     tinyxml2::XMLDocument nwscriptDoc;
 
-    // Retrieve previous results and merge
-    NWScriptParser::ScriptParseResults knownUserObjects;
-    knownUserObjects.SerializeFromFile(_pluginPaths["NWScriptUserObjectsFile"]);
-    _NWScriptParseResults->Members.merge(knownUserObjects.Members);
-    _NWScriptParseResults->RecountStructs();
-
     // Set some Timestamp headers
     char timestamp[128]; time_t currTime;  struct tm currTimeP;
     time(&currTime);
@@ -1965,7 +1957,10 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 
     // If compiler settings not initialized, run command to initialize them, then re-check parameters - since it's a modal window.
     if (!Settings().compilerSettingsCreated)
+    {
         CompilerSettings();
+        _clockStart = GetTickCount64(); // Reset clock because user had opened configurations
+    }
 
     if (!Settings().compilerSettingsCreated)
         return;
@@ -2721,10 +2716,23 @@ PLUGINCOMMAND Plugin::ImportUserTokens()
 // Menu Command "Reset user-defined tokens" function handler. 
 PLUGINCOMMAND Plugin::ResetUserTokens()
 {
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+    // The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
+    if (PathFileExists(Instance()._pluginPaths["PluginAutoCompleteFilePath"].c_str()))
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+    else
+        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
     if (MessageBox(Instance().NotepadHwnd(), TEXT("Warning: this action cannot be undone. Continue?"), TEXT("NWScript Tools - Confirmation required"),
         MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
-        Instance().DoResetEditorColors();
+        Instance().DoResetUserTokens();
     }
 }
 
@@ -2744,12 +2752,6 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 }
 
 //-------------------------------------------------------------
-
-// Opens the user's online help web page
-PLUGINCOMMAND Plugin::OnlineHelp()
-{
-    ShellExecute(NULL, L"open", PLUGIN_ONLINEHELP, L"", L"", WM_SHOWWINDOW);
-}
 
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
