@@ -89,6 +89,8 @@ namespace NWScriptPlugin {
 		void WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole = false);
 		void UpdateToolButtonLabels();
 		void ToggleWordWrap();
+		void CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText);
+		void CreateTooltips();
 
 		void switchToConsole()
 		{

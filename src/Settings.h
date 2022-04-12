@@ -91,9 +91,9 @@ namespace NWScriptPlugin {
 		bool compilerWindowShowWarnings = true;
 		bool compilerWindowShowInfos = false;
 		bool compilerWindowConsoleWordWrap = true;
-		bool compilerWindowConsoleShowErrors = false;
-		bool compilerWindowConsoleShowWarnings = true;
-		bool compilerWindowConsoleShowInfos = true;
+		bool compilerWindowConsoleShowErrors = true;
+		bool compilerWindowConsoleShowWarnings = false;
+		bool compilerWindowConsoleShowInfos = false;
 
 
 		std::string getChosenInstallDir() {

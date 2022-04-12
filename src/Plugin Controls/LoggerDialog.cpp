@@ -148,6 +148,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			else
 				switchToConsole();
 
+			// Create buttons tooltips
+			CreateTooltips();
+
 			break;
 		}
 		
@@ -733,3 +736,43 @@ void LoggerDialog::ToggleWordWrap()
 	SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
 }
 
+void LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
+{
+	if (!toolID || !hDlg || !pszText)
+		return;
+
+	// Get the window of the tool.
+	HWND hwndTool = GetDlgItem(hDlg, toolID);
+
+	// Create the tooltip. _hInst is the global instance handle.
+	HWND hwndTip = CreateWindowEx(NULL, TOOLTIPS_CLASS, NULL,
+		WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON | TTS_NOPREFIX,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		hDlg, NULL,
+		_hInst, NULL);
+
+	if (!hwndTool || !hwndTip)
+		return;
+
+	// Associate the tooltip with the tool.
+	TOOLINFO toolInfo = { 0 };
+	toolInfo.cbSize = sizeof(toolInfo);
+	toolInfo.hwnd = hDlg;
+	toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	toolInfo.uId = (UINT_PTR)hwndTool;
+	toolInfo.lpszText = (PTSTR)pszText;
+	SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
+
+}
+
+void LoggerDialog::CreateTooltips()
+{
+	CreateToolTip(_consoleDlgHwnd, IDC_BTCLEARCONSOLE, TEXT("Clear the console window"));
+	CreateToolTip(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, TEXT("Toggle console word wrap"));
+
+	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERERRORS, TEXT("Output error messages to the console"));
+	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERWARNINGS, TEXT("Output warning messages to the console"));
+	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERINFO, TEXT("Output info messages to the console"));
+
+}
