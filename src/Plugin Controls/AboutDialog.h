@@ -7,6 +7,7 @@
 
 #pragma once
 
+
 #include <map>
 #include "StaticDialog.h"
 #include "AnchorMap.h"
@@ -42,10 +43,20 @@ namespace NWScriptPlugin {
 
 		void LoadAboutTextEditor(int resourceID);
 		void LaunchHyperlink(const ENLINK& link);
+		void setLogo();
 
 		generic_string _homePath;
 		generic_string _aboutText;
 		OleCallback _oleCallback;
 		std::map<generic_string, generic_string> _replaceStrings;
+
+		// Anchoring and size restriction informations
+		RECTSIZER mainWindowSize = {};
+		RECTSIZER lblPluginName = {};
+		RECTSIZER lblVersion = {};
+		RECTSIZER lblCopyright = {};
+		RECTSIZER lblCredits = {};
+		RECTSIZER lnkHomepageSize = {};
+		RECTSIZER txtAboutSize = {};
 	};
 }

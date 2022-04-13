@@ -23,6 +23,7 @@
 //#include "tinyxml2.h"
 
 #include "Common.h"
+#include "DPIManager.h"
 
 
 namespace NWScriptPluginCommons {
@@ -297,7 +298,7 @@ namespace NWScriptPluginCommons {
 #pragma warning (push)
 #pragma warning (disable : 6387)
     // Load a PNG from resources and convert into an HBITMAP.
-    HBITMAP loadPNGFromResource(HMODULE module, int idResource)
+    HBITMAP loadPNGFromResource(HMODULE module, int idResource, UINT width, UINT height)
     {
         HBITMAP retval = NULL;
         ULONG_PTR token = 0;
@@ -326,8 +327,14 @@ namespace NWScriptPluginCommons {
             if (SUCCEEDED(hr))
             {
                 Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
-                bmp->GetHBITMAP(Gdiplus::Color::Transparent, &retval);
-                delete bmp;
+                int destWidth = (width > 0) ? width : bmp->GetWidth();
+                int destHeight = (height > 0) ? height : bmp->GetHeight();
+                Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
+                Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
+                g->DrawImage(bmp, 0, 0, destWidth, destHeight);
+
+                destination->GetHBITMAP(Gdiplus::Color::Transparent, &retval);
+                delete bmp, destination;
                 Gdiplus::GdiplusShutdown(token);
                 pStream->Release();
             }

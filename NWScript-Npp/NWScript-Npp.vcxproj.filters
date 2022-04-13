@@ -190,6 +190,9 @@
     <ClInclude Include="..\src\Lexers\Lexilla\SciLexer.h">
       <Filter>Custom Lexers\Lexilla</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Notepad Controls\DPIManager.h">
+      <Filter>Notepad Controls</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -383,6 +386,15 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\icons\WordWrap.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScriptLogo-200.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScriptLogo-300.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Media\NWScript-FileParse.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

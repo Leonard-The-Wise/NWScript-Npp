@@ -39,6 +39,8 @@ namespace NWScriptPlugin {
 		generic_string _functionsDefinitionCount;
 		generic_string _constantsCount;
 
+		void setLogo();
+
 		void (*_okDialogCallback)(HRESULT decision) = nullptr;
 
 

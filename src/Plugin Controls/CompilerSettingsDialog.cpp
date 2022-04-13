@@ -25,6 +25,10 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 		case WM_INITDIALOG:
 		{
+
+			_dpiManager.DPIResizeControl(_hSelf);
+			_dpiManager.DPIResizeChildren(_hSelf, true);
+
 			Settings& myset = *_settings;
 			if (myset.neverwinterInstallChoice == 0)
 			{

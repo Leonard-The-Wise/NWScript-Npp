@@ -903,7 +903,3 @@ private:
 #define ANCHOR_MAP_REMOVESIZERESTRICTOR(hWnd) m_bpfxAnchorMap.removeRestrictor(hWnd);
 
 #define ANCHOR_MAP_RESET() m_bpfxAnchorMap.reset();
-
-#ifdef USE_ANF_SCREEN_TO_CLIENT
-#define ScreenToClient(hWnd, pRECT) ControlAnchorMap::screenToClientEx(hWnd, pRECT)
-#endif

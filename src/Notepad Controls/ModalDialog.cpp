@@ -84,10 +84,10 @@ INT_PTR CALLBACK ModalDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 	{
 		ModalDialog* pModalDlg = reinterpret_cast<ModalDialog*>(lParam);
 		pModalDlg->_hSelf = hwnd;
-		::GetWindowRect(hwnd, &(pModalDlg->_rc));
-		pModalDlg->goToCenter();
+		::GetWindowRect(hwnd, &(pModalDlg->_dialogRect));
 		::SetWindowLongPtr(hwnd, GWLP_USERDATA, static_cast<LONG_PTR>(lParam));
 		pModalDlg->run_dlgProc(message, wParam, lParam);
+		pModalDlg->goToCenter();
 
 		return TRUE;
 	}
@@ -106,15 +106,16 @@ INT_PTR CALLBACK ModalDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, LP
 void ModalDialog::goToCenter()
 {
 	RECT rc;
+	::GetWindowRect(_hSelf, &_dialogRect);
 	::GetClientRect(_hParent, &rc);
 	POINT center = {};
 	center.x = rc.left + (rc.right - rc.left) / 2;
 	center.y = rc.top + (rc.bottom - rc.top) / 2;
 	::ClientToScreen(_hParent, &center);
 
-	int x = center.x - (_rc.right - _rc.left) / 2;
-	int y = center.y - (_rc.bottom - _rc.top) / 2;
+	int x = center.x - (_dialogRect.right - _dialogRect.left) / 2;
+	int y = center.y - (_dialogRect.bottom - _dialogRect.top) / 2;
 
-	::MoveWindow(_hSelf, x, y, _rc.right - _rc.left, _rc.bottom - _rc.top, true);
+	::MoveWindow(_hSelf, x, y, _dialogRect.right - _dialogRect.left, _dialogRect.bottom - _dialogRect.top, true);
 }
 

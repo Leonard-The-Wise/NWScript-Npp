@@ -39,6 +39,11 @@
 #define IDI_WORDWRAP                    174
 #define IDR_ABOUTDOCDARK                175
 #define IDR_KNOWNOBJECTS                177
+#define IDB_NWSCRIPTLOGO_200            178
+#define IDB_PNG2                        179
+#define IDB_NWSCRIPTLOGO_300            179
+#define IDB_PNG1                        180
+#define IDB_NWSCRIPTFILEPARSE           180
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -112,7 +117,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        178
+#define _APS_NEXT_RESOURCE_VALUE        181
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101

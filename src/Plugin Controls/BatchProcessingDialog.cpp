@@ -26,6 +26,9 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 	{
 		case WM_INITDIALOG:
 		{
+			_dpiManager.DPIResizeControl(_hSelf);
+			_dpiManager.DPIResizeChildren(_hSelf, true);
+
 			Settings& myset = *_settings;
 
 			SetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, myset.startingBatchFolder.c_str());

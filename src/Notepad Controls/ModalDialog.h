@@ -12,7 +12,7 @@
 class ModalDialog 
 {
 public:
-	ModalDialog() : _hSelf(nullptr), _rc(), _hParent(nullptr), _hInst(nullptr)
+	ModalDialog() : _hSelf(nullptr), _dialogRect(), _hParent(nullptr), _hInst(nullptr)
 	{ };
 	~ModalDialog() {
 		if (_hSelf) {
@@ -49,8 +49,10 @@ protected:
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE** ppMyDlgTemplate);
 
+	DPIManager _dpiManager;
+
 private:
-	RECT _rc;
+	RECT _dialogRect;
 	void goToCenter();
 };
 

@@ -25,6 +25,7 @@
 #define WINDOW_CONTROL_H
 
 #include <windows.h>
+#include "DPIManager.h"
 
 enum class PosAlign { left, right, top, bottom };
 
@@ -129,6 +130,8 @@ protected:
 	HINSTANCE _hInst;
 	HWND _hParent;
 	HWND _hSelf;
+
+	DPIManager _dpiManager;
 };
 
 #endif //WINDOW_CONTROL_H

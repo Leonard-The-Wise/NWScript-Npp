@@ -14,6 +14,10 @@
 //You should have received a copy of the GNU General Public License
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+///////////////////////////////////////////////////////////////////
+// Fixed bug on goToCenter not updating window rect when resizing
+// on initialization (for DPI management).
+///////////////////////////////////////////////////////////////////
 
 
 #include "pch.h"
@@ -26,16 +30,17 @@
 void StaticDialog::goToCenter()
 {
 	RECT rc;
+	::GetWindowRect(_hSelf, &_dialogRect);
 	::GetClientRect(_hParent, &rc);
 	POINT center = {};
 	center.x = rc.left + (rc.right - rc.left)/2;
 	center.y = rc.top + (rc.bottom - rc.top)/2;
 	::ClientToScreen(_hParent, &center);
 
-	int x = center.x - (_rc.right - _rc.left)/2;
-	int y = center.y - (_rc.bottom - _rc.top)/2;
+	int x = center.x - (_dialogRect.right - _dialogRect.left)/2;
+	int y = center.y - (_dialogRect.bottom - _dialogRect.top)/2;
 
-	::SetWindowPos(_hSelf, HWND_TOP, x, y, _rc.right - _rc.left, _rc.bottom - _rc.top, SWP_SHOWWINDOW);
+	::SetWindowPos(_hSelf, HWND_TOP, x, y, _dialogRect.right - _dialogRect.left, _dialogRect.bottom - _dialogRect.top, SWP_SHOWWINDOW);
 }
 
 HGLOBAL StaticDialog::makeRTLResource(int dialogID, DLGTEMPLATE **ppMyDlgTemplate)
@@ -103,7 +108,7 @@ INT_PTR CALLBACK StaticDialog::dlgProc(HWND hwnd, UINT message, WPARAM wParam, L
 			StaticDialog *pStaticDlg = reinterpret_cast<StaticDialog *>(lParam);
 			pStaticDlg->_hSelf = hwnd;
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, static_cast<LONG_PTR>(lParam));
-			::GetWindowRect(hwnd, &(pStaticDlg->_rc));
+			::GetWindowRect(hwnd, &(pStaticDlg->_dialogRect));
 			pStaticDlg->run_dlgProc(message, wParam, lParam);
 
 			return TRUE;

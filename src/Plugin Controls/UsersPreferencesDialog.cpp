@@ -26,6 +26,9 @@ intptr_t CALLBACK UsersPreferencesDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 	case WM_INITDIALOG:
 	{
+		_dpiManager.DPIResizeControl(_hSelf);
+		_dpiManager.DPIResizeChildren(_hSelf, true);
+
 		CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDISASSEMBLED, _settings->autoDisplayDisassembled ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDEBUGSYMBOLS, _settings->autoDisplayDebugSymbols ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME, _settings->autoInstallDarkTheme ? BST_CHECKED : BST_UNCHECKED);

@@ -25,20 +25,14 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 	case WM_INITDIALOG:
 	{
-		// Sets the dialog icon from code cause Resource Editor won't work transparencies
-		//HICON NWSCRIPTFILE = reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_NWSCRIPTFILE96),
-		//	IMAGE_ICON, 96, 96, LR_DEFAULTCOLOR));
-		//::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE,
-		//	static_cast<WPARAM>(IMAGE_BITMAP),
-		//	reinterpret_cast<LPARAM>(iconToBitmap(NWSCRIPTFILE)));
 
 		// Set the font style and colors for File Summary and Keep Results labels
 		// Set bold font for warning
-		HFONT hFont = ::CreateFont(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		HFONT hFont = ::CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
 		::SendMessage(GetDlgItem(_hSelf, IDC_LBLFILESUMARY), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
 		
-		hFont = ::CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		hFont = ::CreateFont(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
 		::SendMessage(GetDlgItem(_hSelf, IDC_LBLKEEPRESULTS), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
 
@@ -46,6 +40,11 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 		::SetDlgItemText(_hSelf, IDC_LBLENGINESTRUCTS, _engineStructuresCount.c_str());
 		::SetDlgItemText(_hSelf, IDC_LBLFUNCTIONDEFINITIONS, _functionsDefinitionCount.c_str());
 		::SetDlgItemText(_hSelf, IDC_LBLGLOBALCONSTANTS, _constantsCount.c_str());
+
+		_dpiManager.DPIResizeControl(_hSelf);
+		_dpiManager.DPIResizeChildren(_hSelf, true);
+
+		setLogo();
 
 		return TRUE;
 	}
@@ -79,4 +78,25 @@ void FileParseSummaryDialog::doDialog()
 
 	//Show and centralize
 	goToCenter();
+}
+
+
+
+void FileParseSummaryDialog::setLogo()
+{
+	SIZE imageSize = { 110, 93 };
+
+	// Get best image size based on DPI
+	int resourceID = 0;
+	resourceID = IDB_NWSCRIPTFILEPARSE;
+
+	RECT pctRect;
+	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), &pctRect);
+	_dpiManager.screenToClientEx(_hSelf, &pctRect);
+	imageSize.cx = _dpiManager.scaleX(imageSize.cx);
+	imageSize.cy = _dpiManager.scaleY(imageSize.cy);
+
+	HBITMAP hFile = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+	::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hFile));
+
 }

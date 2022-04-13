@@ -31,7 +31,7 @@
 class StaticDialog : public Window
 {
 public :
-	StaticDialog() : Window() { _rc = {}; };
+	StaticDialog() : Window() { _dialogRect = {}; };
 	~StaticDialog(){
 		if (isCreated()) {
 			::SetWindowLongPtr(_hSelf, GWLP_USERDATA, (long)NULL);	//Prevent run_dlgProc from doing anything, since its virtual
@@ -51,7 +51,7 @@ public :
 	};
 
 protected :
-	RECT _rc;
+	RECT _dialogRect;
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) = 0;
 

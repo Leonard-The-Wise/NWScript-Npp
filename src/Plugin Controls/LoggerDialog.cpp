@@ -76,11 +76,12 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
 			// Create an image list to associate with errors and warnings, etc
+			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(IconSize::Size16x16);
 			_iconList16x16 = ImageList_Create(16, 16, ILC_COLOR32, 4, 1);
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
 			ImageList_AddIcon(_iconList16x16, LoadIcon(_hInst, MAKEINTRESOURCE(IDI_ERRORSQUIGGLE)));               // compiler error
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16));
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16));
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
+			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
 
 			// Create toolbar
 			int ImageListID = 0;
@@ -119,9 +120,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
 			HBITMAP wordWrap = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_WORDWRAP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
-			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, IconSize::Size16x16);
-			HBITMAP warningFilter = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, IconSize::Size16x16);
-			HBITMAP infoFilter = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, IconSize::Size16x16);
+			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, iconSize);
+			HBITMAP warningFilter = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, iconSize);
+			HBITMAP infoFilter = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, iconSize);
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(errorFilter));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(warningFilter));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(infoFilter));
@@ -446,6 +447,10 @@ void LoggerDialog::SetupDockingAnchors()
 	if (m_bpfxAnchorMap.isInitialized())
 		m_bpfxAnchorMap.reset();
 
+	// Resize main window with DPI scale
+	_dpiManager.DPIResizeControl(_hSelf);
+	_dpiManager.DPIResizeControl(_toolBar);
+
 	// The tab control is inside a bordered dialog with a title (because Notepad++ needs the title), 
 	// hence we first get the original height OFFSETS between the client with borders to apply to the new 
 	// dialog window without borders. The title bar will become our new bottom limit to expand.
@@ -454,7 +459,7 @@ void LoggerDialog::SetupDockingAnchors()
 	HWND originalLoggerDlg = CreateDialog(_hInst, MAKEINTRESOURCE(IDD_LOGGER), _hSelf, 0);
 	RECT loggerWindow, loggerClient;
 	GetWindowRect(originalLoggerDlg, &loggerWindow);
-	ScreenToClient(originalLoggerDlg, &loggerWindow);
+	_dpiManager.screenToClientEx(originalLoggerDlg, &loggerWindow);
 	GetClientRect(originalLoggerDlg, &loggerClient);
 
 	// Now grab the original margins...
@@ -462,7 +467,7 @@ void LoggerDialog::SetupDockingAnchors()
 	// turn it upside down (cause we want the window title to become the bottom expansion)...
 	ControlAnchorMap::invertOffsetRect(loggerMargins, INVERT_VERTICAL);
 	// displace it on the Y axis twice the current top (because we got a negative top margin now)...
-	ControlAnchorMap::moveOffsetRect(loggerMargins, { 0, -loggerMargins.topMargin * 2 });
+	ControlAnchorMap::moveOffsetRect(loggerMargins, { 0, _dpiManager.unscaleY(- loggerMargins.topMargin * 2)});
 
 	// And then resize and reposition the TAB control into the new sized docked window while keeping the original offsets...
 	// ding!
@@ -479,7 +484,8 @@ void LoggerDialog::SetupDockingAnchors()
 
 	// And since we don't want our child windowses completely overlapping the Tab borders
 	// apply a *small* extra margin to them...
-	ControlAnchorMap::applyMargins(rcTabClient, { 1, 1, -1, -2 });
+	ControlAnchorMap::applyMargins(rcTabClient, { _dpiManager.getDPIX() == 96 ? 1 : _dpiManager.scaleX(1), 
+		_dpiManager.getDPIX() == 96 ? 1 : _dpiManager.scaleY(1), -1, -2 });
 
 	// Now accomodate windowses inside the tab control
 	SetWindowPos(_consoleDlgHwnd, _mainTabHwnd, rcTabClient.left, rcTabClient.top,
@@ -498,6 +504,13 @@ void LoggerDialog::SetupDockingAnchors()
 		originalConsoleDlg, IDC_LBLCONSOLE, ANF_TOPLEFT);
 	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), 
 		originalConsoleDlg, IDC_TXTCONSOLE, ANF_ALL);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS),
+		originalConsoleDlg, IDC_BTFILTERERRORS, ANF_TOPRIGHT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS),
+		originalConsoleDlg, IDC_BTFILTERWARNINGS, ANF_TOPRIGHT);
+	ControlAnchorMap::repositControl(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO),
+		originalConsoleDlg, IDC_BTFILTERINFO, ANF_TOPRIGHT);
+
 		// Errors window items
 	ControlAnchorMap::repositControl(GetDlgItem(_errorDlgHwnd, IDC_ERRORGROUPBOX), 
 		originalErrorsDlg, IDC_ERRORGROUPBOX, ANF_ALL);
@@ -705,7 +718,7 @@ void LoggerDialog::ToggleWordWrap()
 
 	// Get previous windows measures
 	GetWindowRect(editControl, &editRect);
-	ScreenToClient(_consoleDlgHwnd, &editRect);
+	_dpiManager.screenToClientEx(_consoleDlgHwnd, &editRect);
 
 	// Destroy current Control (and remove from anchor map)
 	ANCHOR_MAP_REMOVE(editControl);

@@ -242,6 +242,7 @@
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
+    <ClInclude Include="..\src\Notepad Controls\DPIManager.h" />
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
@@ -394,6 +395,9 @@
     <Image Include="..\Media\icons\UserBuildRemove.ico" />
     <Image Include="..\Media\icons\WelcomeWebTutorial.ico" />
     <Image Include="..\Media\icons\WordWrap.ico" />
+    <Image Include="..\Media\NWScript-FileParse.png" />
+    <Image Include="..\Media\NWScriptLogo-200.png" />
+    <Image Include="..\Media\NWScriptLogo-300.png" />
     <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />

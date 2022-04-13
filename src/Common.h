@@ -57,7 +57,8 @@ const std::string debugSymbolsFileSuffix = ".ndb";
 // https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-icons
 enum IconSize {
     Size8x8 = 8, Size10x10 = 10, Size14x14 = 14, Size16x16 = 16, Size20x20 = 20, Size22x22 = 22, Size24x24 = 24,
-    Size32x32 = 32, Size40x40 = 40, Size48x48 = 48, Size64x64 = 64, Size96x96 = 96, Size128x128 = 128, Size256x256 = 256
+    Size32x32 = 32, Size40x40 = 40, Size48x48 = 48, Size64x64 = 64, Size96x96 = 96, Size128x128 = 128, Size160x160 = 160,
+    Size192x192 = 192, Size224x224 = 224, Size256x256 = 256
 };
 
 enum class PathWritePermission {
@@ -123,8 +124,8 @@ namespace NWScriptPluginCommons {
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID);
 
-    // Load a PNG file from resources.
-    HBITMAP loadPNGFromResource(HMODULE module, int idResource);
+    // Load a PNG file from resources. Width and Height are final sizes. 0 means Original size.
+    HBITMAP loadPNGFromResource(HMODULE module, int idResource, UINT width = 0, UINT height = 0);
 
     // Load a PNG from resources and convert into an HICON.
     HICON loadPNGFromResourceIcon(HMODULE module, int idResource);

@@ -25,15 +25,6 @@
 
 using namespace NWScriptPlugin;
 
-// Anchoring and size restriction informations
-
-constexpr const RECTSIZER mainWindowSize = { {675, 562 } };
-constexpr const RECTSIZER lblPluginName = { { 251, 0 } };
-constexpr const RECTSIZER lblVersion = { { 251, 0 } };
-constexpr const RECTSIZER lblCopyright = { { 251, 0 } };
-constexpr const RECTSIZER lblCredits = { { 251, 114 } };
-constexpr const RECTSIZER lnkHomepageSize = { { 490, 0 } };
-constexpr const RECTSIZER txtAboutSize = { { 607, 200 } };
 
 BEGIN_ANCHOR_MAP(AboutDialog)
 	ANCHOR_MAP_ADDGLOBALSIZERESTRICTION(mainWindowSize)
@@ -146,6 +137,19 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 	{
 		case WM_INITDIALOG:
 		{
+			mainWindowSize = { {_dpiManager.scaleX(688), _dpiManager.scaleY(575)} };
+			lblPluginName = { { _dpiManager.scaleX(251), 0 } };
+			lblVersion = { { _dpiManager.scaleX(251), 0 } };
+			lblCopyright = { { _dpiManager.scaleX(251), 0 } };
+			lblCredits = { { _dpiManager.scaleX(251), _dpiManager.scaleY(114) } };
+			lnkHomepageSize = { { _dpiManager.scaleX(490), 0 } };
+			txtAboutSize = { { _dpiManager.scaleX(607), _dpiManager.scaleY(200) } };
+
+			// Make window zoomable
+			LONG extStyle = GetWindowLong(GetDlgItem(_hSelf, IDC_TXTABOUT), GWL_EXSTYLE);
+			extStyle |= ES_EX_ZOOMABLE;
+			SetWindowLong(GetDlgItem(_hSelf, IDC_TXTABOUT), GWL_EXSTYLE, extStyle);
+
 			// Get version from module's binary file
 			VersionInfoEx versionInfo = VersionInfoEx::getLocalVersion();
 			generic_stringstream sVersion = {};
@@ -156,13 +160,13 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			size_t fontIndex = 0;
 			while (fontIndex < std::size(fontFamilies) && !hTitleFont)
 			{
-				hTitleFont = ::CreateFont(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				hTitleFont = ::CreateFont(_dpiManager.scaleX(22), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
 				if (!hTitleFont)
 					fontIndex++;
 			}
 
-			HFONT hHomepageFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+			HFONT hHomepageFont = CreateFont(_dpiManager.scaleX(18), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, fontFamilies[fontIndex].c_str());
 
 			if (hTitleFont)
@@ -175,8 +179,10 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 
 			LoadAboutTextEditor(IDR_ABOUTDOC);
 
-			HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO);
-			::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+			// We don't resize controls based on DPI here, since this form
+			// already uses custom font that scales with DPI.
+			// Only adjust logo.
+			setLogo();
 
 			HICON hAbout = loadPNGFromResourceIcon(_hInst, IDI_ABOUTDIALOGWINDOWICO);
 			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
@@ -272,4 +278,29 @@ void AboutDialog::doDialog()
 	goToCenter();
 }
 
+void AboutDialog::setLogo()
+{
+	SIZE imageSize = { 273, 203 };
 
+	// Get best image size based on DPI
+	int resourceID = 0;
+	int dpiPercent = _dpiManager.getDPIScalePercent();
+	if (dpiPercent == 100)
+		resourceID = IDB_NWSCRIPTLOGO;
+	else 
+		if (dpiPercent > 100 || dpiPercent < 150)
+			resourceID = IDB_NWSCRIPTLOGO_200;
+		else
+			resourceID = IDB_NWSCRIPTLOGO_300;
+
+	RECT pctRect;
+	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
+	_dpiManager.screenToClientEx(_hSelf, &pctRect);
+	imageSize.cx = _dpiManager.scaleX(imageSize.cx);
+	imageSize.cy = _dpiManager.scaleY(imageSize.cy);
+	MoveWindow(GetDlgItem(_hSelf, IDC_PCTLOGO), _dpiManager.scaleX(pctRect.left), _dpiManager.scaleY(pctRect.top), imageSize.cx, imageSize.cy, true);
+
+	HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+    ::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+
+}

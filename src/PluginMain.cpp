@@ -129,7 +129,7 @@ const generic_string NotepadPseudoBatchRestartFile = TEXT("~doNWScriptNotepadRes
 // NWScript known engine objects file
 const generic_string NWScriptEngineObjectsFile = TEXT("NWScript-Npp-EngineObjects.bin");
 // NWScript known user objects file
-const generic_string NWScriptUserObjectsFile = TEXT("NWScript-Npp-UseObjects.bin");
+const generic_string NWScriptUserObjectsFile = TEXT("NWScript-Npp-UserObjects.bin");
 
 // Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
 // this will ever change, so we made them constants here.
