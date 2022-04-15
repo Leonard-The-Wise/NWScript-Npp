@@ -185,12 +185,8 @@ namespace NWScriptPlugin {
 		bool IsPluginMenuItemEnabled(int ID);
 		// Enable/disable menu item
 		void EnablePluginMenuItem(int ID, bool enabled);
-		// Set a plugin menu Icon from resources
-		bool SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a plugin menu Icon to a given stock Shell Icon
 		bool SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
-		// Set a plugin menu Icon from a PNG resource
-		bool SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a (scalable) plugin menu Icon from a SVG resource
 		bool SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.

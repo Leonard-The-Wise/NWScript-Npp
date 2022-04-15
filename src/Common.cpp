@@ -480,10 +480,6 @@ namespace NWScriptPluginCommons {
         BITMAPINFOHEADER bitmapInfoH = { sizeof(BITMAPINFOHEADER), static_cast<int>(width), -static_cast<int>(height), 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
         BITMAPINFO bitmapInfo = { bitmapInfoH, {} };
         Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(&bitmapInfo, reinterpret_cast<void*>(bmpResult.data()));
-        HBITMAP ret;
-        bmp->GetHBITMAP(Gdiplus::Color::Transparent, &ret);
-
-        return ret;
 
         // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
          // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency

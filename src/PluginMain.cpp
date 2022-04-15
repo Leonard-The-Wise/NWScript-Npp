@@ -721,48 +721,6 @@ void Plugin::RemovePluginMenuItem(int ID, bool byPosition)
     }
 }
 
-bool Plugin::SetPluginMenuItemIcon(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
-{
-
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        HBITMAP hIconBmp = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_dllHModule, MAKEINTRESOURCE(resourceID),
-            IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
-        bool bSuccess = false;
-        if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
-        if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
-        if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
-        return bSuccess;
-    }
-
-    return false;
-
-}
-
-bool Plugin::SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
-{
-
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        HBITMAP hIconBmp = loadPNGFromResource(DllHModule(), resourceID);
-        bool bSuccess = false;
-        if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
-        if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
-        if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
-        return bSuccess;
-    }
-
-    return false;
-}
-
 bool Plugin::SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
 {
     HMENU hMenu = GetNppMainMenu();
