@@ -176,6 +176,8 @@ namespace NWScriptPlugin {
 		void DisplayCompilerLogWindow(bool toShow = true);
 		// Checkup Engine Known objects file
 		void CheckupEngineObjectsFile();
+		// Crudely detects a dark mode interface
+		void CrudeDetectDarkModeEnabled();
 
 		// ### Initialization -> Menu handling
 		
@@ -275,6 +277,8 @@ namespace NWScriptPlugin {
 
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
+		bool _isNppDarkModeEnabled = false;
+		bool _wasNppDarkModeEnabled = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 		ULONGLONG _clockStart = 0;
 

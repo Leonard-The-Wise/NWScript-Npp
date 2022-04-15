@@ -281,6 +281,9 @@
     <ClCompile Include="..\src\Lexers\Lexlib\LexAccessor.cxx">
       <Filter>Custom Lexers\Lexlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Utils\ColorConvert.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">

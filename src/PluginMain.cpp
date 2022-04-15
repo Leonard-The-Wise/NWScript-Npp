@@ -42,6 +42,8 @@
 #include "VersionInfoEx.h"
 #include "IconBuilder.h"
 
+#include "ColorConvert.h"
+
 #pragma warning (disable : 6387)
 
 //#define DEBUG_AUTO_INDENT_833      // Uncomment to test auto-indent with message
@@ -360,6 +362,42 @@ plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"
     }        
 }
 
+// Crudely detects if dark mode is enabled for Notepad++.
+void Plugin::CrudeDetectDarkModeEnabled()
+{
+    //std::this_thread::sleep_for(200ms);
+
+    RECT NppRect;
+    HWND NppParent = GetParent(NotepadHwnd());    
+    GetWindowRect(NotepadHwnd(), &NppRect);
+
+    int x, y;
+    x = (NppRect.right - NppRect.left) / 2;
+    y = NppRect.top + 5;
+
+    HDC hdcScreen = GetDC(NULL);
+    COLORREF pixel = GetPixel(hdcScreen, x, y);
+    ReleaseDC(NULL, hdcScreen);
+
+    if (pixel == CLR_INVALID)
+        return;
+
+    //Convert pixel to luminescence
+    HSL tester = rgb2hsl((float)((pixel >> 24) & 0x00FF), (float)((pixel >> 16) & 0x00FF), (float)((pixel) & 0x00FF));
+
+    // Completely black menu title or a low lighted one.
+    if (tester.l < 0.35f)
+        _isNppDarkModeEnabled = true;
+    else
+        _isNppDarkModeEnabled = false;
+
+    if (_wasNppDarkModeEnabled != _isNppDarkModeEnabled)
+    {
+        _wasNppDarkModeEnabled = _isNppDarkModeEnabled;
+        SetupPluginMenuItems();
+    }
+}
+
 
 #pragma endregion Plugin DLL Initialization
 
@@ -367,7 +405,7 @@ plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"
 
 // Processes Raw messages from a Notepad++ window (the ones not handled by editor). 
 LRESULT Plugin::ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam)
-{
+{        
     return TRUE;
 }
 
@@ -383,8 +421,6 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         SetAutoIndentSupport();
         DetectDarkThemeInstall();
         LoadNotepadLexer();
-
-        SetupPluginMenuItems();
         _isReady = true;
 
         // Auto call a function that required restart during the previous session (because of privilege elevation)
@@ -456,6 +492,12 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
         break;
     }
+
+    case SCN_PAINTED:
+    {
+        CrudeDetectDarkModeEnabled();
+    }
+
     default:
         return;
     }
@@ -726,7 +768,7 @@ bool Plugin::SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUnch
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = loadSVGFromResource(DllHModule(), resourceID, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        HBITMAP hIconBmp = loadSVGFromResource(DllHModule(), resourceID, _isNppDarkModeEnabled, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
             bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);

@@ -472,7 +472,10 @@ namespace NWScriptPluginCommons {
 
         auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
         lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
-        bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+        if (invertLuminosity)
+            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, false);
+        else
+            bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
 
         FreeResource(hMemory);
 
