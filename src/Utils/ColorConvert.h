@@ -72,16 +72,16 @@ HSL rgb2hsl(float r, float g, float b) {
  */
 float hue2rgb(float p, float q, float t) {
 
-    if (t < 0)
-        t += 1;
-    if (t > 1)
-        t -= 1;
-    if (t < 1. / 6)
-        return p + (q - p) * 6 * t;
-    if (t < 1. / 2)
+    if (t < 0.0f)
+        t += 1.0f;
+    if (t > 1.0f)
+        t -= 1.0f;
+    if (t < 1.0f / 6.0f)
+        return p + (q - p) * 6.0f * t;
+    if (t < 1.0f / 2.0f)
         return q;
-    if (t < 2. / 3)
-        return p + (q - p) * (2. / 3 - t) * 6;
+    if (t < 2.0f / 3.0f)
+        return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
 
     return p;
 
@@ -105,9 +105,9 @@ RGB hsl2rgb(float h, float s, float l) {
     else {
         float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         float p = 2 * l - q;
-        result.r = hue2rgb(p, q, h + 1. / 3) * 255;
-        result.g = hue2rgb(p, q, h) * 255;
-        result.b = hue2rgb(p, q, h - 1. / 3) * 255;
+        result.r = hue2rgb(p, q, h + 1.0f / 3.0f) * 255.0f;
+        result.g = hue2rgb(p, q, h) * 255.0f;
+        result.b = hue2rgb(p, q, h - 1.0f / 3.0f) * 255.0f;
     }
 
     return result;

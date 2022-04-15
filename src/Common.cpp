@@ -242,7 +242,7 @@ namespace NWScriptPluginCommons {
             FreeLibrary(hModule);
         }
 
-        return hIcon;
+        return hIcon; 
     }
 
     // Converts a HICON to HBITMAP, preserving transparency channels
@@ -454,6 +454,7 @@ namespace NWScriptPluginCommons {
     // Resource files must be included as "SVG".
     HBITMAP loadSVGFromResource(HMODULE module, int idResource, bool invertLuminosity, UINT width, UINT height)
     {
+        HICON retval = NULL;
         ULONG_PTR token = 0;
         Gdiplus::GdiplusStartupInput input = NULL;
         Gdiplus::GdiplusStartup(&token, &input, NULL);
@@ -475,27 +476,29 @@ namespace NWScriptPluginCommons {
 
         FreeResource(hMemory);
 
-        // Use GDI+ to build HBITMAP from the image. If we don't, we lose information on DIB transparency
-        // Image is upside-down, so the trick is to create the header with a negative height.
+        // Create compatible bitmap from bmpResult (DIB)
         BITMAPINFOHEADER bitmapInfoH = { sizeof(BITMAPINFOHEADER), static_cast<int>(width), -static_cast<int>(height), 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
         BITMAPINFO bitmapInfo = { bitmapInfoH, {} };
         Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(&bitmapInfo, reinterpret_cast<void*>(bmpResult.data()));
+        HBITMAP ret;
+        bmp->GetHBITMAP(Gdiplus::Color::Transparent, &ret);
+
+        return ret;
 
         // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
-        // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+         // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
         Gdiplus::BitmapData lockedBitmapData;
         Gdiplus::Rect rc(0, 0, width, height);
         bmp->LockBits(&rc, Gdiplus::ImageLockModeRead, bmp->GetPixelFormat(), &lockedBitmapData);
 
         Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
             PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
-        HICON tempIcon;
-        image->GetHICON(&tempIcon);
+
+        image->GetHICON(&retval);
         delete bmp, image;
         Gdiplus::GdiplusShutdown(token);
 
-        // Cast HICON to HBITMAP
-        return iconToBitmap(tempIcon);
+        return iconToBitmap(retval);
     }
 
     // Load a SVG from resources and convert into an HICON.
@@ -520,7 +523,10 @@ namespace NWScriptPluginCommons {
 
         auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
         lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
-        bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+        if (invertLuminosity)
+            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, false);
+        else
+            bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
 
         FreeResource(hMemory);
 

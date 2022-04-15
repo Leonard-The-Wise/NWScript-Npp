@@ -55,6 +55,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_INITDIALOG:
 		{
+
+			bool bInvertLuminosity = false;
+
 			INITCOMMONCONTROLSEX ix = { 0, 0 };
 			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
 			ix.dwICC = ICC_TAB_CLASSES;
@@ -79,8 +82,8 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(IconSize::Size16x16);
 			_iconList16x16 = ImageList_Create(_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16), ILC_COLOR32, 4, 1);
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
-			ImageList_AddIcon(_iconList16x16, bitmapToIcon(loadSVGFromResource(_hInst, IDI_ERRORSQUIGGLE,
-				_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16))));
+			ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, bInvertLuminosity,
+				_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16)));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
 
@@ -117,9 +120,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			ShowWindow(_toolBar, TRUE);
 
 			// Setup icons to buttons in console log (LoadIcon is bugging, using LoadImage instead).
-			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, bInvertLuminosity, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, bInvertLuminosity, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
 
 			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, iconSize);
