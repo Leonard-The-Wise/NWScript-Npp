@@ -370,14 +370,15 @@ void Plugin::CrudeDetectDarkModeEnabled()
     RECT NppRect;
     HWND NppParent = GetParent(NotepadHwnd());    
     GetWindowRect(NotepadHwnd(), &NppRect);
+    _dpiManager.screenToClientEx(NppParent, &NppRect);
 
     int x, y;
     x = (NppRect.right - NppRect.left) / 2;
     y = NppRect.top + 5;
 
-    HDC hdcScreen = GetDC(NULL);
+    HDC hdcScreen = GetDCEx(NotepadHwnd(), NULL ,DCX_CACHE | DCX_WINDOW | DCX_LOCKWINDOWUPDATE);
     COLORREF pixel = GetPixel(hdcScreen, x, y);
-    ReleaseDC(NULL, hdcScreen);
+    ReleaseDC(NotepadHwnd(), hdcScreen);
 
     if (pixel == CLR_INVALID)
         return;
@@ -421,6 +422,7 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         SetAutoIndentSupport();
         DetectDarkThemeInstall();
         LoadNotepadLexer();
+        SetupPluginMenuItems();
         _isReady = true;
 
         // Auto call a function that required restart during the previous session (because of privilege elevation)

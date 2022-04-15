@@ -340,7 +340,7 @@ namespace NWScriptPluginCommons {
         Gdiplus::GdiplusStartupInput input = NULL;
         Gdiplus::GdiplusStartup(&token, &input, NULL);
 
-        if (token != 0)
+        if (token == 0)
             return NULL;
         
         // Load resource
@@ -399,7 +399,7 @@ namespace NWScriptPluginCommons {
         Gdiplus::GdiplusStartupInput input = NULL;
         Gdiplus::GdiplusStartup(&token, &input, NULL);
 
-        if (token != 0)
+        if (token == 0)
             return NULL;
         
         // Load resource
@@ -473,9 +473,9 @@ namespace NWScriptPluginCommons {
         auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
         lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
         if (invertLuminosity)
-            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, false);
+            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, true);
         else
-            bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+            bmpResult.convert(2, 1, 0, 3, true); // Convert to ARGB not premultiplied.
 
         FreeResource(hMemory);
 
@@ -523,9 +523,9 @@ namespace NWScriptPluginCommons {
         auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
         lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
         if (invertLuminosity)
-            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, false);
+            convertWithInverseLuminosity(&bmpResult, 2, 1, 0, 3, true);
         else
-            bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+            bmpResult.convert(2, 1, 0, 3, true); // Convert to ARGB not premultiplied.
 
         FreeResource(hMemory);
 
