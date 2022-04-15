@@ -191,6 +191,8 @@ namespace NWScriptPlugin {
 		bool SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
 		// Set a plugin menu Icon from a PNG resource
 		bool SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
+		// Set a (scalable) plugin menu Icon from a SVG resource
+		bool SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 		// Lock/Unlock all of the plugin's options
@@ -301,6 +303,7 @@ namespace NWScriptPlugin {
 
 		// Settings instance
 		NWScriptPlugin::Settings _settings;
+		DPIManager _dpiManager;
 
 		// Temporary stash to Scintilla document content to be used inside the compilation thread
 		std::string _tempFileContents;

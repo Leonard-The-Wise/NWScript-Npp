@@ -119,7 +119,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexilla;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -145,7 +145,7 @@
       <WarningLevel>Level3</WarningLevel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexilla;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -172,7 +172,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;_WINDOWS;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -197,7 +197,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -274,6 +274,7 @@
     <ClInclude Include="..\src\Utils\jpcre2.hpp" />
     <ClInclude Include="..\src\Utils\MiniINI.h" />
     <ClInclude Include="..\src\Utils\OleCallback.h" />
+    <ClInclude Include="..\src\Utils\ColorConvert.h" />
     <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
     <ClInclude Include="..\src\Utils\VersionInfoEx.h" />
@@ -360,6 +361,26 @@
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\icons-svg\AboutBox.svg" />
+    <None Include="..\Media\icons-svg\ClearWindow.svg" />
+    <None Include="..\Media\icons-svg\CompilableFile.svg" />
+    <None Include="..\Media\icons-svg\CompileBatch.svg" />
+    <None Include="..\Media\icons-svg\DarkTheme.svg" />
+    <None Include="..\Media\icons-svg\DependancyGraph.svg" />
+    <None Include="..\Media\icons-svg\DisassemblyCode.svg" />
+    <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg" />
+    <None Include="..\Media\icons-svg\ImmediateWindow.svg" />
+    <None Include="..\Media\icons-svg\ImportSettings.svg" />
+    <None Include="..\Media\icons-svg\RepeatLastRun.svg" />
+    <None Include="..\Media\icons-svg\Report.svg" />
+    <None Include="..\Media\icons-svg\Restart.svg" />
+    <None Include="..\Media\icons-svg\SettingsGroup.svg" />
+    <None Include="..\Media\icons-svg\ShowAssignedConfigurations.svg" />
+    <None Include="..\Media\icons-svg\UndoCheckBoxList.svg" />
+    <None Include="..\Media\icons-svg\UserBuild.svg" />
+    <None Include="..\Media\icons-svg\UserBuildRemove.svg" />
+    <None Include="..\Media\icons-svg\WelcomeWebTutorial.svg" />
+    <None Include="..\Media\icons-svg\WordWrap.svg" />
     <None Include="..\Media\NWScript-Npp-EngineObjects.bin" />
     <None Include="..\Media\OnlineHelp-Dark.rtf" />
     <None Include="..\Media\OnlineHelp.rtf" />
@@ -375,26 +396,6 @@
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
     <Image Include="..\Media\icons\About-Dialog-Ico.ico" />
-    <Image Include="..\Media\icons\AboutBox.ico" />
-    <Image Include="..\Media\icons\ClearWindow.ico" />
-    <Image Include="..\Media\icons\CompilableFile.ico" />
-    <Image Include="..\Media\icons\CompileBatch.ico" />
-    <Image Include="..\Media\icons\DarkTheme.ico" />
-    <Image Include="..\Media\icons\DependancyGraph.ico" />
-    <Image Include="..\Media\icons\DisassembleCode.ico" />
-    <Image Include="..\Media\icons\ErrorSquiggleActive.ico" />
-    <Image Include="..\Media\icons\ImmediateWindow.ico" />
-    <Image Include="..\Media\icons\ImportSettings.ico" />
-    <Image Include="..\Media\icons\RepeatLastRun.ico" />
-    <Image Include="..\Media\icons\Report.ico" />
-    <Image Include="..\Media\icons\Restart.ico" />
-    <Image Include="..\Media\icons\SettingsGroup.ico" />
-    <Image Include="..\Media\icons\ShowAssignedConfigurations.ico" />
-    <Image Include="..\Media\icons\UndoCheckBoxList.ico" />
-    <Image Include="..\Media\icons\UserBuild.ico" />
-    <Image Include="..\Media\icons\UserBuildRemove.ico" />
-    <Image Include="..\Media\icons\WelcomeWebTutorial.ico" />
-    <Image Include="..\Media\icons\WordWrap.ico" />
     <Image Include="..\Media\NWScript-FileParse.png" />
     <Image Include="..\Media\NWScriptLogo-200.png" />
     <Image Include="..\Media\NWScriptLogo-300.png" />
@@ -407,6 +408,9 @@
     <Text Include="..\src\Lexers\Lexilla\License.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\lib\lunasvg\lunasvg.vcxproj">
+      <Project>{2a77808e-c149-4184-85da-70a1bb4c1eea}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\lib\NscLib\NscLib.vcxproj">
       <Project>{9d6bac40-e346-4e23-b0ea-960dd98fea37}</Project>
     </ProjectReference>

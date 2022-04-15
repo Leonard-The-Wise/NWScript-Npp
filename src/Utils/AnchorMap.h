@@ -292,7 +292,7 @@ public:
     ControlAnchorMap() :
         m_bInitialized(0), m_bUsedDefaultEntry(0), m_globalParent(nullptr),
         m_nDefaultFlags(0), m_hWndSizeGrip(0), m_isSorted(false), 
-        m_globalSizer(), m_previousWindowSize()
+        m_globalSizer(), m_previousWindowSize(), m_invalidated(false)
     {
         m_clrBackground = GetSysColor(COLOR_BTNFACE);
     };

@@ -40,6 +40,7 @@
 
 #include "XMLGenStrings.h"
 #include "VersionInfoEx.h"
+#include "IconBuilder.h"
 
 #pragma warning (disable : 6387)
 
@@ -232,6 +233,9 @@ void Plugin::SetNotepadData(NppData& data)
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
     generic_string sPluginConfigPath = fName;
+    _pluginPaths.insert({ "AppDataDir", fs::path(sPluginConfigPath) });
+
+
     sPluginConfigPath.append(TEXT("\\"));
     sPluginConfigPath.append(_pluginFileName);
     sPluginConfigPath.append(TEXT(".ini"));
@@ -281,7 +285,6 @@ void Plugin::SetNotepadData(NppData& data)
 
     // Check engine objects file
     CheckupEngineObjectsFile();
-
 }
 
 // Initializes the compiler log window
@@ -320,6 +323,7 @@ void Plugin::DisplayCompilerLogWindow(bool toShow)
     SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
 }
 
+// Check the files for known engine objects
 void Plugin::CheckupEngineObjectsFile()
 {
     if (!PathFileExists(_pluginPaths["NWScriptEngineObjectsFile"].c_str()))
@@ -759,12 +763,32 @@ bool Plugin::SetPluginMenuItemPNG(int commandID, int resourceID, bool bSetToUnch
     return false;
 }
 
+bool Plugin::SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
+{
+    HMENU hMenu = GetNppMainMenu();
+    if (hMenu)
+    {
+        HBITMAP hIconBmp = loadSVGFromResource(DllHModule(), resourceID, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        bool bSuccess = false;
+        if (bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
+        if (bSetToUncheck && !bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
+        if (!bSetToUncheck && bSetToCheck)
+            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
+
+        return bSuccess;
+    }
+
+    return false;
+}
+
 bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
 {
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, IconSize::Size16x16);
+        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, (IconSize)_dpiManager.ScaleIconSize((UINT)IconSize::Size16x16));
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
             bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
@@ -789,10 +813,10 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
-    SetPluginMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -833,20 +857,19 @@ void Plugin::SetupPluginMenuItems()
     }
     
     // Setup icons for the rest of items
-    SetPluginMenuItemIcon(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
-    //SetPluginMenuItemIcon(PLUGINMENU_ONLINEHELP, IDI_WEBWELCOMETUTORIAL, true, false);
-    SetPluginMenuItemIcon(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
     
     // Menu run last batch: initially disabled
-    EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+    SetPluginMenuItemSVG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
 }
 
 void Plugin::LockPluginMenu(bool toLock)
@@ -2350,7 +2373,6 @@ void CALLBACK Plugin::RunScheduledReposition(HWND hwnd, UINT message, UINT idTim
     KillTimer(hwnd, NAGIVATECALLBACKTIMER);
 }
 
-
 #pragma endregion Compiler Funcionality
 
 #pragma region
@@ -2457,7 +2479,6 @@ PLUGINCOMMAND Plugin::RunLastBatch()
 // Opens the Plugin's Batch process files dialog
 PLUGINCOMMAND Plugin::BatchProcessFiles()
 {
-
     static BatchProcessingDialog batchProcessing = {};
 
     if (!batchProcessing.isCreated())

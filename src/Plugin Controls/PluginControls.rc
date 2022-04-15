@@ -408,47 +408,54 @@ IDB_NWSCRIPTFILEPARSE   PNG                     "E:\\Projetos\\NWScript-Npp\\Med
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ABOUTBOX            ICON                    "..\\..\\Media\\icons\\AboutBox.ico"
 
-IDI_CLEARWINDOW         ICON                    "..\\..\\Media\\icons\\ClearWindow.ico"
+IDI_ABOUTDIALOGWINDOWICO SVG                    "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
 
-IDI_COMPILEFILE         ICON                    "..\\..\\Media\\icons\\CompilableFile.ico"
 
-IDI_COMPILEBATCH        ICON                    "..\\..\\Media\\icons\\CompileBatch.ico"
+/////////////////////////////////////////////////////////////////////////////
+//
+// SVG
+//
 
-IDI_DARKTHEME           ICON                    "..\\..\\Media\\icons\\DarkTheme.ico"
+IDI_ABOUTBOX            SVG                    "..\\..\\Media\\icons-svg\\AboutBox.svg"
 
-IDI_DEPENCENCYGROUP     ICON                    "..\\..\\Media\\icons\\DependancyGraph.ico"
+IDI_CLEARWINDOW         SVG                    "..\\..\\Media\\icons-svg\\ClearWindow.svg"
 
-IDI_DISASSEMBLECODE     ICON                    "..\\..\\Media\\icons\\DisassembleCode.ico"
+IDI_COMPILEFILE         SVG                    "..\\..\\Media\\icons-svg\\CompilableFile.svg"
 
-IDI_IMMEDIATEWINDOW     ICON                    "..\\..\\Media\\icons\\ImmediateWindow.ico"
+IDI_COMPILEBATCH        SVG                    "..\\..\\Media\\icons-svg\\CompileBatch.svg"
 
-IDI_IMPORTSETTINGS      ICON                    "..\\..\\Media\\icons\\ImportSettings.ico"
+IDI_DARKTHEME           SVG                    "..\\..\\Media\\icons-svg\\DarkTheme.svg"
 
-IDI_REPEATLASTRUN       ICON                    "..\\..\\Media\\icons\\RepeatLastRun.ico"
+IDI_DEPENCENCYGROUP     SVG                    "..\\..\\Media\\icons-svg\\DependancyGraph.svg"
 
-IDI_REPORT              ICON                    "..\\..\\Media\\icons\\Report.ico"
+IDI_DISASSEMBLECODE     SVG                    "..\\..\\Media\\icons-svg\\DisassemblyCode.svg"
 
-IDI_SETTINGSGROUP       ICON                    "..\\..\\Media\\icons\\SettingsGroup.ico"
+IDI_IMMEDIATEWINDOW     SVG                    "..\\..\\Media\\icons-svg\\ImmediateWindow.svg"
 
-IDI_SHOWASSIGNEDCONFIGURATION ICON                    "..\\..\\Media\\icons\\ShowAssignedConfigurations.ico"
+IDI_IMPORTSETTINGS      SVG                    "..\\..\\Media\\icons-svg\\ImportSettings.svg"
 
-IDI_UNDOCHECKBOXLIST    ICON                    "..\\..\\Media\\icons\\UndoCheckBoxList.ico"
+IDI_REPEATLASTRUN       SVG                    "..\\..\\Media\\icons-svg\\RepeatLastRun.svg"
 
-IDI_USERBUILD           ICON                    "..\\..\\Media\\icons\\UserBuild.ico"
+IDI_REPORT              SVG                    "..\\..\\Media\\icons-svg\\Report.svg"
 
-IDI_USERBUILDREMOVE     ICON                    "..\\..\\Media\\icons\\UserBuildRemove.ico"
+IDI_SETTINGSGROUP       SVG                    "..\\..\\Media\\icons-svg\\SettingsGroup.svg"
 
-IDI_WEBWELCOMETUTORIAL  ICON                    "..\\..\\Media\\icons\\WelcomeWebTutorial.ico"
+IDI_SHOWASSIGNEDCONFIGURATION SVG                    "..\\..\\Media\\icons-svg\\ShowAssignedConfigurations.svg"
 
-IDI_RESTART             ICON                    "..\\..\\Media\\icons\\Restart.ico"
+IDI_UNDOCHECKBOXLIST    SVG                    "..\\..\\Media\\icons-svg\\UndoCheckBoxList.svg"
 
-IDI_ABOUTDIALOGWINDOWICO ICON                    "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
+IDI_USERBUILD           SVG                    "..\\..\\Media\\icons-svg\\UserBuild.svg"
 
-IDI_ERRORSQUIGGLE       ICON                    "..\\..\\Media\\icons\\ErrorSquiggleActive.ico"
+IDI_USERBUILDREMOVE     SVG                    "..\\..\\Media\\icons-svg\\UserBuildRemove.svg"
 
-IDI_WORDWRAP            ICON                    "..\\..\\Media\\icons\\WordWrap.ico"
+IDI_WEBWELCOMETUTORIAL  SVG                    "..\\..\\Media\\icons-svg\\WelcomeWebTutorial.svg"
+
+IDI_RESTART             SVG                    "..\\..\\Media\\icons-svg\\Restart.svg"
+
+IDI_ERRORSQUIGGLE       SVG                    "..\\..\\Media\\icons-svg\\ErrorSquiggleActive.svg"
+
+IDI_WORDWRAP            SVG                    "..\\..\\Media\\icons-svg\\WordWrap.svg"
 
 
 /////////////////////////////////////////////////////////////////////////////

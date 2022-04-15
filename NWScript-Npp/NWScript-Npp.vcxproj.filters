@@ -3,7 +3,7 @@
   <ItemGroup>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms;svg</Extensions>
     </Filter>
     <Filter Include="Plugin Interface">
       <UniqueIdentifier>{317db69f-b0d1-4a41-9b3d-8714f6ea043f}</UniqueIdentifier>
@@ -193,6 +193,9 @@
     <ClInclude Include="..\src\Notepad Controls\DPIManager.h">
       <Filter>Notepad Controls</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Utils\ColorConvert.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -306,6 +309,66 @@
     <None Include="..\Media\NWScript-Npp-EngineObjects.bin">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\Media\icons-svg\AboutBox.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ClearWindow.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\CompilableFile.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\CompileBatch.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DarkTheme.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DependancyGraph.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DisassemblyCode.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ImmediateWindow.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ImportSettings.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\RepeatLastRun.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\Report.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\Restart.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\SettingsGroup.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ShowAssignedConfigurations.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UndoCheckBoxList.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UserBuild.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UserBuildRemove.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\WelcomeWebTutorial.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\WordWrap.svg">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">
@@ -325,67 +388,7 @@
     <Image Include="..\Media\HereBeDragons.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\icons\AboutBox.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\ClearWindow.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\CompilableFile.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\CompileBatch.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\DarkTheme.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\DependancyGraph.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\DisassembleCode.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\ImmediateWindow.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\ImportSettings.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\RepeatLastRun.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\Report.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\SettingsGroup.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\ShowAssignedConfigurations.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\UndoCheckBoxList.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\UserBuild.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\UserBuildRemove.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\WelcomeWebTutorial.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\Restart.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\icons\About-Dialog-Ico.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\ErrorSquiggleActive.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\icons\WordWrap.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Media\NWScriptLogo-200.png">

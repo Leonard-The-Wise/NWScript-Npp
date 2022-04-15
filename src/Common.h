@@ -65,6 +65,11 @@ enum class PathWritePermission {
     FileIsReadOnly = 1, RequiresAdminPrivileges, BlockedByApplication, UndeterminedError, WriteAllowed
 };
 
+typedef struct tagV5BMPINFO {
+    BITMAPV5HEADER bmiHeader;
+    DWORD        bmiColors[3];
+} V5BMPINFO;
+
 
 // Some common namespace uses across modules.
 namespace NWScriptPlugin {
@@ -118,17 +123,26 @@ namespace NWScriptPluginCommons {
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
     HBITMAP iconToBitmap(HICON hIcon);
 
+    // Converts a HBITMAP to HICON.
+    HICON bitmapToIcon(HBITMAP hBitmap);
+
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize);
-
-    // Get one of the system or user folders by it's GUID.
-    generic_string getSystemFolder(GUID folderID);
 
     // Load a PNG file from resources. Width and Height are final sizes. 0 means Original size.
     HBITMAP loadPNGFromResource(HMODULE module, int idResource, UINT width = 0, UINT height = 0);
 
     // Load a PNG from resources and convert into an HICON.
-    HICON loadPNGFromResourceIcon(HMODULE module, int idResource);
+    HICON loadPNGFromResourceIcon(HMODULE module, int idResource, UINT width = 0, UINT height = 0);
+
+    // Load an SVG file from resources and render into a HBITMAP.
+    HBITMAP loadSVGFromResource(HMODULE module, int idResource, bool invertLuminosity = false, UINT width = 0, UINT height = 0);
+
+    // Load SVG file from resources and render into a HICON
+    HICON loadSVGFromResourceIcon(HMODULE module, int idResource, bool invertLuminosity = false, UINT width = 0, UINT height = 0);
+
+    // Get one of the system or user folders by it's GUID.
+    generic_string getSystemFolder(GUID folderID);
 
     // Converts a File Link into an actual filename
     void resolveLinkFile(generic_string& linkFilePath);
@@ -204,6 +218,7 @@ namespace NWScriptPluginCommons {
 
     // Folder browsing child enumeration function callback
     BOOL CALLBACK EnumCallback(HWND hWndChild, LPARAM lParam);
+
 }
 
 

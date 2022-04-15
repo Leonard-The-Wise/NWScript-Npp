@@ -77,9 +77,10 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 			// Create an image list to associate with errors and warnings, etc
 			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(IconSize::Size16x16);
-			_iconList16x16 = ImageList_Create(16, 16, ILC_COLOR32, 4, 1);
+			_iconList16x16 = ImageList_Create(_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16), ILC_COLOR32, 4, 1);
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
-			ImageList_AddIcon(_iconList16x16, LoadIcon(_hInst, MAKEINTRESOURCE(IDI_ERRORSQUIGGLE)));               // compiler error
+			ImageList_AddIcon(_iconList16x16, bitmapToIcon(loadSVGFromResource(_hInst, IDI_ERRORSQUIGGLE,
+				_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16))));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
 
@@ -108,7 +109,7 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			SendMessage(_toolBar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tbButtons);
 
 			// Resize the toolbar, and then show it.
-			TBMETRICS tbM;
+			TBMETRICS tbM ={};
 			tbM.cbSize = sizeof(tbM);
 			tbM.cxButtonSpacing = 6;
 			tbM.dwMask = TBMF_BUTTONSPACING;
@@ -116,10 +117,11 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			ShowWindow(_toolBar, TRUE);
 
 			// Setup icons to buttons in console log (LoadIcon is bugging, using LoadImage instead).
-			HBITMAP clearWindow = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_CLEARWINDOW), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
+			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-			HBITMAP wordWrap = iconToBitmap(reinterpret_cast<HICON>(LoadImage(_hInst, MAKEINTRESOURCE(IDI_WORDWRAP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR)));
+			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
+
 			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, iconSize);
 			HBITMAP warningFilter = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, iconSize);
 			HBITMAP infoFilter = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, iconSize);
@@ -300,7 +302,7 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
 					// Gather the item ID stored previously
 					int messageItem = -1;
-					LVITEM itemInfo;
+					LVITEM itemInfo = {};
 					itemInfo.mask = LVIF_PARAM;
 					itemInfo.iItem = lpnmia->iItem;
 					ListView_GetItem(lstErrors, &itemInfo);
@@ -629,7 +631,7 @@ void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignore
 
 void LoggerDialog::AppendConsoleText(const generic_string& newText)
 {
-	CHARRANGE cr;
+	CHARRANGE cr = {};
 	cr.cpMin = -1;
 	cr.cpMax = -1;
 	HWND editControl = GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE);

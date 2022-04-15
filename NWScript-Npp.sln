@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NWScript-Npp", "NWScript-Np
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NscLib", "lib\NscLib\NscLib.vcxproj", "{9D6BAC40-E346-4E23-B0EA-960DD98FEA37}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lunasvg", "lib\lunasvg\lunasvg.vcxproj", "{2A77808E-C149-4184-85DA-70A1BB4C1EEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +36,14 @@ Global
 		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37}.Release|x64.Build.0 = Release|x64
 		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37}.Release|x86.ActiveCfg = Release|Win32
 		{9D6BAC40-E346-4E23-B0EA-960DD98FEA37}.Release|x86.Build.0 = Release|Win32
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Debug|x64.ActiveCfg = Debug|x64
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Debug|x64.Build.0 = Debug|x64
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Debug|x86.ActiveCfg = Debug|Win32
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Debug|x86.Build.0 = Debug|Win32
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Release|x64.ActiveCfg = Release|x64
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Release|x64.Build.0 = Release|x64
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Release|x86.ActiveCfg = Release|Win32
+		{2A77808E-C149-4184-85DA-70A1BB4C1EEA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -57,13 +57,14 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-#include <thread>
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <memory>
+#include <set>
+#include <thread>
 #include <utility>
 #include <vector>
-#include <set>
 
 #include <tchar.h>
 #include <assert.h>

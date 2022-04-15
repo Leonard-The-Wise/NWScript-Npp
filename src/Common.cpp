@@ -22,9 +22,11 @@
 //#include <fstream>
 //#include "tinyxml2.h"
 
+#include <lunasvg.h>
+#include "ColorConvert.h"
+
 #include "Common.h"
 #include "DPIManager.h"
-
 
 namespace NWScriptPluginCommons {
 
@@ -290,14 +292,47 @@ namespace NWScriptPluginCommons {
         return winBitmap;
     }
 
+    // Converts an HICON to HBITMAP, preserving transparency channels.
+    HICON bitmapToIcon(HBITMAP hBitmap)
+    {
+        ULONG_PTR token = 0;
+        Gdiplus::GdiplusStartupInput input = NULL;
+        Gdiplus::GdiplusStartup(&token, &input, NULL);
+
+        if (token != 0)
+        {
+            BITMAP bm;
+            GetObject(hBitmap, sizeof(BITMAP), &bm);
+
+            Gdiplus::Bitmap* bmp = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
+
+            // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
+            // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+            Gdiplus::BitmapData lockedBitmapData;
+            Gdiplus::Rect rc(0, 0, bmp->GetWidth(), bmp->GetHeight());
+            bmp->LockBits(&rc, Gdiplus::ImageLockModeRead, bmp->GetPixelFormat(), &lockedBitmapData);
+
+            Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
+                PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
+
+            HICON tempIcon;
+            image->GetHICON(&tempIcon);
+
+            delete bmp, image;
+            Gdiplus::GdiplusShutdown(token);
+            return tempIcon;
+        }
+
+        return NULL;
+    }
+
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize) {
         return iconToBitmap(getStockIcon(stockIconID, iconSize));
     }
-
 #pragma warning (push)
 #pragma warning (disable : 6387)
-    // Load a PNG from resources and convert into an HBITMAP.
+    // Load a PNG from resources and convert into an HBITMAP with scaling possibility.
     HBITMAP loadPNGFromResource(HMODULE module, int idResource, UINT width, UINT height)
     {
         HBITMAP retval = NULL;
@@ -306,48 +341,58 @@ namespace NWScriptPluginCommons {
         Gdiplus::GdiplusStartup(&token, &input, NULL);
 
         if (token != 0)
+            return NULL;
+        
+        // Load resource
+        auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
+        size_t _size = SizeofResource(module, hResource);
+        auto hMemory = LoadResource(module, hResource);
+        LPVOID ptr = LockResource(hMemory);
+
+        // copy image bytes into a real hglobal memory handle
+        hMemory = ::GlobalAlloc(GHND, _size);
+        if (hMemory)
         {
-            // Load resource
-            auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
-            size_t _size = SizeofResource(module, hResource);
-            auto hMemory = LoadResource(module, hResource);
-            LPVOID ptr = LockResource(hMemory);
-
-            // copy image bytes into a real hglobal memory handle
-            hMemory = ::GlobalAlloc(GHND, _size);
-            if (hMemory)
-            {
-                void* pBuffer = ::GlobalLock(hMemory);
-                memcpy(pBuffer, ptr, _size);
-            }
-
-            // Create stream
-            IStream* pStream = nullptr;
-            HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
-            if (SUCCEEDED(hr))
-            {
-                Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
-                int destWidth = (width > 0) ? width : bmp->GetWidth();
-                int destHeight = (height > 0) ? height : bmp->GetHeight();
-                Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
-                Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
-                g->DrawImage(bmp, 0, 0, destWidth, destHeight);
-
-                destination->GetHBITMAP(Gdiplus::Color::Transparent, &retval);
-                delete bmp, destination;
-                Gdiplus::GdiplusShutdown(token);
-                pStream->Release();
-            }
-
-            if (hMemory)
-                GlobalFree(hMemory);
+            void* pBuffer = ::GlobalLock(hMemory);
+            memcpy(pBuffer, ptr, _size);
         }
+
+        // Create stream
+        IStream* pStream = nullptr;
+        HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+        if (SUCCEEDED(hr))
+        {
+            Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
+            int destWidth = (width > 0) ? width : bmp->GetWidth();
+            int destHeight = (height > 0) ? height : bmp->GetHeight();
+            Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
+            Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
+            g->DrawImage(bmp, 0, 0, destWidth, destHeight);
+
+            // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
+            // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+            Gdiplus::BitmapData lockedBitmapData;
+            Gdiplus::Rect rc(0, 0, destination->GetWidth(), destination->GetHeight());
+            destination->LockBits(&rc, Gdiplus::ImageLockModeRead, destination->GetPixelFormat(), &lockedBitmapData);
+
+            Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
+                PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
+
+            image->GetHBITMAP(Gdiplus::Color::Transparent, &retval);
+            delete bmp, destination, g, image;
+            pStream->Release();
+        }
+
+        if (hMemory)
+            GlobalFree(hMemory);
+
+        Gdiplus::GdiplusShutdown(token);        
 
         return retval;
     }
 
-    // Load a PNG from resources and convert into an HICON.
-    HICON loadPNGFromResourceIcon(HMODULE module, int idResource)
+    // Load a PNG from resources and convert into an HICON with scaling possibility.
+    HICON loadPNGFromResourceIcon(HMODULE module, int idResource, UINT width, UINT height)
     {
         HICON retval = NULL;
         ULONG_PTR token = 0;
@@ -355,36 +400,148 @@ namespace NWScriptPluginCommons {
         Gdiplus::GdiplusStartup(&token, &input, NULL);
 
         if (token != 0)
+            return NULL;
+        
+        // Load resource
+        auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
+        size_t _size = SizeofResource(module, hResource);
+        auto hMemory = LoadResource(module, hResource);
+        LPVOID ptr = LockResource(hMemory);
+
+        // copy image bytes into a real hglobal memory handle
+        hMemory = ::GlobalAlloc(GHND, _size);
+        if (hMemory)
         {
-            // Load resource
-            auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"PNG");
-            size_t _size = SizeofResource(module, hResource);
-            auto hMemory = LoadResource(module, hResource);
-            LPVOID ptr = LockResource(hMemory);
-
-            // copy image bytes into a real hglobal memory handle
-            hMemory = ::GlobalAlloc(GHND, _size);
-            if (hMemory)
-            {
-                void* pBuffer = ::GlobalLock(hMemory);
-                memcpy(pBuffer, ptr, _size);
-            }
-
-            // Create stream
-            IStream* pStream = nullptr;
-            HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
-            if (SUCCEEDED(hr))
-            {
-                Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
-                bmp->GetHICON(&retval);
-                delete bmp;
-                Gdiplus::GdiplusShutdown(token);
-                pStream->Release();
-            }
-
-            if (hMemory)
-                GlobalFree(hMemory);
+            void* pBuffer = ::GlobalLock(hMemory);
+            memcpy(pBuffer, ptr, _size);
         }
+
+        // Create stream
+        IStream* pStream = nullptr;
+        HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+        if (SUCCEEDED(hr))
+        {
+            Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(pStream);
+            int destWidth = (width > 0) ? width : bmp->GetWidth();
+            int destHeight = (height > 0) ? height : bmp->GetHeight();
+            Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
+            Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
+            g->DrawImage(bmp, 0, 0, destWidth, destHeight);
+
+            // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
+            // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+            Gdiplus::BitmapData lockedBitmapData;
+            Gdiplus::Rect rc(0, 0, destination->GetWidth(), destination->GetHeight());
+            destination->LockBits(&rc, Gdiplus::ImageLockModeRead, destination->GetPixelFormat(), &lockedBitmapData);
+
+            Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
+                PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
+
+            image->GetHICON(&retval);
+            delete bmp, destination, g, image;
+            pStream->Release();
+        }
+
+        if (hMemory)
+            GlobalFree(hMemory);
+
+        Gdiplus::GdiplusShutdown(token);
+
+        return retval;
+    }
+
+    // Load a SVG from resources and convert into an HBITMAP.
+    // Resource files must be included as "SVG".
+    HBITMAP loadSVGFromResource(HMODULE module, int idResource, bool invertLuminosity, UINT width, UINT height)
+    {
+        ULONG_PTR token = 0;
+        Gdiplus::GdiplusStartupInput input = NULL;
+        Gdiplus::GdiplusStartup(&token, &input, NULL);
+
+        if (token == 0)
+            return NULL;
+
+        // Load resource
+        auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"SVG");
+        size_t _size = SizeofResource(module, hResource);
+        auto hMemory = LoadResource(module, hResource);
+        LPVOID ptr = LockResource(hMemory);
+        if (!hMemory)
+            return NULL;
+
+        auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
+        lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
+        bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+
+        FreeResource(hMemory);
+
+        // Use GDI+ to build HBITMAP from the image. If we don't, we lose information on DIB transparency
+        // Image is upside-down, so the trick is to create the header with a negative height.
+        BITMAPINFOHEADER bitmapInfoH = { sizeof(BITMAPINFOHEADER), static_cast<int>(width), -static_cast<int>(height), 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
+        BITMAPINFO bitmapInfo = { bitmapInfoH, {} };
+        Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(&bitmapInfo, reinterpret_cast<void*>(bmpResult.data()));
+
+        // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
+        // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+        Gdiplus::BitmapData lockedBitmapData;
+        Gdiplus::Rect rc(0, 0, width, height);
+        bmp->LockBits(&rc, Gdiplus::ImageLockModeRead, bmp->GetPixelFormat(), &lockedBitmapData);
+
+        Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
+            PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
+        HICON tempIcon;
+        image->GetHICON(&tempIcon);
+        delete bmp, image;
+        Gdiplus::GdiplusShutdown(token);
+
+        // Cast HICON to HBITMAP
+        return iconToBitmap(tempIcon);
+    }
+
+    // Load a SVG from resources and convert into an HICON.
+    // Resource files must be included as "SVG".
+    HICON loadSVGFromResourceIcon(HMODULE module, int idResource, bool invertLuminosity, UINT width, UINT height)
+    {
+        HICON retval = NULL;
+        ULONG_PTR token = 0;
+        Gdiplus::GdiplusStartupInput input = NULL;
+        Gdiplus::GdiplusStartup(&token, &input, NULL);
+
+        if (token == 0)
+            return NULL;
+
+        // Load resource
+        auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"SVG");
+        size_t _size = SizeofResource(module, hResource);
+        auto hMemory = LoadResource(module, hResource);
+        LPVOID ptr = LockResource(hMemory);
+        if (!hMemory)
+            return NULL;
+
+        auto svgDocument = lunasvg::Document::loadFromData(reinterpret_cast<char*>(ptr));
+        lunasvg::Bitmap bmpResult = svgDocument->renderToBitmap(width, height);
+        bmpResult.convert(2, 1, 0, 3, false); // Convert to ARGB not premultiplied.
+
+        FreeResource(hMemory);
+
+        // Use GDI+ to build HBITMAP from the image
+        // Image is upside-down, so the trick is to create the header with a negative height.
+        BITMAPINFOHEADER bitmapInfoH = { sizeof(BITMAPINFOHEADER), static_cast<int>(width), -static_cast<int>(height), 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
+        BITMAPINFO bitmapInfo = { bitmapInfoH, {} };
+        Gdiplus::Bitmap* bmp = new Gdiplus::Bitmap(&bitmapInfo, reinterpret_cast<void*>(bmpResult.data()));
+
+        // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
+        // https://stackoverflow.com/questions/11338009/how-do-i-copy-an-hicon-from-gdi-to-gdi-with-transparency
+        Gdiplus::BitmapData lockedBitmapData;
+        Gdiplus::Rect rc(0, 0, width, height);
+        bmp->LockBits(&rc, Gdiplus::ImageLockModeRead, bmp->GetPixelFormat(), &lockedBitmapData);
+
+        Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
+            PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
+
+        image->GetHICON(&retval);
+        delete bmp, image;
+        Gdiplus::GdiplusShutdown(token);
 
         return retval;
     }

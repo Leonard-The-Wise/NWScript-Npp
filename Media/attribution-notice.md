@@ -11,6 +11,10 @@ Notepad++ Logo used was originally created by [Hayes Roberts](https://commons.wi
 Extra icons from Visual Studio 2022 Image Library
 https://www.microsoft.com/en-us/download/details.aspx?id=35825
 
+Stock Icons, from Windows Libraries:
+https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ne-shellapi-shstockiconid?redirectedfrom=MSDN
+
+
 Neverwinter Font is licensed from [Shayna Davidson](shayna@pixelsagas.com).
 
 Image to Icon convert:<br>
