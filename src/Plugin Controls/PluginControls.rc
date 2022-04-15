@@ -394,11 +394,11 @@ IDB_HEREBEDRAGONS       PNG                     "..\\..\\Media\\HereBeDragons.pn
 
 IDB_NWSCRIPTLOGO        PNG                     "..\\..\\Media\\NWScriptLogo.png"
 
-IDB_NWSCRIPTLOGO_200    PNG                     "E:\\Projetos\\NWScript-Npp\\Media\\NWScriptLogo-200.png"
+IDB_NWSCRIPTLOGO_200    PNG                     "..\\..\\Media\\NWScriptLogo-200.png"
 
-IDB_NWSCRIPTLOGO_300    PNG                     "E:\\Projetos\\NWScript-Npp\\Media\\NWScriptLogo-300.png"
+IDB_NWSCRIPTLOGO_300    PNG                     "..\\..\\Media\\NWScriptLogo-300.png"
 
-IDB_NWSCRIPTFILEPARSE   PNG                     "E:\\Projetos\\NWScript-Npp\\Media\\NWScript-FileParse.png"
+IDB_NWSCRIPTFILEPARSE   PNG                     "..\\..\\Media\\NWScript-FileParse.png"
 
 
 /////////////////////////////////////////////////////////////////////////////
