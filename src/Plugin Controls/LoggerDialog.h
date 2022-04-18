@@ -67,7 +67,7 @@ namespace NWScriptPlugin {
 
 		void LockControls(bool toLock);
 
-		void setDarkMode() {
+		void refreshDarkMode() {
 			checkSwitchToDarkMode();
 		}
 

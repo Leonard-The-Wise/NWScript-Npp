@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <Windows.h>
-
 constexpr COLORREF HEXRGB(DWORD rrggbb) {
 	// from 0xRRGGBB like natural #RRGGBB
 	// to the little-endian 0xBBGGRR
@@ -58,7 +56,7 @@ namespace PluginDarkMode
 		tabbar
 	};
 
-	enum ColorTone {
+	enum class ColorTone {
 		blackTone  = 0,
 		redTone    = 1,
 		greenTone  = 2,
@@ -79,7 +77,6 @@ namespace PluginDarkMode
 	void initDarkMode();				
 
 	bool isEnabled();
-	void setEnabled(bool enable);
 	bool isDarkMenuEnabled();
 	bool isExperimentalSupported();
 

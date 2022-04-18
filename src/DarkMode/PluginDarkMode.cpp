@@ -14,21 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "pch.h"
+#define USE_PCH
 
+#ifdef USE_PCH
+#include "pch.h"
+#else
+#include <Windows.h>
+#include <Uxtheme.h>
+#include <Vssym32.h>
+#include <Shlwapi.h>
+#include <Richedit.h>
+#include <cmath>
+#include <assert.h>
+#endif
+
+#include "DPIManager.h"
 #include "PluginDarkMode.h"
 
 #include "DarkMode.h"
 #include "UAHMenuBar.h"
 
-#include "NotepadInternalMessages.h"
-
-#include "PluginMain.h"
-
-using namespace NWScriptPlugin;
-
 #ifdef __GNUC__
-#include <cmath>
 #define WINAPI_LAMBDA WINAPI
 #else
 #define WINAPI_LAMBDA
@@ -204,6 +210,8 @@ namespace PluginDarkMode
 		HEXRGB(0x909080)	// edgeColor
 	};
 
+	static DPIManager _dpiManager;
+
 	// customized
 	Colors darkCustomizedColors{
 		HEXRGB(0x202020),	// background
@@ -218,7 +226,7 @@ namespace PluginDarkMode
 		HEXRGB(0x646464)	// edgeColor
 	};
 
-	ColorTone g_colorToneChoice = blackTone;
+	ColorTone g_colorToneChoice = ColorTone::blackTone;
 
 	void setDarkTone(ColorTone colorToneChoice)
 	{
@@ -259,25 +267,25 @@ namespace PluginDarkMode
 	{
 		switch (g_colorToneChoice)
 		{
-			case redTone:
+			case ColorTone::redTone:
 				return tR;
 
-			case greenTone:
+			case ColorTone::greenTone:
 				return tG;
 
-			case blueTone:
+			case ColorTone::blueTone:
 				return tB;
 
-			case purpleTone:
+			case ColorTone::purpleTone:
 				return tP;
 
-			case cyanTone:
+			case ColorTone::cyanTone:
 				return tC;
 
-			case oliveTone:
+			case ColorTone::oliveTone:
 				return tO;
 
-			case customizedTone:
+			case ColorTone::customizedTone:
 				return tCustom;
 
 			default:
@@ -287,33 +295,30 @@ namespace PluginDarkMode
 
 	static Options _options;			// actual runtime options
 
-	Options configuredOptions()
+	Options configuredOptions(bool bEnable)
 	{
 		Options opt;
-		opt.enable = Plugin::Instance().IsDarkModeEnabled();
+		opt.enable = bEnable;
 		opt.enableMenubar = opt.enable;
 
 		g_colorToneChoice = ColorTone::blackTone; // black tone
 		tCustom.change(darkColors);
+		_dpiManager.Invalidate();
 
 		return opt;
 	}
 
 	void initDarkMode()
 	{
-		_options = configuredOptions();
+		_options = configuredOptions(false);
 
 		initExperimentalDarkMode();
-		setDarkMode(_options.enable, true);
+		setDarkMode(false, true);
 	}
 
 	bool isEnabled()
 	{
 		return _options.enable;
-	}
-
-	void setEnabled(bool enable) {
-		_options.enable = enable;
 	}
 
 	bool isDarkMenuEnabled()
@@ -673,6 +678,8 @@ namespace PluginDarkMode
 
 	void setDarkMode(bool useDark, bool fixDarkScrollbar)
 	{
+		_options.enable = useDark;
+		_options.enableMenubar = useDark;
 		::SetDarkMode(useDark, fixDarkScrollbar);
 	}
 
@@ -999,7 +1006,7 @@ namespace PluginDarkMode
 			auto holdBrush = ::SelectObject(hdc, PluginDarkMode::getDarkerBackgroundBrush());
 
 			RECT arrowRc = {
-			rc.right - Plugin::Instance().DpiManager().scaleX(17), rc.top + 1,
+			rc.right - _dpiManager.scaleX(17), rc.top + 1,
 			rc.right - 1, rc.bottom - 1
 			};
 
@@ -1041,7 +1048,7 @@ namespace PluginDarkMode
 			::SetTextColor(hdc, isHot ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
 			::SetBkColor(hdc, isHot ? PluginDarkMode::getHotBackgroundColor() : PluginDarkMode::getBackgroundColor());
 			::ExtTextOut(hdc,
-				arrowRc.left + (arrowRc.right - arrowRc.left) / 2 - Plugin::Instance().DpiManager().scaleX(4),
+				arrowRc.left + (arrowRc.right - arrowRc.left) / 2 - _dpiManager.scaleX(4),
 				arrowRc.top + 3,
 				ETO_OPAQUE | ETO_CLIPPED,
 				&arrowRc, L"˅",
@@ -1438,12 +1445,12 @@ namespace PluginDarkMode
 					::SendMessage(hWnd, TCM_GETITEM, i, reinterpret_cast<LPARAM>(&tci));
 
 					RECT rcText = rcItem;
-					rcText.left += Plugin::Instance().DpiManager().scaleX(6);
-					rcText.right -= Plugin::Instance().DpiManager().scaleX(3);
+					rcText.left += _dpiManager.scaleX(6);
+					rcText.right -= _dpiManager.scaleX(3);
 
 					if (i == nSelTab)
 					{
-						rcText.bottom -= Plugin::Instance().DpiManager().scaleX(4);
+						rcText.bottom -= _dpiManager.scaleX(4);
 					}
 
 					DrawText(hdc, label, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
@@ -1703,8 +1710,8 @@ namespace PluginDarkMode
 					found = static_cast<bool>(SendMessage(hwnd, LM_GETITEM, 0, reinterpret_cast<LPARAM>(&pItem)));
 					if (found)
 					{
-						pItem.state = LIS_ENABLED | LIS_FOCUSED | LIS_DEFAULTCOLORS;
-						pItem.stateMask = LIS_ENABLED | LIS_FOCUSED | LIS_DEFAULTCOLORS;
+						pItem.state = LIS_ENABLED | LIS_FOCUSED | (PluginDarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0);
+						pItem.stateMask = LIS_ENABLED | LIS_FOCUSED | (PluginDarkMode::isEnabled() ? LIS_DEFAULTCOLORS : 0);
 						SendMessage(hwnd, LM_SETITEM, 0, reinterpret_cast<LPARAM>(&pItem));
 						i++;
 					}

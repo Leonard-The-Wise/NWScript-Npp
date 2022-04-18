@@ -364,10 +364,12 @@ plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"
         FreeResource(hMemory);
 
         // Retrieve statistics
+        _NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
         _NWScriptParseResults->SerializeFromFile(_pluginPaths["NWScriptEngineObjectsFile"].c_str());
         Settings().engineStructs = _NWScriptParseResults->EngineStructuresCount;
         Settings().engineFunctionCount = _NWScriptParseResults->FunctionsCount;
         Settings().engineConstants = _NWScriptParseResults->ConstantsCount;
+        _NWScriptParseResults = nullptr;
     }        
 }
 
@@ -382,20 +384,18 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     if (_NppSupportDarkModeMessages)
         _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
 
-    PluginDarkMode::setEnabled(_isNppDarkModeEnabled);
-
     if (_wasNppDarkModeEnabled != _isNppDarkModeEnabled)
     {
         _wasNppDarkModeEnabled = _isNppDarkModeEnabled;
 
-        // Dark mode message processing is enabled/disabled;
-        PluginDarkMode::setEnabled(_isNppDarkModeEnabled);
+        // Set Dark Mode for window/application
+        PluginDarkMode::setDarkMode(_isNppDarkModeEnabled, true);
 
         // Rebuild menu
         SetupPluginMenuItems();
 
-        // Set permanent dialogs dark mode
-        _loggerWindow.setDarkMode();
+        // Refresh permanent dialog dark mode
+        _loggerWindow.refreshDarkMode();
     }
 }
 
@@ -404,7 +404,6 @@ void Plugin::SetDarkModeLegacy(bool UseDark)
 {
     Instance().RefreshDarkMode(true, UseDark);
 }
-
 
 #pragma endregion Plugin DLL Initialization
 
@@ -429,6 +428,8 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             DetectDarkThemeInstall();
             LoadNotepadLexer();
             SetupPluginMenuItems();
+
+            PluginDarkMode::initDarkMode();
 
             // Detects Dark mode if supported
             if (_NppSupportDarkModeMessages)

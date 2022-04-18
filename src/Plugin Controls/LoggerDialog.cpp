@@ -900,9 +900,6 @@ void LoggerDialog::CreateTooltips()
 
 void LoggerDialog::checkSwitchToDarkMode()
 {
-	if (PluginDarkMode::isEnabled())
-		PluginDarkMode::initDarkMode();
-
 	RecreateIcons();
 	RecreateTxtConsole();
 
