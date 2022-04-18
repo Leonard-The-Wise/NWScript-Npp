@@ -40,9 +40,10 @@
 
 #include "XMLGenStrings.h"
 #include "VersionInfoEx.h"
-#include "IconBuilder.h"
 
 #include "ColorConvert.h"
+
+#include "PluginDarkMode.h"
 
 #pragma warning (disable : 6387)
 
@@ -95,17 +96,17 @@ ShortcutKey toggleConsoleKey = { true, false, false,  VK_OEM_COMMA };
 FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Use auto-identation"), Plugin::SwitchAutoIndent, 0, false },
     {TEXT("---")},
-    {TEXT("Compile script"), Plugin::CompileScript, 0, false, &compileScriptKey },
+    {TEXT("Compile NWScript"), Plugin::CompileScript, 0, false, &compileScriptKey },
     {TEXT("Disassemble file..."), Plugin::DisassembleFile, 0, false, &disassembleScriptKey },
-    {TEXT("Batch processing..."), Plugin::BatchProcessFiles, 0, false, &batchScriptKey },
+    {TEXT("Batch Process NWScript Files..."), Plugin::BatchProcessFiles, 0, false, &batchScriptKey },
     {TEXT("Run last batch"), Plugin::RunLastBatch, 0, false, &runLastBatchKey},
     {TEXT("---")},
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View script dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
-    {TEXT("Toggle compiler log window"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
+    {TEXT("Toggle NWCompiler Console"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
     {TEXT("---")},
-    {TEXT("Compiler settings..."), Plugin::CompilerSettings},
+    {TEXT("NWCompiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
@@ -276,6 +277,9 @@ void Plugin::SetNotepadData(NppData& data)
         Settings().notepadVersion = currentNotepad;
     }
 
+    if (Settings().notepadVersion >= "8.3.4") 
+        _NppSupportDarkModeMessages = true;
+
     // Adjust menu "Use Auto-Indentation" checked or not before creation
     pluginFunctions[PLUGINMENU_SWITCHAUTOINDENT]._init2Check = Settings().enableAutoIndentation;
 
@@ -301,7 +305,7 @@ void Plugin::InitCompilerLogWindow()
     _loggerWindow.init(DllHModule(), NotepadHwnd());
     _loggerWindow.create(&_dockingData);
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
-    _dockingIcon = getStockIcon(SHSTOCKICONID::SIID_SOFTWARE, IconSize::Size16x16);
+    _dockingIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, 32, 32);
     _dockingData.hIconTab = _dockingIcon;
     _dockingData.pszModuleName = _pluginFileName.c_str();
     _dockingData.dlgID = 0;
@@ -315,7 +319,6 @@ void Plugin::InitCompilerLogWindow()
 
     // Set the compiler log navigate callback (from errors list to main window)
     _loggerWindow.SetNavigateFunctionCallback(NavigateToCode);
-
 }
 
 // Display / Hide the compiler log window
@@ -359,44 +362,47 @@ void Plugin::CheckupEngineObjectsFile()
 plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"), TEXT("NWScript Plugin - Critical Error"), MB_OK | MB_ICONERROR);
 
         FreeResource(hMemory);
+
+        // Retrieve statistics
+        _NWScriptParseResults->SerializeFromFile(_pluginPaths["NWScriptEngineObjectsFile"].c_str());
+        Settings().engineStructs = _NWScriptParseResults->EngineStructuresCount;
+        Settings().engineFunctionCount = _NWScriptParseResults->FunctionsCount;
+        Settings().engineConstants = _NWScriptParseResults->ConstantsCount;
     }        
 }
 
-// Crudely detects if dark mode is enabled for Notepad++.
-void Plugin::CrudeDetectDarkModeEnabled()
+// Properly detects if dark mode is enabled (Notepad++ 8.3.4 and above)
+void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
 {
-    //std::this_thread::sleep_for(200ms);
+    // Legacy support
+    if (ForceUseDark)
+        _isNppDarkModeEnabled = UseDark;
 
-    RECT NppRect;
-    HWND NppParent = GetParent(NotepadHwnd());    
-    GetWindowRect(NotepadHwnd(), &NppRect);
-    _dpiManager.screenToClientEx(NppParent, &NppRect);
+    // Normal support overrides legacy
+    if (_NppSupportDarkModeMessages)
+        _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
 
-    int x, y;
-    x = (NppRect.right - NppRect.left) / 2;
-    y = NppRect.top + 5;
-
-    HDC hdcScreen = GetDCEx(NotepadHwnd(), NULL ,DCX_CACHE | DCX_WINDOW | DCX_LOCKWINDOWUPDATE);
-    COLORREF pixel = GetPixel(hdcScreen, x, y);
-    ReleaseDC(NotepadHwnd(), hdcScreen);
-
-    if (pixel == CLR_INVALID)
-        return;
-
-    //Convert pixel to luminescence
-    HSL tester = rgb2hsl((float)((pixel >> 24) & 0x00FF), (float)((pixel >> 16) & 0x00FF), (float)((pixel) & 0x00FF));
-
-    // Completely black menu title or a low lighted one.
-    if (tester.l < 0.35f)
-        _isNppDarkModeEnabled = true;
-    else
-        _isNppDarkModeEnabled = false;
+    PluginDarkMode::setEnabled(_isNppDarkModeEnabled);
 
     if (_wasNppDarkModeEnabled != _isNppDarkModeEnabled)
     {
         _wasNppDarkModeEnabled = _isNppDarkModeEnabled;
+
+        // Dark mode message processing is enabled/disabled;
+        PluginDarkMode::setEnabled(_isNppDarkModeEnabled);
+
+        // Rebuild menu
         SetupPluginMenuItems();
+
+        // Set permanent dialogs dark mode
+        _loggerWindow.setDarkMode();
     }
+}
+
+// Set Dark Mode for Legacy Notepad++ versions
+void Plugin::SetDarkModeLegacy(bool UseDark)
+{
+    Instance().RefreshDarkMode(true, UseDark);
 }
 
 
@@ -416,92 +422,121 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 {
     switch (notifyCode->nmhdr.code)
     {
-    case NPPN_READY:
-    {
-        // Do Initialization procedures
-        SetAutoIndentSupport();
-        DetectDarkThemeInstall();
-        LoadNotepadLexer();
-        SetupPluginMenuItems();
-        _isReady = true;
-
-        // Auto call a function that required restart during the previous session (because of privilege elevation)
-        // Up to now...
-        // 1 = ImportDefinitions
-        // 2 = Fix Editor's Colors
-        // Since all functions that required restart must have returned in Admin Mode, we check this
-        // to see if the user didn't cancel the UAC request.
-        // Also break processing here, since those functions can call another restart
-        if (IsUserAnAdmin())
+        case NPPN_READY:
         {
-            if (Settings().notepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
-            {
-                DoResetEditorColors(Settings().notepadRestartFunction);
-                break;
-            }
-            if (Settings().notepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
-            {
-                DoInstallDarkTheme(Settings().notepadRestartFunction);
-                break;
-            }
-        }
-
-        // And then make sure to clear the hooks, temp files, etc. 
-        // Call as immediate to instant save on settings so we avoid losing it on a session crash also.
-        SetRestartHook(RestartMode::None, RestartFunctionHook::None);
-
-        break;
-    }
-    case NPPN_CANCELSHUTDOWN:
-    {
-        // We're clearing any attempt to hook restarts here, have they been setup or not
-        SetRestartHook(RestartMode::None);
-        break;
-    }
-    case NPPN_SHUTDOWN:
-    {
-        _isReady = false;
-        Settings().Save();
-
-        // If we have a restart hook setup, call out shell to execute it.
-        if (Settings().notepadRestartMode != RestartMode::None)
-        {
-           runProcess(Settings().notepadRestartMode == RestartMode::Admin ? true : false, 
-              Instance()._pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
-        }
-
-        break;
-    }
-    case NPPN_LANGCHANGED:
-    {
-        LoadNotepadLexer();
-        break;
-    }
-    case NPPN_BUFFERACTIVATED:
-    {
-        if (_isReady)
+            // Do Initialization procedures
+            SetAutoIndentSupport();
+            DetectDarkThemeInstall();
             LoadNotepadLexer();
-        break;
-    }
-    case SCN_CHARADDED:
-    {
-        // Conditions to perform the Auto-Indent:
-        // - Notepad is in Ready state;
-        // - Current Language is set to one of the plugin supported langs
-        // - Notepad version doesn't yet support Extended AutoIndent functionality
-        if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
-            && Settings().enableAutoIndentation)
-            Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
-        break;
-    }
+            SetupPluginMenuItems();
 
-    case SCN_PAINTED:
-    {
-        CrudeDetectDarkModeEnabled();
-    }
+            // Detects Dark mode if supported
+            if (_NppSupportDarkModeMessages)
+                RefreshDarkMode();
 
-    default:
-        return;
+            // Force dark mode for legacy Notepad++, settings dependant
+            if (!_NppSupportDarkModeMessages && Settings().legacyDarkModeUse)
+                RefreshDarkMode(true, true);
+
+            _isReady = true;
+
+            // Auto call a function that required restart during the previous session (because of privilege elevation)
+            // Up to now...
+            // 1 = ImportDefinitions
+            // 2 = Fix Editor's Colors
+            // Since all functions that required restart must have returned in Admin Mode, we check this
+            // to see if the user didn't cancel the UAC request.
+            // Also break processing here, since those functions can call another restart
+            if (IsUserAnAdmin())
+            {
+                if (Settings().notepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
+                {
+                    DoResetEditorColors(Settings().notepadRestartFunction);
+                    break;
+                }
+                if (Settings().notepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
+                {
+                    DoInstallDarkTheme(Settings().notepadRestartFunction);
+                    break;
+                }
+            }
+
+            // And then make sure to clear the hooks, temp files, etc. 
+            // Call as immediate to instant save on settings so we avoid losing it on a session crash also.
+            SetRestartHook(RestartMode::None, RestartFunctionHook::None);
+
+            break;
+        }
+        case NPPN_CANCELSHUTDOWN:
+        {
+            // We're clearing any attempt to hook restarts here, have they been setup or not
+            SetRestartHook(RestartMode::None);
+            break;
+        }
+        case NPPN_SHUTDOWN:
+        {
+            _isReady = false;
+            Settings().Save();
+
+            // If we have a restart hook setup, call out shell to execute it.
+            if (Settings().notepadRestartMode != RestartMode::None)
+            {
+               runProcess(Settings().notepadRestartMode == RestartMode::Admin ? true : false, 
+                  Instance()._pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
+            }
+
+            break;
+        }
+        case NPPN_LANGCHANGED:
+        {
+            LoadNotepadLexer();
+            break;
+        }
+        case NPPN_BUFFERACTIVATED:
+        {
+            if (_isReady)
+                LoadNotepadLexer();
+            break;
+        }
+        case SCN_CHARADDED:
+        {
+            // Conditions to perform the Auto-Indent:
+            // - Notepad is in Ready state;
+            // - Current Language is set to one of the plugin supported langs
+            // - Notepad version doesn't yet support Extended AutoIndent functionality
+            if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
+                && Settings().enableAutoIndentation)
+                Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
+            break;
+        }
+        case NPPN_DARKMODECHANGED:
+        {
+            RefreshDarkMode();
+            break;
+        }
+        case NPPN_TBMODIFICATION:
+        {
+            toolbarIconsWithDarkMode tbIcons[3] = {};
+
+            tbIcons[0].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[0].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[0].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+
+            tbIcons[1].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[1].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[1].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+
+            tbIcons[2].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[2].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            tbIcons[2].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+
+            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+                pluginFunctions[PLUGINMENU_COMPILESCRIPT]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[0]));
+            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+                pluginFunctions[PLUGINMENU_BATCHPROCESSING]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[1]));
+            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+                pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[2]));
+        }
     }
 }
 
@@ -865,7 +900,7 @@ void Plugin::SetupPluginMenuItems()
     SetPluginMenuItemSVG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
     SetPluginMenuItemSVG(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
     SetPluginMenuItemSVG(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, false);
+    SetPluginMenuItemSVG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, true);
     SetPluginMenuItemSVG(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
     SetPluginMenuItemSVG(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
     SetPluginMenuItemSVG(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
@@ -948,7 +983,6 @@ Plugin::PathCheckResults Plugin::WritePermissionCheckup(const std::vector<generi
         ePermission.SetPathsText(sWhichPaths);
         ePermission.SetSolution(TEXT("To solve this, you may either : \r\n - Try to reopen Notepad++ with elevated privileges(Administrator Mode); or \r\n \
 - Give write access permissions to the file(s) manually, by finding it in Windows Explorer, selecting Properties->Security Tab."));
-
         INT_PTR RunAdmin = ePermission.doDialog();
         if (RunAdmin == 1)
         {
@@ -1955,7 +1989,7 @@ void Plugin::BatchProcessDialogCallback(HRESULT decision)
 
     // Initial status dialog
     inst._processingFilesDialog.setStatus(TEXT("Building files list..."));
-    inst._processingFilesDialog.doDialog();
+    inst._processingFilesDialog.showDialog();
 
     // The rest processes when file filters are done in separate thread
 #ifdef USE_THREADS
@@ -2500,6 +2534,8 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 // Toggles the log console
 PLUGINCOMMAND Plugin::ToggleLogger()
 {
+    Instance().Messenger().SendNppMessage<void>(NPPM_SETMENUITEMCHECK,
+        pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, !Instance()._loggerWindow.isVisible());
     Instance().DisplayCompilerLogWindow(!Instance()._loggerWindow.isVisible());
 }
 
@@ -2560,7 +2596,7 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
 PLUGINCOMMAND Plugin::CompilerSettings()
 {
     static CompilerSettingsDialog compilerSettings = {};
-
+    
     compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
     compilerSettings.appendSettings(&Instance()._settings);
     compilerSettings.doDialog();
@@ -2573,6 +2609,8 @@ PLUGINCOMMAND Plugin::UserPreferences()
 
     userPreferences.init(Instance().DllHModule(), Instance().NotepadHwnd());
     userPreferences.appendSettings(&Instance()._settings);
+    userPreferences.SetEnableDarkModeLegacy(!Instance()._NppSupportDarkModeMessages);
+    userPreferences.SetDarkModeLegacyFunction(Plugin::SetDarkModeLegacy);
     userPreferences.doDialog();
 }
 
@@ -2805,16 +2843,16 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
 
     // Add user statistics
-    replaceStrings.insert({ TEXT("%COMPILEATTEMPTS%"), std::to_wstring(Instance().Settings().compileAttempts) });
-    replaceStrings.insert({ TEXT("%COMPILESUCCESSES%"), std::to_wstring(Instance().Settings().compileSuccesses) });
-    replaceStrings.insert({ TEXT("%COMPILESFAILED%"), std::to_wstring(Instance().Settings().compileFails) });
-    replaceStrings.insert({ TEXT("%DISASSEMBLEDFILES%"), std::to_wstring(Instance().Settings().disassembledFiles) });
+    replaceStrings.insert({ TEXT("%COMPILEATTEMPTS%"), thousandSeparatorW(Instance().Settings().compileAttempts)});
+    replaceStrings.insert({ TEXT("%COMPILESUCCESSES%"), thousandSeparatorW(Instance().Settings().compileSuccesses) });
+    replaceStrings.insert({ TEXT("%COMPILESFAILED%"), thousandSeparatorW(Instance().Settings().compileFails) });
+    replaceStrings.insert({ TEXT("%DISASSEMBLEDFILES%"), thousandSeparatorW(Instance().Settings().disassembledFiles) });
 
-    replaceStrings.insert({ TEXT("%engineStructures%"), std::to_wstring(Instance().Settings().engineStructs) });
-    replaceStrings.insert({ TEXT("%engineFunctionCount%"), std::to_wstring(Instance().Settings().engineFunctionCount) });
-    replaceStrings.insert({ TEXT("%engineConstants%"), std::to_wstring(Instance().Settings().engineConstants) });
-    replaceStrings.insert({ TEXT("%userFunctionCount%"), std::to_wstring(Instance().Settings().userFunctionCount) });
-    replaceStrings.insert({ TEXT("%userConstants%"), std::to_wstring(Instance().Settings().userConstants) });
+    replaceStrings.insert({ TEXT("%engineStructures%"), thousandSeparatorW(Instance().Settings().engineStructs) });
+    replaceStrings.insert({ TEXT("%engineFunctionCount%"), thousandSeparatorW(Instance().Settings().engineFunctionCount) });
+    replaceStrings.insert({ TEXT("%engineConstants%"), thousandSeparatorW(Instance().Settings().engineConstants) });
+    replaceStrings.insert({ TEXT("%userFunctionCount%"), thousandSeparatorW(Instance().Settings().userFunctionCount) });
+    replaceStrings.insert({ TEXT("%userConstants%"), thousandSeparatorW(Instance().Settings().userConstants) });
 
     // Set replace strings
     aboutDialog.setReplaceStrings(replaceStrings); 

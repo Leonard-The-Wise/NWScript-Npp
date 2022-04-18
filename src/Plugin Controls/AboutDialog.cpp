@@ -21,6 +21,7 @@
 #include "VersionInfoEx.h"
 
 #include "AboutDialog.h"
+#include "PluginDarkMode.h"
 
 
 using namespace NWScriptPlugin;
@@ -72,21 +73,33 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 {
 	// Load resource
 	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(resourceID), L"RTF");
-	size_t _size = SizeofResource(_hInst, hResource);
-	auto hMemory = LoadResource(_hInst, hResource);
-	LPVOID ptr = LockResource(hMemory);
+	HGLOBAL hMemory = NULL;
+	LPVOID ptr = NULL;
+	size_t _size = 0;
+
+	if (hResource)
+	{
+		_size = SizeofResource(_hInst, hResource);
+		hMemory = LoadResource(_hInst, hResource);
+
+		if (hMemory)
+			ptr = LockResource(hMemory);
+	}
 
 	// Copy image bytes into a real hglobal memory handle
 	hMemory = ::GlobalAlloc(GHND, _size);
 	if (hMemory)
 	{
 		void* pBuffer = ::GlobalLock(hMemory);
-		memcpy(pBuffer, ptr, _size);
+		if (pBuffer && ptr)
+			memcpy(pBuffer, ptr, _size);
 	}
 
 	// Make a raw string of resources
 	std::string rawText;
-	rawText.assign((char*)ptr, _size);
+
+	if (ptr)
+		rawText.assign((char*)ptr, _size);
 
 	// Replace %VARIABLE% strings from raw text
 	generic_string rawTextW = replaceStringsW(str2wstr(rawText), _replaceStrings);
@@ -100,7 +113,8 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 	if (hMemory)
 	{
 		void* pBuffer = ::GlobalLock(hMemory);
-		memcpy(pBuffer, wstr2str(rawTextW).c_str(), rawTextW.size());
+		if (pBuffer)
+			memcpy(pBuffer, wstr2str(rawTextW).c_str(), rawTextW.size());
 	}
 
 	// Create stream on hMemory
@@ -108,21 +122,22 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
 	if (SUCCEEDED(hr))
 	{
-		// Set paramenters and load default text resource
+		// Set paramenters
 		EDITSTREAM es = { (DWORD_PTR)pStream, 0, EditStreamCallback };
 		HWND editControl = GetDlgItem(_hSelf, IDC_TXTABOUT);
 		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)&_oleCallback);
 		SendMessage(editControl, EM_AUTOURLDETECT, AURL_ENABLEURL, 0);
 		SendMessage(editControl, EM_EXLIMITTEXT, 0, -1);
 		SendMessage(editControl, EM_SETEVENTMASK, 0, ENM_LINK);
+
+		// Load Document 
 		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
-		
-		// Retrieve raw buffer from TXTABOUT for replace strings and later use with hyperlinks
+
+		// Retrieve raw buffer from TXTABOUT for replace strings and later use with hyperlink clicks
 		GETTEXTLENGTHEX tl = { GTL_NUMCHARS, 1200 };
 		_aboutText.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, (WPARAM)&tl, 0) + 1);
 		GETTEXTEX tex = { (DWORD)_aboutText.size() * sizeof(TCHAR), GT_RAWTEXT, 1200, NULL, NULL};
 		SendMessage(editControl, EM_GETTEXTEX, (WPARAM)&tex, (LPARAM)_aboutText.data());
-
 	}
 
 	// Free memory allocated for resource again
@@ -177,16 +192,18 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 			::SetDlgItemText(_hSelf, IDC_LBLVERSION, reinterpret_cast<LPCWSTR>(sVersion.str().c_str()));
 			::SetDlgItemText(_hSelf, IDC_LNKHOMEPAGE, (TEXT("<a href=\"") + _homePath + TEXT("\">") + _homePath + TEXT("</a>")).c_str());
 
-			LoadAboutTextEditor(IDR_ABOUTDOC);
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 
-			// We don't resize controls based on DPI here, since this form
-			// already uses custom font that scales with DPI.
+			LoadAboutTextEditor(PluginDarkMode::isEnabled() ? IDR_ABOUTDOCDARK : IDR_ABOUTDOC);
+
 			// Only adjust logo.
 			setLogo();
 
-			HICON hAbout = loadPNGFromResourceIcon(_hInst, IDI_ABOUTDIALOGWINDOWICO);
+			// Load PNG image for logo
+			HICON hAbout = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
 
+			// Setup control anchors
 			InitAnchors();
 
 			return TRUE;
@@ -254,6 +271,7 @@ intptr_t CALLBACK AboutDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM l
 					break;
 				}
 			}
+			break;
 		}
 	}
 

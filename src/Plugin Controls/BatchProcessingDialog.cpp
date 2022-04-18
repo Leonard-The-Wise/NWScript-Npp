@@ -15,6 +15,7 @@
 #include "BatchProcessingDialog.h"
 
 #include "PluginControlsRC.h"
+#include "PluginDarkMode.h"
 
 typedef jpcre2::select<TCHAR> pcre2;
 
@@ -28,6 +29,8 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 		{
 			_dpiManager.DPIResizeControl(_hSelf);
 			_dpiManager.DPIResizeChildren(_hSelf, true);
+
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 
 			Settings& myset = *_settings;
 
@@ -145,6 +148,7 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 						_tmpFiltersDisasm = buffer;
 				}
 			}
+			break;
 		}
 	}
 

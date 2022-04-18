@@ -49,6 +49,28 @@ protected:
 	static INT_PTR CALLBACK dlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HGLOBAL makeRTLResource(int dialogID, DLGTEMPLATE** ppMyDlgTemplate);
 
+	virtual void getClientRect(RECT& rc) const {
+		::GetClientRect(_hSelf, &rc);
+	};
+
+	virtual void getWindowRect(RECT& rc) const {
+		::GetWindowRect(_hSelf, &rc);
+	};
+
+	virtual int getWidth() const {
+		RECT rc;
+		::GetClientRect(_hSelf, &rc);
+		return (rc.right - rc.left);
+	};
+
+	virtual int getHeight() const {
+		RECT rc;
+		::GetClientRect(_hSelf, &rc);
+		if (::IsWindowVisible(_hSelf) == TRUE)
+			return (rc.bottom - rc.top);
+		return 0;
+	};
+
 	DPIManager _dpiManager;
 
 private:

@@ -52,6 +52,40 @@ namespace NWScriptPluginCommons {
         return TEXT("0x") + rc;
     }
 
+    // Create a thousand separator string
+    // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
+    std::string thousandSeparator(int number)
+    {
+        auto count = 3;
+        std::string src = std::to_string(number);
+        std::string dest;
+
+        TCHAR sepBuffer[2]; // Null-terminated char string
+        GetLocaleInfoEx(LOCALE_NAME_USER_DEFAULT, LOCALE_STHOUSAND, sepBuffer, 2);
+        std::string sep = wstr2str(sepBuffer);
+
+        for (auto i = src.crbegin(); i != src.crend(); ++i) {
+            if (count == 0)
+            {
+                dest.push_back(sep[0]);
+                count = 3;
+            }
+            if (count--) {
+                dest.push_back(*i);
+            }
+        }
+        std::reverse(dest.begin(), dest.end());
+
+        return dest;
+    }
+
+    // Create a thousand separator string
+    // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
+    generic_string thousandSeparatorW(int number)
+    {
+        return str2wstr(thousandSeparator(number));
+    }
+
     // Since codecvt is now deprecated API and no replacement is provided, we write our own.
     std::wstring str2wstr(const std::string& string)
     {
@@ -238,7 +272,7 @@ namespace NWScriptPluginCommons {
         if (hModule)
         {
             hIcon = reinterpret_cast<HICON>(LoadImage(hModule, MAKEINTRESOURCE(-sii.iIcon),
-                IMAGE_ICON, iconSize, iconSize, LR_DEFAULTCOLOR));
+                IMAGE_ICON, static_cast<UINT>(iconSize), static_cast<UINT>(iconSize), LR_DEFAULTCOLOR));
             FreeLibrary(hModule);
         }
 
@@ -386,7 +420,7 @@ namespace NWScriptPluginCommons {
         if (hMemory)
             GlobalFree(hMemory);
 
-        Gdiplus::GdiplusShutdown(token);        
+        Gdiplus::GdiplusShutdown(token);
 
         return retval;
     }
@@ -548,9 +582,67 @@ namespace NWScriptPluginCommons {
         delete bmp, image;
         Gdiplus::GdiplusShutdown(token);
 
-        return retval;
+        return createIconMask(retval);
     }
 #pragma warning (pop)
+
+    // Creates an image mask for bitmap
+    HBITMAP createImageMask(HBITMAP bitmapHandle, const COLORREF transparencyColor)
+    {
+        // For getting information about the bitmap's height and width in this context
+        BITMAP bitmap;
+
+        // Create the device contexts for the bitmap and its mask
+        HDC bitmapGraphicsDeviceContext = CreateCompatibleDC(NULL);
+        HDC bitmapMaskGraphicsDeviceContext = CreateCompatibleDC(NULL);
+
+        // For the device contexts to re-select the initial object they initialized with
+        // and de-select the bitmap and mask
+        HGDIOBJ bitmapDummyObject;
+        HGDIOBJ bitmapMaskDummyObject;
+
+        // The actual mask
+        HBITMAP bitmapMaskHandle;
+
+        // 1. Generate the mask.
+        GetObject(bitmapHandle, sizeof(BITMAP), &bitmap);
+        bitmapMaskHandle = CreateBitmap(bitmap.bmWidth, bitmap.bmHeight, 1, 1, NULL);
+
+        // 2. Setup the device context for the mask (and the bitmap)
+        //    — also get the initial selected objects in the device contexts.
+        bitmapDummyObject = SelectObject(bitmapGraphicsDeviceContext, (HGDIOBJ)(HBITMAP)bitmapHandle);
+        bitmapMaskDummyObject = SelectObject(bitmapMaskGraphicsDeviceContext, (HGDIOBJ)(HBITMAP)bitmapMaskHandle);
+
+        // 3. Set the background color of the mask.
+        SetBkColor(bitmapGraphicsDeviceContext, transparencyColor);
+
+        // 4. Copy the bitmap to the mask and invert it so it blends with the background color.
+        BitBlt(bitmapMaskGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapGraphicsDeviceContext, 0, 0, SRCCOPY);
+        BitBlt(bitmapGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapMaskGraphicsDeviceContext, 0, 0, SRCINVERT);
+
+        // 5. Select the bitmaps out before deleting the device contexts to avoid any issues.
+        SelectObject(bitmapGraphicsDeviceContext, bitmapDummyObject);
+        SelectObject(bitmapMaskGraphicsDeviceContext, bitmapMaskDummyObject);
+
+        // Clean-up
+        DeleteDC(bitmapGraphicsDeviceContext);
+        DeleteDC(bitmapMaskGraphicsDeviceContext);
+
+        // Voila!
+        return bitmapMaskHandle;
+    }
+
+    // Creates an icon mask for current HICON
+    HICON createIconMask(HICON source)
+    {
+        ICONINFO iconInfo;
+        bool success = GetIconInfo(source, &iconInfo);
+        if (!success)
+            return NULL;
+
+        iconInfo.hbmMask = createImageMask(iconInfo.hbmColor, 0);
+        return CreateIconIndirect(&iconInfo);
+    }
 
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID)
@@ -1066,6 +1158,8 @@ namespace NWScriptPluginCommons {
         }
         return TRUE;       
     }
+
+
 
 #pragma warning(pop)
 

@@ -12,6 +12,8 @@
 #include "LoggerDialog.h"
 #include "Common.h"
 
+#include "PluginDarkMode.h"
+
 #define IDM_ERRORTOGGLE 4001
 #define IDM_WARNINGTOGGLE 4002
 #define IDM_MESSAGETOGGLE 4003
@@ -55,12 +57,15 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_INITDIALOG:
 		{
-
 			bool bInvertLuminosity = false;
 
 			INITCOMMONCONTROLSEX ix = { 0, 0 };
 			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
 			ix.dwICC = ICC_TAB_CLASSES;
+			InitCommonControlsEx(&ix);
+
+			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
+			ix.dwICC = ICC_LISTVIEW_CLASSES;
 			InitCommonControlsEx(&ix);
 
 			_mainTabHwnd = GetDlgItem(_hSelf, IDC_TABLOGGER);
@@ -79,7 +84,7 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
 			// Create an image list to associate with errors and warnings, etc
-			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(IconSize::Size16x16);
+			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(static_cast<UINT>(IconSize::Size16x16));
 			_iconList16x16 = ImageList_Create(_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16), ILC_COLOR32, 4, 1);
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
 			ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, bInvertLuminosity,
@@ -90,7 +95,7 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			// Create toolbar
 			int ImageListID = 0;
 			_toolBar = CreateWindowEx(TBSTYLE_EX_MIXEDBUTTONS, TOOLBARCLASSNAME, 
-				NULL, WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_LIST | CCS_NOPARENTALIGN | CCS_NODIVIDER,
+				NULL, WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT | TBSTYLE_LIST | CCS_NOPARENTALIGN | CCS_NODIVIDER,
 				6, 11, 360, 29,	_errorDlgHwnd, NULL, _hInst, NULL);
 			SendMessage(_toolBar, TB_SETIMAGELIST, (WPARAM)ImageListID, (LPARAM)_iconList16x16);
 
@@ -135,7 +140,7 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			// Set Toggle Word Wrap state (default is ON. If it's off, we need to rebuild the control)
 			CheckDlgButton(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, _settings->compilerWindowConsoleWordWrap);
 			if (!_settings->compilerWindowConsoleWordWrap)
-				ToggleWordWrap();
+				RecreateTxtConsole();
 
 			// Set filters checkboxes (buttons) state
 			CheckDlgButton(_consoleDlgHwnd, IDC_BTFILTERERRORS, _settings->compilerWindowConsoleShowErrors);
@@ -156,6 +161,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 			// Create buttons tooltips
 			CreateTooltips();
+
+			// Check switch to dark mode.
+			checkSwitchToDarkMode();
 
 			break;
 		}
@@ -270,7 +278,9 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
 				case IDC_BTTOGGLEWORDWRAP:
 				{
-					ToggleWordWrap();
+					// There's no toggle word wrap message to text boxes, we must recreate the control.
+					// https://stackoverflow.com/questions/56781359/how-do-i-toggle-word-wrap-in-a-editbox
+					RecreateTxtConsole();
 					break;
 				}
 
@@ -288,6 +298,9 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
 		case WM_NOTIFY:
 		{
+
+			constexpr const UINT nm_customdraw = 4294967284; // Override NM_CUSTOMDRAW define because it generates warnings... thanks Microsoft.
+
 			if (wParam == IDC_LSTERRORS)
 			{
 				LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
@@ -328,7 +341,63 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 					break;
 				}					
 			}
+
+			if (reinterpret_cast<LPNMHDR>(lParam)->code == nm_customdraw)
+			{
+				LPNMTBCUSTOMDRAW lpcd = reinterpret_cast<LPNMTBCUSTOMDRAW>(lParam);
+				if (lpcd->nmcd.hdr.hwndFrom == _toolBar)
+				{
+					switch (lpcd->nmcd.dwDrawStage)
+					{
+						case CDDS_PREPAINT:
+						{
+							if (PluginDarkMode::isEnabled())
+							{
+								::FillRect(lpcd->nmcd.hdc, &lpcd->nmcd.rc, PluginDarkMode::getDarkerBackgroundBrush());
+							}
+
+							HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
+							SetWindowLongPtr(Parent, DWLP_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+							return CDRF_NOTIFYITEMDRAW;
+						}
+
+						case CDDS_ITEMPREPAINT: 
+						{
+							if (!PluginDarkMode::isEnabled())
+								return CDRF_DODEFAULT;
+
+							lpcd->clrText = PluginDarkMode::getTextColor();
+							lpcd->clrBtnFace = PluginDarkMode::getBackgroundColor();
+							lpcd->clrBtnHighlight = PluginDarkMode::getDarkerBackgroundColor();
+							lpcd->clrHighlightHotTrack = PluginDarkMode::getHotBackgroundColor();
+							lpcd->clrMark = 0;
+							lpcd->clrTextHighlight = 0;
+							lpcd->nHLStringBkMode = TRANSPARENT;
+
+							HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
+							DWORD result = TBCDRF_USECDCOLORS | TBCDRF_HILITEHOTTRACK;
+
+							if (lpcd->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT))
+							{
+								SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getEdgePen());
+								SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getSofterBackgroundBrush());
+								RECT btRect;
+								CopyRect(&btRect, &lpcd->nmcd.rc);
+								RoundRect(lpcd->nmcd.hdc, btRect.left, btRect.top, btRect.right, btRect.bottom,
+									3, 3);
+								
+								lpcd->nmcd.uItemState &= ~CDIS_CHECKED;
+							}
+							SetWindowLongPtr(Parent, DWLP_MSGRESULT, result);
+							return result;
+						}
+					}
+				}
+			}
+
+			break;
 		}
+
 	}
 
 	return FALSE;
@@ -370,6 +439,8 @@ void LoggerDialog::SetupListView()
 	// Extended Styles
 	ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT |
 		LVS_EX_SUBITEMIMAGES | LVS_EX_TWOCLICKACTIVATE | LVS_EX_JUSTIFYCOLUMNS | LVS_EX_UNDERLINEHOT);
+
+	//ListView_SetExtendedListViewStyle(listErrorsHWND, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_HEADERDRAGDROP);
 
 	// Associate icons list with errors list
 	ListView_SetImageList(GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS), _iconList16x16, LVSIL_SMALL);
@@ -639,6 +710,12 @@ void LoggerDialog::AppendConsoleText(const generic_string& newText)
 	cr.cpMax = -1;
 	HWND editControl = GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE);
 	SendMessage(editControl, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
+	CHARFORMAT ch = {};
+	ch.cbSize = sizeof(ch);
+	ch.dwMask = CFM_COLOR;
+	ch.crTextColor = PluginDarkMode::isEnabled() ? PluginDarkMode::getTextColor() : 0;
+	ch.dwEffects = 0;
+	SendMessage(editControl, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&ch));
 	SendMessage(editControl, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(newText.c_str()));
 	SendMessage(editControl, WM_VSCROLL, SB_BOTTOM, 0);
 }
@@ -707,9 +784,7 @@ void LoggerDialog::LockControls(bool toLock)
 	EnableWindow(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), !toLock);
 }
 
-// There's no toggle word wrap message to text boxes, we must recreate the control.
-// https://stackoverflow.com/questions/56781359/how-do-i-toggle-word-wrap-in-a-editbox
-void LoggerDialog::ToggleWordWrap()
+void LoggerDialog::RecreateTxtConsole()
 {
 	RECT editRect;
 	generic_string sTextBuffer;
@@ -745,19 +820,47 @@ void LoggerDialog::ToggleWordWrap()
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Consolas"));
 	::SendMessage(editControl, WM_SETFONT, reinterpret_cast<WPARAM>(editFont), 0);
 
+	// Set Editor colors
+	if (PluginDarkMode::isEnabled())
+	{
+		SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_TXTCONSOLE), EM_SETBKGNDCOLOR, 0, PluginDarkMode::getSofterBackgroundColor());
+	}
+
 	// Redo visibility and anchor map
 	ShowWindow(editControl, SW_NORMAL);
 	ANCHOR_MAP_DYNAMICCONTROL(editControl, ANF_ALL);
 
 	// Restore old text
-	SETTEXTEX stex = { ST_DEFAULT, 1200 };
-	SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
+	CHARRANGE cr = {};
+	cr.cpMin = -1;
+	cr.cpMax = -1;
+	SendMessage(editControl, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
+	CHARFORMAT ch = {};
+	ch.cbSize = sizeof(ch);
+	ch.dwMask = CFM_COLOR;
+	ch.crTextColor = PluginDarkMode::isEnabled() ? PluginDarkMode::getTextColor() : 0;
+	ch.dwEffects = 0;
+	SendMessage(editControl, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&ch));
+	SendMessage(editControl, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(sTextBuffer.c_str()));
+	SendMessage(editControl, WM_VSCROLL, SB_BOTTOM, 0);
+	//SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
 }
 
-void LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
+void LoggerDialog::RecreateIcons()
+{
+	ImageList_ReplaceIcon(_iconList16x16, 1, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, PluginDarkMode::isEnabled(),
+		_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16)));
+
+	HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, PluginDarkMode::isEnabled(), _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
+	HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, PluginDarkMode::isEnabled(), _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
+}
+
+HWND LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
 {
 	if (!toolID || !hDlg || !pszText)
-		return;
+		return NULL;
 
 	// Get the window of the tool.
 	HWND hwndTool = GetDlgItem(hDlg, toolID);
@@ -771,7 +874,7 @@ void LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
 		_hInst, NULL);
 
 	if (!hwndTool || !hwndTip)
-		return;
+		return NULL;
 
 	// Associate the tooltip with the tool.
 	TOOLINFO toolInfo = { 0 };
@@ -782,15 +885,34 @@ void LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
 	toolInfo.lpszText = (PTSTR)pszText;
 	SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
 
+	return hwndTip;
 }
 
 void LoggerDialog::CreateTooltips()
 {
-	CreateToolTip(_consoleDlgHwnd, IDC_BTCLEARCONSOLE, TEXT("Clear the console window"));
-	CreateToolTip(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, TEXT("Toggle console word wrap"));
+	_toolTips[0] = CreateToolTip(_consoleDlgHwnd, IDC_BTCLEARCONSOLE, TEXT("Clear the console window"));
+	_toolTips[1] = CreateToolTip(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, TEXT("Toggle console word wrap"));
 
-	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERERRORS, TEXT("Output error messages to the console"));
-	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERWARNINGS, TEXT("Output warning messages to the console"));
-	CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERINFO, TEXT("Output info messages to the console"));
+	_toolTips[2] = CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERERRORS, TEXT("Output error messages to the console"));
+	_toolTips[3] = CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERWARNINGS, TEXT("Output warning messages to the console"));
+	_toolTips[4] = CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERINFO, TEXT("Output info messages to the console"));
+}
 
+void LoggerDialog::checkSwitchToDarkMode()
+{
+	if (PluginDarkMode::isEnabled())
+		PluginDarkMode::initDarkMode();
+
+	RecreateIcons();
+	RecreateTxtConsole();
+
+	PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
+	PluginDarkMode::autoSetupWindowAndChildren(_consoleDlgHwnd);
+	PluginDarkMode::autoSetupWindowAndChildren(_errorDlgHwnd);
+
+	for (int i = 0; i < _maxToolTips; i++)
+		PluginDarkMode::setDarkTooltips(_toolTips[i], PluginDarkMode::ToolTipsType::tooltip);
+
+	InvalidateRect(_hSelf, NULL, true);
+	UpdateWindow(_hSelf);
 }

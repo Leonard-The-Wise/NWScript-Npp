@@ -81,7 +81,7 @@ public:
     int pointsToPixels(int pt) { return MulDiv(pt, _dpiY, 72); };
 
     // Invalidate any cached metrics.
-    void Invalidate() { init(); };
+    void Invalidate(HWND hwnd = NULL) { init(hwnd); };
 
     // Resize a control (or any window) based on current DPI settings
     void DPIResizeControl(HWND hWndControl, bool resizeFont = false)
@@ -159,8 +159,9 @@ private:
     int _dpiY = 0;
     bool _bResizeFontAlso = false;
 
-    void init() {
-        HDC hdc = GetDC(NULL);
+    void init(HWND hwnd = NULL) 
+    {
+        HDC hdc = GetDC(hwnd);
         if (hdc)
         {
             // Initialize the DPIManager member variable
@@ -168,7 +169,7 @@ private:
             // With all Windows OS's to date the X and Y DPI will be identical					
             _dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
             _dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
-            ReleaseDC(NULL, hdc);
+            ReleaseDC(hwnd, hdc);
         }
     };
 

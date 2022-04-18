@@ -55,7 +55,7 @@ const std::string debugSymbolsFileSuffix = ".ndb";
 
 // Current Windows official sizes for icons
 // https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-icons
-enum IconSize {
+enum class IconSize {
     Size8x8 = 8, Size10x10 = 10, Size14x14 = 14, Size16x16 = 16, Size20x20 = 20, Size22x22 = 22, Size24x24 = 24,
     Size32x32 = 32, Size40x40 = 40, Size48x48 = 48, Size64x64 = 64, Size96x96 = 96, Size128x128 = 128, Size160x160 = 160,
     Size192x192 = 192, Size224x224 = 224, Size256x256 = 256
@@ -93,6 +93,14 @@ namespace NWScriptPluginCommons {
     // Extracted from here: https://stackoverflow.com/questions/5100718/integer-to-hex-string-in-c
     template <typename I>
     generic_string n2hexstrg(I w, size_t hex_len = sizeof(I) << 1);
+
+    // Create a thousand separator string
+    // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
+    std::string thousandSeparator(int number);
+
+    // Create a thousand separator string
+    // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
+    generic_string thousandSeparatorW(int number);
 
     // Since codecvt is now deprecated API and no replacement is provided, we write our own.
     std::wstring str2wstr(const std::string& string);
@@ -140,6 +148,12 @@ namespace NWScriptPluginCommons {
 
     // Load SVG file from resources and render into a HICON
     HICON loadSVGFromResourceIcon(HMODULE module, int idResource, bool invertLuminosity = false, UINT width = 0, UINT height = 0);
+
+    // Creates an image mask for current HBITMAP
+    HBITMAP createImageMask(HBITMAP bitmapHandle, const COLORREF transparencyColor);
+
+    // Creates a bitmap mask for current HICON
+    HICON createIconMask(HICON source);
 
     // Get one of the system or user folders by it's GUID.
     generic_string getSystemFolder(GUID folderID);

@@ -15,6 +15,7 @@
 #include "CompilerSettingsDialog.h"
 
 #include "PluginControlsRC.h"
+#include "PluginDarkMode.h"
 
 
 using namespace NWScriptPlugin;
@@ -25,9 +26,10 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 		case WM_INITDIALOG:
 		{
-
 			_dpiManager.DPIResizeControl(_hSelf);
 			_dpiManager.DPIResizeChildren(_hSelf, true);
+
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 
 			Settings& myset = *_settings;
 			if (myset.neverwinterInstallChoice == 0)
@@ -233,6 +235,7 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 					return FALSE;
 				}
 			}
+			break;
 		}
 	}
 

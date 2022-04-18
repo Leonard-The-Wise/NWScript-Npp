@@ -73,6 +73,10 @@ namespace NWScriptPlugin {
 		static void PluginInit(HANDLE hModule);
 		// Performs the instance cleanup: Called from DLL Main message DLL_DETACH
 		static void PluginRelease();
+		// Checks if Dark Mode is enabled at initialization.
+		bool IsDarkModeEnabled() {
+			return _isNppDarkModeEnabled;
+		}
 
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName.data(); }
@@ -117,6 +121,10 @@ namespace NWScriptPlugin {
 
 		// Sets the current language to our plugin's lexer language by calling MENU commands.
 		void SetNotepadToPluginLexer();
+		// Gets the DPI Manager
+		DPIManager& DpiManager() {
+			return _dpiManager;
+		}
 
 		// ### User Interfacing
 
@@ -176,8 +184,10 @@ namespace NWScriptPlugin {
 		void DisplayCompilerLogWindow(bool toShow = true);
 		// Checkup Engine Known objects file
 		void CheckupEngineObjectsFile();
-		// Crudely detects a dark mode interface
-		void CrudeDetectDarkModeEnabled();
+		// Sets dark mode usage (for legacy Notepad++ 8.3.3 and bellow)
+		static void SetDarkModeLegacy(bool UseDark);
+		// Detects Dark Mode usage (for Notepad++ 8.3.4 and above)
+		void RefreshDarkMode(bool ForceUseDark = false, bool UseDark = false);
 
 		// ### Initialization -> Menu handling
 		
@@ -279,6 +289,7 @@ namespace NWScriptPlugin {
 		bool _needPluginAutoIndent = false;
 		bool _isNppDarkModeEnabled = false;
 		bool _wasNppDarkModeEnabled = false;
+		bool _NppSupportDarkModeMessages = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 		ULONGLONG _clockStart = 0;
 

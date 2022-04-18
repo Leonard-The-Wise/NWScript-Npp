@@ -29,7 +29,6 @@ namespace NWScriptPlugin {
 		void setConstantsCount(int constantsCount) {
 			_constantsCount = std::to_wstring(constantsCount);
 		}
-
 		void doDialog();
 
 	protected:

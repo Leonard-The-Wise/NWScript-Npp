@@ -24,12 +24,21 @@ namespace NWScriptPlugin {
 
 		void doDialog();
 
-		virtual void destroy() {};
+		void SetDarkModeLegacyFunction(void (*UseDarkModeFunc)(bool UseDark)) {
+			_UseDarkModeLegacy = UseDarkModeFunc;
+		}
+
+		void SetEnableDarkModeLegacy(bool isEnabled) {
+			_UseDarkModeEnabledLegacy = isEnabled;
+		}
 
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
 		void keepSettings();
+
+		void (*_UseDarkModeLegacy)(bool UseDark);
+		bool _UseDarkModeEnabledLegacy = false;
 
 		Settings* _settings = nullptr;
 	};

@@ -74,6 +74,7 @@ void Settings::Load()
 	autoDisplayDisassembled = GetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDisassembled"));
 	autoDisplayDebugSymbols = GetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDebugSymbols"));
 	autoInstallDarkTheme = GetBoolean(TEXT("User's Preferences"), TEXT("autoInstallDarkTheme"));
+	legacyDarkModeUse = GetBoolean(TEXT("User's Preferences"), TEXT("legacyDarkModeUse"));
 	lastOpenedDir = properDirNameW(GetString(TEXT("User's Preferences"), TEXT("lastOpenedDir")));
 
 	// Dark Theme auto-install support
@@ -194,6 +195,7 @@ void Settings::Save()
 	SetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDisassembled"), autoDisplayDisassembled);
 	SetBoolean(TEXT("User's Preferences"), TEXT("autoDisplayDebugSymbols"), autoDisplayDebugSymbols);
 	SetBoolean(TEXT("User's Preferences"), TEXT("autoInstallDarkTheme"), autoInstallDarkTheme);
+	SetBoolean(TEXT("User's Preferences"), TEXT("legacyDarkModeUse"), legacyDarkModeUse);
 	SetString(TEXT("User's Preferences"), TEXT("lastOpenedDir"), lastOpenedDir);
 
 	// Dark Theme auto-install support

@@ -14,6 +14,7 @@
 #include "WarningDialog.h"
 
 #include "PluginControlsRC.h"
+#include "PluginDarkMode.h"
 
 
 using namespace NWScriptPlugin;
@@ -24,6 +25,8 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 	{
 		case WM_INITDIALOG:
 		{
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
+
 			// Warning dialog background
 			HBITMAP hWarning = loadPNGFromResource(_hInst, IDB_HEREBEDRAGONS);
 			::SendMessage(GetDlgItem(_hSelf, IDC_HEREBEDRAGONS), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hWarning));
@@ -39,6 +42,7 @@ intptr_t CALLBACK WarningDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 				// Check settings and fall back to IDOK
 			case IDC_CHKOK:
 				_settings->autoIndentationWarningAccepted = true;
+				[[fallthrough]];
 			case IDOK:
 				display(false);
 				destroy();

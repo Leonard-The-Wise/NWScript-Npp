@@ -35,6 +35,9 @@
     <Filter Include="Custom Lexers\Lexilla">
       <UniqueIdentifier>{b9b00af0-83ff-4e55-95ec-e74caaa7447c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DarkMode">
+      <UniqueIdentifier>{1d74ff3e-534a-469a-a3f1-7c3af1bf8e5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -196,6 +199,18 @@
     <ClInclude Include="..\src\Utils\ColorConvert.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DarkMode\DarkMode.h">
+      <Filter>DarkMode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DarkMode\IatHook.h">
+      <Filter>DarkMode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DarkMode\PluginDarkMode.h">
+      <Filter>DarkMode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DarkMode\UAHMenuBar.h">
+      <Filter>DarkMode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -284,6 +299,12 @@
     <ClCompile Include="..\src\Utils\ColorConvert.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\DarkMode\DarkMode.cpp">
+      <Filter>DarkMode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DarkMode\PluginDarkMode.cpp">
+      <Filter>DarkMode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -370,6 +391,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\Media\icons-svg\WordWrap.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\NeverwinterApp.svg">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

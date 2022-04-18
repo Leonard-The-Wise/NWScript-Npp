@@ -16,6 +16,7 @@
 #include "PluginControlsRC.h"
 #include "FileParseSummaryDialog.h"
 
+#include "PluginDarkMode.h"
 
 using namespace NWScriptPlugin;
 
@@ -23,47 +24,49 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 {
 	switch (message)
 	{
-	case WM_INITDIALOG:
-	{
-
-		// Set the font style and colors for File Summary and Keep Results labels
-		// Set bold font for warning
-		HFONT hFont = ::CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
-		::SendMessage(GetDlgItem(_hSelf, IDC_LBLFILESUMARY), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
-		
-		hFont = ::CreateFont(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
-		::SendMessage(GetDlgItem(_hSelf, IDC_LBLKEEPRESULTS), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
-
-		// Set the labels
-		::SetDlgItemText(_hSelf, IDC_LBLENGINESTRUCTS, _engineStructuresCount.c_str());
-		::SetDlgItemText(_hSelf, IDC_LBLFUNCTIONDEFINITIONS, _functionsDefinitionCount.c_str());
-		::SetDlgItemText(_hSelf, IDC_LBLGLOBALCONSTANTS, _constantsCount.c_str());
-
-		_dpiManager.DPIResizeControl(_hSelf);
-		_dpiManager.DPIResizeChildren(_hSelf, true);
-
-		setLogo();
-
-		return TRUE;
-	}
-
-	case WM_COMMAND:
-	{
-		switch (wParam)
+		case WM_INITDIALOG:
 		{
-		case IDCANCEL:
-		case IDNO: 
-		case IDYES:
-			display(false);
-			destroy();
-			
-			if (_okDialogCallback != nullptr)
-				_okDialogCallback(static_cast<HRESULT>(wParam));
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
+
+			// Set the font style and colors for File Summary and Keep Results labels
+			// Set bold font for warning
+			HFONT hFont = ::CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
+			::SendMessage(GetDlgItem(_hSelf, IDC_LBLFILESUMARY), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
+		
+			hFont = ::CreateFont(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("MS Shell Dlg"));
+			::SendMessage(GetDlgItem(_hSelf, IDC_LBLKEEPRESULTS), WM_SETFONT, reinterpret_cast<WPARAM>(hFont), 0);
+
+			// Set the labels
+			::SetDlgItemText(_hSelf, IDC_LBLENGINESTRUCTS, _engineStructuresCount.c_str());
+			::SetDlgItemText(_hSelf, IDC_LBLFUNCTIONDEFINITIONS, _functionsDefinitionCount.c_str());
+			::SetDlgItemText(_hSelf, IDC_LBLGLOBALCONSTANTS, _constantsCount.c_str());
+
+			_dpiManager.DPIResizeControl(_hSelf);
+			_dpiManager.DPIResizeChildren(_hSelf, true);
+
+			setLogo();
+
 			return TRUE;
 		}
-	}
+
+		case WM_COMMAND:
+		{
+			switch (wParam)
+			{
+			case IDCANCEL:
+			case IDNO: 
+			case IDYES:
+				display(false);
+				destroy();
+			
+				if (_okDialogCallback != nullptr)
+					_okDialogCallback(static_cast<HRESULT>(wParam));
+				return TRUE;
+			}
+			break;
+		}
 	}
 
 	// Signals done processing messages
@@ -100,3 +103,4 @@ void FileParseSummaryDialog::setLogo()
 	::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hFile));
 
 }
+

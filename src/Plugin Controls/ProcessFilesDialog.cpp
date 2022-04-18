@@ -14,6 +14,7 @@
 #include "ProcessFilesDialog.h"
 
 #include "PluginControlsRC.h"
+#include "PluginDarkMode.h"
 
 
 using namespace NWScriptPlugin;
@@ -22,32 +23,35 @@ intptr_t CALLBACK ProcessFilesDialog::run_dlgProc(UINT message, WPARAM wParam, L
 {
 	switch (message)
 	{
-	case WM_INITDIALOG:
-	{
-		_dpiManager.DPIResizeControl(_hSelf);
-		_dpiManager.DPIResizeChildren(_hSelf, true);
-
-		return TRUE;
-	}
-
-	case WM_COMMAND:
-	{
-		switch (wParam)
+		case WM_INITDIALOG:
 		{
-		case IDCANCEL:
-			*_interruptFlagVariable = true;
-			display(false);
-			destroy();
+			_dpiManager.DPIResizeControl(_hSelf);
+			_dpiManager.DPIResizeChildren(_hSelf, true);
+
+			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
+
 			return TRUE;
 		}
-	}
+
+		case WM_COMMAND:
+		{
+			switch (wParam)
+			{
+			case IDCANCEL:
+				*_interruptFlagVariable = true;
+				display(false);
+				destroy();
+				return TRUE;
+			}
+			break;
+		}
 	}
 
 	// Signals done processing messages
 	return FALSE;
 }
 
-void ProcessFilesDialog::doDialog()
+void ProcessFilesDialog::showDialog()
 {
 	// Create from resource
 	if (!isCreated())

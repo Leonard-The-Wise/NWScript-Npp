@@ -71,6 +71,7 @@ namespace NWScriptPlugin {
 		bool autoDisplayDisassembled = true;
 		bool autoDisplayDebugSymbols = true;
 		bool autoInstallDarkTheme = false;
+		bool legacyDarkModeUse = false;
 		generic_string lastOpenedDir;
 
 		// Plugin statistics

@@ -67,6 +67,10 @@ namespace NWScriptPlugin {
 
 		void LockControls(bool toLock);
 
+		void setDarkMode() {
+			checkSwitchToDarkMode();
+		}
+
 	protected:
 
 		// Main window dialog procedure call
@@ -76,6 +80,8 @@ namespace NWScriptPlugin {
 		static INT_PTR CALLBACK dlgProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		// Real children message-processing 
 		intptr_t CALLBACK childrenDlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+
+		void checkSwitchToDarkMode();
 
 	private:
 		DECLARE_ANCHOR_MAP()
@@ -88,8 +94,9 @@ namespace NWScriptPlugin {
 		void RebuildErrorsList();
 		void WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole = false);
 		void UpdateToolButtonLabels();
-		void ToggleWordWrap();
-		void CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText);
+		void RecreateTxtConsole();
+		void RecreateIcons();
+		HWND CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText);
 		void CreateTooltips();
 
 		void switchToConsole()
@@ -121,7 +128,11 @@ namespace NWScriptPlugin {
 		HWND _mainTabHwnd = nullptr;
 		HWND _errorDlgHwnd = nullptr;
 		HWND _consoleDlgHwnd = nullptr;
+		HWND _listErrors = nullptr;
 		HWND _toolBar = nullptr;
+
+		static const int _maxToolTips = 5;
+		HWND _toolTips[_maxToolTips] = { };
 
 		HWND _txtConsole = nullptr;
 

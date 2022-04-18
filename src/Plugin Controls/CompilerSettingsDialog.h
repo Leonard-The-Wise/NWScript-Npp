@@ -27,6 +27,7 @@ namespace NWScriptPlugin {
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
 		bool keepSettings();
+
 		Settings* _settings = nullptr;
 	};
 

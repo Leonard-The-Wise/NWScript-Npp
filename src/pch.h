@@ -13,6 +13,8 @@
 #include <objidl.h>
 #include <ShlObj.h>
 #include <Shlwapi.h>
+#include <Uxtheme.h>
+#include <Vssym32.h>
 
 // Bug with GDI+ include...
 // https://developercommunity.visualstudio.com/t/gdiplustypesh-does-not-compile-with-nominmax/727770

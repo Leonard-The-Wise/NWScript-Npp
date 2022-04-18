@@ -15,9 +15,7 @@ namespace NWScriptPlugin {
 	public:
 		ProcessFilesDialog() = default;
 
-		void doDialog();
-
-		virtual void destroy() {};
+		void showDialog();
 
 		void setInterruptFlag(std::atomic<bool>& interruptFlagVariable) {
 			_interruptFlagVariable = &interruptFlagVariable;
@@ -31,10 +29,8 @@ namespace NWScriptPlugin {
 			EnableWindow(_hSelf, !toLock);
 		}
 
-
 	protected:
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 		std::atomic<bool>* _interruptFlagVariable;
 	};
-
 }

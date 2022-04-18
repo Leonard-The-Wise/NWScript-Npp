@@ -44,6 +44,8 @@
 #define IDB_NWSCRIPTLOGO_300            179
 #define IDB_PNG1                        180
 #define IDB_NWSCRIPTFILEPARSE           180
+#define IDR_SVG1                        181
+#define IDI_NEVERWINTERAPP              181
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -99,6 +101,8 @@
 #define IDC_CHKAUTOOPENDISASSEMBLED     1055
 #define IDC_CHKAUTOOPENDEBUGSYMBOLS     1056
 #define IDC_CHKAUTOINSTALLDARKTHEME     1057
+#define IDC_CHKAUTOOPENDISASSEMBLED2    1058
+#define IDC_CHKUSEDARKMODE              1058
 #define IDC_TABLOGGER                   1060
 #define IDC_TXTCONSOLE                  1062
 #define IDC_LSTERRORS                   1067
@@ -117,7 +121,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        181
+#define _APS_NEXT_RESOURCE_VALUE        182
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101
