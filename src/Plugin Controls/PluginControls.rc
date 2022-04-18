@@ -197,8 +197,8 @@ BEGIN
     CONTROL         "Auto-reinstall Dark Theme support on Notepad++ upgrades.",IDC_CHKAUTOINSTALLDARKTHEME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,57,210,10
     LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_STATIC,21,69,275,20
-    CONTROL         "Use Dark Mode interface (legacy option for Notepad++ 8.3.3 and bellow)",IDC_CHKUSEDARKMODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,92,251,10
+    CONTROL         "Use Dark Mode interface (legacy option for Notepad++ 8.3.3 and bellow only)",IDC_CHKUSEDARKMODE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,92,275,10
 END
 
 IDD_LOGGER DIALOGEX 0, 0, 509, 173
