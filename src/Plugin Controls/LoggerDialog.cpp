@@ -295,109 +295,6 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		}
-
-		case WM_NOTIFY:
-		{
-
-			constexpr const UINT nm_customdraw = 4294967284; // Override NM_CUSTOMDRAW define because it generates warnings... thanks Microsoft.
-
-			if (wParam == IDC_LSTERRORS)
-			{
-				LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
-				NMHDR hdr = lpnmia->hdr;
-#pragma warning (push)
-#pragma warning (disable : 26454)
-				if (hdr.code == NM_CLICK)
-#pragma warning (pop)
-				{
-    				// Invalid item or list is "locked" for user input at the time.
-					if (lpnmia->iItem < 0 || !_processInputForErrorList)
-						return FALSE;
-
-					HWND lstErrors = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
-
-					// Gather the item ID stored previously
-					int messageItem = -1;
-					LVITEM itemInfo = {};
-					itemInfo.mask = LVIF_PARAM;
-					itemInfo.iItem = lpnmia->iItem;
-					ListView_GetItem(lstErrors, &itemInfo);
-					messageItem = static_cast<int>(itemInfo.lParam);
-
-					CompilerMessage& r = _errorsList[messageItem];
-
-					// Dispatch to Plugin for processing.
-					generic_string fileName = r.fileName.empty() ? TEXT("") : r.fileName + TEXT(".") + r.fileExt;
-					int lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
-
-					// Only dispatch messages with valid line numbers
-					if (navigateToFileCallback && lineNumber > -1)
-					{
-						// HACK: To correct the file navigation issue, we store the current lineNumber being passed
-						// to navigateToFileCallback, so the timer on it can refer back to it.
-						_currentLine = lineNumber;
-						navigateToFileCallback(fileName, lineNumber, r.messageText, r.filePath);
-					}
-					break;
-				}					
-			}
-
-			if (reinterpret_cast<LPNMHDR>(lParam)->code == nm_customdraw)
-			{
-				LPNMTBCUSTOMDRAW lpcd = reinterpret_cast<LPNMTBCUSTOMDRAW>(lParam);
-				if (lpcd->nmcd.hdr.hwndFrom == _toolBar)
-				{
-					switch (lpcd->nmcd.dwDrawStage)
-					{
-						case CDDS_PREPAINT:
-						{
-							if (PluginDarkMode::isEnabled())
-							{
-								::FillRect(lpcd->nmcd.hdc, &lpcd->nmcd.rc, PluginDarkMode::getDarkerBackgroundBrush());
-							}
-
-							HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
-							SetWindowLongPtr(Parent, DWLP_MSGRESULT, CDRF_NOTIFYITEMDRAW);
-							return CDRF_NOTIFYITEMDRAW;
-						}
-
-						case CDDS_ITEMPREPAINT: 
-						{
-							if (!PluginDarkMode::isEnabled())
-								return CDRF_DODEFAULT;
-
-							lpcd->clrText = PluginDarkMode::getTextColor();
-							lpcd->clrBtnFace = PluginDarkMode::getBackgroundColor();
-							lpcd->clrBtnHighlight = PluginDarkMode::getDarkerBackgroundColor();
-							lpcd->clrHighlightHotTrack = PluginDarkMode::getHotBackgroundColor();
-							lpcd->clrMark = 0;
-							lpcd->clrTextHighlight = 0;
-							lpcd->nHLStringBkMode = TRANSPARENT;
-
-							HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
-							DWORD result = TBCDRF_USECDCOLORS | TBCDRF_HILITEHOTTRACK;
-
-							if (lpcd->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT))
-							{
-								SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getEdgePen());
-								SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getSofterBackgroundBrush());
-								RECT btRect;
-								CopyRect(&btRect, &lpcd->nmcd.rc);
-								RoundRect(lpcd->nmcd.hdc, btRect.left, btRect.top, btRect.right, btRect.bottom,
-									3, 3);
-								
-								lpcd->nmcd.uItemState &= ~CDIS_CHECKED;
-							}
-							SetWindowLongPtr(Parent, DWLP_MSGRESULT, result);
-							return result;
-						}
-					}
-				}
-			}
-
-			break;
-		}
-
 	}
 
 	return FALSE;
@@ -412,7 +309,6 @@ void LoggerDialog::ResizeList()
 
 	RECT rcList;
 	GetClientRect(listErrorsHWND, &rcList);
-	rcList.right;
 
 	// Get column sizes
 	size_t lstWidth = ListView_GetColumnWidth(listErrorsHWND, 0);
@@ -425,9 +321,6 @@ void LoggerDialog::ResizeList()
 	// Set "Description" column width
 	size_t finalSize = rcList.right - lstWidth;
 	ListView_SetColumnWidth(listErrorsHWND, 3, finalSize);
-
-	//Auto-size last column
-	ListView_SetColumnWidth(listErrorsHWND, 6, LVSCW_AUTOSIZE);
 }
 
 void LoggerDialog::SetupListView()
@@ -505,7 +398,7 @@ void LoggerDialog::SetupListView()
 	ListView_InsertColumn(listErrorsHWND, 5, &newColumn);
 
 	// Last column (a dummy empty terminator)
-	newColumn.mask = LVCF_FMT | LVCF_WIDTH;
+	newColumn.mask = LVCF_FMT | LVCF_DEFAULTWIDTH;
 	newColumn.fmt = LVCFMT_RIGHT;
 	newColumn.cx = 25;
 	ListView_InsertColumn(listErrorsHWND, 6, &newColumn);

@@ -382,21 +382,32 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
 
     // Normal support overrides legacy
     if (_NppSupportDarkModeMessages)
-        _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
-
-    if (_wasNppDarkModeEnabled != _isNppDarkModeEnabled)
     {
-        _wasNppDarkModeEnabled = _isNppDarkModeEnabled;
+        _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
+        PluginDarkMode::Colors newColors;
+        bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, 0, reinterpret_cast<LPARAM>(&newColors));
 
-        // Set Dark Mode for window/application
-        PluginDarkMode::setDarkMode(_isNppDarkModeEnabled, true);
-
-        // Rebuild menu
-        SetupPluginMenuItems();
-
-        // Refresh permanent dialog dark mode
-        _loggerWindow.refreshDarkMode();
+        if (bSuccess)
+        {
+            PluginDarkMode::setBackgroundColor(newColors.background);
+            PluginDarkMode::setSofterBackgroundColor(newColors.softerBackground);
+            PluginDarkMode::setHotBackgroundColor(newColors.hotBackground);
+            PluginDarkMode::setDarkerBackgroundColor(newColors.pureBackground);
+            PluginDarkMode::setErrorBackgroundColor(newColors.errorBackground);
+            PluginDarkMode::setTextColor(newColors.text);
+            PluginDarkMode::setDarkerTextColor(newColors.darkerText);
+            PluginDarkMode::setDisabledTextColor(newColors.disabledText);
+            PluginDarkMode::setLinkTextColor(newColors.linkText);
+            PluginDarkMode::setEdgeColor(newColors.edge);
+        }
     }
+
+    // Set Dark Mode for window/application
+    PluginDarkMode::setDarkMode(_isNppDarkModeEnabled, true);
+    // Rebuild menu
+    SetupPluginMenuItems();
+    // Refresh permanent dialog dark mode
+    _loggerWindow.refreshDarkMode();
 }
 
 // Set Dark Mode for Legacy Notepad++ versions

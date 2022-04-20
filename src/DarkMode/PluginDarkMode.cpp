@@ -51,6 +51,8 @@ namespace PluginDarkMode
 		HBRUSH hotBackground = nullptr;
 		HBRUSH pureBackground = nullptr;
 		HBRUSH errorBackground = nullptr;
+		HBRUSH invertlightDarkerBackground = nullptr;
+		HBRUSH invertlightSofterBackground = nullptr;
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -58,6 +60,9 @@ namespace PluginDarkMode
 			, hotBackground(::CreateSolidBrush(colors.hotBackground))
 			, pureBackground(::CreateSolidBrush(colors.pureBackground))
 			, errorBackground(::CreateSolidBrush(colors.errorBackground))
+			, invertlightDarkerBackground(::CreateSolidBrush(invertLightness(colors.softerBackground)))
+			, invertlightSofterBackground(::CreateSolidBrush(invertLightnessSofter(colors.softerBackground)))
+
 		{}
 
 		~Brushes()
@@ -67,6 +72,8 @@ namespace PluginDarkMode
 			::DeleteObject(hotBackground);		hotBackground = nullptr;
 			::DeleteObject(pureBackground);		pureBackground = nullptr;
 			::DeleteObject(errorBackground);	errorBackground = nullptr;
+			::DeleteObject(invertlightDarkerBackground);	invertlightDarkerBackground = nullptr;
+			::DeleteObject(invertlightSofterBackground);	invertlightSofterBackground = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -76,12 +83,16 @@ namespace PluginDarkMode
 			::DeleteObject(hotBackground);
 			::DeleteObject(pureBackground);
 			::DeleteObject(errorBackground);
+			::DeleteObject(invertlightDarkerBackground);
+			::DeleteObject(invertlightSofterBackground);
 
 			background = ::CreateSolidBrush(colors.background);
 			softerBackground = ::CreateSolidBrush(colors.softerBackground);
 			hotBackground = ::CreateSolidBrush(colors.hotBackground);
 			pureBackground = ::CreateSolidBrush(colors.pureBackground);
 			errorBackground = ::CreateSolidBrush(colors.errorBackground);
+			invertlightDarkerBackground = ::CreateSolidBrush(invertLightness(colors.background));
+			invertlightSofterBackground = ::CreateSolidBrush(invertLightnessSofter(colors.background));
 		}
 	};
 
@@ -210,8 +221,6 @@ namespace PluginDarkMode
 		HEXRGB(0x909080)	// edgeColor
 	};
 
-	static DPIManager _dpiManager;
-
 	// customized
 	Colors darkCustomizedColors{
 		HEXRGB(0x202020),	// background
@@ -293,6 +302,12 @@ namespace PluginDarkMode
 		}
 	}
 
+	static DPIManager _dpiManager;      // dpi manager for some functions
+
+	DPIManager dpiManager() {
+		return _dpiManager;
+	}
+
 	static Options _options;			// actual runtime options
 
 	Options configuredOptions(bool bEnable)
@@ -362,7 +377,7 @@ namespace PluginDarkMode
 		WORD l = 0;
 		ColorRGBToHLS(c, &h, &l, &s);
 
-		l = std::min(240 - l, 211);
+		l = std::min(180 - l, 151);
 
 		COLORREF invert_c = ColorHLSToRGB(h, l, s);
 
@@ -410,6 +425,9 @@ namespace PluginDarkMode
 	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
 	HBRUSH getDarkerBackgroundBrush()     { return getTheme()._brushes.pureBackground; }
 	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
+	HBRUSH getInvertlightDarkerBackgroundBrush() { return getTheme()._brushes.invertlightDarkerBackground; }
+	HBRUSH getInvertlightSofterBackgroundBrush() { return getTheme()._brushes.invertlightSofterBackground; }
+
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
@@ -702,7 +720,9 @@ namespace PluginDarkMode
 	{
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
-
+	
+	// Which classes exist for themes?
+	// https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
 	struct ButtonData
 	{
 		HTHEME hTheme = nullptr;
@@ -818,7 +838,9 @@ namespace PluginDarkMode
 	{
 		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
 		DWORD nStyle = GetWindowLong(hwnd, GWL_STYLE);
+		LONG_PTR nUserData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		DWORD nButtonStyle = nStyle & 0xF;
+		bool bNormalButton = false;
 
 		int iPartID = BP_CHECKBOX;
 		if (nButtonStyle == BS_CHECKBOX || nButtonStyle == BS_AUTOCHECKBOX)
@@ -829,19 +851,26 @@ namespace PluginDarkMode
 		{
 			iPartID = BP_RADIOBUTTON;
 		}
+		else if ((nStyle & BS_PUSHLIKE) || nUserData == BS_PUSHLIKE)
+		{
+			iPartID = BP_PUSHBUTTON;
+			bNormalButton = true;
+		}
 		else
 		{
 			assert(false);
 		}
 
-		// states of BP_CHECKBOX and BP_RADIOBUTTON are the same
-		int iStateID = RBS_UNCHECKEDNORMAL;
+		int iStateID = 0;
+		
+		// states of BP_CHECKBOX, BP_RADIOBUTTON and BP_PUSHBUTTON are the same
+		iStateID = RBS_UNCHECKEDNORMAL;
 
 		if (nStyle & WS_DISABLED)		iStateID = RBS_UNCHECKEDDISABLED;
 		else if (nState & BST_PUSHED)	iStateID = RBS_UNCHECKEDPRESSED;
 		else if (nState & BST_HOT)		iStateID = RBS_UNCHECKEDHOT;
 
-		if (nState & BST_CHECKED)		iStateID += 4;
+		if ((nState & BST_CHECKED) && !bNormalButton)		iStateID += 4;
 
 		if (BufferedPaintRenderAnimation(hwnd, hdc))
 		{
@@ -1266,7 +1295,195 @@ namespace PluginDarkMode
 		SetWindowSubclass(hwnd, GroupboxSubclass, g_groupboxSubclassID, pButtonData);
 	}
 
+	constexpr UINT_PTR g_headerSubclassID = 42;
 	constexpr UINT_PTR g_listViewSubclassID = 42;
+
+	LRESULT DrawHeaderItem(HWND hHeader, HDC hdc, RECT& rcItem, int itemID)
+	{
+		constexpr const TCHAR sortArrowDown[2] = L"˅";
+		constexpr const TCHAR sortArrowUp[2] = L"˄";
+
+		POINT cursosPos;
+		GetCursorPos(&cursosPos);
+		ScreenToClient(hHeader, &cursosPos);
+
+		// Information on Control Style
+		LONG_PTR headerStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
+		bool clickableHeaderStyle = (headerStyle & HDS_BUTTONS) == HDS_BUTTONS;
+
+		// Information on Header Item
+		HDITEM hdItem = {};
+		TCHAR buffer[MAX_PATH] = { '/0' };
+		hdItem.mask = HDI_TEXT | HDI_FORMAT;
+		hdItem.pszText = buffer;
+		hdItem.cchTextMax = std::size(buffer);
+		Header_GetItem(hHeader, itemID, &hdItem);
+
+		// Temporary modifiable rectangle for item
+		RECT txtRC;
+		CopyRect(&txtRC, &rcItem);
+
+		HFONT ArrowFont = nullptr;
+		if (hdItem.fmt & (HDF_SPLITBUTTON | HDF_SORTDOWN | HDF_SORTUP))
+			ArrowFont = ::CreateFont(_dpiManager.scaleX(10), _dpiManager.scaleY(10), 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Courier New"));
+
+		SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
+		SetBkMode(hdc, TRANSPARENT);
+
+		// Get current hot item if appliable
+		bool vItemPressed = false, vItemFocused = false;
+		if (clickableHeaderStyle)
+		{
+			HDHITTESTINFO hti = {};
+			hti.pt = cursosPos;
+			SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
+			int hotItem = hti.iItem;
+			vItemFocused = (hotItem == itemID);
+			vItemPressed = (vItemFocused && (GetKeyState(VK_LBUTTON) & 0x8000) != 0);
+
+			// Draw background
+			if (vItemPressed || vItemFocused)
+				FillRect(hdc, &rcItem, getInvertlightSofterBackgroundBrush());
+
+			// Draw Combo box if appliable
+			if ((hdItem.fmt & HDF_SPLITBUTTON) && (vItemPressed || vItemFocused))
+			{
+				// Draw combo arrow
+				bool comboHit = ((hti.flags & HHT_ONDROPDOWN) != 0);
+				if (comboHit)
+					SetTextColor(hdc, PluginDarkMode::getTextColor());
+				
+				RECT splitRc;
+				CopyRect(&splitRc, &rcItem);
+				splitRc.top = splitRc.bottom / 3;
+				splitRc.right += _dpiManager.scaleX(1);
+				splitRc.left = splitRc.right - _dpiManager.scaleX(18);
+				HFONT hOldFont = nullptr;
+				if (ArrowFont)
+					hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, ArrowFont));
+				DrawText(hdc, sortArrowDown, std::size(sortArrowDown), &splitRc, DT_NOPREFIX | DT_TOP | DT_CENTER);
+
+				if (comboHit)
+					SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
+
+				// Draw box splitter
+				splitRc.left -= _dpiManager.scaleX(4);
+				auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
+				POINT comboEdges[] = {
+					{ splitRc.left - _dpiManager.scaleX(1), rcItem.top},
+					{ splitRc.left - _dpiManager.scaleX(1), rcItem.bottom}
+				};
+				Polyline(hdc, comboEdges, _countof(comboEdges));
+				SelectObject(hdc, hOldPen);
+				if (hOldFont)
+					SelectObject(hdc, hOldFont);
+			}
+		}
+
+		// Draw Sort arrow
+		if (hdItem.fmt & (HDF_SORTDOWN | HDF_SORTUP))
+		{
+			HFONT hOldFont;
+			if (ArrowFont)
+				hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, ArrowFont));
+
+			if (hdItem.fmt & HDF_SORTDOWN)
+				DrawText(hdc, sortArrowDown, std::size(sortArrowDown), &txtRC, DT_NOPREFIX | DT_TOP | DT_CENTER);
+			else 
+				DrawText(hdc, sortArrowUp, std::size(sortArrowUp), &txtRC, DT_NOPREFIX | DT_TOP | DT_CENTER);
+
+			if (hOldFont)
+				SelectObject(hdc, hOldFont);
+		}
+
+		if (ArrowFont)
+			DeleteObject(ArrowFont);
+
+		SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
+
+		DWORD textFormat;
+		textFormat = (hdItem.fmt & HDF_LEFT) ? DT_LEFT : 0;
+		if (textFormat == 0)
+			textFormat = (hdItem.fmt & HDF_CENTER) ? DT_CENTER : 0;
+		if (textFormat == 0)
+			textFormat = (hdItem.fmt & HDF_RIGHT) ? DT_RIGHT : 0;
+		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS;
+
+		txtRC.left += 5;
+		txtRC.top += 4;
+		if (vItemPressed)
+		{
+			txtRC.left += _dpiManager.scaleX(1);
+			txtRC.top += _dpiManager.scaleY(1);
+			if (hdItem.fmt & HDF_SPLITBUTTON)
+				txtRC.right -= _dpiManager.scaleX(23);
+		}
+
+		buffer[MAX_PATH - 1] = '\0';
+		DrawText(hdc, std::wstring(buffer).c_str(), std::wstring(buffer).size(), &txtRC, textFormat);
+
+		// Draw grid lines
+		auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
+		POINT edges[] = {
+			{rcItem.right - _dpiManager.scaleX(1), rcItem.top},
+			{rcItem.right - _dpiManager.scaleX(1), rcItem.bottom}
+		};
+		Polyline(hdc, edges, _countof(edges));
+		::SelectObject(hdc, hOldPen);
+
+		// TODO: 
+		// Handle Header styles: HDS_HORZ, HDS_FILTERBAR? (https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223)
+		// Handle HDITEM styles and formats: HDI_BITMAP, HDI_IMAGE, HDF_CHECKBOX
+
+		return CDRF_SKIPDEFAULT;
+	}
+
+	LRESULT CALLBACK HeaderSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR /*uIdSubclass*/,
+		DWORD_PTR dwRefData
+	)
+	{
+		switch (uMsg)
+		{
+			case WM_PAINT:
+			{
+				PAINTSTRUCT ps;
+				HDC hdc = BeginPaint(hWnd, &ps);
+
+				RECT rcClient = {};
+				GetClientRect(hWnd, &rcClient);
+				FillRect(hdc, &rcClient, getDarkerBackgroundBrush());
+
+				HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
+				HFONT oldFont = reinterpret_cast<HFONT>(SelectObject(hdc, lstFont));
+
+				int count = static_cast<int>(Header_GetItemCount(hWnd));
+				RECT wRc = {};
+				for (int i = 0; i < count; i++)
+				{
+					Header_GetItemRect(hWnd, i, &wRc);
+					DrawHeaderItem(hWnd, hdc, wRc, i);
+				}
+
+				SelectObject(hdc, oldFont);
+				EndPaint(hWnd, &ps);
+
+				return TRUE;
+			}
+		}
+
+		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	void subclassHeaderControl(HWND hwndHeader)
+	{
+		SetWindowSubclass(hwndHeader, HeaderSubclass, g_headerSubclassID, 0);
+	}
 
 	LRESULT CALLBACK ListViewSubclass(
 		HWND hWnd,
@@ -1277,30 +1494,61 @@ namespace PluginDarkMode
 		DWORD_PTR dwRefData
 	)
 	{
-		constexpr const UINT nm_customdraw = 4294967284; // Override NM_CUSTOMDRAW define because it generates warnings... thanks Microsoft.
-
 		switch (uMsg)
 		{
+#ifdef USE_CUSTOMDRAW
+		// This actually gets notifications from Listview Header, since ListView is the parent of the header
 		case WM_NOTIFY:
 		{
-			if (reinterpret_cast<LPNMHDR>(lParam)->code == nm_customdraw)
+			LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lParam);
+			if (nmhdr->code == NM_CUSTOMDRAW)
 			{
-				LPNMLVCUSTOMDRAW lplvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
-				switch (lplvcd->nmcd.dwDrawStage)
+				LPNMCUSTOMDRAW lpcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
+				switch (lpcd->dwDrawStage)
 				{
 				case CDDS_PREPAINT:
 				{
-					return CDRF_NOTIFYITEMDRAW;
+					if (!PluginDarkMode::isEnabled())
+						return CDRF_DODEFAULT;
+
+					FillRect(lpcd->hdc, &lpcd->rc, getDarkerBackgroundBrush());
+					return CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 				}
 				case CDDS_ITEMPREPAINT:
 				{
-					SetTextColor(lplvcd->nmcd.hdc, PluginDarkMode::getTextColor());
-					return CDRF_DODEFAULT;
+					return DrawHeaderItem(lParam);
 				}
+
+				case CDDS_POSTPAINT:
+
+					// Calculates the undrawn border outside columns
+					HWND hHeader = lpcd->hdr.hwndFrom;
+					int count = static_cast<int>(Header_GetItemCount(hHeader));
+					int colsWidth = 0;
+					RECT wRc = {};
+					for (int i = 0; i < count; i++)
+					{
+						Header_GetItemRect(hHeader, i, &wRc);
+						colsWidth += wRc.right - wRc.left;
+					}
+
+					RECT clientRect;
+					GetClientRect(hHeader, &clientRect);
+					if (clientRect.right > (colsWidth + dpiManager().scaleX(3)))
+					{
+						clientRect.left = colsWidth + dpiManager().scaleX(1);
+						HDC hdc = GetDC(hHeader);
+						FillRect(hdc, &clientRect, getDarkerBackgroundBrush());
+						ReleaseDC(hHeader, hdc);
+						RedrawWindow(hHeader, NULL, NULL, RDW_UPDATENOW);
+					}
+
+					return CDRF_SKIPDEFAULT;
 				}
 			}
 			break;
 		}
+#endif
 
 		case WM_THEMECHANGED:
 		{
@@ -1315,18 +1563,19 @@ namespace PluginDarkMode
 				COLORREF color;
 				if (SUCCEEDED(GetThemeColor(hTheme, 0, 0, TMT_TEXTCOLOR, &color)))
 				{
-					ListView_SetTextColor(hWnd, color);
+					ListView_SetTextColor(hWnd, PluginDarkMode::isEnabled() ? PluginDarkMode::getTextColor() : color);
 				}
 
 				if (SUCCEEDED(GetThemeColor(hTheme, 0, 0, TMT_FILLCOLOR, &color)))
 				{
-					ListView_SetTextBkColor(hWnd, color);
-					ListView_SetBkColor(hWnd, color);
+					ListView_SetTextBkColor(hWnd, PluginDarkMode::isEnabled() ? PluginDarkMode::getSofterBackgroundColor() : color);
+					ListView_SetBkColor(hWnd, PluginDarkMode::isEnabled() ? PluginDarkMode::getSofterBackgroundColor() : color);
 				}
 
 				CloseThemeData(hTheme);
 			}
 
+			SendMessageW(hHeader, WM_THEMECHANGED, wParam, lParam);
 			RedrawWindow(hWnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 			break;
 		}
@@ -1341,9 +1590,9 @@ namespace PluginDarkMode
 		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
 
-	void subclassListViewControl(HWND hwnd)
+	void subclassListViewControl(HWND hwndListView)
 	{
-		SetWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID, 0);
+		SetWindowSubclass(hwndListView, ListViewSubclass, g_listViewSubclassID, 0);
 	}
 
 	constexpr UINT_PTR g_staticSubclassID = 42;
@@ -1524,6 +1773,8 @@ namespace PluginDarkMode
 		DWORD_PTR dwRefData
 	)
 	{
+		static bool isItemChecked = false, isSep = false;
+
 		switch (uMsg)
 		{
 		case WM_CTLCOLOREDIT:
@@ -1569,6 +1820,88 @@ namespace PluginDarkMode
 			}
 			break;
 		}
+
+		case WM_NOTIFY:
+		{
+			LPNMTBCUSTOMDRAW lpcd = reinterpret_cast<LPNMTBCUSTOMDRAW>(lParam);
+
+			const size_t classNameLen = 16;
+			TCHAR className[classNameLen] = { '\0' };
+			GetClassName(lpcd->nmcd.hdr.hwndFrom, className, classNameLen);
+
+			// Handle Toolbar Custom Draw
+			if (reinterpret_cast<LPNMHDR>(lParam)->code == NM_CUSTOMDRAW && wcscmp(className, TOOLBARCLASSNAME) == 0)
+			{
+				switch (lpcd->nmcd.dwDrawStage)
+				{
+				case CDDS_PREPAINT:
+				{
+					HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
+					if (!PluginDarkMode::isEnabled())
+					{
+						SetWindowLongPtr(Parent, DWLP_MSGRESULT, CDRF_DODEFAULT);
+						return CDRF_DODEFAULT;
+					}
+
+					::FillRect(lpcd->nmcd.hdc, &lpcd->nmcd.rc, PluginDarkMode::getDarkerBackgroundBrush());
+					SetWindowLongPtr(Parent, DWLP_MSGRESULT, CDRF_NOTIFYITEMDRAW);
+					return CDRF_NOTIFYITEMDRAW;
+				}
+				case CDDS_ITEMPREPAINT:
+				{
+					// Colors to be returned
+					lpcd->clrText = PluginDarkMode::getTextColor();
+					lpcd->clrBtnFace = PluginDarkMode::getBackgroundColor();
+					lpcd->clrBtnHighlight = PluginDarkMode::getDarkerBackgroundColor();
+					lpcd->clrHighlightHotTrack = PluginDarkMode::getHotBackgroundColor();
+					lpcd->clrMark = 0;
+					lpcd->clrTextHighlight = 0;
+					lpcd->nHLStringBkMode = TRANSPARENT;
+
+					HWND Parent = GetParent(lpcd->nmcd.hdr.hwndFrom);
+
+					// Draw button background (if it is not a separator and for checked/hot items)
+					TBBUTTONINFO btInfo = {};
+					btInfo.cbSize = sizeof(TBBUTTONINFO);
+					btInfo.dwMask = TBIF_STYLE;
+					SendMessage(lpcd->nmcd.hdr.hwndFrom, TB_GETBUTTONINFO, lpcd->nmcd.dwItemSpec, reinterpret_cast<LPARAM>(&btInfo));
+
+					isItemChecked = ((lpcd->nmcd.uItemState & (CDIS_CHECKED)) != 0);
+					isSep = (btInfo.fsStyle & BTNS_SEP) == BTNS_SEP;
+
+					if (isItemChecked && !isSep)
+					{
+						SelectObject(lpcd->nmcd.hdc, GetStockObject(NULL_PEN));
+						SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getSofterBackgroundBrush());
+						RoundRect(lpcd->nmcd.hdc, lpcd->nmcd.rc.left, lpcd->nmcd.rc.top, lpcd->nmcd.rc.right, lpcd->nmcd.rc.bottom,
+							3, 3);
+					}
+
+					// Simulate item uncheck so we don't get the blue highlight on a dark themed toolbar
+					lpcd->nmcd.uItemState &= ~CDIS_CHECKED;
+
+					DWORD result = TBCDRF_USECDCOLORS | TBCDRF_HILITEHOTTRACK | CDRF_NOTIFYPOSTPAINT;
+					SetWindowLongPtr(Parent, DWLP_MSGRESULT, result);
+					return result;
+				}
+
+				case CDDS_ITEMPOSTPAINT:
+				{
+					// Post-draws the rectangle border to checked buttons
+					if (isItemChecked && !isSep)
+					{
+						SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getEdgePen());
+						SelectObject(lpcd->nmcd.hdc, GetStockObject(HOLLOW_BRUSH));
+						RoundRect(lpcd->nmcd.hdc, lpcd->nmcd.rc.left, lpcd->nmcd.rc.top, lpcd->nmcd.rc.right, lpcd->nmcd.rc.bottom,
+							3, 3);
+					}
+					break;
+				}
+				}
+			}
+
+			break;
+		}
 		}
 		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -1577,7 +1910,6 @@ namespace PluginDarkMode
 	{
 		SetWindowSubclass(hwnd, WindowSubclass, g_windowSubclassID, 0);
 	}
-
 
 	void autoSetupWindowAndChildren(HWND hwndWindow)
 	{
@@ -1633,6 +1965,8 @@ namespace PluginDarkMode
 					{
 						if (p.theme)
 							SetWindowTheme(hwnd, p.themeClassName, nullptr);
+						if (p.subclass)
+							PluginDarkMode::subclassButtonControl(hwnd);
 						break;
 					}
 
@@ -1653,6 +1987,11 @@ namespace PluginDarkMode
 				case BS_PUSHBUTTON:
 					if (p.theme)
 						SetWindowTheme(hwnd, p.themeClassName, nullptr);
+					if (p.subclass)
+					{
+						SetWindowLongPtr(hwnd, GWLP_USERDATA, BS_PUSHLIKE);
+						PluginDarkMode::subclassButtonControl(hwnd);
+					}
 
 					break;
 				}
@@ -1729,17 +2068,25 @@ namespace PluginDarkMode
 			if (wcscmp(className, WC_LISTVIEW) == 0)
 			{
 				if (p.subclass && PluginDarkMode::isEnabled())
+				{
 					subclassListViewControl(hwnd);
+					subclassHeaderControl(ListView_GetHeader(hwnd));
+				}
 
+				HWND hHeader = ListView_GetHeader(hwnd);
 				if (p.theme)
 				{
-					HWND hHeader = ListView_GetHeader(hwnd);
 					SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"ItemsView" : nullptr, nullptr);
-					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"Explorer" : nullptr, nullptr);
+					if (hHeader)
+						SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"Explorer" : nullptr, nullptr);
 				}
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
+				{
+					if (hHeader)
+						RemoveWindowSubclass(hHeader, HeaderSubclass, g_listViewSubclassID);
 					RemoveWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID);
+				}
 			}
 
 			if (wcscmp(className, WC_TABCONTROL) == 0)
@@ -1748,6 +2095,12 @@ namespace PluginDarkMode
 					subclassTabControl(hwnd);
 				if (p.subclass && !PluginDarkMode::isEnabled())
 					RemoveWindowSubclass(hwnd, TabSubclass, g_tabSubclassID);
+			}
+
+			if (wcscmp(className, WC_TREEVIEW) == 0)
+			{
+				calculateTreeViewStyle();
+				setTreeViewStyle(hwnd);
 			}
 
 			return TRUE;
@@ -1851,6 +2204,75 @@ namespace PluginDarkMode
 
 	// range to determine when it should be better to use classic style
 	constexpr double middleGrayRange = 2.0;
+
+	void calculateTreeViewStyle()
+	{
+		COLORREF bgColor = PluginDarkMode::getBackgroundColor();
+
+		if (treeViewBg != bgColor || lighnessTreeView == 50.0)
+		{
+			lighnessTreeView = calculatePerceivedLighness(bgColor);
+			treeViewBg = bgColor;
+		}
+
+		if (lighnessTreeView < (50.0 - middleGrayRange))
+		{
+			treeViewStyle = TreeViewStyle::dark;
+		}
+		else if (lighnessTreeView > (50.0 + middleGrayRange))
+		{
+			treeViewStyle = TreeViewStyle::light;
+		}
+		else
+		{
+			treeViewStyle = TreeViewStyle::classic;
+		}
+	}
+
+	void setTreeViewStyle(HWND hwnd)
+	{
+		auto style = static_cast<long>(::GetWindowLongPtr(hwnd, GWL_STYLE));
+		bool hasHotStyle = (style & TVS_TRACKSELECT) == TVS_TRACKSELECT;
+		bool change = false;
+		switch (treeViewStyle)
+		{
+		case TreeViewStyle::light:
+		{
+			if (!hasHotStyle)
+			{
+				style |= TVS_TRACKSELECT;
+				change = true;
+			}
+			SetWindowTheme(hwnd, L"Explorer", nullptr);
+			break;
+		}
+		case TreeViewStyle::dark:
+		{
+			if (!hasHotStyle)
+			{
+				style |= TVS_TRACKSELECT;
+				change = true;
+			}
+			SetWindowTheme(hwnd, L"DarkMode_Explorer", nullptr);
+			break;
+		}
+		default:
+		{
+			if (hasHotStyle)
+			{
+				style &= ~TVS_TRACKSELECT;
+				change = true;
+			}
+			SetWindowTheme(hwnd, nullptr, nullptr);
+			break;
+		}
+		}
+
+		if (change)
+		{
+			::SetWindowLongPtr(hwnd, GWL_STYLE, style);
+		}
+	}
 
 	void setBorder(HWND hwnd, bool border)
 	{

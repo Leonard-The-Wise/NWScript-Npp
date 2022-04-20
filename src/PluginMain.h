@@ -288,7 +288,6 @@ namespace NWScriptPlugin {
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
 		bool _isNppDarkModeEnabled = false;
-		bool _wasNppDarkModeEnabled = false;
 		bool _NppSupportDarkModeMessages = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 		ULONGLONG _clockStart = 0;

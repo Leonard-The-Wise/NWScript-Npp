@@ -486,6 +486,11 @@ struct toolbarIconsWithDarkMode {
 // bool NPPM_ISDARKMODEENABLED(0, 0)
 // Returns true when Notepad++ Dark Mode is enable, false when it is not.
 
+#define NPPM_GETDARKMODECOLORS (NPPMSG + 108)
+// bool NPPM_GETDARKMODECOLORS (0, NppDarkMode::Colors* returnColors)
+// - returnColors must be a pre-allocated NppDarkMode::Colors struct.
+// Returns true when successful, false otherwise.
+
 
 
 #define VAR_NOT_RECOGNIZED 0
@@ -676,4 +681,5 @@ struct toolbarIconsWithDarkMode {
 #define NPPN_DARKMODECHANGED (NPPN_FIRST + 27) // To notify plugins that Dark Mode was enabled/disabled
 //scnNotification->nmhdr.code = NPPN_DARKMODECHANGED;
 //scnNotification->nmhdr.hwndFrom = hwndNpp;
+//scnNotification->nmhdr.idFrom = 0;
 

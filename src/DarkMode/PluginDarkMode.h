@@ -74,6 +74,8 @@ namespace PluginDarkMode
 		dark = 2
 	};
 
+	DPIManager dpiManager();
+
 	void initDarkMode();				
 
 	bool isEnabled();
@@ -106,6 +108,8 @@ namespace PluginDarkMode
 	HBRUSH getSofterBackgroundBrush();
 	HBRUSH getHotBackgroundBrush();
 	HBRUSH getErrorBackgroundBrush();
+	HBRUSH getInvertlightDarkerBackgroundBrush();
+	HBRUSH getInvertlightSofterBackgroundBrush();
 
 	HPEN getDarkerTextPen();
 	HPEN getEdgePen();
@@ -159,6 +163,8 @@ namespace PluginDarkMode
 	void setDarkTooltips(HWND hwnd, ToolTipsType type);
 	void setDarkLineAbovePanelToolbar(HWND hwnd);
 	void setDarkListView(HWND hwnd);
+	void calculateTreeViewStyle();
+	void setTreeViewStyle(HWND hwnd);
 
 	void disableVisualStyle(HWND hwnd, bool doDisable);
 	void setBorder(HWND hwnd, bool border = true);
