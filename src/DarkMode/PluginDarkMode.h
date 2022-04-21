@@ -74,9 +74,7 @@ namespace PluginDarkMode
 		dark = 2
 	};
 
-	DPIManager dpiManager();
-
-	void initDarkMode();				
+	void initDarkMode();
 
 	bool isEnabled();
 	bool isDarkMenuEnabled();
@@ -114,6 +112,7 @@ namespace PluginDarkMode
 	HPEN getDarkerTextPen();
 	HPEN getEdgePen();
 
+	void setThemeColors(Colors& newColors);
 	void setBackgroundColor(COLORREF c);
 	void setSofterBackgroundColor(COLORREF c);
 	void setHotBackgroundColor(COLORREF c);

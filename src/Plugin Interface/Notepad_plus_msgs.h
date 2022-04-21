@@ -487,7 +487,8 @@ struct toolbarIconsWithDarkMode {
 // Returns true when Notepad++ Dark Mode is enable, false when it is not.
 
 #define NPPM_GETDARKMODECOLORS (NPPMSG + 108)
-// bool NPPM_GETDARKMODECOLORS (0, NppDarkMode::Colors* returnColors)
+// bool NPPM_GETDARKMODECOLORS (size_t cbSize, NppDarkMode::Colors* returnColors)
+// - cbSize must be filled with sizeof(NppDarkMode::Colors).
 // - returnColors must be a pre-allocated NppDarkMode::Colors struct.
 // Returns true when successful, false otherwise.
 

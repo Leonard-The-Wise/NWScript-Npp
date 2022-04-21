@@ -75,8 +75,8 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			else
 			{
 				// Set a shield icon also to the Run as Admin button - to preserve Windows standards
-				HBITMAP hShieldSmall = getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.ScaleIconSize((UINT)IconSize::Size16x16));
-				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hShieldSmall));
+				HICON hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.ScaleIconSize((UINT)IconSize::Size16x16));
+				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(hShieldSmall));
 			}
 
 			return TRUE;

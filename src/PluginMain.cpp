@@ -166,6 +166,8 @@ void Plugin::PluginInit(HANDLE hModule)
     Instance()._pluginLexerConfigFile = Instance()._pluginPaths["PluginPath"].stem();
     Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
+    PluginDarkMode::initDarkMode();
+
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
 
@@ -385,21 +387,9 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     {
         _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
         PluginDarkMode::Colors newColors;
-        bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, 0, reinterpret_cast<LPARAM>(&newColors));
-
+        bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, sizeof(newColors), reinterpret_cast<LPARAM>(&newColors));
         if (bSuccess)
-        {
-            PluginDarkMode::setBackgroundColor(newColors.background);
-            PluginDarkMode::setSofterBackgroundColor(newColors.softerBackground);
-            PluginDarkMode::setHotBackgroundColor(newColors.hotBackground);
-            PluginDarkMode::setDarkerBackgroundColor(newColors.pureBackground);
-            PluginDarkMode::setErrorBackgroundColor(newColors.errorBackground);
-            PluginDarkMode::setTextColor(newColors.text);
-            PluginDarkMode::setDarkerTextColor(newColors.darkerText);
-            PluginDarkMode::setDisabledTextColor(newColors.disabledText);
-            PluginDarkMode::setLinkTextColor(newColors.linkText);
-            PluginDarkMode::setEdgeColor(newColors.edge);
-        }
+            PluginDarkMode::setThemeColors(newColors);
     }
 
     // Set Dark Mode for window/application
@@ -439,8 +429,6 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             DetectDarkThemeInstall();
             LoadNotepadLexer();
             SetupPluginMenuItems();
-
-            PluginDarkMode::initDarkMode();
 
             // Detects Dark mode if supported
             if (_NppSupportDarkModeMessages)

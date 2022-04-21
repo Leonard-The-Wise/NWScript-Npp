@@ -304,10 +304,6 @@ namespace PluginDarkMode
 
 	static DPIManager _dpiManager;      // dpi manager for some functions
 
-	DPIManager dpiManager() {
-		return _dpiManager;
-	}
-
 	static Options _options;			// actual runtime options
 
 	Options configuredOptions(bool bEnable)
@@ -322,6 +318,8 @@ namespace PluginDarkMode
 
 		return opt;
 	}
+
+	HMODULE g_thisModule;
 
 	void initDarkMode()
 	{
@@ -431,6 +429,11 @@ namespace PluginDarkMode
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
+
+	void setThemeColors(Colors& newColors)
+	{
+		getTheme().change(newColors);
+	}
 
 	void setBackgroundColor(COLORREF c)
 	{
@@ -720,17 +723,104 @@ namespace PluginDarkMode
 	{
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
+
+	void colorizeThemeGlyph(HBITMAP themeGlyph)
+	{
+		DIBSECTION dib = {};
+		GetObject(themeGlyph, sizeof(dib), &dib);
+		if (dib.dsBm.bmBitsPixel < 32)
+			return;
+
+		HDC hdc = CreateCompatibleDC(NULL);
+		BITMAPINFO bitmapInfo = {};
+		bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+
+		GetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, NULL, &bitmapInfo, DIB_RGB_COLORS);
+		std::unique_ptr<std::uint8_t[]> rowData = std::make_unique<std::uint8_t[]>(bitmapInfo.bmiHeader.biSizeImage);
+		GetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, rowData.get(), &bitmapInfo, DIB_RGB_COLORS);
+
+		std::uint8_t* data, *currentRowData = rowData.get();
+		std::uint8_t a, r, g, b;
+		WORD hH, hL, hS, h, l, s;
+		COLORREF result;
+
+		// Convert image colors to HLS and then apply Hue and Saturation from theme color
+		ColorRGBToHLS(getSofterBackgroundColor(), &hH, &hL, &hS);
+		for (std::uint32_t y = 0; y < dib.dsBm.bmHeight; y++)
+		{
+			data = currentRowData;
+			for (std::uint32_t x = 0; x < dib.dsBm.bmWidth; x++)
+			{
+				a = data[0];
+				r = data[1];
+				g = data[2];
+				b = data[3];
+
+				ColorRGBToHLS(RGB(r, g, b), &h, &l, &s);
+
+				// Keep bitmap luminosity, replace other components
+				h = hH;
+				s = hS;
+				result = ColorHLSToRGB(h, l, s);
+				
+				data[1] = GetRValue(result);
+				data[2] = GetGValue(result);
+				data[3] = GetBValue(result);
+
+				data += 4;
+			}
+			currentRowData += dib.dsBm.bmWidthBytes;
+		}
+
+		// Updates the HBITMAP
+		int copied = SetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, rowData.get(), &bitmapInfo, DIB_RGB_COLORS);
+		DeleteDC(hdc);
+		rowData.reset();
+	}
 	
+	HBITMAP createBitmapMask(HBITMAP bitmapHandle, COLORREF transparency = -1)
+	{
+		BITMAP bitmap;
+
+		HDC bitmapGraphicsDeviceContext = CreateCompatibleDC(NULL);
+		HDC bitmapMaskGraphicsDeviceContext = CreateCompatibleDC(NULL);
+
+		HGDIOBJ bitmapDummyObject;
+		HGDIOBJ bitmapMaskDummyObject;
+		HBITMAP bitmapMaskHandle;
+
+		GetObject(bitmapHandle, sizeof(BITMAP), &bitmap);
+		bitmapMaskHandle = CreateBitmap(bitmap.bmWidth, bitmap.bmHeight, 1, 1, NULL);
+		bitmapDummyObject = SelectBitmap(bitmapGraphicsDeviceContext, bitmapHandle);
+		bitmapMaskDummyObject = SelectBitmap(bitmapMaskGraphicsDeviceContext, bitmapMaskHandle);
+
+		COLORREF transparencyColor = transparency == -1 ? GetPixel(bitmapGraphicsDeviceContext, 0, 0) : transparency;
+
+		SetBkColor(bitmapGraphicsDeviceContext, transparencyColor);
+		BitBlt(bitmapMaskGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapGraphicsDeviceContext, 0, 0, SRCCOPY);
+		BitBlt(bitmapGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapMaskGraphicsDeviceContext, 0, 0, SRCINVERT);
+		SelectObject(bitmapGraphicsDeviceContext, bitmapDummyObject);
+		SelectObject(bitmapMaskGraphicsDeviceContext, bitmapMaskDummyObject);
+
+		DeleteDC(bitmapGraphicsDeviceContext);
+		DeleteDC(bitmapMaskGraphicsDeviceContext);
+
+		return bitmapMaskHandle;
+	}
+
 	// Which classes exist for themes?
 	// https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
 	struct ButtonData
 	{
 		HTHEME hTheme = nullptr;
 		int iStateID = 0;
+		HBITMAP hbmMask = nullptr;
 
 		~ButtonData()
 		{
 			closeTheme();
+			if (hbmMask)
+				DeleteObject(hbmMask);
 		}
 
 		bool ensureTheme(HWND hwnd)
@@ -738,6 +828,12 @@ namespace PluginDarkMode
 			if (!hTheme)
 			{
 				hTheme = OpenThemeData(hwnd, L"Button");
+
+				HBITMAP hBm = reinterpret_cast<HBITMAP>(SendMessage(hwnd, BM_GETIMAGE, IMAGE_BITMAP, 0));
+				BITMAP bm;
+				int bitSize = GetObject(hBm, sizeof(BITMAP), &bm);
+				if (bitSize)
+					hbmMask = createBitmapMask(hBm);
 			}
 			return hTheme != nullptr;
 		}
@@ -752,13 +848,13 @@ namespace PluginDarkMode
 		}
 	};
 
-	void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
+	void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID, ButtonData& buttonData)
 	{
 		RECT rcClient = {};
 		WCHAR szText[256] = { '\0' };
 		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
 		DWORD uiState = static_cast<DWORD>(SendMessage(hwnd, WM_QUERYUISTATE, 0, 0));
-		DWORD nStyle = GetWindowLong(hwnd, GWL_STYLE);
+		LONG_PTR nStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
 
 		HFONT hFont = nullptr;
 		HFONT hOldFont = nullptr;
@@ -782,6 +878,12 @@ namespace PluginDarkMode
 		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
 		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
 
+		if (iPartID == 1)
+		{
+			dtFlags &= ~(DT_RIGHT);
+			dtFlags |= DT_CENTER;
+		}
+
 		if (!(nStyle & BS_MULTILINE) && !(nStyle & BS_BOTTOM) && !(nStyle & BS_TOP))
 		{
 			dtFlags |= DT_VCENTER;
@@ -792,6 +894,11 @@ namespace PluginDarkMode
 
 		SIZE szBox = { 13, 13 };
 		GetThemePartSize(hTheme, hdc, iPartID, iStateID, NULL, TS_DRAW, &szBox);
+		if (iPartID == 1)
+		{
+			szBox.cx = rcClient.right;
+			szBox.cy = rcClient.bottom;
+		}
 
 		RECT rcText = rcClient;
 		GetThemeBackgroundContentRect(hTheme, hdc, iPartID, iStateID, &rcClient, &rcText);
@@ -799,14 +906,87 @@ namespace PluginDarkMode
 		RECT rcBackground = rcClient;
 		if (dtFlags & DT_SINGLELINE)
 		{
-			rcBackground.top += (rcText.bottom - rcText.top - szBox.cy) / 2;
+			if (iPartID > 1)
+				rcBackground.top += (rcText.bottom - rcText.top - szBox.cy) / 2;
 		}
 		rcBackground.bottom = rcBackground.top + szBox.cy;
 		rcBackground.right = rcBackground.left + szBox.cx;
-		rcText.left = rcBackground.right + 3;
 
-		DrawThemeParentBackground(hwnd, hdc, &rcClient);
-		DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBackground, nullptr);
+		if (iPartID > 1)
+			rcText.left = rcBackground.right + 3;
+
+		if (IsThemeBackgroundPartiallyTransparent(hTheme, iPartID, iStateID))
+			DrawThemeParentBackground(hwnd, hdc, &rcClient);
+		if (iPartID == 1)
+		{
+			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
+			HBRUSH hBckBrush = ((nState & BST_CHECKED) != 0) ? PluginDarkMode::getSofterBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
+			if ((nState & BST_HOT) != 0)
+				hBckBrush = PluginDarkMode::getInvertlightSofterBackgroundBrush();
+			if ((nState & BST_PUSHED) != 0)
+				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
+
+			SelectObject(hdc, PluginDarkMode::getEdgePen());
+			SelectObject(hdc, hBckBrush);
+			RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
+		}
+		else
+			DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBackground, nullptr);
+
+		// Draw button image
+		RECT rcImage = rcClient;
+		if (iPartID == 1)
+		{
+			// Calculate actual text output rectangle and centralize
+			DrawText(hdc, szText, std::wstring(szText).size(), &rcImage, DT_CALCRECT);
+			rcImage.left = (rcClient.right - rcImage.right) / 2;
+			rcImage.right += rcImage.left;
+
+			ICONINFO ii;
+			BITMAP bm;
+
+			HICON hIcon = reinterpret_cast<HICON>(SendMessage(hwnd, BM_GETIMAGE, IMAGE_ICON, 0));
+			HBITMAP hBitmap = reinterpret_cast<HBITMAP>(hIcon); // BM_GETIMAGE returns the same handler for IMAGE_ICON and IMAGE_BITMAP.
+			BOOL bIcon = GetIconInfo(hIcon, &ii);
+			BOOL bBitmap = GetObject(hBitmap, sizeof(bm), &bm);
+
+			bool bStandalone = ((nStyle & BS_BITMAP) != 0) || ((nStyle & BS_ICON) != 0) || (szText[0] == '\0');
+
+			if (bIcon)
+			{
+				POINT pxIcon = {};
+				rcImage.left -= ii.xHotspot * 2;
+				pxIcon.x = bStandalone ? (rcClient.right - ii.xHotspot * 2) / 2 : rcImage.left;
+				pxIcon.y = (rcClient.bottom - (ii.yHotspot * 2)) / 2;
+				if (nState & BST_PUSHED)
+				{
+					pxIcon.x += _dpiManager.scaleX(1);
+					pxIcon.y += _dpiManager.scaleY(1);
+				}
+				DrawIconEx(hdc, pxIcon.x, pxIcon.y, hIcon, ii.xHotspot * 2, ii.yHotspot * 2, 0, NULL, DI_NORMAL);
+			}
+
+			if (bBitmap)
+			{
+				POINT pxBmp = {};
+				rcImage.left -= bm.bmWidth;
+				HDC memDC = CreateCompatibleDC(hdc);
+				pxBmp.x = bStandalone ? (rcClient.right - bm.bmWidth) / 2 : rcImage.left;
+				pxBmp.y = (rcClient.bottom - bm.bmHeight) / 2;
+				if (nState & BST_PUSHED)
+				{
+					pxBmp.x += _dpiManager.scaleX(1);
+					pxBmp.y += _dpiManager.scaleY(1);
+				}
+
+				HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, buttonData.hbmMask));
+				BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCAND);
+				SelectObject(memDC, hBitmap);
+				BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCPAINT);
+				SelectObject(memDC, oldBmp);
+				DeleteDC(memDC);
+			}
+		}
 
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
 		dtto.crText = PluginDarkMode::getTextColor();
@@ -828,7 +1008,7 @@ namespace PluginDarkMode
 			rcFocus.left--;
 			rcFocus.right++;
 			DrawFocusRect(hdc, &rcFocus);
-		}
+		}		
 
 		if (hCreatedFont) DeleteObject(hCreatedFont);
 		SelectObject(hdc, hOldFont);
@@ -837,24 +1017,27 @@ namespace PluginDarkMode
 	void paintButton(HWND hwnd, HDC hdc, ButtonData& buttonData)
 	{
 		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
-		DWORD nStyle = GetWindowLong(hwnd, GWL_STYLE);
+		LONG_PTR nStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
 		LONG_PTR nUserData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		DWORD nButtonStyle = nStyle & 0xF;
 		bool bNormalButton = false;
 
+		DWORD PushLike = nStyle & BS_PUSHLIKE;
+
 		int iPartID = BP_CHECKBOX;
-		if (nButtonStyle == BS_CHECKBOX || nButtonStyle == BS_AUTOCHECKBOX)
+		if ((nStyle & BS_PUSHLIKE) || (nUserData == BS_PUSHLIKE))
 		{
-			iPartID = BP_CHECKBOX;
+			iPartID = BP_PUSHBUTTON;
+			if (nUserData == BS_PUSHLIKE)
+				bNormalButton = true;
 		}
 		else if (nButtonStyle == BS_RADIOBUTTON || nButtonStyle == BS_AUTORADIOBUTTON)
 		{
 			iPartID = BP_RADIOBUTTON;
 		}
-		else if ((nStyle & BS_PUSHLIKE) || nUserData == BS_PUSHLIKE)
+		else if (nButtonStyle == BS_CHECKBOX || nButtonStyle == BS_AUTOCHECKBOX)
 		{
-			iPartID = BP_PUSHBUTTON;
-			bNormalButton = true;
+			iPartID = BP_CHECKBOX;
 		}
 		else
 		{
@@ -894,11 +1077,11 @@ namespace PluginDarkMode
 		{
 			if (hdcFrom)
 			{
-				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
+				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID, buttonData);
 			}
 			if (hdcTo)
 			{
-				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
+				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID, buttonData);
 			}
 
 			buttonData.iStateID = iStateID;
@@ -907,7 +1090,7 @@ namespace PluginDarkMode
 		}
 		else
 		{
-			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID);
+			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID, buttonData);
 
 			buttonData.iStateID = iStateID;
 		}
@@ -2076,9 +2259,9 @@ namespace PluginDarkMode
 				HWND hHeader = ListView_GetHeader(hwnd);
 				if (p.theme)
 				{
-					SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"ItemsView" : nullptr, nullptr);
 					if (hHeader)
-						SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"Explorer" : nullptr, nullptr);
+						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
+					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
 				}
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
