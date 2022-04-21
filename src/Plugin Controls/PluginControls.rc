@@ -53,14 +53,14 @@ CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,141,227,50,14
-    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,144,9,184,14
-    CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,144,44,184,8
-    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,144,60,184,52
-    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,144,27,184,8
-    CONTROL         "",IDC_PCTLOGO,"Static",SS_BITMAP,7,8,11,10
+    CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,146,9,182,14
+    CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,146,44,182,8
+    CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,146,60,182,52
+    CTEXT           "(Version X.X.X.XXX)",IDC_LBLVERSION,146,27,182,8
     CONTROL         "%homepath%",IDC_LNKHOMEPAGE,"SysLink",WS_TABSTOP,87,114,204,9
     LTEXT           "Homepage:",IDC_LBLHOMEPAGE,44,114,38,11
     CONTROL         "",IDC_TXTABOUT,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,125,321,95
+    CONTROL         "",IDC_PCTLOGO,"Static",SS_BITMAP,7,8,11,10
 END
 
 IDD_HEREBEDRAGONS DIALOGEX 0, 0, 400, 208

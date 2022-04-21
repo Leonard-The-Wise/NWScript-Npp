@@ -41,9 +41,20 @@
 #endif
 
 #pragma comment(lib, "uxtheme.lib")
+#pragma comment(lib, "Msimg32.lib")
 
 namespace PluginDarkMode
 {
+	//Globals
+	ColorTone g_colorToneChoice = ColorTone::blackTone;
+	static DPIManager _dpiManager;      // dpi manager for some functions
+	static Options _options;			// actual runtime options
+
+	TreeViewStyle treeViewStyle = TreeViewStyle::classic;
+	COLORREF treeViewBg = 0;
+	double lighnessTreeView = 50.0;
+
+
 	struct Brushes
 	{
 		HBRUSH background = nullptr;
@@ -100,25 +111,30 @@ namespace PluginDarkMode
 	{
 		HPEN darkerTextPen = nullptr;
 		HPEN edgePen = nullptr;
+		HPEN lightEdgePen = nullptr;
 
 		Pens(const Colors& colors)
 			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
 			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
+			, lightEdgePen(::CreatePen(PS_SOLID, 1, invertLightness(colors.darkerText)))
 		{}
 
 		~Pens()
 		{
 			::DeleteObject(darkerTextPen);	darkerTextPen = nullptr;
 			::DeleteObject(edgePen);		edgePen = nullptr;
+			::DeleteObject(lightEdgePen);	lightEdgePen = nullptr;
 		}
 
 		void change(const Colors& colors)
 		{
 			::DeleteObject(darkerTextPen);
 			::DeleteObject(edgePen);
+			::DeleteObject(lightEdgePen);
 
-			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
-			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
+			darkerTextPen = ::CreatePen(PS_SOLID, _dpiManager.scaleX(1), colors.darkerText);
+			edgePen = ::CreatePen(PS_SOLID, _dpiManager.scaleX(1), colors.edge);
+			lightEdgePen = ::CreatePen(PS_SOLID, 1, invertLightness(colors.softerBackground));
 		}
 
 	};
@@ -235,8 +251,6 @@ namespace PluginDarkMode
 		HEXRGB(0x646464)	// edgeColor
 	};
 
-	ColorTone g_colorToneChoice = ColorTone::blackTone;
-
 	void setDarkTone(ColorTone colorToneChoice)
 	{
 		g_colorToneChoice = colorToneChoice;
@@ -302,10 +316,6 @@ namespace PluginDarkMode
 		}
 	}
 
-	static DPIManager _dpiManager;      // dpi manager for some functions
-
-	static Options _options;			// actual runtime options
-
 	Options configuredOptions(bool bEnable)
 	{
 		Options opt;
@@ -318,8 +328,6 @@ namespace PluginDarkMode
 
 		return opt;
 	}
-
-	HMODULE g_thisModule;
 
 	void initDarkMode()
 	{
@@ -382,10 +390,6 @@ namespace PluginDarkMode
 		return invert_c;
 	}
 
-	TreeViewStyle treeViewStyle = TreeViewStyle::classic;
-	COLORREF treeViewBg = 0;
-	double lighnessTreeView = 50.0;
-
 	// adapted from https://stackoverflow.com/a/56678483
 	double calculatePerceivedLighness(COLORREF c)
 	{
@@ -426,9 +430,9 @@ namespace PluginDarkMode
 	HBRUSH getInvertlightDarkerBackgroundBrush() { return getTheme()._brushes.invertlightDarkerBackground; }
 	HBRUSH getInvertlightSofterBackgroundBrush() { return getTheme()._brushes.invertlightSofterBackground; }
 
-
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
+	HPEN getLightEdgePen()				  { return getTheme()._pens.lightEdgePen; }
 
 	void setThemeColors(Colors& newColors)
 	{
@@ -724,90 +728,6 @@ namespace PluginDarkMode
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
 
-	void colorizeThemeGlyph(HBITMAP themeGlyph)
-	{
-		DIBSECTION dib = {};
-		GetObject(themeGlyph, sizeof(dib), &dib);
-		if (dib.dsBm.bmBitsPixel < 32)
-			return;
-
-		HDC hdc = CreateCompatibleDC(NULL);
-		BITMAPINFO bitmapInfo = {};
-		bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-
-		GetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, NULL, &bitmapInfo, DIB_RGB_COLORS);
-		std::unique_ptr<std::uint8_t[]> rowData = std::make_unique<std::uint8_t[]>(bitmapInfo.bmiHeader.biSizeImage);
-		GetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, rowData.get(), &bitmapInfo, DIB_RGB_COLORS);
-
-		std::uint8_t* data, *currentRowData = rowData.get();
-		std::uint8_t a, r, g, b;
-		WORD hH, hL, hS, h, l, s;
-		COLORREF result;
-
-		// Convert image colors to HLS and then apply Hue and Saturation from theme color
-		ColorRGBToHLS(getSofterBackgroundColor(), &hH, &hL, &hS);
-		for (std::uint32_t y = 0; y < dib.dsBm.bmHeight; y++)
-		{
-			data = currentRowData;
-			for (std::uint32_t x = 0; x < dib.dsBm.bmWidth; x++)
-			{
-				a = data[0];
-				r = data[1];
-				g = data[2];
-				b = data[3];
-
-				ColorRGBToHLS(RGB(r, g, b), &h, &l, &s);
-
-				// Keep bitmap luminosity, replace other components
-				h = hH;
-				s = hS;
-				result = ColorHLSToRGB(h, l, s);
-				
-				data[1] = GetRValue(result);
-				data[2] = GetGValue(result);
-				data[3] = GetBValue(result);
-
-				data += 4;
-			}
-			currentRowData += dib.dsBm.bmWidthBytes;
-		}
-
-		// Updates the HBITMAP
-		int copied = SetDIBits(hdc, themeGlyph, 0, dib.dsBm.bmHeight, rowData.get(), &bitmapInfo, DIB_RGB_COLORS);
-		DeleteDC(hdc);
-		rowData.reset();
-	}
-	
-	HBITMAP createBitmapMask(HBITMAP bitmapHandle, COLORREF transparency = -1)
-	{
-		BITMAP bitmap;
-
-		HDC bitmapGraphicsDeviceContext = CreateCompatibleDC(NULL);
-		HDC bitmapMaskGraphicsDeviceContext = CreateCompatibleDC(NULL);
-
-		HGDIOBJ bitmapDummyObject;
-		HGDIOBJ bitmapMaskDummyObject;
-		HBITMAP bitmapMaskHandle;
-
-		GetObject(bitmapHandle, sizeof(BITMAP), &bitmap);
-		bitmapMaskHandle = CreateBitmap(bitmap.bmWidth, bitmap.bmHeight, 1, 1, NULL);
-		bitmapDummyObject = SelectBitmap(bitmapGraphicsDeviceContext, bitmapHandle);
-		bitmapMaskDummyObject = SelectBitmap(bitmapMaskGraphicsDeviceContext, bitmapMaskHandle);
-
-		COLORREF transparencyColor = transparency == -1 ? GetPixel(bitmapGraphicsDeviceContext, 0, 0) : transparency;
-
-		SetBkColor(bitmapGraphicsDeviceContext, transparencyColor);
-		BitBlt(bitmapMaskGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapGraphicsDeviceContext, 0, 0, SRCCOPY);
-		BitBlt(bitmapGraphicsDeviceContext, 0, 0, bitmap.bmWidth, bitmap.bmHeight, bitmapMaskGraphicsDeviceContext, 0, 0, SRCINVERT);
-		SelectObject(bitmapGraphicsDeviceContext, bitmapDummyObject);
-		SelectObject(bitmapMaskGraphicsDeviceContext, bitmapMaskDummyObject);
-
-		DeleteDC(bitmapGraphicsDeviceContext);
-		DeleteDC(bitmapMaskGraphicsDeviceContext);
-
-		return bitmapMaskHandle;
-	}
-
 	// Which classes exist for themes?
 	// https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
 	struct ButtonData
@@ -828,12 +748,6 @@ namespace PluginDarkMode
 			if (!hTheme)
 			{
 				hTheme = OpenThemeData(hwnd, L"Button");
-
-				HBITMAP hBm = reinterpret_cast<HBITMAP>(SendMessage(hwnd, BM_GETIMAGE, IMAGE_BITMAP, 0));
-				BITMAP bm;
-				int bitSize = GetObject(hBm, sizeof(BITMAP), &bm);
-				if (bitSize)
-					hbmMask = createBitmapMask(hBm);
 			}
 			return hTheme != nullptr;
 		}
@@ -848,7 +762,7 @@ namespace PluginDarkMode
 		}
 	};
 
-	void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID, ButtonData& buttonData)
+	void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
 	{
 		RECT rcClient = {};
 		WCHAR szText[256] = { '\0' };
@@ -920,13 +834,14 @@ namespace PluginDarkMode
 		if (iPartID == 1)
 		{
 			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
-			HBRUSH hBckBrush = ((nState & BST_CHECKED) != 0) ? PluginDarkMode::getSofterBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
-			if ((nState & BST_HOT) != 0)
-				hBckBrush = PluginDarkMode::getInvertlightSofterBackgroundBrush();
-			if ((nState & BST_PUSHED) != 0)
+			HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getInvertlightSofterBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
+			if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
 				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
 
-			SelectObject(hdc, PluginDarkMode::getEdgePen());
+			if ((nState & BST_FOCUS) || (nStyle & BS_DEFPUSHBUTTON))
+				SelectObject(hdc, PluginDarkMode::getLightEdgePen());
+			else
+				SelectObject(hdc, PluginDarkMode::getEdgePen());
 			SelectObject(hdc, hBckBrush);
 			RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
 		}
@@ -938,9 +853,10 @@ namespace PluginDarkMode
 		if (iPartID == 1)
 		{
 			// Calculate actual text output rectangle and centralize
+			int padding = _dpiManager.scaleX(4);
 			DrawText(hdc, szText, std::wstring(szText).size(), &rcImage, DT_CALCRECT);
-			rcImage.left = (rcClient.right - rcImage.right) / 2;
-			rcImage.right += rcImage.left;
+			rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
+			rcImage.right += padding + rcImage.left;
 
 			ICONINFO ii;
 			BITMAP bm;
@@ -979,13 +895,20 @@ namespace PluginDarkMode
 					pxBmp.y += _dpiManager.scaleY(1);
 				}
 
-				HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, buttonData.hbmMask));
-				BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCAND);
-				SelectObject(memDC, hBitmap);
-				BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCPAINT);
+				HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, hBitmap));
+				BLENDFUNCTION bf1;
+				bf1.BlendOp = AC_SRC_OVER;
+				bf1.BlendFlags = 0;
+				bf1.SourceConstantAlpha = 0xff;
+				bf1.AlphaFormat = AC_SRC_ALPHA;
+				AlphaBlend(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf1);
 				SelectObject(memDC, oldBmp);
 				DeleteDC(memDC);
 			}
+
+			if (bIcon || bBitmap)
+				rcText.left += padding;
+
 		}
 
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
@@ -1007,7 +930,15 @@ namespace PluginDarkMode
 			rcFocus.bottom++;
 			rcFocus.left--;
 			rcFocus.right++;
-			DrawFocusRect(hdc, &rcFocus);
+
+			if (iPartID == 1)
+			{
+				rcClient.left += _dpiManager.scaleX(3); rcClient.right -= _dpiManager.scaleX(3);
+				rcClient.top += _dpiManager.scaleY(3); rcClient.bottom -= _dpiManager.scaleY(3);
+				DrawFocusRect(hdc, &rcClient);
+			}
+			else
+				DrawFocusRect(hdc, &rcFocus);
 		}		
 
 		if (hCreatedFont) DeleteObject(hCreatedFont);
@@ -1077,11 +1008,11 @@ namespace PluginDarkMode
 		{
 			if (hdcFrom)
 			{
-				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID, buttonData);
+				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
 			}
 			if (hdcTo)
 			{
-				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID, buttonData);
+				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
 			}
 
 			buttonData.iStateID = iStateID;
@@ -1090,7 +1021,7 @@ namespace PluginDarkMode
 		}
 		else
 		{
-			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID, buttonData);
+			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID);
 
 			buttonData.iStateID = iStateID;
 		}
@@ -1142,16 +1073,20 @@ namespace PluginDarkMode
 					PAINTSTRUCT ps = {};
 					HDC hdc = reinterpret_cast<HDC>(wParam);
 					if (!hdc)
-					{
 						hdc = BeginPaint(hWnd, &ps);
-					}
+
+					ULONG_PTR token = 0;
+					Gdiplus::GdiplusStartupInput input = NULL;
+					Gdiplus::GdiplusStartup(&token, &input, NULL);
 
 					paintButton(hWnd, hdc, *pButtonData);
 
 					if (ps.hdc)
-					{
 						EndPaint(hWnd, &ps);
-					}
+
+					if (token)
+						Gdiplus::GdiplusShutdown(token);
+
 
 					return 0;
 				}
@@ -2057,7 +1992,7 @@ namespace PluginDarkMode
 						SelectObject(lpcd->nmcd.hdc, GetStockObject(NULL_PEN));
 						SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getSofterBackgroundBrush());
 						RoundRect(lpcd->nmcd.hdc, lpcd->nmcd.rc.left, lpcd->nmcd.rc.top, lpcd->nmcd.rc.right, lpcd->nmcd.rc.bottom,
-							3, 3);
+							_dpiManager.scaleX(5), _dpiManager.scaleY(5));
 					}
 
 					// Simulate item uncheck so we don't get the blue highlight on a dark themed toolbar
@@ -2076,7 +2011,7 @@ namespace PluginDarkMode
 						SelectObject(lpcd->nmcd.hdc, PluginDarkMode::getEdgePen());
 						SelectObject(lpcd->nmcd.hdc, GetStockObject(HOLLOW_BRUSH));
 						RoundRect(lpcd->nmcd.hdc, lpcd->nmcd.rc.left, lpcd->nmcd.rc.top, lpcd->nmcd.rc.right, lpcd->nmcd.rc.bottom,
-							3, 3);
+							_dpiManager.scaleX(5), _dpiManager.scaleY(5));
 					}
 					break;
 				}

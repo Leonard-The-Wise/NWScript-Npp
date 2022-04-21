@@ -316,9 +316,11 @@ void AboutDialog::setLogo()
 	_dpiManager.screenToClientEx(_hSelf, &pctRect);
 	imageSize.cx = _dpiManager.scaleX(imageSize.cx);
 	imageSize.cy = _dpiManager.scaleY(imageSize.cy);
-	MoveWindow(GetDlgItem(_hSelf, IDC_PCTLOGO), _dpiManager.scaleX(pctRect.left), _dpiManager.scaleY(pctRect.top), imageSize.cx, imageSize.cy, true);
+	MoveWindow(GetDlgItem(_hSelf, IDC_PCTLOGO), pctRect.left, pctRect.top, imageSize.cx, imageSize.cy, true);
 
-	HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
-    ::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+	GetClientRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
+	HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, pctRect.right, pctRect.bottom);
+	//HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+	::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
 
 }

@@ -389,7 +389,12 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
         PluginDarkMode::Colors newColors;
         bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, sizeof(newColors), reinterpret_cast<LPARAM>(&newColors));
         if (bSuccess)
+        {
             PluginDarkMode::setThemeColors(newColors);
+
+            // We override link colors
+            PluginDarkMode::setLinkTextColor(HEXRGB(0xFFC000));
+        }
     }
 
     // Set Dark Mode for window/application
