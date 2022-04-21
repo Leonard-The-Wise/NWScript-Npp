@@ -34,6 +34,14 @@ namespace NWScriptPlugin {
 
 		void doDialog();
 
+		void reloadAboutDocument() {
+			if (_currentDocumentID == 0)
+				return;
+			LoadAboutTextEditor(_currentDocumentID);
+		}
+
+		void refreshDarkMode();
+
 	protected:
 
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
@@ -45,9 +53,11 @@ namespace NWScriptPlugin {
 		void LaunchHyperlink(const ENLINK& link);
 		void setLogo();
 
+		int _currentDocumentID = 0;
+
 		generic_string _homePath;
 		generic_string _aboutText;
-		OleCallback _oleCallback;
+		OleCallback* _aboutOleCallback = nullptr;
 		std::map<generic_string, generic_string> _replaceStrings;
 
 		// Anchoring and size restriction informations

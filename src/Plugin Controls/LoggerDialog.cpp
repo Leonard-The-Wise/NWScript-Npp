@@ -163,7 +163,7 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			CreateTooltips();
 
 			// Check switch to dark mode.
-			checkSwitchToDarkMode();
+			refreshDarkMode();
 
 			break;
 		}
@@ -791,7 +791,7 @@ void LoggerDialog::CreateTooltips()
 	_toolTips[4] = CreateToolTip(_consoleDlgHwnd, IDC_BTFILTERINFO, TEXT("Output info messages to the console"));
 }
 
-void LoggerDialog::checkSwitchToDarkMode()
+void LoggerDialog::refreshDarkMode()
 {
 	RecreateIcons();
 	RecreateTxtConsole();

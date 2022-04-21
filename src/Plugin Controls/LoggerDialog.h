@@ -67,9 +67,7 @@ namespace NWScriptPlugin {
 
 		void LockControls(bool toLock);
 
-		void refreshDarkMode() {
-			checkSwitchToDarkMode();
-		}
+		void refreshDarkMode();
 
 	protected:
 
@@ -80,8 +78,6 @@ namespace NWScriptPlugin {
 		static INT_PTR CALLBACK dlgProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		// Real children message-processing 
 		intptr_t CALLBACK childrenDlgProc(UINT message, WPARAM wParam, LPARAM lParam);
-
-		void checkSwitchToDarkMode();
 
 	private:
 		DECLARE_ANCHOR_MAP()

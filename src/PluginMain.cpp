@@ -29,7 +29,6 @@
 
 #include "NWScriptParser.h"
 
-#include "AboutDialog.h"
 #include "BatchProcessingDialog.h"
 #include "CompilerSettingsDialog.h"
 #include "FileParseSummaryDialog.h"
@@ -171,8 +170,9 @@ void Plugin::PluginInit(HANDLE hModule)
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
 
-    // Load latest Richedit library
+    // Load latest Richedit library and only then create the about dialog
     LoadLibrary(TEXT("Msftedit.dll"));
+    //Instance()._aboutDialog = std::make_unique<AboutDialog>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -399,10 +399,13 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
 
     // Set Dark Mode for window/application
     PluginDarkMode::setDarkMode(_isNppDarkModeEnabled, true);
+
     // Rebuild menu
     SetupPluginMenuItems();
-    // Refresh permanent dialog dark mode
+
+    // Refresh permanent dialogs dark mode
     _loggerWindow.refreshDarkMode();
+    //_aboutDialog->refreshDarkMode();
 }
 
 // Set Dark Mode for Legacy Notepad++ versions
@@ -2822,14 +2825,13 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
+    static AboutDialog aboutDialog;
 
+    ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
+     
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 
-    // Dialog boxes need to be static unless modal ones.
-    static AboutDialog aboutDialog = {};
-
-    // Initialize some user information
+    // Initialize some user information 
     std::map<generic_string, generic_string> replaceStrings;
     replaceStrings.insert({ TEXT("%PLUGINXMLFILE%"), Instance()._pluginPaths["PluginLexerConfigFilePath"] });
     replaceStrings.insert({ TEXT("%AUTOCOMPLETEFILE%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"] });
@@ -2859,18 +2861,30 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%userFunctionCount%"), thousandSeparatorW(Instance().Settings().userFunctionCount) });
     replaceStrings.insert({ TEXT("%userConstants%"), thousandSeparatorW(Instance().Settings().userConstants) });
 
-    // Set replace strings
-    aboutDialog.setReplaceStrings(replaceStrings); 
 
-    // Set homepath dir...
+    aboutDialog.setReplaceStrings(replaceStrings); 
+    aboutDialog.reloadAboutDocument();
     aboutDialog.setHomePath(PLUGIN_HOMEPATH);
 
-    // Present it
     if (!aboutDialog.isCreated())
         aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
 
     if (!aboutDialog.isVisible())
         aboutDialog.doDialog();
+
+    //// Set replace strings
+    //Instance()._aboutDialog->setReplaceStrings(replaceStrings);
+    //Instance()._aboutDialog->reloadAboutDocument();
+
+    //// Set homepath dir...
+    //Instance()._aboutDialog->setHomePath(PLUGIN_HOMEPATH);
+
+    //// Present it
+    //if (!Instance()._aboutDialog->isCreated())
+    //    Instance()._aboutDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
+
+    //if (!Instance()._aboutDialog->isVisible())
+    //    Instance()._aboutDialog->doDialog();
 }
 
 #pragma endregion Plugin User Interfacing and Menu Commands

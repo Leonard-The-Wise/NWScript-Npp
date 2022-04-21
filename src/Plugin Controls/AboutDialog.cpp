@@ -71,15 +71,17 @@ DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG cb, PL
 
 void AboutDialog::LoadAboutTextEditor(int resourceID)
 {
+	_currentDocumentID = resourceID;
+	
 	// Load resource
-	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(resourceID), L"RTF");
+	auto hResource = FindResourceW(_hInst, MAKEINTRESOURCE(_currentDocumentID), L"RTF");
 	HGLOBAL hMemory = NULL;
 	LPVOID ptr = NULL;
 	size_t _size = 0;
 
 	if (hResource)
 	{
-		_size = SizeofResource(_hInst, hResource);
+		_size = SizeofResource(_hInst, hResource); 
 		hMemory = LoadResource(_hInst, hResource);
 
 		if (hMemory)
@@ -117,6 +119,9 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 			memcpy(pBuffer, wstr2str(rawTextW).c_str(), rawTextW.size());
 	}
 
+	if (!_aboutOleCallback)
+		_aboutOleCallback = new OleCallback(); // Don't need to delete this pointer later, the Release() method of OleCallback will do it for us.
+
 	// Create stream on hMemory
 	IStream* pStream = nullptr;
 	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
@@ -125,10 +130,9 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 		// Set paramenters
 		EDITSTREAM es = { (DWORD_PTR)pStream, 0, EditStreamCallback };
 		HWND editControl = GetDlgItem(_hSelf, IDC_TXTABOUT);
-		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)&_oleCallback);
-		SendMessage(editControl, EM_AUTOURLDETECT, AURL_ENABLEURL, 0);
 		SendMessage(editControl, EM_EXLIMITTEXT, 0, -1);
 		SendMessage(editControl, EM_SETEVENTMASK, 0, ENM_LINK);
+		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)(_aboutOleCallback));
 
 		// Load Document 
 		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
@@ -300,17 +304,6 @@ void AboutDialog::setLogo()
 {
 	SIZE imageSize = { 273, 203 };
 
-	// Get best image size based on DPI
-	int resourceID = 0;
-	int dpiPercent = _dpiManager.getDPIScalePercent();
-	if (dpiPercent == 100)
-		resourceID = IDB_NWSCRIPTLOGO;
-	else 
-		if (dpiPercent > 100 || dpiPercent < 150)
-			resourceID = IDB_NWSCRIPTLOGO_200;
-		else
-			resourceID = IDB_NWSCRIPTLOGO_300;
-
 	RECT pctRect;
 	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
 	_dpiManager.screenToClientEx(_hSelf, &pctRect);
@@ -319,8 +312,27 @@ void AboutDialog::setLogo()
 	MoveWindow(GetDlgItem(_hSelf, IDC_PCTLOGO), pctRect.left, pctRect.top, imageSize.cx, imageSize.cy, true);
 
 	GetClientRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
-	HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, pctRect.right, pctRect.bottom);
-	//HBITMAP hLogo = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+	HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO, pctRect.right, pctRect.bottom);
 	::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+}
 
+
+void AboutDialog::refreshDarkMode()
+{
+	if (!isCreated())
+		return;
+
+	PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
+
+	LoadAboutTextEditor(PluginDarkMode::isEnabled() ? IDR_ABOUTDOCDARK : IDR_ABOUTDOC);
+
+	// Reload window icon
+	HICON hAboutOld = reinterpret_cast<HICON>(::SendMessage(_hSelf, WM_GETICON, ICON_SMALL, 0));
+	if (hAboutOld)
+		DeleteObject(hAboutOld);
+	HICON hAbout = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+	::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
+
+	InvalidateRect(_hSelf, NULL, true);
+	UpdateWindow(_hSelf);
 }

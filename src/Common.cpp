@@ -401,6 +401,7 @@ namespace NWScriptPluginCommons {
             int destHeight = (height > 0) ? height : bmp->GetHeight();
             Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
             Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
+            g->SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
             g->DrawImage(bmp, 0, 0, destWidth, destHeight);
 
             // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
@@ -460,6 +461,7 @@ namespace NWScriptPluginCommons {
             int destHeight = (height > 0) ? height : bmp->GetHeight();
             Gdiplus::Bitmap* destination = new Gdiplus::Bitmap(destWidth, destHeight, PixelFormat32bppARGB);
             Gdiplus::Graphics* g = Gdiplus::Graphics::FromImage(destination);
+            g->SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
             g->DrawImage(bmp, 0, 0, destWidth, destHeight);
 
             // GDI+ will mangle the Alpha channel from our Bitmap, so we must do an extra step to recover it.
@@ -527,6 +529,7 @@ namespace NWScriptPluginCommons {
         Gdiplus::Bitmap* image = new Gdiplus::Bitmap(lockedBitmapData.Width, lockedBitmapData.Height, lockedBitmapData.Stride,
             PixelFormat32bppARGB, reinterpret_cast<BYTE*>(lockedBitmapData.Scan0));
 
+        // Even rebuilding image, we can't retrieve HBITMAP directly, again...
         image->GetHICON(&retval);
         delete bmp, image;
         Gdiplus::GdiplusShutdown(token);

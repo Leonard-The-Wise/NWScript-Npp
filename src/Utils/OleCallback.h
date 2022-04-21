@@ -8,28 +8,37 @@
 
 #pragma once
 
+static int g_iNumStorages = 0;
+
 interface OleCallback : public IRichEditOleCallback
 {
 public:
     IStorage* pstorage;
     DWORD m_ref;
     int grfmode;
+
     OleCallback() : grfmode(STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE)
     {
-        pstorage = nullptr;
-        m_ref = 0;        
-        std::ignore = StgCreateStorageEx(NULL, grfmode | STGM_DELETEONRELEASE, STGFMT_STORAGE, 0, 0, NULL, 
+        pstorage = nullptr; 
+        m_ref = 0;
+
+        HRESULT hSuccess = StgCreateStorageEx(NULL, grfmode, STGFMT_STORAGE, 0, 0, NULL, 
             IID_IStorage, reinterpret_cast<void**>(&pstorage));
+        OutputDebugString((L"AboutBox: StgCreateStorageEx result is: " + std::to_wstring(hSuccess)).c_str());
     }
 
     HRESULT STDMETHODCALLTYPE GetNewStorage(LPSTORAGE* lplpstg)
     {
         wchar_t name[256] = { 0 };
+        g_iNumStorages++;
+        swprintf(name, 256, L"NWScript-REOLEStorage%d", g_iNumStorages);
+
         HRESULT pResult = pstorage->CreateStorage(name, grfmode, 0, 0, lplpstg);
+        OutputDebugString((L"AboutBox: pstorage->CreateStorage result is: " + std::to_wstring(pResult)).c_str());
         return pResult;
     }
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** lplpObj)
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** lplpObj) 
     {
         *lplpObj = NULL;
         if (iid == IID_IUnknown || iid == IID_IRichEditOleCallback)
@@ -48,7 +57,13 @@ public:
 
     ULONG STDMETHODCALLTYPE Release()
     {
-        return --m_ref;
+        if (--m_ref == 0)
+        {
+            delete this;
+            return 0;
+        }
+
+        return m_ref;
     }
 
     STDMETHOD(GetInPlaceContext) (LPOLEINPLACEFRAME FAR*, LPOLEINPLACEUIWINDOW FAR*, LPOLEINPLACEFRAMEINFO) { return S_OK; }

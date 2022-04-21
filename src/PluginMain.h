@@ -20,6 +20,7 @@
 #include "NWScriptParser.h"
 #include "NWScriptCompiler.h"
 
+#include "AboutDialog.h"
 #include "LoggerDialog.h"
 #include "ProcessFilesDialog.h"
 
@@ -305,6 +306,7 @@ namespace NWScriptPlugin {
 
 		LoggerDialog _loggerWindow;
 		ProcessFilesDialog _processingFilesDialog;
+		//std::unique_ptr<AboutDialog> _aboutDialog;
 
 		// Internal handles
 
