@@ -22,7 +22,7 @@ public:
         pstorage = nullptr; 
         m_ref = 0;
 
-        HRESULT hSuccess = StgCreateStorageEx(NULL, grfmode, STGFMT_STORAGE, 0, 0, NULL, 
+        HRESULT hSuccess = StgCreateStorageEx(NULL, grfmode | STGM_DELETEONRELEASE, STGFMT_STORAGE, 0, 0, NULL, 
             IID_IStorage, reinterpret_cast<void**>(&pstorage));
         OutputDebugString((L"AboutBox: StgCreateStorageEx result is: " + std::to_wstring(hSuccess)).c_str());
     }

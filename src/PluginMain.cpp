@@ -2825,8 +2825,6 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    //static AboutDialog aboutDialog;
-
     ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
      
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
@@ -2860,17 +2858,6 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%engineConstants%"), thousandSeparatorW(Instance().Settings().engineConstants) });
     replaceStrings.insert({ TEXT("%userFunctionCount%"), thousandSeparatorW(Instance().Settings().userFunctionCount) });
     replaceStrings.insert({ TEXT("%userConstants%"), thousandSeparatorW(Instance().Settings().userConstants) });
-
-
-    //aboutDialog.setReplaceStrings(replaceStrings); 
-    //aboutDialog.reloadAboutDocument();
-    //aboutDialog.setHomePath(PLUGIN_HOMEPATH);
-
-    //if (!aboutDialog.isCreated())
-    //    aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
-
-    //if (!aboutDialog.isVisible())
-    //    aboutDialog.doDialog();
 
     // Set replace strings
     Instance()._aboutDialog->setReplaceStrings(replaceStrings);
