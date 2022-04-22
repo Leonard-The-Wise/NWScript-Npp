@@ -172,7 +172,7 @@ void Plugin::PluginInit(HANDLE hModule)
 
     // Load latest Richedit library and only then create the about dialog
     LoadLibrary(TEXT("Msftedit.dll"));
-    //Instance()._aboutDialog = std::make_unique<AboutDialog>();
+    Instance()._aboutDialog = std::make_unique<AboutDialog>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -405,7 +405,7 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
 
     // Refresh permanent dialogs dark mode
     _loggerWindow.refreshDarkMode();
-    //_aboutDialog->refreshDarkMode();
+    _aboutDialog->refreshDarkMode();
 }
 
 // Set Dark Mode for Legacy Notepad++ versions
@@ -2825,7 +2825,7 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    static AboutDialog aboutDialog;
+    //static AboutDialog aboutDialog;
 
     ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
      
@@ -2862,29 +2862,29 @@ PLUGINCOMMAND Plugin::AboutMe()
     replaceStrings.insert({ TEXT("%userConstants%"), thousandSeparatorW(Instance().Settings().userConstants) });
 
 
-    aboutDialog.setReplaceStrings(replaceStrings); 
-    aboutDialog.reloadAboutDocument();
-    aboutDialog.setHomePath(PLUGIN_HOMEPATH);
+    //aboutDialog.setReplaceStrings(replaceStrings); 
+    //aboutDialog.reloadAboutDocument();
+    //aboutDialog.setHomePath(PLUGIN_HOMEPATH);
 
-    if (!aboutDialog.isCreated())
-        aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    //if (!aboutDialog.isCreated())
+    //    aboutDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
 
-    if (!aboutDialog.isVisible())
-        aboutDialog.doDialog();
+    //if (!aboutDialog.isVisible())
+    //    aboutDialog.doDialog();
 
-    //// Set replace strings
-    //Instance()._aboutDialog->setReplaceStrings(replaceStrings);
-    //Instance()._aboutDialog->reloadAboutDocument();
+    // Set replace strings
+    Instance()._aboutDialog->setReplaceStrings(replaceStrings);
+    Instance()._aboutDialog->reloadAboutDocument();
 
-    //// Set homepath dir...
-    //Instance()._aboutDialog->setHomePath(PLUGIN_HOMEPATH);
+    // Set homepath dir...
+    Instance()._aboutDialog->setHomePath(PLUGIN_HOMEPATH);
 
-    //// Present it
-    //if (!Instance()._aboutDialog->isCreated())
-    //    Instance()._aboutDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
+    // Present it
+    if (!Instance()._aboutDialog->isCreated())
+        Instance()._aboutDialog->init(Instance().DllHModule(), Instance().NotepadHwnd());
 
-    //if (!Instance()._aboutDialog->isVisible())
-    //    Instance()._aboutDialog->doDialog();
+    if (!Instance()._aboutDialog->isVisible())
+        Instance()._aboutDialog->doDialog();
 }
 
 #pragma endregion Plugin User Interfacing and Menu Commands

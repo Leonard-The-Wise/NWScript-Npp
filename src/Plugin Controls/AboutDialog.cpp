@@ -79,7 +79,7 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 	LPVOID ptr = NULL;
 	size_t _size = 0;
 
-	if (hResource)
+	if (hResource) 
 	{
 		_size = SizeofResource(_hInst, hResource); 
 		hMemory = LoadResource(_hInst, hResource);
@@ -135,7 +135,9 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)(_aboutOleCallback));
 
 		// Load Document 
+		SendMessage(editControl, EM_SETREADONLY, 0, 0); // Set readonly off or images may not load properly
 		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+		SendMessage(editControl, EM_SETREADONLY, 1, 0);
 
 		// Retrieve raw buffer from TXTABOUT for replace strings and later use with hyperlink clicks
 		GETTEXTLENGTHEX tl = { GTL_NUMCHARS, 1200 };

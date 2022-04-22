@@ -306,7 +306,7 @@ namespace NWScriptPlugin {
 
 		LoggerDialog _loggerWindow;
 		ProcessFilesDialog _processingFilesDialog;
-		//std::unique_ptr<AboutDialog> _aboutDialog;
+		std::unique_ptr<AboutDialog> _aboutDialog;
 
 		// Internal handles
 
