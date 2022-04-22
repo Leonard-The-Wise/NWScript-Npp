@@ -17,18 +17,16 @@ public:
     DWORD m_ref;
     int grfmode;
 
-    OleCallback() : grfmode(STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE)
+    OleCallback() : pstorage(nullptr), m_ref(0), grfmode(STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE)
     {
-        pstorage = nullptr; 
-        m_ref = 0;
-
-        HRESULT hSuccess = StgCreateStorageEx(NULL, grfmode | STGM_DELETEONRELEASE, STGFMT_STORAGE, 0, 0, NULL, 
-            IID_IStorage, reinterpret_cast<void**>(&pstorage));
-        OutputDebugString((L"AboutBox: StgCreateStorageEx result is: " + std::to_wstring(hSuccess)).c_str());
+        CreateStorage();
     }
 
     HRESULT STDMETHODCALLTYPE GetNewStorage(LPSTORAGE* lplpstg)
     {
+        if (!pstorage)
+            CreateStorage();
+
         wchar_t name[256] = { 0 };
         g_iNumStorages++;
         swprintf(name, 256, L"NWScript-REOLEStorage%d", g_iNumStorages);
@@ -57,13 +55,7 @@ public:
 
     ULONG STDMETHODCALLTYPE Release()
     {
-        if (--m_ref == 0)
-        {
-            delete this;
-            return 0;
-        }
-
-        return m_ref;
+        return --m_ref;
     }
 
     STDMETHOD(GetInPlaceContext) (LPOLEINPLACEFRAME FAR*, LPOLEINPLACEUIWINDOW FAR*, LPOLEINPLACEFRAMEINFO) { return S_OK; }
@@ -75,6 +67,16 @@ public:
     STDMETHOD(GetClipboardData) (CHARRANGE FAR*, DWORD, LPDATAOBJECT FAR*) { return S_OK; }
     STDMETHOD(GetDragDropEffect) (BOOL, DWORD, LPDWORD) { return S_OK; }
     STDMETHOD(GetContextMenu) (WORD, LPOLEOBJECT, CHARRANGE FAR*, HMENU FAR*) { return S_OK; }
+
+private:
+    void CreateStorage() {
+        pstorage = nullptr;
+        m_ref = 0;
+
+        HRESULT hSuccess = StgCreateStorageEx(NULL, grfmode | STGM_DELETEONRELEASE, STGFMT_STORAGE, 0, 0, NULL,
+            IID_IStorage, reinterpret_cast<void**>(&pstorage));
+        OutputDebugString((L"AboutBox: StgCreateStorageEx result is: " + std::to_wstring(hSuccess)).c_str());
+    }
 };
 
 

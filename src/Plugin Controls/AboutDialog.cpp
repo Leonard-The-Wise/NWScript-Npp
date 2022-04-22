@@ -119,9 +119,6 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 			memcpy(pBuffer, wstr2str(rawTextW).c_str(), rawTextW.size());
 	}
 
-	if (!_aboutOleCallback)
-		_aboutOleCallback = new OleCallback(); // Don't need to delete this pointer later, the Release() method of OleCallback will do it for us.
-
 	// Create stream on hMemory
 	IStream* pStream = nullptr;
 	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
@@ -132,18 +129,18 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 		HWND editControl = GetDlgItem(_hSelf, IDC_TXTABOUT);
 		SendMessage(editControl, EM_EXLIMITTEXT, 0, -1);
 		SendMessage(editControl, EM_SETEVENTMASK, 0, ENM_LINK);
-		SendMessage(editControl, EM_SETOLECALLBACK, 0, (LPARAM)(_aboutOleCallback));
+		SendMessage(editControl, EM_SETOLECALLBACK, 0, reinterpret_cast<LPARAM>(&_aboutOleCallback));
 
 		// Load Document 
 		SendMessage(editControl, EM_SETREADONLY, 0, 0); // Set readonly off or images may not load properly
-		SendMessage(editControl, EM_STREAMIN, SF_RTF, (LPARAM)&es);
+		SendMessage(editControl, EM_STREAMIN, SF_RTF, reinterpret_cast<LPARAM>(&es));
 		SendMessage(editControl, EM_SETREADONLY, 1, 0);
 
 		// Retrieve raw buffer from TXTABOUT for replace strings and later use with hyperlink clicks
 		GETTEXTLENGTHEX tl = { GTL_NUMCHARS, 1200 };
-		_aboutText.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, (WPARAM)&tl, 0) + 1);
+		_aboutText.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, reinterpret_cast<WPARAM>(&tl), 0) + 1);
 		GETTEXTEX tex = { (DWORD)_aboutText.size() * sizeof(TCHAR), GT_RAWTEXT, 1200, NULL, NULL};
-		SendMessage(editControl, EM_GETTEXTEX, (WPARAM)&tex, (LPARAM)_aboutText.data());
+		SendMessage(editControl, EM_GETTEXTEX, reinterpret_cast<LPARAM>(&tex), reinterpret_cast<LPARAM>(_aboutText.data()));
 	}
 
 	// Free memory allocated for resource again

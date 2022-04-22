@@ -41,7 +41,6 @@
 #endif
 
 #pragma comment(lib, "uxtheme.lib")
-#pragma comment(lib, "Msimg32.lib")
 
 namespace PluginDarkMode
 {
@@ -838,10 +837,13 @@ namespace PluginDarkMode
 			if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
 				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
 
-			if ((nState & BST_FOCUS) || (nStyle & BS_DEFPUSHBUTTON))
+			if (nStyle & WS_DISABLED)
+				SelectObject(hdc, PluginDarkMode::getDarkerTextPen());
+			else if ((nState & BST_FOCUS) || (nStyle & BS_DEFPUSHBUTTON))
 				SelectObject(hdc, PluginDarkMode::getLightEdgePen());
-			else
+			else 
 				SelectObject(hdc, PluginDarkMode::getEdgePen());
+
 			SelectObject(hdc, hBckBrush);
 			RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
 		}
@@ -896,19 +898,24 @@ namespace PluginDarkMode
 				}
 
 				HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, hBitmap));
-				BLENDFUNCTION bf1;
-				bf1.BlendOp = AC_SRC_OVER;
-				bf1.BlendFlags = 0;
-				bf1.SourceConstantAlpha = 0xff;
-				bf1.AlphaFormat = AC_SRC_ALPHA;
-				AlphaBlend(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf1);
+				if (bm.bmBitsPixel == 32)
+				{
+					BLENDFUNCTION bf1;
+					bf1.BlendOp = AC_SRC_OVER;
+					bf1.BlendFlags = 0;
+					bf1.SourceConstantAlpha = 0xff;
+					bf1.AlphaFormat = AC_SRC_ALPHA;
+					GdiAlphaBlend(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf1);
+				}
+				else
+					BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCCOPY);
+
 				SelectObject(memDC, oldBmp);
 				DeleteDC(memDC);
 			}
 
 			if (bIcon || bBitmap)
 				rcText.left += padding;
-
 		}
 
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
@@ -933,8 +940,8 @@ namespace PluginDarkMode
 
 			if (iPartID == 1)
 			{
-				rcClient.left += _dpiManager.scaleX(3); rcClient.right -= _dpiManager.scaleX(3);
-				rcClient.top += _dpiManager.scaleY(3); rcClient.bottom -= _dpiManager.scaleY(3);
+				rcClient.left += _dpiManager.scaleX(2); rcClient.right -= _dpiManager.scaleX(2);
+				rcClient.top += _dpiManager.scaleY(2); rcClient.bottom -= _dpiManager.scaleY(2);
 				DrawFocusRect(hdc, &rcClient);
 			}
 			else

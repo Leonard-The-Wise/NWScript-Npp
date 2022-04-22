@@ -57,7 +57,7 @@ namespace NWScriptPlugin {
 
 		generic_string _homePath;
 		generic_string _aboutText;
-		OleCallback* _aboutOleCallback = nullptr;
+		OleCallback _aboutOleCallback;
 		std::map<generic_string, generic_string> _replaceStrings;
 
 		// Anchoring and size restriction informations
