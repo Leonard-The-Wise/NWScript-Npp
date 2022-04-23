@@ -396,6 +396,18 @@
     <None Include="..\Media\icons-svg\NeverwinterApp.svg">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\Media\icons-svg\Analysis.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DescriptionViewer.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\FileDestination.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\GoToCurrentLine.svg">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\src\Lexers\Config\NWScript-Npp.xml">

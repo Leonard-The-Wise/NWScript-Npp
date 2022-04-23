@@ -61,7 +61,6 @@ namespace PluginDarkMode
 	COLORREF treeViewBg = 0;
 	double lighnessTreeView = 50.0;
 
-
 	struct Brushes
 	{
 		HBRUSH background = nullptr;
@@ -336,12 +335,19 @@ namespace PluginDarkMode
 		return opt;
 	}
 
+	bool g_initialized = false;
 	void initDarkMode()
 	{
+		g_initialized = true;
+
 		_options = configuredOptions(false);
 
 		initExperimentalDarkMode();
 		setDarkMode(false, true);
+	}
+
+	bool isInitialized() {
+		return g_initialized;
 	}
 
 	bool isEnabled()
@@ -411,7 +417,7 @@ namespace PluginDarkMode
 		return newColor;
 	}
 
-	bool colorizeBitmap(HBITMAP image, COLORREF color)
+	bool colorizeBitmap(HBITMAP image, COLORREF color, WORD extraLuminance)
 	{
 		struct { BITMAPINFO info = {}; RGBQUAD moreColors[255]; } bmi;
 		BITMAPINFOHEADER& bmh = bmi.info.bmiHeader;
@@ -468,6 +474,8 @@ namespace PluginDarkMode
 				ColorRGBToHLS(RGB(r, g, b), &srcH, &srcL, &srcS);
 				srcH = h;
 				srcS = s;
+				if (extraLuminance > 0 && a > 0)
+					srcL += extraLuminance;
 				COLORREF colorRes = ColorHLSToRGB(srcH, srcL, srcS);
 
 				data[3] = GetRValue(colorRes);
@@ -826,7 +834,7 @@ namespace PluginDarkMode
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
 
-	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID)
+	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID, WORD extraLuminance)
 	{
 		HDC screenDC = GetDC(NULL);
 		HDC hdc = CreateCompatibleDC(screenDC);
@@ -848,7 +856,7 @@ namespace PluginDarkMode
 		SelectObject(hdc, hOldBitmap);
 		DeleteDC(hdc);
 
-		bool bsuccess = colorizeBitmap(hReturn, getBackgroundColor());
+		bool bsuccess = colorizeBitmap(hReturn, getBackgroundColor(), extraLuminance);
 		if (bsuccess)
 			return hReturn;
 
@@ -887,8 +895,9 @@ namespace PluginDarkMode
 	struct HeaderItemData
 	{
 		HTHEME hTheme = nullptr;
-		HBITMAP upArrow = nullptr;
-		HBITMAP downArrow = nullptr;
+		HBITMAP upArrow[2] = {};
+		HBITMAP downArrow[2] = {};
+		bool lastDropDownTrackWasHot = false;
 
 		~HeaderItemData()
 		{
@@ -909,8 +918,10 @@ namespace PluginDarkMode
 		{
 			if (hTheme)
 			{
-				upArrow = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDUP);
-				downArrow = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDDOWN);
+				upArrow[0] = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDUP);
+				upArrow[1] = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDUP, 60);
+				downArrow[0] = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDDOWN);
+				downArrow[1] = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDDOWN, 60);
 			}
 		}
 
@@ -920,46 +931,53 @@ namespace PluginDarkMode
 			{
 				CloseThemeData(hTheme);
 				hTheme = nullptr;
-				DeleteObject(upArrow);
-				DeleteObject(downArrow);
-				upArrow = nullptr;
-				downArrow = nullptr;
+				DeleteObject(upArrow[0]);
+				DeleteObject(upArrow[1]);
+				DeleteObject(downArrow[0]);
+				DeleteObject(downArrow[1]);
 			}
 		}
 
 		void drawSortArrow(HDC destDC, int iStateID, RECT& clientRect)
 		{
-			drawArrow(destDC, iStateID, clientRect, false);
+			drawArrow(destDC, iStateID, clientRect, false, false);
 		}
 
-		void drawComboArrow(HDC destDC, RECT& comboRect)
+		void drawComboArrow(HDC destDC, RECT& comboRect, bool Hot)
 		{
-			drawArrow(destDC, HSAS_SORTEDDOWN, comboRect, true);
+			drawArrow(destDC, HSAS_SORTEDDOWN, comboRect, true, Hot);
 		}
 
 	private:
-		void drawArrow(HDC destDC, int iStateID, RECT& clientRect, bool bComboArrow)
+
+		void drawArrow(HDC destDC, int iStateID, RECT& clientRect, bool bComboArrow, bool Hot)
 		{
 			RECT rcArrow = {};
 			BITMAP bp;
 			if (iStateID == HSAS_SORTEDUP)
-				GetObject(upArrow, sizeof(bp), &bp);
+				GetObject(upArrow[0], sizeof(bp), &bp);
 			else
-				GetObject(downArrow, sizeof(bp), &bp);
+				GetObject(downArrow[0], sizeof(bp), &bp);
 
 			rcArrow.top = bComboArrow ? (clientRect.bottom - bp.bmHeight) / 2 : 1;
 			rcArrow.left = clientRect.left + ((clientRect.right - clientRect.left - bp.bmWidth) / 2);
 			rcArrow.right = rcArrow.left + bp.bmWidth;
 			rcArrow.bottom = rcArrow.top + bp.bmHeight;
 
+			HBITMAP toDraw = (iStateID == HSAS_SORTEDUP) ? (Hot ? upArrow[1] : upArrow[0]) : (Hot ? downArrow[1] : downArrow[0]);
+			drawGlyph(destDC, rcArrow, toDraw, { bp.bmWidth, bp.bmHeight });
+		}
+
+		void drawGlyph(HDC hdc, const RECT& finalRect, const HBITMAP glyph, const SIZE& glyphSize)
+		{
 			HDC srcDC = CreateCompatibleDC(NULL);
-			HBITMAP hOldBitmap = SelectBitmap(srcDC, (iStateID == HSAS_SORTEDUP) ? upArrow : downArrow);
+			HBITMAP hOldBitmap = SelectBitmap(srcDC, glyph);
 			BLENDFUNCTION bf1;
 			bf1.BlendOp = AC_SRC_OVER;
 			bf1.BlendFlags = 0;
 			bf1.SourceConstantAlpha = 0xff;
 			bf1.AlphaFormat = AC_SRC_ALPHA;
-			GdiAlphaBlend(destDC, rcArrow.left, rcArrow.top, bp.bmWidth, bp.bmHeight, srcDC, 0, 0, bp.bmWidth, bp.bmHeight, bf1);
+			GdiAlphaBlend(hdc, finalRect.left, finalRect.top, glyphSize.cx, glyphSize.cy, srcDC, 0, 0, glyphSize.cx, glyphSize.cy, bf1);
 			SelectBitmap(srcDC, hOldBitmap);
 			DeleteDC(srcDC);
 		}
@@ -1634,18 +1652,18 @@ namespace PluginDarkMode
 	constexpr UINT_PTR g_headerSubclassID = 42;
 	constexpr UINT_PTR g_listViewSubclassID = 42;
 
-	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcItem, int itemID)
+	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcItem, int itemID, LONG_PTR headerStyle)
 	{
-		POINT cursosPos;
-		GetCursorPos(&cursosPos);
-		ScreenToClient(hHeader, &cursosPos);
+		POINT cursorPos;
+		HDHITTESTINFO hti = {};
+
+		GetCursorPos(&cursorPos);
+		ScreenToClient(hHeader, &cursorPos);
 
 		HTHEME hTheme = headerItem.hTheme;
 		SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
 
-
 		// Information on Control Style
-		LONG_PTR headerStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
 		bool clickableHeaderStyle = (headerStyle & HDS_BUTTONS) == HDS_BUTTONS;
 
 		// Information on Header Item
@@ -1660,6 +1678,11 @@ namespace PluginDarkMode
 		RECT txtRC = rcItem;
 		RECT dropDownRc;
 
+		// Create a clipping region
+		HRGN clipRgn = CreateRectRgnIndirect(&txtRC);
+		SelectClipRgn(hdc, clipRgn);
+		DeleteObject(clipRgn);
+
 		// Filterbar is somewhat deprecated, but will double width of column
 		if (headerStyle & HDS_FILTERBAR)
 			txtRC.bottom /= 2;
@@ -1671,7 +1694,7 @@ namespace PluginDarkMode
 			textFormat = (hdItem.fmt & HDF_CENTER) ? DT_CENTER : 0;
 		if (textFormat == 0)
 			textFormat = (hdItem.fmt & HDF_RIGHT) ? DT_RIGHT : 0;
-		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS | DT_SINGLELINE;
+		textFormat |= DT_NOPREFIX | DT_WORD_ELLIPSIS | DT_MODIFYSTRING;
 
 		int iTextStateID = HIS_NORMAL;
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
@@ -1696,8 +1719,7 @@ namespace PluginDarkMode
 		{
 			int iComboStateID = 0;
 
-			HDHITTESTINFO hti = {};
-			hti.pt = cursosPos;
+			hti.pt = cursorPos;
 			SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
 			int hotItem = hti.iItem;
 			vItemFocused = (hotItem == itemID);
@@ -1705,26 +1727,13 @@ namespace PluginDarkMode
 
 			if (vItemPressed)
 			{
-				FillRect(hdc, &rcItem, getHardlightBackgroundBrush());
+				FillRect(hdc, &txtRC, getHardlightBackgroundBrush());
 				iTextStateID = HIS_PRESSED;
 			}
 			else if (vItemFocused)
-				FillRect(hdc, &rcItem, getSoftlightBackgroundBrush());
+				FillRect(hdc, &txtRC, getSoftlightBackgroundBrush());
 			else
 				iTextStateID = HIS_HOT;
-
-			// Draw Combo box if focused
-			if ((hdItem.fmt & HDF_SPLITBUTTON) && (vItemPressed || vItemFocused))
-			{
-				// Combo box part is not present, simulate with down arrow and an edge
-				headerItem.drawComboArrow(hdc, dropDownRc);
-				::SelectObject(hdc, PluginDarkMode::getEdgePen());
-				POINT edges[] = {
-					{dropDownRc.left, rcItem.top},
-					{dropDownRc.left, rcItem.bottom}
-				};
-				Polyline(hdc, edges, _countof(edges));
-			}
 		}
 
 		// Draw Sort arrow
@@ -1850,9 +1859,9 @@ namespace PluginDarkMode
 			}
 		}
 
-		// Process caption text - check if we got space avaliable.
+		// Process caption text.
 		constexpr const int margins = 10;
-		if (buffer[0] != 0 && txtRC.left < (txtRC.right - margins - szBitmap.cx))
+		if (buffer[0] != 0)
 		{
 			if (szTxtOutput.cx > szTxtRect.cx)
 			{
@@ -1901,6 +1910,12 @@ namespace PluginDarkMode
 				rcTxtOutput.top += _dpiManager.scaleY(1); rcTxtOutput.bottom += _dpiManager.scaleY(1);
 			}
 
+			// Sanity check
+			if (rcTxtOutput.right > txtRC.right - dxGap)
+				rcTxtOutput.right = txtRC.right - dxGap;
+			if (rcTxtOutput.left > rcTxtOutput.right)
+				rcTxtOutput.left = rcTxtOutput.right;
+
 			// Draw text
 			DrawThemeTextEx(hTheme, hdc, HP_HEADERITEM, iTextStateID, buffer, -1, textFormat, &rcTxtOutput, &dtto);
 		}
@@ -1914,10 +1929,129 @@ namespace PluginDarkMode
 		Polyline(hdc, edges, _countof(edges));
 		::SelectObject(hdc, hOldPen);
 
+		// Draw Combo box if focused
+		if ((hdItem.fmt & HDF_SPLITBUTTON) && (vItemPressed || vItemFocused))
+		{
+			if (vItemPressed)
+				FillRect(hdc, &dropDownRc, getHardlightBackgroundBrush());
+			else
+				FillRect(hdc, &dropDownRc, getSoftlightBackgroundBrush());
+
+			// Combo box part is not present, simulate with down arrow and an edge
+			headerItem.lastDropDownTrackWasHot = PtInRect(&dropDownRc, cursorPos);
+			headerItem.drawComboArrow(hdc, dropDownRc, headerItem.lastDropDownTrackWasHot);
+			::SelectObject(hdc, PluginDarkMode::getEdgePen());
+			POINT edges[] = {
+				{dropDownRc.left, rcItem.top},
+				{dropDownRc.left, rcItem.bottom}
+			};
+			Polyline(hdc, edges, _countof(edges));
+		}
+
 		// TODO: handle HDS_FILTERBAR style? How?
 		// https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223
 
 		return CDRF_SKIPDEFAULT;
+	}
+
+	LRESULT DrawHeaderOverflow(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcClient)
+	{
+		RECT overflowRect = {};
+		Header_GetOverflowRect(hHeader, &overflowRect);
+
+		if (overflowRect.left == overflowRect.right)
+			return S_OK;
+
+		HTHEME hTheme = headerItem.hTheme;
+		POINT cursorPos;
+		HDHITTESTINFO hti;
+		GetCursorPos(&cursorPos);
+		ScreenToClient(hHeader, &cursorPos);
+		hti.pt = cursorPos;
+		SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
+
+		SelectClipRgn(hdc, NULL);
+
+		DRAWTEXTPARAMS dt = {};
+		RECT rcOutText = overflowRect;
+		dt.cbSize = sizeof(dt);
+
+		HFONT hFont = ::CreateFont(_dpiManager.scaleX(18), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Arial"));
+		HFONT hOldFont = SelectFont(hdc, hFont);
+
+		DrawTextEx(hdc, reinterpret_cast<LPWSTR>(std::wstring(TEXT("»")).data()), -1, &rcOutText,
+			DT_RIGHT | DT_VCENTER | DT_CALCRECT, &dt);
+
+		SIZE szTextOut = { rcOutText.right - rcOutText.left, rcOutText.bottom };
+		rcOutText.top = (rcClient.bottom - rcOutText.bottom) / 2;
+		rcOutText.bottom = rcOutText.top + szTextOut.cy;
+		rcOutText.right = overflowRect.right;
+		rcOutText.left = rcOutText.right - szTextOut.cx;
+
+		if (hti.flags & HHT_ONOVERFLOW)
+		{
+			SelectPen(hdc, getLightEdgePen());
+			SelectBrush(hdc, getSoftlightBackgroundBrush());
+			RoundRect(hdc, rcOutText.left, rcOutText.top, rcOutText.right, rcOutText.bottom, 3, 3);
+		}
+
+		rcOutText.top -= 1;
+		SetTextColor(hdc, getTextColor());
+		SetBkMode(hdc, TRANSPARENT);
+		DrawTextEx(hdc, reinterpret_cast<LPWSTR>(std::wstring(TEXT("»")).data()), -1, &rcOutText,
+			DT_RIGHT | DT_VCENTER, &dt);
+		SelectFont(hdc, hOldFont);
+		DeleteObject(hFont);
+
+		return S_OK;
+	}
+
+	void HotTrackHeaderComboBox(HeaderItemData& headerItem, HWND hHeader, DWORD cursorParams)
+	{
+		// Mouse coords
+		POINT cursorPos = { LOWORD(cursorParams), HIWORD(cursorParams) };
+		HDHITTESTINFO hti;
+
+		// Control style
+		LONG_PTR headerStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
+		bool clickableHeaderStyle = (headerStyle & HDS_BUTTONS) > 0;
+
+		// Not clickable, bye.
+		if (!clickableHeaderStyle)
+			return;
+
+		// Get hit item
+		hti.pt = cursorPos;
+		SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
+		HDITEM hdItem;
+		hdItem.mask = HDI_FORMAT;
+		Header_GetItem(hHeader, hti.iItem, &hdItem);
+
+		// Don't have dropdown box, bye.
+		if ((hdItem.fmt & HDF_SPLITBUTTON) == 0)
+			return;
+
+		// Get the real coordinates of rectangle (Header_GetItemDropDownRect is broken for some cases, we only use the width)
+		RECT rcItem, dropRc;
+		SIZE szDropDown;
+		Header_GetItemRect(hHeader, hti.iItem, &rcItem);
+		Header_GetItemDropDownRect(hHeader, hti.iItem, &dropRc);
+		szDropDown.cx = dropRc.right - dropRc.left;
+		SetRect(&dropRc, rcItem.right - szDropDown.cx, dropRc.top, rcItem.right, dropRc.bottom);
+
+		if ((PtInRect(&dropRc, cursorPos) && headerItem.lastDropDownTrackWasHot == false)
+			|| (!PtInRect(&dropRc, cursorPos) && headerItem.lastDropDownTrackWasHot))
+		{
+			// Redraw the only this item
+			HDC hdc = GetDC(hHeader);
+			HFONT hFont = reinterpret_cast<HFONT>(SendMessage(hHeader, WM_GETFONT, 0, 0)); // must set the DC font first
+			HFONT hOldFont = SelectFont(hdc, hFont);
+			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle);
+			RedrawWindow(hHeader, &rcItem, NULL, RDW_VALIDATE);
+			SelectFont(hdc, hOldFont);
+			ReleaseDC(hHeader, hdc);
+		}
 	}
 
 	LRESULT CALLBACK HeaderSubclass(
@@ -1935,26 +2069,36 @@ namespace PluginDarkMode
 		{
 			case WM_PAINT:
 			{
+				//break;
 				pHeaderItem->ensureTheme(hWnd);
 
 				PAINTSTRUCT ps;
 				HDC hdc = BeginPaint(hWnd, &ps);
 
+				// Erase control background
 				RECT rcClient = {};
 				GetClientRect(hWnd, &rcClient);
 				FillRect(hdc, &rcClient, getDarkerBackgroundBrush());
+				LONG_PTR headerStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
 
+				// Change font
 				HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
 				HFONT oldFont = reinterpret_cast<HFONT>(SelectObject(hdc, lstFont));
 
+				// Draw items
 				int count = static_cast<int>(Header_GetItemCount(hWnd));
 				RECT wRc = {};
 				for (int i = 0; i < count; i++)
 				{
 					Header_GetItemRect(hWnd, i, &wRc);
-					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i);
+					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i, headerStyle);
 				}
 
+				// Draw header overflow if appliable
+				if ((headerStyle & HDS_OVERFLOW) > 0)
+					DrawHeaderOverflow(*pHeaderItem, hWnd, hdc, rcClient);
+
+				//Cleanup
 				SelectObject(hdc, oldFont);
 				EndPaint(hWnd, &ps);
 
@@ -1977,6 +2121,12 @@ namespace PluginDarkMode
 			case WM_SIZE:
 			{
 				pHeaderItem->reloadStructBitmaps();
+				break;
+			}
+
+			case WM_MOUSEMOVE:
+			{
+				HotTrackHeaderComboBox(*pHeaderItem, hWnd, static_cast<DWORD>(lParam));
 				break;
 			}
 		}
@@ -2076,7 +2226,6 @@ namespace PluginDarkMode
 				}
 
 				CloseThemeData(hTheme);
-
 			}
 
 			SendMessage(hHeader, WM_THEMECHANGED, wParam, lParam);
@@ -2571,18 +2720,19 @@ namespace PluginDarkMode
 
 			if (wcscmp(className, WC_LISTVIEW) == 0)
 			{
+				HWND hHeader = ListView_GetHeader(hwnd);
 				if (p.subclass && PluginDarkMode::isEnabled())
 				{
 					subclassListViewControl(hwnd);
-					subclassHeaderControl(ListView_GetHeader(hwnd));
+					if (hHeader)
+						subclassHeaderControl(hHeader);
 				}
 
-				HWND hHeader = ListView_GetHeader(hwnd);
 				if (p.theme)
 				{
+					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_Explorer" : nullptr, nullptr);
 					if (hHeader)
-						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
-					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
+						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"ItemsView" : nullptr, nullptr);
 				}
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
@@ -2591,6 +2741,8 @@ namespace PluginDarkMode
 					if (hHeader)
 						RemoveWindowSubclass(hHeader, HeaderSubclass, g_listViewSubclassID);
 				}
+
+				::SetWindowPos(hHeader, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 			}
 
 			if (wcscmp(className, WC_TABCONTROL) == 0)

@@ -28,6 +28,19 @@ namespace NWScriptPlugin {
 	public:
 		LoggerDialog() : DockingDlgInterface(IDD_LOGGER) {};
 
+		~LoggerDialog() {
+			if (_iconsVector.size() > 0)
+			{
+				if (_iconList16x16)
+					ImageList_Destroy(_iconList16x16);
+				for (HICON& i : _iconsVector)
+					DeleteObject(i);
+				_iconsVector.clear();
+			}
+
+			DestroyWindow(_toolBar);
+		}
+
 		virtual void display(bool toShow = true) 
 		{
 			DockingDlgInterface::display(toShow);
@@ -91,6 +104,7 @@ namespace NWScriptPlugin {
 		void WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole = false);
 		void UpdateToolButtonLabels();
 		void RecreateTxtConsole();
+		void RecreateListErrors();
 		void RecreateIcons();
 		HWND CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText);
 		void CreateTooltips();
@@ -133,6 +147,7 @@ namespace NWScriptPlugin {
 		HWND _txtConsole = nullptr;
 
 		HIMAGELIST _iconList16x16 = nullptr;
+		std::vector<HICON> _iconsVector;
 
 		Settings* _settings = nullptr;
 

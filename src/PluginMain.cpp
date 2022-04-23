@@ -165,14 +165,14 @@ void Plugin::PluginInit(HANDLE hModule)
     Instance()._pluginLexerConfigFile = Instance()._pluginPaths["PluginPath"].stem();
     Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
-    PluginDarkMode::initDarkMode();
-
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
 
     // Load latest Richedit library and only then create the about dialog
     LoadLibrary(TEXT("Msftedit.dll"));
     Instance()._aboutDialog = std::make_unique<AboutDialog>();
+    Instance()._loggerWindow = std::make_unique<LoggerDialog>();
+    Instance()._processingFilesDialog = std::make_unique<ProcessFilesDialog>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -301,11 +301,11 @@ void Plugin::InitCompilerLogWindow()
     _dockingData = {};
 
     // Register settings class to the window
-    _loggerWindow.appendSettings(&_settings);
+    _loggerWindow->appendSettings(&_settings);
 
     // additional info
-    _loggerWindow.init(DllHModule(), NotepadHwnd());
-    _loggerWindow.create(&_dockingData);
+    _loggerWindow->init(DllHModule(), NotepadHwnd());
+    _loggerWindow->create(&_dockingData);
     _dockingData.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_ADDINFO;
     _dockingIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, 32, 32);
     _dockingData.hIconTab = _dockingIcon;
@@ -320,13 +320,13 @@ void Plugin::InitCompilerLogWindow()
     _compiler.setLoggerMessageCallback(WriteToCompilerLog);
 
     // Set the compiler log navigate callback (from errors list to main window)
-    _loggerWindow.SetNavigateFunctionCallback(NavigateToCode);
+    _loggerWindow->SetNavigateFunctionCallback(NavigateToCode);
 }
 
 // Display / Hide the compiler log window
 void Plugin::DisplayCompilerLogWindow(bool toShow)
 {
-    Instance()._loggerWindow.display(toShow);
+    Instance()._loggerWindow->display(toShow);
     SetFocus(Instance().Messenger().GetCurentScintillaHwnd());
 }
 
@@ -378,6 +378,10 @@ plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"
 // Properly detects if dark mode is enabled (Notepad++ 8.3.4 and above)
 void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
 {
+    // Initialization
+    if (!PluginDarkMode::isInitialized())
+        PluginDarkMode::initDarkMode();
+
     // Legacy support
     if (ForceUseDark)
         _isNppDarkModeEnabled = UseDark;
@@ -404,7 +408,7 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     SetupPluginMenuItems();
 
     // Refresh permanent dialogs dark mode
-    _loggerWindow.refreshDarkMode();
+    _loggerWindow->refreshDarkMode();
     _aboutDialog->refreshDarkMode();
 }
 
@@ -1974,13 +1978,13 @@ void Plugin::BatchProcessDialogCallback(HRESULT decision)
     // Start counting ticks
     Instance()._clockStart = GetTickCount64();
 
-    if (!inst._processingFilesDialog.isCreated())
+    if (!inst._processingFilesDialog->isCreated())
     {
-        inst._processingFilesDialog.init(inst.DllHModule(), inst.NotepadHwnd());
+        inst._processingFilesDialog->init(inst.DllHModule(), inst.NotepadHwnd());
     }
 
     // Setup interrupt flag
-    inst._processingFilesDialog.setInterruptFlag(inst._batchInterrupt);
+    inst._processingFilesDialog->setInterruptFlag(inst._batchInterrupt);
 
     // Reset batch state
     inst.ResetBatchStates();
@@ -1992,12 +1996,12 @@ void Plugin::BatchProcessDialogCallback(HRESULT decision)
     inst.Compiler().setProcessingEndCallback(BatchProcessFilesCallback);
 
     // Display and clear compiler log window
-    inst._loggerWindow.reset();
+    inst._loggerWindow->reset();
     inst.DisplayCompilerLogWindow(true);
 
     // Initial status dialog
-    inst._processingFilesDialog.setStatus(TEXT("Building files list..."));
-    inst._processingFilesDialog.showDialog();
+    inst._processingFilesDialog->setStatus(TEXT("Building files list..."));
+    inst._processingFilesDialog->showDialog();
 
     // The rest processes when file filters are done in separate thread
 #ifdef USE_THREADS
@@ -2083,7 +2087,7 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
 
     // Lock controls to compiler log window
     LockPluginMenu(true);
-    _loggerWindow.LockControls(true);
+    _loggerWindow->LockControls(true);
 
     // Increment statistics
     if (_compiler.getMode() == 0 && !_compiler.isFetchPreprocessorOnly() && !_compiler.isViewDependencies())
@@ -2129,11 +2133,11 @@ void Plugin::CompileEndingCallback(HRESULT decision)
     Instance()._tempFileContents.clear();
 
     // Unlock controls to compiler log window
-    Instance()._loggerWindow.LockControls(false);
+    Instance()._loggerWindow->LockControls(false);
     Instance().LockPluginMenu(false);
 
     // Check if logger window need to switch to errors panel
-    Instance()._loggerWindow.checkSwitchToErrors();
+    Instance()._loggerWindow->checkSwitchToErrors();
 
     if (static_cast<int>(decision) == false)
     {
@@ -2166,11 +2170,11 @@ void Plugin::DisassembleEndingCallback(HRESULT decision)
     NWScriptCompiler& compiler = Instance().Compiler();
 
     // Unlock controls to compiler log window
-    Instance()._loggerWindow.LockControls(false);
+    Instance()._loggerWindow->LockControls(false);
     Instance().LockPluginMenu(false);
 
     // Check if logger window need to switch to errors panel
-    Instance()._loggerWindow.checkSwitchToErrors();
+    Instance()._loggerWindow->checkSwitchToErrors();
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -2201,12 +2205,12 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Failed to process file... batch processing stopped.") });
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Done.") });
 
-        inst._processingFilesDialog.display(false);
-        inst._loggerWindow.LockControls(false);
+        inst._processingFilesDialog->display(false);
+        inst._loggerWindow->LockControls(false);
         inst.LockPluginMenu(false);
 
         // Check if logger window need to switch to errors panel
-        Instance()._loggerWindow.checkSwitchToErrors();
+        Instance()._loggerWindow->checkSwitchToErrors();
 
         return;
     }
@@ -2217,8 +2221,8 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Batch processing interrupted by user's request.") });
 
-        inst._processingFilesDialog.display(false);
-        inst._loggerWindow.LockControls(false);
+        inst._processingFilesDialog->display(false);
+        inst._loggerWindow->LockControls(false);
         inst.LockPluginMenu(false);
         return;
     }
@@ -2230,7 +2234,7 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         inst._batchCurrentFileIndex++;
 
         // Update status
-        inst._processingFilesDialog.setStatus(nextFile);
+        inst._processingFilesDialog->setStatus(nextFile);
 
         // This function will create a thread that will callback here again for next file...
         inst.DoCompileOrDisasm(nextFile, false, true);
@@ -2242,15 +2246,15 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Finished processing ") + 
             to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.")});
 
-        inst._processingFilesDialog.display(false);
+        inst._processingFilesDialog->display(false);
 
         // Enable run last batch (after unlocking controls)
-        inst._loggerWindow.LockControls(false);
+        inst._loggerWindow->LockControls(false);
         inst.LockPluginMenu(false);
         Instance().EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, true);
 
         // Check if logger window need to switch to errors panel
-        Instance()._loggerWindow.checkSwitchToErrors();
+        Instance()._loggerWindow->checkSwitchToErrors();
 
         // Reset batch state
         inst.ResetBatchStates();
@@ -2265,11 +2269,11 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
 void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
 {
     // Unlock controls to compiler log window
-    Instance()._loggerWindow.LockControls(false);
+    Instance()._loggerWindow->LockControls(false);
     Instance().LockPluginMenu(false);
 
     // Check if logger window need to switch to errors panel
-    Instance()._loggerWindow.checkSwitchToErrors();
+    Instance()._loggerWindow->checkSwitchToErrors();
 
 
     if (static_cast<int>(decision) == static_cast<int>(false))
@@ -2292,11 +2296,11 @@ void Plugin::FetchPreprocessedEndingCallback(HRESULT decision)
 void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
 {
     // Unlock controls to compiler log window
-    Instance()._loggerWindow.LockControls(false);
+    Instance()._loggerWindow->LockControls(false);
     Instance().LockPluginMenu(false);
 
     // Check if logger window need to switch to errors panel
-    Instance()._loggerWindow.checkSwitchToErrors();
+    Instance()._loggerWindow->checkSwitchToErrors();
 
     if (static_cast<int>(decision) == static_cast<int>(false))
         return;
@@ -2314,7 +2318,7 @@ void Plugin::ViewDependenciesEndingCallback(HRESULT decision)
 // Write messages to the compiler window - also called back from compiler logger
 void Plugin::WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message)
 {
-    Instance()._loggerWindow.LogMessage(message, Instance()._compiler.getSourceFilePath());
+    Instance()._loggerWindow->LogMessage(message, Instance()._compiler.getSourceFilePath());
 }
 
 // Receives notifications from Compiler Window to open files and navigato to text inside it
@@ -2381,7 +2385,7 @@ void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, cons
 void CALLBACK Plugin::RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
 {
     PluginMessenger msg = Instance().Messenger();
-    int lineNum = Instance()._loggerWindow.getCurrentNavigationLine();
+    int lineNum = Instance()._loggerWindow->getCurrentNavigationLine();
 
     int currentPosition = msg.SendSciMessage<int>(SCI_GETCURRENTPOS);
     int linePositionStart = msg.SendSciMessage<int>(SCI_POSITIONFROMLINE, (WPARAM)lineNum - 1);
@@ -2476,7 +2480,7 @@ PLUGINCOMMAND Plugin::CompileScript()
 
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
-    Instance()._loggerWindow.reset();
+    Instance()._loggerWindow->reset();
 
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
@@ -2501,7 +2505,7 @@ PLUGINCOMMAND Plugin::DisassembleFile()
 
         // Display and clear compiler log window
         Instance().DisplayCompilerLogWindow(true);
-        Instance()._loggerWindow.reset();
+        Instance()._loggerWindow->reset();
 
         // Reset compiler cache and clear log so we catch all possible dependencies editions.
         Instance().Compiler().reset();
@@ -2543,8 +2547,8 @@ PLUGINCOMMAND Plugin::BatchProcessFiles()
 PLUGINCOMMAND Plugin::ToggleLogger()
 {
     Instance().Messenger().SendNppMessage<void>(NPPM_SETMENUITEMCHECK,
-        pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, !Instance()._loggerWindow.isVisible());
-    Instance().DisplayCompilerLogWindow(!Instance()._loggerWindow.isVisible());
+        pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, !Instance()._loggerWindow->isVisible());
+    Instance().DisplayCompilerLogWindow(!Instance()._loggerWindow->isVisible());
 }
 
 //-------------------------------------------------------------
@@ -2561,7 +2565,7 @@ PLUGINCOMMAND Plugin::FetchPreprocessorText()
 
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
-    Instance()._loggerWindow.reset();
+    Instance()._loggerWindow->reset();
 
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
@@ -2586,7 +2590,7 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
 
     // Display and clear compiler log window
     Instance().DisplayCompilerLogWindow(true);
-    Instance()._loggerWindow.reset();
+    Instance()._loggerWindow->reset();
 
     // Reset compiler so we catch all possible dependencies editions.
     Instance().Compiler().reset();
@@ -2825,7 +2829,7 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
-    ::SendMessage(Instance()._loggerWindow.getHSelf(), WM_SIZE, 0, 0);
+    ::SendMessage(Instance()._loggerWindow->getHSelf(), WM_SIZE, 0, 0);
      
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 

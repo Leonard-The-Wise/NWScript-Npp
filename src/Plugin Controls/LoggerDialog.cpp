@@ -57,8 +57,6 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_INITDIALOG:
 		{
-			bool bInvertLuminosity = false;
-
 			INITCOMMONCONTROLSEX ix = { 0, 0 };
 			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
 			ix.dwICC = ICC_TAB_CLASSES;
@@ -83,14 +81,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			_consoleDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
-			// Create an image list to associate with errors and warnings, etc
-			IconSize iconSize = (IconSize)_dpiManager.scaleIconSize(static_cast<UINT>(IconSize::Size16x16));
+			// Create image list with resolution based on DPI and populate
 			_iconList16x16 = ImageList_Create(_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16), ILC_COLOR32, 4, 1);
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
-			ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, bInvertLuminosity,
-				_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
-			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
+			RecreateIcons();
 
 			// Create toolbar
 			int ImageListID = 0;
@@ -124,19 +117,6 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			SendMessage(_toolBar, TB_SETMETRICS, 0, (LPARAM)&tbM);
 			ShowWindow(_toolBar, TRUE);
 
-			// Setup icons to buttons in console log (LoadIcon is bugging, using LoadImage instead).
-			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, bInvertLuminosity, _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
-			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, bInvertLuminosity, _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
-			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
-
-			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, iconSize);
-			HBITMAP warningFilter = getStockIconBitmap(SHSTOCKICONID::SIID_WARNING, iconSize);
-			HBITMAP infoFilter = getStockIconBitmap(SHSTOCKICONID::SIID_INFO, iconSize);
-			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(errorFilter));
-			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(warningFilter));
-			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(infoFilter));
-
 			// Set Toggle Word Wrap state (default is ON. If it's off, we need to rebuild the control)
 			CheckDlgButton(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP, _settings->compilerWindowConsoleWordWrap);
 			if (!_settings->compilerWindowConsoleWordWrap)
@@ -161,9 +141,6 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 
 			// Create buttons tooltips
 			CreateTooltips();
-
-			// Check switch to dark mode.
-			refreshDarkMode();
 
 			break;
 		}
@@ -421,13 +398,23 @@ void LoggerDialog::SetupListView()
 
 	Header_GetItem(hHeader, 2, &hdi);
 	hdi.fmt |= HDF_IMAGE;
-	hdi.iImage = 1;
+	hdi.iImage = 6;
 	Header_SetItem(hHeader, 2, &hdi);
 	
 	Header_GetItem(hHeader, 3, &hdi);
-	hdi.fmt |= HDF_IMAGE;
-	hdi.iImage = 4;
+	hdi.fmt |= HDF_IMAGE | HDF_SPLITBUTTON;
+	hdi.iImage = 7;
 	Header_SetItem(hHeader, 3, &hdi);
+
+	Header_GetItem(hHeader, 4, &hdi);
+	hdi.fmt |= HDF_IMAGE;
+	hdi.iImage = 8;
+	Header_SetItem(hHeader, 4, &hdi);
+
+	Header_GetItem(hHeader, 5, &hdi);
+	hdi.fmt |= HDF_IMAGE;
+	hdi.iImage = 9;
+	Header_SetItem(hHeader, 5, &hdi);
 
 	// Do a first resize to fit the window...
 	ResizeList();
@@ -765,15 +752,96 @@ void LoggerDialog::RecreateTxtConsole()
 	//SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
 }
 
+void LoggerDialog::RecreateListErrors()
+{
+	RECT lstRect;
+	generic_string sTextBuffer;
+	HWND lstControl = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+
+	// Get previous windows measures
+	GetWindowRect(lstControl, &lstRect);
+	_dpiManager.screenToClientEx(_errorDlgHwnd, &lstRect);
+
+	// Destroy current Control (and remove from anchor map)
+	ANCHOR_MAP_REMOVE(lstControl);
+	DestroyWindow(lstControl);
+
+	DWORD defaultStyles = WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP;
+
+	// Using HMENU trick to preserve control ID.
+	// https://social.msdn.microsoft.com/Forums/vstudio/en-US/aa81f991-85c9-431a-8804-2a580aa6a293/assigning-a-control-id-to-a-win32-button?forum=vcgeneral
+	SetLastError(0);
+	lstControl = CreateWindowEx(0, WC_LISTVIEW, 0, defaultStyles, lstRect.left, lstRect.top,
+		lstRect.right - lstRect.left, lstRect.bottom - lstRect.top, _errorDlgHwnd, (HMENU)IDC_LSTERRORS, _hInst, 0);
+	DWORD test = GetLastError();
+
+	// Redo visibility and anchor map
+	ShowWindow(lstControl, SW_NORMAL);
+	ANCHOR_MAP_DYNAMICCONTROL(lstControl, ANF_ALL);
+
+	SetupListView();
+	RebuildErrorsList();
+
+	InvalidateRect(lstControl, NULL, true);
+	UpdateWindow(lstControl);
+}
+
 void LoggerDialog::RecreateIcons()
 {
-	ImageList_ReplaceIcon(_iconList16x16, 1, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, PluginDarkMode::isEnabled(),
+	// Cleanup first
+	if (_iconsVector.size() > 0)
+	{
+		if (_iconList16x16)
+			ImageList_RemoveAll(_iconList16x16);
+		for (HICON& i : _iconsVector)
+			DeleteObject(i);
+		_iconsVector.clear();
+	}
+
+	// Determine icon size based on DPI
+	IconSize iconSize = (IconSize)_dpiManager.scaleIconSize(static_cast<UINT>(IconSize::Size16x16));
+
+	// Load main items for listview (Error Squiggle must be in this order)
+	_iconsVector.push_back(getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+	_iconsVector.push_back(getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
+	_iconsVector.push_back(getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
+
+	// Load icons from SVG (invert light for Dark Mode) to remaining controls in console
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_CLEARWINDOW, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_WORDWRAP, PluginDarkMode::isEnabled(),
 		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
 
-	HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, PluginDarkMode::isEnabled(), _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
-	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-	HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, PluginDarkMode::isEnabled(), _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
-	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
+	// List Errors icons
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_ANALISYS, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_DESCRIPTIONVIEWER, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_FILEDESTINATION, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+	_iconsVector.push_back(loadSVGFromResourceIcon(_hInst, IDI_GOTOLINE, PluginDarkMode::isEnabled(),
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
+
+	// Create an image list to associate images
+	for (const HICON& i : _iconsVector)
+		ImageList_AddIcon(_iconList16x16, i);
+
+	// Update controls
+
+	// Controls from console panel (left to right).
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, 
+		static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_iconsVector[4]));
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, 
+		static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_iconsVector[5]));
+
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERERRORS), BM_SETIMAGE, 
+		static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_iconsVector[0]));
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERWARNINGS), BM_SETIMAGE, 
+		static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_iconsVector[2]));
+	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTFILTERINFO), BM_SETIMAGE, 
+		static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_iconsVector[3]));
 }
 
 HWND LoggerDialog::CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText)
@@ -821,6 +889,7 @@ void LoggerDialog::refreshDarkMode()
 {
 	RecreateIcons();
 	RecreateTxtConsole();
+	//RecreateListErrors();
 
 	PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 	PluginDarkMode::autoSetupWindowAndChildren(_consoleDlgHwnd);

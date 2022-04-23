@@ -304,8 +304,8 @@ namespace NWScriptPlugin {
 		generic_string _dockingTitle;   // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
-		LoggerDialog _loggerWindow;
-		ProcessFilesDialog _processingFilesDialog;
+		std::unique_ptr<LoggerDialog> _loggerWindow;
+		std::unique_ptr<ProcessFilesDialog> _processingFilesDialog;
 		std::unique_ptr<AboutDialog> _aboutDialog;
 
 		// Internal handles

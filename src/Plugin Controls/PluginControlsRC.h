@@ -42,6 +42,11 @@
 #define IDB_NWSCRIPTFILEPARSE           180
 #define IDI_NEVERWINTERAPP              181
 #define IDR_RTF1                        182
+#define IDI_ANALISYS                    183
+#define IDI_DESCRIPTIONVIEWER           184
+#define IDI_FILEDESTINATION             185
+#define IDR_SVG2                        186
+#define IDI_GOTOLINE                    186
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -116,7 +121,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        183
+#define _APS_NEXT_RESOURCE_VALUE        187
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101

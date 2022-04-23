@@ -303,6 +303,12 @@ void AboutDialog::setLogo()
 {
 	SIZE imageSize = { 273, 203 };
 
+	if (_hLogo)
+	{
+		DeleteObject(_hLogo);
+		_hLogo = nullptr;
+	}
+
 	RECT pctRect;
 	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
 	_dpiManager.screenToClientEx(_hSelf, &pctRect);
@@ -311,8 +317,8 @@ void AboutDialog::setLogo()
 	MoveWindow(GetDlgItem(_hSelf, IDC_PCTLOGO), pctRect.left, pctRect.top, imageSize.cx, imageSize.cy, true);
 
 	GetClientRect(GetDlgItem(_hSelf, IDC_PCTLOGO), &pctRect);
-	HBITMAP hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO, pctRect.right, pctRect.bottom);
-	::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hLogo));
+	_hLogo = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO, pctRect.right, pctRect.bottom);
+	::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(_hLogo));
 }
 
 
@@ -329,8 +335,8 @@ void AboutDialog::refreshDarkMode()
 	HICON hAboutOld = reinterpret_cast<HICON>(::SendMessage(_hSelf, WM_GETICON, ICON_SMALL, 0));
 	if (hAboutOld)
 		DeleteObject(hAboutOld);
-	HICON hAbout = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-	::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
+	_hAboutIcon = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+	::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hAboutIcon));
 
 	InvalidateRect(_hSelf, NULL, true);
 	UpdateWindow(_hSelf);

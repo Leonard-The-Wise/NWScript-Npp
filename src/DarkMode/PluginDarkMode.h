@@ -76,6 +76,7 @@ namespace PluginDarkMode
 
 	void initDarkMode();
 
+	bool isInitialized();
 	bool isEnabled();
 	bool isDarkMenuEnabled();
 	bool isExperimentalSupported();
@@ -85,10 +86,10 @@ namespace PluginDarkMode
 	COLORREF invertLightness(COLORREF c);
 	COLORREF invertLightnessSofter(COLORREF c);
 	COLORREF lightColor(COLORREF color, WORD luminance);
-	bool colorizeBitmap(HBITMAP image, COLORREF color);
+	bool colorizeBitmap(HBITMAP image, COLORREF color, WORD extraLuminance = 0);
 	double calculatePerceivedLighness(COLORREF c);
 
-	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID);
+	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID, WORD extraLuminance = 0);
 
 	void setDarkTone(ColorTone colorToneChoice);
 

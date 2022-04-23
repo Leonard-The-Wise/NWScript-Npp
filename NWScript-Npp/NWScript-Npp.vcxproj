@@ -384,13 +384,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Media\icons-svg\AboutBox.svg" />
+    <None Include="..\Media\icons-svg\Analysis.svg" />
     <None Include="..\Media\icons-svg\ClearWindow.svg" />
     <None Include="..\Media\icons-svg\CompilableFile.svg" />
     <None Include="..\Media\icons-svg\CompileBatch.svg" />
     <None Include="..\Media\icons-svg\DarkTheme.svg" />
     <None Include="..\Media\icons-svg\DependancyGraph.svg" />
+    <None Include="..\Media\icons-svg\DescriptionViewer.svg" />
     <None Include="..\Media\icons-svg\DisassemblyCode.svg" />
     <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg" />
+    <None Include="..\Media\icons-svg\FileDestination.svg" />
+    <None Include="..\Media\icons-svg\GoToCurrentLine.svg" />
     <None Include="..\Media\icons-svg\ImmediateWindow.svg" />
     <None Include="..\Media\icons-svg\ImportSettings.svg" />
     <None Include="..\Media\icons-svg\NeverwinterApp.svg" />
