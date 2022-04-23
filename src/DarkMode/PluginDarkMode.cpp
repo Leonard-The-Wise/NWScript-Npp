@@ -1641,6 +1641,8 @@ namespace PluginDarkMode
 		ScreenToClient(hHeader, &cursosPos);
 
 		HTHEME hTheme = headerItem.hTheme;
+		SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
+
 
 		// Information on Control Style
 		LONG_PTR headerStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
@@ -1656,13 +1658,39 @@ namespace PluginDarkMode
 
 		// Temporary modifiable rectangle for item
 		RECT txtRC = rcItem;
+		RECT dropDownRc;
 
+		// Filterbar is somewhat deprecated, but will double width of column
 		if (headerStyle & HDS_FILTERBAR)
 			txtRC.bottom /= 2;
 
-		int iTextStateID = HIS_NORMAL;
+		// Text format parameters
+		DWORD textFormat;
+		textFormat = (hdItem.fmt & HDF_LEFT) ? DT_LEFT : 0;
+		if (textFormat == 0)
+			textFormat = (hdItem.fmt & HDF_CENTER) ? DT_CENTER : 0;
+		if (textFormat == 0)
+			textFormat = (hdItem.fmt & HDF_RIGHT) ? DT_RIGHT : 0;
+		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS | DT_SINGLELINE;
 
-		// Get current hot item if appliable
+		int iTextStateID = HIS_NORMAL;
+		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
+		dtto.crText = PluginDarkMode::getTextColor();
+
+		// Calculate Dropdown box
+		if ((hdItem.fmt & HDF_SPLITBUTTON))
+		{
+			Header_GetItemDropDownRect(hHeader, itemID, &dropDownRc);
+			int cx = dropDownRc.right - dropDownRc.left;
+			dropDownRc.left = rcItem.right - cx;
+			dropDownRc.right = rcItem.right;
+			txtRC.right -= cx;
+
+			if (headerStyle & HDS_FILTERBAR)
+				dropDownRc.bottom /= 2;
+		}
+
+		// Draw hot/pressed item if appliable
 		bool vItemPressed = false, vItemFocused = false;
 		if (clickableHeaderStyle)
 		{
@@ -1677,27 +1705,17 @@ namespace PluginDarkMode
 
 			if (vItemPressed)
 			{
-				FillRect(hdc, &txtRC, getHardlightBackgroundBrush());
+				FillRect(hdc, &rcItem, getHardlightBackgroundBrush());
 				iTextStateID = HIS_PRESSED;
 			}
 			else if (vItemFocused)
-				FillRect(hdc, &txtRC, getSoftlightBackgroundBrush());
+				FillRect(hdc, &rcItem, getSoftlightBackgroundBrush());
 			else
 				iTextStateID = HIS_HOT;
 
-			// Draw Combo box if appliable
+			// Draw Combo box if focused
 			if ((hdItem.fmt & HDF_SPLITBUTTON) && (vItemPressed || vItemFocused))
 			{
-				// Only gets the size of rectangle, since this macro bugs with maximized windowses.
-				RECT dropDownRc;
-				Header_GetItemDropDownRect(hHeader, itemID, &dropDownRc);
-				int cx = dropDownRc.right - dropDownRc.left;
-				dropDownRc.left = rcItem.right - cx;
-				dropDownRc.right = rcItem.right;
-
-				if (headerStyle & HDS_FILTERBAR)
-					dropDownRc.bottom /= 2;
-
 				// Combo box part is not present, simulate with down arrow and an edge
 				headerItem.drawComboArrow(hdc, dropDownRc);
 				::SelectObject(hdc, PluginDarkMode::getEdgePen());
@@ -1713,37 +1731,181 @@ namespace PluginDarkMode
 		if (hdItem.fmt & (HDF_SORTDOWN | HDF_SORTUP))
 		{
 			int iSortArrowState = (hdItem.fmt & HDF_SORTDOWN) > 0 ? HSAS_SORTEDDOWN : HSAS_SORTEDUP;
-			headerItem.drawSortArrow(hdc, iSortArrowState, txtRC);
+			headerItem.drawSortArrow(hdc, iSortArrowState, rcItem);
 		}
 
-		DWORD textFormat;
-		textFormat = (hdItem.fmt & HDF_LEFT) ? DT_LEFT : 0;
-		if (textFormat == 0)
-			textFormat = (hdItem.fmt & HDF_CENTER) ? DT_CENTER : 0;
-		if (textFormat == 0)
-			textFormat = (hdItem.fmt & HDF_RIGHT) ? DT_RIGHT : 0;
-		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS | DT_SINGLELINE;
+		SIZE szTxtRect = { txtRC.right - txtRC.left, txtRC.bottom - txtRC.top };
 
-		txtRC.left += 5;
-		if (vItemPressed)
+		// Calculate text rectangle output (after processing the combo box)
+		RECT rcTxtOutput = {};
+		SIZE szTxtOutput = {};
+		buffer[MAX_PATH - 1] = '\0';
+		if (buffer[0] > 0)
+			GetThemeTextExtent(hTheme, hdc, HP_HEADERITEM, iTextStateID, buffer, -1,
+				textFormat, ((textFormat & DT_CENTER) > 0) ? &rcItem : &txtRC, &rcTxtOutput);
+		szTxtOutput = { rcTxtOutput.right - rcTxtOutput.left, rcTxtOutput.bottom - rcTxtOutput.top };
+
+		// Process item checkbox (current control does nothing on listviews, so we skip here)
+		// if (hdItem.fmt & HDF_CHECKBOX)
+
+		// Process item bitmap
+		SIZE szBitmap = {};
+		bool bitmapValid = false;
+		int dxGap = 0;
+		int dxTextGap = 0;
+		if ((hdItem.fmt & HDF_BITMAP) > 0 || (hdItem.fmt & HDF_IMAGE) > 0)
 		{
-			txtRC.left += _dpiManager.scaleX(1);
-			txtRC.top += _dpiManager.scaleY(1);
-			if (hdItem.fmt & HDF_SPLITBUTTON)
+			RECT rcBitmap = {};
+			HBITMAP hBitmap = nullptr;
+			HIMAGELIST imageList = nullptr;
+			if (hdItem.fmt & HDF_IMAGE)
 			{
-				RECT splitRc;
-				Header_GetItemDropDownRect(hHeader, itemID, &splitRc);
-				txtRC.right = splitRc.left-1;
+				int ix, iy;
+				imageList = Header_GetImageList(hHeader);
+				ImageList_GetIconSize(imageList, &ix, &iy);
+				szBitmap = { ix, iy };
+				bitmapValid = true;
+				dxTextGap = 10; // To mimic the behavior of the normal listview
+			}
+
+			BITMAP bp = {};
+			if (GetObject(hdItem.hbm, sizeof(bp), &bp))
+			{
+				szBitmap = { bp.bmWidth, bp.bmHeight };
+				hBitmap = hdItem.hbm;
+				bitmapValid = true;
+			}
+
+			// Create gap between text and image
+			if (bitmapValid)
+				dxGap = 5;
+
+			// if contains also text, align image relative to text
+			if (buffer[0] != 0)
+			{
+				if ((textFormat & DT_CENTER) > 0)
+				{
+					rcBitmap.left = rcItem.left + (szItem.cx - szTxtOutput.cx - szBitmap.cx - dxGap - dxTextGap) / 2;
+					if (hdItem.fmt & HDF_BITMAP_ON_RIGHT)
+						rcBitmap.left += szTxtOutput.cx + dxGap + dxTextGap;
+				}
+				else
+					rcBitmap.left = (hdItem.fmt & HDF_BITMAP_ON_RIGHT) ? txtRC.left + szTxtOutput.cx + (dxGap * 2) : txtRC.left + dxGap;
+
+				rcBitmap.top = (rcItem.bottom - szBitmap.cy) / 2;
+				rcBitmap.right = rcBitmap.left + szBitmap.cx;
+				rcBitmap.bottom = rcBitmap.top + szBitmap.cy;
+
+				// For both right aligned image and text, override position
+				if ((hdItem.fmt & HDF_BITMAP_ON_RIGHT) > 0 && (textFormat & DT_RIGHT) > 0)
+				{
+					rcBitmap.left = txtRC.right - szBitmap.cx - dxGap;
+					rcBitmap.right = rcBitmap.left + szBitmap.cx;
+				}
+				// Lastly, for right aligned text (left image), position it before text
+				else if ((textFormat & DT_RIGHT) > 0)
+				{
+					rcBitmap.left = txtRC.right - (szBitmap.cx + szTxtOutput.cx + 10);
+					rcBitmap.right = rcBitmap.left + szBitmap.cx;
+				}
+			}
+			// Else, align purely without text
+			else
+			{
+				if ((hdItem.fmt & HDF_CENTER) > 0)
+					rcBitmap.left = rcItem.left + (szItem.cx - szBitmap.cx) / 2;
+				else if ((hdItem.fmt & HDF_RIGHT) > 0)
+					rcBitmap.left = txtRC.right - szBitmap.cx;
+				else
+					rcBitmap.left = dxGap;
+
+				rcBitmap.top = (rcItem.bottom - szBitmap.cy) / 2;
+				rcBitmap.right = rcBitmap.left + szBitmap.cx;
+				rcBitmap.bottom = rcBitmap.top + szBitmap.cy;
+			}
+
+			// Offset pressed item
+			if (vItemPressed)
+			{
+				rcBitmap.left += _dpiManager.scaleX(1); rcBitmap.right += _dpiManager.scaleX(1);
+				rcBitmap.top += _dpiManager.scaleY(1); rcBitmap.bottom += _dpiManager.scaleY(1);
+			}
+
+			// Draw either one of the images. Priority for ImageList
+			if (imageList)
+				ImageList_Draw(imageList, hdItem.iImage, hdc, rcBitmap.left, rcBitmap.top, ILD_NORMAL);
+			else if (hBitmap)
+			{
+				HDC memDC = CreateCompatibleDC(NULL);
+				HBITMAP hOldBitmap = SelectBitmap(memDC, hBitmap);
+
+				BLENDFUNCTION bf1;
+				bf1.BlendOp = AC_SRC_OVER;
+				bf1.BlendFlags = 0;
+				bf1.SourceConstantAlpha = 0xff;
+				bf1.AlphaFormat = AC_SRC_ALPHA;
+				GdiAlphaBlend(hdc, rcBitmap.left, rcBitmap.top, szBitmap.cx, szBitmap.cy, memDC, 0, 0, szBitmap.cx, szBitmap.cy, bf1);
+				SelectBitmap(memDC, hOldBitmap);
+				DeleteDC(memDC);
 			}
 		}
 
-		buffer[MAX_PATH - 1] = '\0';
+		// Process caption text - check if we got space avaliable.
+		constexpr const int margins = 10;
+		if (buffer[0] != 0 && txtRC.left < (txtRC.right - margins - szBitmap.cx))
+		{
+			if (szTxtOutput.cx > szTxtRect.cx)
+			{
+				rcTxtOutput.left = txtRC.left;
+				rcTxtOutput.right = txtRC.right;
+				szTxtOutput = { rcTxtOutput.right - rcTxtOutput.left, rcTxtOutput.bottom - rcTxtOutput.top };
+			}
 
-		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
-		dtto.crText = PluginDarkMode::getTextColor();
-		HRESULT hSuccess = DrawThemeTextEx(hTheme, hdc, HP_HEADERITEM, iTextStateID, buffer, -1, textFormat, &txtRC, &dtto);
+			// Vertical align
+			rcTxtOutput.top = (txtRC.bottom - szTxtOutput.cy) / 2;
+			rcTxtOutput.bottom = rcTxtOutput.top + szTxtOutput.cy;
 
-		// Draw grid lines
+			// Proper align output rectangle inside client box according to text alignment and previous image (if exist)
+			if ((textFormat & DT_RIGHT) > 0)
+			{
+				rcTxtOutput.right = txtRC.right - 5;
+				rcTxtOutput.left = rcTxtOutput.right - szTxtOutput.cx;
+
+				if (bitmapValid && ((hdItem.fmt & HDF_BITMAP_ON_RIGHT) > 0))
+				{
+					rcTxtOutput.left -= (szBitmap.cx + dxGap + dxTextGap);
+					rcTxtOutput.right -= (szBitmap.cx + dxGap + dxTextGap);
+				}
+			}
+			else if ((textFormat & DT_CENTER) > 0)
+			{
+				rcTxtOutput.left = rcItem.left + (szItem.cx - szTxtOutput.cx - szBitmap.cx - dxGap - dxTextGap) / 2;
+				rcTxtOutput.right = rcTxtOutput.left + szTxtOutput.cx;
+
+				if (bitmapValid && ((hdItem.fmt & HDF_BITMAP_ON_RIGHT) == 0))
+				{
+					rcTxtOutput.left += szBitmap.cx + dxGap + dxTextGap;
+					rcTxtOutput.right += szBitmap.cx + dxGap + dxTextGap;
+				}
+			}
+			else
+			{
+				rcTxtOutput.left += 5 + (((hdItem.fmt & HDF_BITMAP_ON_RIGHT) > 0) ? 0 : szBitmap.cx + dxGap + dxTextGap);
+				rcTxtOutput.right += 5 + (((hdItem.fmt & HDF_BITMAP_ON_RIGHT) > 0) ? 0 : szBitmap.cx + dxGap + dxTextGap);
+			}
+
+			// Offset text box for pressed items
+			if (vItemPressed)
+			{
+				rcTxtOutput.left += _dpiManager.scaleX(1); rcTxtOutput.right += _dpiManager.scaleX(1);
+				rcTxtOutput.top += _dpiManager.scaleY(1); rcTxtOutput.bottom += _dpiManager.scaleY(1);
+			}
+
+			// Draw text
+			DrawThemeTextEx(hTheme, hdc, HP_HEADERITEM, iTextStateID, buffer, -1, textFormat, &rcTxtOutput, &dtto);
+		}
+
+		// Draw separator line
 		auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
 		POINT edges[] = {
 			{rcItem.right - _dpiManager.scaleX(1), rcItem.top},
@@ -1752,9 +1914,8 @@ namespace PluginDarkMode
 		Polyline(hdc, edges, _countof(edges));
 		::SelectObject(hdc, hOldPen);
 
-		// TODO: 
-		// Handle Header styles: HDS_FILTERBAR? (https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223)
-		// Handle HDITEM styles and formats: HDI_BITMAP, HDI_IMAGE, HDF_CHECKBOX?
+		// TODO: handle HDS_FILTERBAR style? How?
+		// https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223
 
 		return CDRF_SKIPDEFAULT;
 	}

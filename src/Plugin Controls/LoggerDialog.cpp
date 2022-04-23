@@ -406,13 +406,27 @@ void LoggerDialog::SetupListView()
 	HWND hHeader = ListView_GetHeader(listErrorsHWND);
 
 	LONG_PTR HeaderStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
-	HeaderStyle |= HDS_OVERFLOW;// | HDS_FILTERBAR;
+	HeaderStyle |= HDS_OVERFLOW;
 	SetWindowLongPtr(hHeader, GWL_STYLE, HeaderStyle);
 
+	Header_SetImageList(hHeader, _iconList16x16);
+	ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_WEBWELCOMETUTORIAL,
+		PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleX(16)));
+
 	HDITEM hdi;
-	hdi.mask = HDI_FORMAT;
+	TCHAR buffer[260] = { 0 };
+	hdi.mask = HDI_TEXT | HDI_IMAGE | HDI_FORMAT;
+	hdi.cchTextMax = 260;
+	hdi.pszText = buffer;
+
+	Header_GetItem(hHeader, 2, &hdi);
+	hdi.fmt |= HDF_IMAGE;
+	hdi.iImage = 1;
+	Header_SetItem(hHeader, 2, &hdi);
+	
 	Header_GetItem(hHeader, 3, &hdi);
-	hdi.fmt |= HDF_SPLITBUTTON | HDF_SORTUP;
+	hdi.fmt |= HDF_IMAGE;
+	hdi.iImage = 4;
 	Header_SetItem(hHeader, 3, &hdi);
 
 	// Do a first resize to fit the window...
