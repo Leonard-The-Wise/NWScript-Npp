@@ -84,11 +84,11 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
 
 			// Create an image list to associate with errors and warnings, etc
-			IconSize iconSize = (IconSize)_dpiManager.ScaleIconSize(static_cast<UINT>(IconSize::Size16x16));
-			_iconList16x16 = ImageList_Create(_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16), ILC_COLOR32, 4, 1);
+			IconSize iconSize = (IconSize)_dpiManager.scaleIconSize(static_cast<UINT>(IconSize::Size16x16));
+			_iconList16x16 = ImageList_Create(_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16), ILC_COLOR32, 4, 1);
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_ERROR, iconSize));
 			ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, bInvertLuminosity,
-				_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16)));
+				_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_WARNING, iconSize));
 			ImageList_AddIcon(_iconList16x16, getStockIcon(SHSTOCKICONID::SIID_INFO, iconSize));
 
@@ -125,9 +125,9 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			ShowWindow(_toolBar, TRUE);
 
 			// Setup icons to buttons in console log (LoadIcon is bugging, using LoadImage instead).
-			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, bInvertLuminosity, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+			HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, bInvertLuminosity, _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, bInvertLuminosity, _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+			HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, bInvertLuminosity, _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
 			::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
 
 			HBITMAP errorFilter = getStockIconBitmap(SHSTOCKICONID::SIID_ERROR, iconSize);
@@ -403,6 +403,18 @@ void LoggerDialog::SetupListView()
 	newColumn.cx = 25;
 	ListView_InsertColumn(listErrorsHWND, 6, &newColumn);
 
+	HWND hHeader = ListView_GetHeader(listErrorsHWND);
+
+	LONG_PTR HeaderStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
+	HeaderStyle |= HDS_OVERFLOW;// | HDS_FILTERBAR;
+	SetWindowLongPtr(hHeader, GWL_STYLE, HeaderStyle);
+
+	HDITEM hdi;
+	hdi.mask = HDI_FORMAT;
+	Header_GetItem(hHeader, 3, &hdi);
+	hdi.fmt |= HDF_SPLITBUTTON | HDF_SORTUP;
+	Header_SetItem(hHeader, 3, &hdi);
+
 	// Do a first resize to fit the window...
 	ResizeList();
 }
@@ -417,8 +429,8 @@ void LoggerDialog::SetupDockingAnchors()
 		m_bpfxAnchorMap.reset();
 
 	// Resize main window with DPI scale
-	_dpiManager.DPIResizeControl(_hSelf);
-	_dpiManager.DPIResizeControl(_toolBar);
+	_dpiManager.resizeControl(_hSelf);
+	_dpiManager.resizeControl(_toolBar);
 
 	// The tab control is inside a bordered dialog with a title (because Notepad++ needs the title), 
 	// hence we first get the original height OFFSETS between the client with borders to apply to the new 
@@ -742,11 +754,11 @@ void LoggerDialog::RecreateTxtConsole()
 void LoggerDialog::RecreateIcons()
 {
 	ImageList_ReplaceIcon(_iconList16x16, 1, loadSVGFromResourceIcon(_hInst, IDI_ERRORSQUIGGLE, PluginDarkMode::isEnabled(),
-		_dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16)));
+		_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16)));
 
-	HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, PluginDarkMode::isEnabled(), _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+	HBITMAP clearWindow = loadSVGFromResource(_hInst, IDI_CLEARWINDOW, PluginDarkMode::isEnabled(), _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
 	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTCLEARCONSOLE), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(clearWindow));
-	HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, PluginDarkMode::isEnabled(), _dpiManager.ScaleIconSize(16), _dpiManager.ScaleIconSize(16));
+	HBITMAP wordWrap = loadSVGFromResource(_hInst, IDI_WORDWRAP, PluginDarkMode::isEnabled(), _dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16));
 	::SendMessage(GetDlgItem(_consoleDlgHwnd, IDC_BTTOGGLEWORDWRAP), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(wordWrap));
 }
 

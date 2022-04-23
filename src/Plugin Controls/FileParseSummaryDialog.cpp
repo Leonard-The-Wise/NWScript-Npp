@@ -43,8 +43,8 @@ intptr_t CALLBACK FileParseSummaryDialog::run_dlgProc(UINT message, WPARAM wPara
 			::SetDlgItemText(_hSelf, IDC_LBLFUNCTIONDEFINITIONS, _functionsDefinitionCount.c_str());
 			::SetDlgItemText(_hSelf, IDC_LBLGLOBALCONSTANTS, _constantsCount.c_str());
 
-			_dpiManager.DPIResizeControl(_hSelf);
-			_dpiManager.DPIResizeChildren(_hSelf, true);
+			_dpiManager.resizeControl(_hSelf);
+			_dpiManager.resizeChildren(_hSelf, true);
 
 			setLogo();
 

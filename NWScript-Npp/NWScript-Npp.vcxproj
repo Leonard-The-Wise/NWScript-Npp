@@ -224,6 +224,7 @@
     <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h" />
     <ClInclude Include="..\src\Common.h" />
     <ClInclude Include="..\src\DarkMode\DarkMode.h" />
+    <ClInclude Include="..\src\DarkMode\DPIManager.h" />
     <ClInclude Include="..\src\DarkMode\IatHook.h" />
     <ClInclude Include="..\src\DarkMode\PluginDarkMode.h" />
     <ClInclude Include="..\src\DarkMode\UAHMenuBar.h" />
@@ -246,7 +247,6 @@
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
-    <ClInclude Include="..\src\Notepad Controls\DPIManager.h" />
     <ClInclude Include="..\src\Notepad Controls\ModalDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />

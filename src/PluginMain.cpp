@@ -833,7 +833,7 @@ bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, (IconSize)_dpiManager.ScaleIconSize((UINT)IconSize::Size16x16));
+        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
         bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
             bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);

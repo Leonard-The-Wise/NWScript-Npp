@@ -193,9 +193,6 @@
     <ClInclude Include="..\src\Lexers\Lexilla\SciLexer.h">
       <Filter>Custom Lexers\Lexilla</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Notepad Controls\DPIManager.h">
-      <Filter>Notepad Controls</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Utils\ColorConvert.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -209,6 +206,9 @@
       <Filter>DarkMode</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DarkMode\UAHMenuBar.h">
+      <Filter>DarkMode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DarkMode\DPIManager.h">
       <Filter>DarkMode</Filter>
     </ClInclude>
   </ItemGroup>

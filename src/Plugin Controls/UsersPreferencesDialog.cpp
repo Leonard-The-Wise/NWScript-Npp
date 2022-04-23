@@ -52,8 +52,8 @@ intptr_t CALLBACK UsersPreferencesDialog::run_dlgProc(UINT message, WPARAM wPara
 				EnableWindow(newControl, false);
 			}
 
-			_dpiManager.DPIResizeControl(_hSelf);
-			_dpiManager.DPIResizeChildren(_hSelf, true);
+			_dpiManager.resizeControl(_hSelf);
+			_dpiManager.resizeChildren(_hSelf, true);
 
 			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 

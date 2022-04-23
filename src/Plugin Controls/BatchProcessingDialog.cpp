@@ -27,8 +27,8 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 	{
 		case WM_INITDIALOG:
 		{
-			_dpiManager.DPIResizeControl(_hSelf);
-			_dpiManager.DPIResizeChildren(_hSelf, true);
+			_dpiManager.resizeControl(_hSelf);
+			_dpiManager.resizeChildren(_hSelf, true);
 
 			PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 

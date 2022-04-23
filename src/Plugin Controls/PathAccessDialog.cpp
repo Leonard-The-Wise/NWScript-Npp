@@ -37,8 +37,8 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			::SetDlgItemText(_hSelf, IDC_LBLSOLUTION, _sSolution.c_str());
 
 			// Set DIP after setting fonts.
-			_dpiManager.DPIResizeControl(_hSelf);
-			_dpiManager.DPIResizeChildren(_hSelf, true);
+			_dpiManager.resizeControl(_hSelf);
+			_dpiManager.resizeChildren(_hSelf, true);
 
 			// Set picturebox to desired icon
 			int scale = _dpiManager.getDPIScalePercent();
@@ -58,7 +58,7 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 				shieldSize = IconSize::Size256x256;
 				break;
 			default:
-				shieldSize = (IconSize)_dpiManager.ScaleIconSize(76);
+				shieldSize = (IconSize)_dpiManager.scaleIconSize(76);
 			}
 			HBITMAP hBitmap = getStockIconBitmap(_iconID, shieldSize);
 			::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE,
@@ -75,7 +75,7 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			else
 			{
 				// Set a shield icon also to the Run as Admin button - to preserve Windows standards
-				HICON hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.ScaleIconSize((UINT)IconSize::Size16x16));
+				HICON hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
 				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(hShieldSmall));
 			}
 

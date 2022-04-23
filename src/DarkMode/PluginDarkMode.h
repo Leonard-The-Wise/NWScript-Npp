@@ -84,7 +84,11 @@ namespace PluginDarkMode
 
 	COLORREF invertLightness(COLORREF c);
 	COLORREF invertLightnessSofter(COLORREF c);
+	COLORREF lightColor(COLORREF color, WORD luminance);
+	bool colorizeBitmap(HBITMAP image, COLORREF color);
 	double calculatePerceivedLighness(COLORREF c);
+
+	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID);
 
 	void setDarkTone(ColorTone colorToneChoice);
 
@@ -106,8 +110,8 @@ namespace PluginDarkMode
 	HBRUSH getSofterBackgroundBrush();
 	HBRUSH getHotBackgroundBrush();
 	HBRUSH getErrorBackgroundBrush();
-	HBRUSH getInvertlightDarkerBackgroundBrush();
-	HBRUSH getInvertlightSofterBackgroundBrush();
+	HBRUSH getHardlightBackgroundBrush();
+	HBRUSH getSoftlightBackgroundBrush();
 
 	HPEN getDarkerTextPen();
 	HPEN getEdgePen();
@@ -177,3 +181,4 @@ namespace PluginDarkMode
 	LRESULT onCtlColorError(HDC hdc);
 	LRESULT onCtlColorDarkerBGStaticText(HDC hdc, bool isTextEnabled);
 }
+

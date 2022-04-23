@@ -14,9 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#define USE_PCH
+// Which classes exist for themes?
+// https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
 
-#ifdef USE_PCH
+
+// Enable or disable precompiled headers
+#define USE_PCH 1
+
+#if (USE_PCH == 1)
 #include "pch.h"
 #else
 #include <Windows.h>
@@ -42,6 +47,9 @@
 
 #pragma comment(lib, "uxtheme.lib")
 
+#define BKLUMINANCE_BRIGHTER 140
+#define BKLUMINANCE_SOFTER 80
+
 namespace PluginDarkMode
 {
 	//Globals
@@ -61,8 +69,8 @@ namespace PluginDarkMode
 		HBRUSH hotBackground = nullptr;
 		HBRUSH pureBackground = nullptr;
 		HBRUSH errorBackground = nullptr;
-		HBRUSH invertlightDarkerBackground = nullptr;
-		HBRUSH invertlightSofterBackground = nullptr;
+		HBRUSH hardlightBackground = nullptr;
+		HBRUSH softlightBackground = nullptr;
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -70,8 +78,8 @@ namespace PluginDarkMode
 			, hotBackground(::CreateSolidBrush(colors.hotBackground))
 			, pureBackground(::CreateSolidBrush(colors.pureBackground))
 			, errorBackground(::CreateSolidBrush(colors.errorBackground))
-			, invertlightDarkerBackground(::CreateSolidBrush(invertLightness(colors.softerBackground)))
-			, invertlightSofterBackground(::CreateSolidBrush(invertLightnessSofter(colors.softerBackground)))
+			, hardlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER)))
+			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
 
 		{}
 
@@ -82,8 +90,8 @@ namespace PluginDarkMode
 			::DeleteObject(hotBackground);		hotBackground = nullptr;
 			::DeleteObject(pureBackground);		pureBackground = nullptr;
 			::DeleteObject(errorBackground);	errorBackground = nullptr;
-			::DeleteObject(invertlightDarkerBackground);	invertlightDarkerBackground = nullptr;
-			::DeleteObject(invertlightSofterBackground);	invertlightSofterBackground = nullptr;
+			::DeleteObject(hardlightBackground);	hardlightBackground = nullptr;
+			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -93,16 +101,16 @@ namespace PluginDarkMode
 			::DeleteObject(hotBackground);
 			::DeleteObject(pureBackground);
 			::DeleteObject(errorBackground);
-			::DeleteObject(invertlightDarkerBackground);
-			::DeleteObject(invertlightSofterBackground);
+			::DeleteObject(hardlightBackground);
+			::DeleteObject(softlightBackground);
 
 			background = ::CreateSolidBrush(colors.background);
 			softerBackground = ::CreateSolidBrush(colors.softerBackground);
 			hotBackground = ::CreateSolidBrush(colors.hotBackground);
 			pureBackground = ::CreateSolidBrush(colors.pureBackground);
 			errorBackground = ::CreateSolidBrush(colors.errorBackground);
-			invertlightDarkerBackground = ::CreateSolidBrush(invertLightness(colors.background));
-			invertlightSofterBackground = ::CreateSolidBrush(invertLightnessSofter(colors.background));
+			hardlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER));
+			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
 		}
 	};
 
@@ -131,8 +139,8 @@ namespace PluginDarkMode
 			::DeleteObject(edgePen);
 			::DeleteObject(lightEdgePen);
 
-			darkerTextPen = ::CreatePen(PS_SOLID, _dpiManager.scaleX(1), colors.darkerText);
-			edgePen = ::CreatePen(PS_SOLID, _dpiManager.scaleX(1), colors.edge);
+			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
+			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
 			lightEdgePen = ::CreatePen(PS_SOLID, 1, invertLightness(colors.softerBackground));
 		}
 
@@ -389,6 +397,97 @@ namespace PluginDarkMode
 		return invert_c;
 	}
 
+	COLORREF lightColor(COLORREF color, WORD luminance)
+	{
+		WORD h = 0;
+		WORD s = 0;
+		WORD l = 0;
+		ColorRGBToHLS(color, &h, &l, &s);
+
+		l = luminance;
+
+		COLORREF newColor = ColorHLSToRGB(h, l, s);
+
+		return newColor;
+	}
+
+	bool colorizeBitmap(HBITMAP image, COLORREF color)
+	{
+		struct { BITMAPINFO info = {}; RGBQUAD moreColors[255]; } bmi;
+		BITMAPINFOHEADER& bmh = bmi.info.bmiHeader;
+		BITMAP bm = {};
+
+		bmh.biSize = sizeof(bmh);
+		GetObject(image, sizeof(bm), &bm);
+
+		if (bm.bmBitsPixel != 32)
+			return false;
+
+		HDC memDC = CreateCompatibleDC(NULL);
+		if (!memDC)
+			return false;
+
+		std::unique_ptr<std::uint8_t[]> bitmapData;
+		if (bm.bmBits == NULL)
+		{
+			GetDIBits(memDC, image, 0, bm.bmHeight, NULL, &bmi.info, DIB_RGB_COLORS);
+			bitmapData = std::make_unique<std::uint8_t[]>(bmh.biSizeImage);
+			int scanCopied = 0;
+			scanCopied = GetDIBits(memDC, image, 0, bm.bmHeight, bitmapData.get(), &bmi.info, DIB_RGB_COLORS);
+
+			if (scanCopied < bm.bmHeight)
+			{
+				DeleteDC(memDC);
+				return false;
+			}
+		}
+
+		WORD srcH, srcL, srcS, h, l, s;
+		std::uint8_t r, g, b, a;
+		std::uint8_t* data, *initRowData, * rowData = bm.bmBits == NULL ? bitmapData.get() : static_cast<std::uint8_t*>(bm.bmBits);
+
+		DWORD stride = bm.bmWidthBytes;
+		COLORREF colorRes = 0;
+		ColorRGBToHLS(color, &h, &l, &s);
+
+		initRowData = rowData;
+		std::uint32_t bmHeight = static_cast<std::uint32_t>(bm.bmHeight);
+		std::uint32_t bmWidth = static_cast<std::uint32_t>(bm.bmWidth);
+		DWORD index = 0;
+		for (std::uint32_t y = 0; y < bmHeight; y++)
+		{
+			data = rowData;
+			for (std::uint32_t x = 0; x < bmWidth; x++)
+			{
+				index = x + (y * stride);
+				a = data[0];
+				r = data[3];
+				g = data[2];
+				b = data[1];
+
+				ColorRGBToHLS(RGB(r, g, b), &srcH, &srcL, &srcS);
+				srcH = h;
+				srcS = s;
+				COLORREF colorRes = ColorHLSToRGB(srcH, srcL, srcS);
+
+				data[3] = GetRValue(colorRes);
+				data[2] = GetGValue(colorRes);
+				data[1] = GetBValue(colorRes);
+				data += 4;
+			}
+			rowData += stride;
+		}
+
+		int copied = 0;
+		copied = SetDIBits(memDC, image, 0, bm.bmHeight, initRowData, &bmi.info, DIB_RGB_COLORS);
+		DeleteDC(memDC);
+
+		if (copied < bm.bmHeight)
+			return false;
+		else
+			return true;
+	}
+
 	// adapted from https://stackoverflow.com/a/56678483
 	double calculatePerceivedLighness(COLORREF c)
 	{
@@ -426,8 +525,8 @@ namespace PluginDarkMode
 	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
 	HBRUSH getDarkerBackgroundBrush()     { return getTheme()._brushes.pureBackground; }
 	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
-	HBRUSH getInvertlightDarkerBackgroundBrush() { return getTheme()._brushes.invertlightDarkerBackground; }
-	HBRUSH getInvertlightSofterBackgroundBrush() { return getTheme()._brushes.invertlightSofterBackground; }
+	HBRUSH getHardlightBackgroundBrush()  { return getTheme()._brushes.hardlightBackground; }
+	HBRUSH getSoftlightBackgroundBrush()  { return getTheme()._brushes.softlightBackground; }
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
@@ -727,19 +826,43 @@ namespace PluginDarkMode
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
 
-	// Which classes exist for themes?
-	// https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
+	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID)
+	{
+		HDC screenDC = GetDC(NULL);
+		HDC hdc = CreateCompatibleDC(screenDC);
+		SIZE sSize;
+		HRESULT hSuccess = GetThemePartSize(hTheme, hdc, iPartID, iStateID, NULL, THEMESIZE::TS_DRAW, &sSize);
+
+		if (FAILED(hSuccess))
+			return NULL;
+
+		std::unique_ptr<std::uint8_t[]> bmpBits = std::make_unique< std::uint8_t[]>(sSize.cx * sSize.cy * 4);
+		ZeroMemory(bmpBits.get(), sSize.cx * sSize.cy * 4);
+
+		HBITMAP hReturn = CreateBitmap(sSize.cx, sSize.cy, 1, 32, bmpBits.get());
+		HBITMAP hOldBitmap = SelectBitmap(hdc, hReturn);
+
+		RECT rcBitmap = { 0, 0, sSize.cx, sSize.cy };
+		DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBitmap, NULL);
+
+		SelectObject(hdc, hOldBitmap);
+		DeleteDC(hdc);
+
+		bool bsuccess = colorizeBitmap(hReturn, getBackgroundColor());
+		if (bsuccess)
+			return hReturn;
+
+		return NULL;
+	}
+
 	struct ButtonData
 	{
 		HTHEME hTheme = nullptr;
 		int iStateID = 0;
-		HBITMAP hbmMask = nullptr;
 
 		~ButtonData()
 		{
 			closeTheme();
-			if (hbmMask)
-				DeleteObject(hbmMask);
 		}
 
 		bool ensureTheme(HWND hwnd)
@@ -758,6 +881,87 @@ namespace PluginDarkMode
 				CloseThemeData(hTheme);
 				hTheme = nullptr;
 			}
+		}
+	};
+
+	struct HeaderItemData
+	{
+		HTHEME hTheme = nullptr;
+		HBITMAP upArrow = nullptr;
+		HBITMAP downArrow = nullptr;
+
+		~HeaderItemData()
+		{
+			closeTheme();
+		}
+
+		bool ensureTheme(HWND hwnd)
+		{
+			if (!hTheme)
+			{
+				hTheme = OpenThemeData(nullptr, L"Header");
+				reloadStructBitmaps();
+			}
+			return hTheme != nullptr;
+		}
+
+		void reloadStructBitmaps()
+		{
+			if (hTheme)
+			{
+				upArrow = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDUP);
+				downArrow = createCustomThemeBackgroundBitmap(hTheme, HP_HEADERSORTARROW, HSAS_SORTEDDOWN);
+			}
+		}
+
+		void closeTheme()
+		{
+			if (hTheme)
+			{
+				CloseThemeData(hTheme);
+				hTheme = nullptr;
+				DeleteObject(upArrow);
+				DeleteObject(downArrow);
+				upArrow = nullptr;
+				downArrow = nullptr;
+			}
+		}
+
+		void drawSortArrow(HDC destDC, int iStateID, RECT& clientRect)
+		{
+			drawArrow(destDC, iStateID, clientRect, false);
+		}
+
+		void drawComboArrow(HDC destDC, RECT& comboRect)
+		{
+			drawArrow(destDC, HSAS_SORTEDDOWN, comboRect, true);
+		}
+
+	private:
+		void drawArrow(HDC destDC, int iStateID, RECT& clientRect, bool bComboArrow)
+		{
+			RECT rcArrow = {};
+			BITMAP bp;
+			if (iStateID == HSAS_SORTEDUP)
+				GetObject(upArrow, sizeof(bp), &bp);
+			else
+				GetObject(downArrow, sizeof(bp), &bp);
+
+			rcArrow.top = bComboArrow ? (clientRect.bottom - bp.bmHeight) / 2 : 1;
+			rcArrow.left = clientRect.left + ((clientRect.right - clientRect.left - bp.bmWidth) / 2);
+			rcArrow.right = rcArrow.left + bp.bmWidth;
+			rcArrow.bottom = rcArrow.top + bp.bmHeight;
+
+			HDC srcDC = CreateCompatibleDC(NULL);
+			HBITMAP hOldBitmap = SelectBitmap(srcDC, (iStateID == HSAS_SORTEDUP) ? upArrow : downArrow);
+			BLENDFUNCTION bf1;
+			bf1.BlendOp = AC_SRC_OVER;
+			bf1.BlendFlags = 0;
+			bf1.SourceConstantAlpha = 0xff;
+			bf1.AlphaFormat = AC_SRC_ALPHA;
+			GdiAlphaBlend(destDC, rcArrow.left, rcArrow.top, bp.bmWidth, bp.bmHeight, srcDC, 0, 0, bp.bmWidth, bp.bmHeight, bf1);
+			SelectBitmap(srcDC, hOldBitmap);
+			DeleteDC(srcDC);
 		}
 	};
 
@@ -833,7 +1037,7 @@ namespace PluginDarkMode
 		if (iPartID == 1)
 		{
 			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
-			HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getInvertlightSofterBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
+			HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
 			if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
 				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
 
@@ -926,6 +1130,13 @@ namespace PluginDarkMode
 			dtto.crText = PluginDarkMode::getDisabledTextColor();
 		}
 
+		if ((nState & BST_PUSHED) && iPartID == 1)
+		{
+			rcText.left += _dpiManager.scaleX(1);
+			rcText.right += _dpiManager.scaleX(1);
+			rcText.top += _dpiManager.scaleY(1);
+			rcText.bottom += _dpiManager.scaleY(1);
+		}
 		DrawThemeTextEx(hTheme, hdc, iPartID, iStateID, szText, -1, dtFlags, &rcText, &dtto);
 
 		if ((nState & BST_FOCUS) && !(uiState & UISF_HIDEFOCUS))
@@ -1423,14 +1634,13 @@ namespace PluginDarkMode
 	constexpr UINT_PTR g_headerSubclassID = 42;
 	constexpr UINT_PTR g_listViewSubclassID = 42;
 
-	LRESULT DrawHeaderItem(HWND hHeader, HDC hdc, RECT& rcItem, int itemID)
+	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcItem, int itemID)
 	{
-		constexpr const TCHAR sortArrowDown[2] = L"˅";
-		constexpr const TCHAR sortArrowUp[2] = L"˄";
-
 		POINT cursosPos;
 		GetCursorPos(&cursosPos);
 		ScreenToClient(hHeader, &cursosPos);
+
+		HTHEME hTheme = headerItem.hTheme;
 
 		// Information on Control Style
 		LONG_PTR headerStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
@@ -1439,27 +1649,25 @@ namespace PluginDarkMode
 		// Information on Header Item
 		HDITEM hdItem = {};
 		TCHAR buffer[MAX_PATH] = { '/0' };
-		hdItem.mask = HDI_TEXT | HDI_FORMAT;
+		hdItem.mask = HDI_TEXT | HDI_FORMAT | HDI_BITMAP | HDI_IMAGE;
 		hdItem.pszText = buffer;
 		hdItem.cchTextMax = std::size(buffer);
 		Header_GetItem(hHeader, itemID, &hdItem);
 
 		// Temporary modifiable rectangle for item
-		RECT txtRC;
-		CopyRect(&txtRC, &rcItem);
+		RECT txtRC = rcItem;
 
-		HFONT ArrowFont = nullptr;
-		if (hdItem.fmt & (HDF_SPLITBUTTON | HDF_SORTDOWN | HDF_SORTUP))
-			ArrowFont = ::CreateFont(_dpiManager.scaleX(10), _dpiManager.scaleY(10), 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Courier New"));
+		if (headerStyle & HDS_FILTERBAR)
+			txtRC.bottom /= 2;
 
-		SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
-		SetBkMode(hdc, TRANSPARENT);
+		int iTextStateID = HIS_NORMAL;
 
 		// Get current hot item if appliable
 		bool vItemPressed = false, vItemFocused = false;
 		if (clickableHeaderStyle)
 		{
+			int iComboStateID = 0;
+
 			HDHITTESTINFO hti = {};
 			hti.pt = cursosPos;
 			SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
@@ -1467,65 +1675,46 @@ namespace PluginDarkMode
 			vItemFocused = (hotItem == itemID);
 			vItemPressed = (vItemFocused && (GetKeyState(VK_LBUTTON) & 0x8000) != 0);
 
-			// Draw background
-			if (vItemPressed || vItemFocused)
-				FillRect(hdc, &rcItem, getInvertlightSofterBackgroundBrush());
+			if (vItemPressed)
+			{
+				FillRect(hdc, &txtRC, getHardlightBackgroundBrush());
+				iTextStateID = HIS_PRESSED;
+			}
+			else if (vItemFocused)
+				FillRect(hdc, &txtRC, getSoftlightBackgroundBrush());
+			else
+				iTextStateID = HIS_HOT;
 
 			// Draw Combo box if appliable
 			if ((hdItem.fmt & HDF_SPLITBUTTON) && (vItemPressed || vItemFocused))
 			{
-				// Draw combo arrow
-				bool comboHit = ((hti.flags & HHT_ONDROPDOWN) != 0);
-				if (comboHit)
-					SetTextColor(hdc, PluginDarkMode::getTextColor());
-				
-				RECT splitRc;
-				CopyRect(&splitRc, &rcItem);
-				splitRc.top = splitRc.bottom / 3;
-				splitRc.right += _dpiManager.scaleX(1);
-				splitRc.left = splitRc.right - _dpiManager.scaleX(18);
-				HFONT hOldFont = nullptr;
-				if (ArrowFont)
-					hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, ArrowFont));
-				DrawText(hdc, sortArrowDown, std::size(sortArrowDown), &splitRc, DT_NOPREFIX | DT_TOP | DT_CENTER);
+				// Only gets the size of rectangle, since this macro bugs with maximized windowses.
+				RECT dropDownRc;
+				Header_GetItemDropDownRect(hHeader, itemID, &dropDownRc);
+				int cx = dropDownRc.right - dropDownRc.left;
+				dropDownRc.left = rcItem.right - cx;
+				dropDownRc.right = rcItem.right;
 
-				if (comboHit)
-					SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
+				if (headerStyle & HDS_FILTERBAR)
+					dropDownRc.bottom /= 2;
 
-				// Draw box splitter
-				splitRc.left -= _dpiManager.scaleX(4);
-				auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
-				POINT comboEdges[] = {
-					{ splitRc.left - _dpiManager.scaleX(1), rcItem.top},
-					{ splitRc.left - _dpiManager.scaleX(1), rcItem.bottom}
+				// Combo box part is not present, simulate with down arrow and an edge
+				headerItem.drawComboArrow(hdc, dropDownRc);
+				::SelectObject(hdc, PluginDarkMode::getEdgePen());
+				POINT edges[] = {
+					{dropDownRc.left, rcItem.top},
+					{dropDownRc.left, rcItem.bottom}
 				};
-				Polyline(hdc, comboEdges, _countof(comboEdges));
-				SelectObject(hdc, hOldPen);
-				if (hOldFont)
-					SelectObject(hdc, hOldFont);
+				Polyline(hdc, edges, _countof(edges));
 			}
 		}
 
 		// Draw Sort arrow
 		if (hdItem.fmt & (HDF_SORTDOWN | HDF_SORTUP))
 		{
-			HFONT hOldFont;
-			if (ArrowFont)
-				hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, ArrowFont));
-
-			if (hdItem.fmt & HDF_SORTDOWN)
-				DrawText(hdc, sortArrowDown, std::size(sortArrowDown), &txtRC, DT_NOPREFIX | DT_TOP | DT_CENTER);
-			else 
-				DrawText(hdc, sortArrowUp, std::size(sortArrowUp), &txtRC, DT_NOPREFIX | DT_TOP | DT_CENTER);
-
-			if (hOldFont)
-				SelectObject(hdc, hOldFont);
+			int iSortArrowState = (hdItem.fmt & HDF_SORTDOWN) > 0 ? HSAS_SORTEDDOWN : HSAS_SORTEDUP;
+			headerItem.drawSortArrow(hdc, iSortArrowState, txtRC);
 		}
-
-		if (ArrowFont)
-			DeleteObject(ArrowFont);
-
-		SetTextColor(hdc, PluginDarkMode::getDarkerTextColor());
 
 		DWORD textFormat;
 		textFormat = (hdItem.fmt & HDF_LEFT) ? DT_LEFT : 0;
@@ -1533,20 +1722,26 @@ namespace PluginDarkMode
 			textFormat = (hdItem.fmt & HDF_CENTER) ? DT_CENTER : 0;
 		if (textFormat == 0)
 			textFormat = (hdItem.fmt & HDF_RIGHT) ? DT_RIGHT : 0;
-		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS;
+		textFormat |= DT_NOPREFIX | DT_VCENTER | DT_END_ELLIPSIS | DT_SINGLELINE;
 
 		txtRC.left += 5;
-		txtRC.top += 4;
 		if (vItemPressed)
 		{
 			txtRC.left += _dpiManager.scaleX(1);
 			txtRC.top += _dpiManager.scaleY(1);
 			if (hdItem.fmt & HDF_SPLITBUTTON)
-				txtRC.right -= _dpiManager.scaleX(23);
+			{
+				RECT splitRc;
+				Header_GetItemDropDownRect(hHeader, itemID, &splitRc);
+				txtRC.right = splitRc.left-1;
+			}
 		}
 
 		buffer[MAX_PATH - 1] = '\0';
-		DrawText(hdc, std::wstring(buffer).c_str(), std::wstring(buffer).size(), &txtRC, textFormat);
+
+		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
+		dtto.crText = PluginDarkMode::getTextColor();
+		HRESULT hSuccess = DrawThemeTextEx(hTheme, hdc, HP_HEADERITEM, iTextStateID, buffer, -1, textFormat, &txtRC, &dtto);
 
 		// Draw grid lines
 		auto hOldPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
@@ -1558,8 +1753,8 @@ namespace PluginDarkMode
 		::SelectObject(hdc, hOldPen);
 
 		// TODO: 
-		// Handle Header styles: HDS_HORZ, HDS_FILTERBAR? (https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223)
-		// Handle HDITEM styles and formats: HDI_BITMAP, HDI_IMAGE, HDF_CHECKBOX
+		// Handle Header styles: HDS_FILTERBAR? (https://devblogs.microsoft.com/oldnewthing/20120227-00/?p=8223)
+		// Handle HDITEM styles and formats: HDI_BITMAP, HDI_IMAGE, HDF_CHECKBOX?
 
 		return CDRF_SKIPDEFAULT;
 	}
@@ -1573,10 +1768,14 @@ namespace PluginDarkMode
 		DWORD_PTR dwRefData
 	)
 	{
+		auto pHeaderItem = reinterpret_cast<HeaderItemData*>(dwRefData);
+
 		switch (uMsg)
 		{
 			case WM_PAINT:
 			{
+				pHeaderItem->ensureTheme(hWnd);
+
 				PAINTSTRUCT ps;
 				HDC hdc = BeginPaint(hWnd, &ps);
 
@@ -1592,13 +1791,32 @@ namespace PluginDarkMode
 				for (int i = 0; i < count; i++)
 				{
 					Header_GetItemRect(hWnd, i, &wRc);
-					DrawHeaderItem(hWnd, hdc, wRc, i);
+					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i);
 				}
 
 				SelectObject(hdc, oldFont);
 				EndPaint(hWnd, &ps);
 
 				return TRUE;
+			}
+
+			case WM_THEMECHANGED:
+			{
+				pHeaderItem->closeTheme();
+				break;
+			}
+
+			case WM_NCDESTROY:
+			{
+				RemoveWindowSubclass(hWnd, HeaderSubclass, g_headerSubclassID);
+				delete pHeaderItem;
+				break;
+			}
+
+			case WM_SIZE:
+			{
+				pHeaderItem->reloadStructBitmaps();
+				break;
 			}
 		}
 
@@ -1607,7 +1825,7 @@ namespace PluginDarkMode
 
 	void subclassHeaderControl(HWND hwndHeader)
 	{
-		SetWindowSubclass(hwndHeader, HeaderSubclass, g_headerSubclassID, 0);
+		SetWindowSubclass(hwndHeader, HeaderSubclass, g_headerSubclassID, reinterpret_cast<DWORD_PTR>(new HeaderItemData()));
 	}
 
 	LRESULT CALLBACK ListViewSubclass(
@@ -1621,7 +1839,7 @@ namespace PluginDarkMode
 	{
 		switch (uMsg)
 		{
-#ifdef USE_CUSTOMDRAW
+#ifdef USE_HEADER_CUSTOMDRAW
 		// This actually gets notifications from Listview Header, since ListView is the parent of the header
 		case WM_NOTIFY:
 		{
@@ -1636,16 +1854,6 @@ namespace PluginDarkMode
 					if (!PluginDarkMode::isEnabled())
 						return CDRF_DODEFAULT;
 
-					FillRect(lpcd->hdc, &lpcd->rc, getDarkerBackgroundBrush());
-					return CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
-				}
-				case CDDS_ITEMPREPAINT:
-				{
-					return DrawHeaderItem(lParam);
-				}
-
-				case CDDS_POSTPAINT:
-
 					// Calculates the undrawn border outside columns
 					HWND hHeader = lpcd->hdr.hwndFrom;
 					int count = static_cast<int>(Header_GetItemCount(hHeader));
@@ -1659,22 +1867,31 @@ namespace PluginDarkMode
 
 					RECT clientRect;
 					GetClientRect(hHeader, &clientRect);
-					if (clientRect.right > (colsWidth + dpiManager().scaleX(3)))
+					FillRect(lpcd->hdc, &lpcd->rc, getBackgroundBrush());
+					if (clientRect.right > (colsWidth))
 					{
-						clientRect.left = colsWidth + dpiManager().scaleX(1);
-						HDC hdc = GetDC(hHeader);
-						FillRect(hdc, &clientRect, getDarkerBackgroundBrush());
-						ReleaseDC(hHeader, hdc);
-						RedrawWindow(hHeader, NULL, NULL, RDW_UPDATENOW);
+						clientRect.left = colsWidth;
+						ExcludeClipRect(lpcd->hdc, clientRect.left, clientRect.top, clientRect.right, clientRect.bottom);
 					}
+					return CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYITEMDRAW;
+				}
 
-					return CDRF_SKIPDEFAULT;
+				case CDDS_ITEMPREPAINT:
+				{
+					return DrawHeaderItem(lpcd->hdr.hwndFrom, lpcd->hdc, lpcd->rc, lpcd->dwItemSpec);
+				}
+				case CDDS_POSTERASE:
+				case CDDS_ITEMPOSTERASE:
+				{
+					FillRect(lpcd->hdc, &lpcd->rc, getDarkerBackgroundBrush());
+
+					return CDRF_DODEFAULT;
+				}
 				}
 			}
 			break;
 		}
 #endif
-
 		case WM_THEMECHANGED:
 		{
 			HWND hHeader = ListView_GetHeader(hWnd);
@@ -1698,9 +1915,10 @@ namespace PluginDarkMode
 				}
 
 				CloseThemeData(hTheme);
+
 			}
 
-			SendMessageW(hHeader, WM_THEMECHANGED, wParam, lParam);
+			SendMessage(hHeader, WM_THEMECHANGED, wParam, lParam);
 			RedrawWindow(hWnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 			break;
 		}
@@ -2208,9 +2426,9 @@ namespace PluginDarkMode
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
 				{
+					RemoveWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID);
 					if (hHeader)
 						RemoveWindowSubclass(hHeader, HeaderSubclass, g_listViewSubclassID);
-					RemoveWindowSubclass(hwnd, ListViewSubclass, g_listViewSubclassID);
 				}
 			}
 

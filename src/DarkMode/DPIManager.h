@@ -84,7 +84,7 @@ public:
     void Invalidate(HWND hwnd = NULL) { init(hwnd); };
 
     // Resize a control (or any window) based on current DPI settings
-    void DPIResizeControl(HWND hWndControl, bool resizeFont = false)
+    void resizeControl(HWND hWndControl, bool resizeFont = false)
     {
         RECT windowRect;
         GetWindowRect(hWndControl, &windowRect);
@@ -93,19 +93,21 @@ public:
         scaleRect(&windowRect);
 
         if (resizeFont)
-            DPIScaleFont(hWndControl);
+            scaleFont(hWndControl);
 
         MoveWindow(hWndControl, windowRect.left, windowRect.top, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, FALSE);
 
     }
 
-    void DPIResizeChildren(HWND hWndParent, bool resizeFont = false)
+    // Iterates through a window and resize all children inside
+    void resizeChildren(HWND hWndParent, bool resizeFont = false)
     {
         _bResizeFontAlso = resizeFont;
         std::ignore = EnumChildWindows(hWndParent, ResizeChildWindow, reinterpret_cast<LPARAM>(this));
     }
 
-    void DPIScaleFont(HWND windowOrControl)
+    // Scales control font according to DPI
+    void scaleFont(HWND windowOrControl)
     {
         HFONT controlFont = (HFONT)SendMessage(windowOrControl, WM_GETFONT, 0, 0);
         LOGFONT fontAttributes = { 0 };
@@ -116,7 +118,7 @@ public:
     }
 
     // Scale number to a fixed native resolution that icons can support (from 16x16 in multiples of 0.25 up to 256x256)
-    UINT ScaleIconSize(UINT size)
+    UINT scaleIconSize(UINT size)
     {
         int DPIScalePercent = getDPIScalePercent();
         UINT result = (UINT)((float)size * (1.0f + ((float)(((DPIScalePercent - 100) / 25) * 25) / (float)100.0f)));
@@ -130,6 +132,25 @@ public:
             return result;
         else
             return normalResult > 256 ? 256 : normalResult;
+    }
+
+    // Returns index of DPI scale (based on Microsoft's styles standards)
+    BYTE currentDpiIndex() 
+    {
+        if (_dpiX >= 96 and _dpiX < 120)
+            return 0;
+        if (_dpiX >= 120 and _dpiX < 144)
+            return 1;
+        if (_dpiX >= 144 and _dpiX < 192)
+            return 2;
+        if (_dpiX >= 192 and _dpiX < 240)
+            return 3;
+        if (_dpiX >= 240 and _dpiX < 288)
+            return 4;
+        if (_dpiX >= 288 and _dpiX < 384)
+            return 5;
+
+        return 6;
     }
 
     bool screenToClientEx(HWND hWnd, RECT* pRect)
@@ -193,7 +214,7 @@ private:
     static BOOL CALLBACK ResizeChildWindow(HWND hWnd, LPARAM lParam)
     {
         DPIManager* thisPointer = reinterpret_cast<DPIManager*>(lParam);
-        thisPointer->DPIResizeControl(hWnd, thisPointer->_bResizeFontAlso);
+        thisPointer->resizeControl(hWnd, thisPointer->_bResizeFontAlso);
         return TRUE;
     }
 
