@@ -422,10 +422,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
-    <Image Include="..\Media\icons\About-Dialog-Ico.ico" />
     <Image Include="..\Media\NWScript-FileParse.png" />
-    <Image Include="..\Media\NWScriptLogo-200.png" />
-    <Image Include="..\Media\NWScriptLogo-300.png" />
     <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />

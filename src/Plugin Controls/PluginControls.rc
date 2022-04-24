@@ -402,8 +402,6 @@ IDB_NWSCRIPTFILEPARSE   PNG                     "..\\..\\Media\\NWScript-FilePar
 // SVG
 //
 
-IDI_ABOUTDIALOGWINDOWICO SVG                     "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
-
 IDI_ABOUTBOX            SVG                     "..\\..\\Media\\icons-svg\\AboutBox.svg"
 
 IDI_CLEARWINDOW         SVG                     "..\\..\\Media\\icons-svg\\ClearWindow.svg"

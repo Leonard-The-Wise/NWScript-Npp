@@ -32,7 +32,6 @@
 #define IDI_USERBUILD                   162
 #define IDI_USERBUILDREMOVE             163
 #define IDI_RESTART                     165
-#define IDI_ABOUTDIALOGWINDOWICO        167
 #define IDR_ABOUTDOC                    168
 #define IDI_ERRORSQUIGGLE               169
 #define IDI_WORDWRAP                    174
@@ -40,11 +39,9 @@
 #define IDR_KNOWNOBJECTS                177
 #define IDB_NWSCRIPTFILEPARSE           180
 #define IDI_NEVERWINTERAPP              181
-#define IDR_RTF1                        182
 #define IDI_ANALISYS                    183
 #define IDI_DESCRIPTIONVIEWER           184
 #define IDI_FILEDESTINATION             185
-#define IDR_SVG2                        186
 #define IDI_GOTOLINE                    186
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
@@ -101,7 +98,6 @@
 #define IDC_CHKAUTOOPENDISASSEMBLED     1055
 #define IDC_CHKAUTOOPENDEBUGSYMBOLS     1056
 #define IDC_CHKAUTOINSTALLDARKTHEME     1057
-#define IDC_CHKUSEDARKMODE              1058
 #define IDC_TABLOGGER                   1060
 #define IDC_TXTCONSOLE                  1062
 #define IDC_LSTERRORS                   1067

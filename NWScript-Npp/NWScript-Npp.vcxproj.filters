@@ -427,15 +427,6 @@
     <Image Include="..\Media\HereBeDragons.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\Media\icons\About-Dialog-Ico.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\NWScriptLogo-200.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="..\Media\NWScriptLogo-300.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\NWScript-FileParse.png">
       <Filter>Resource Files</Filter>
     </Image>
