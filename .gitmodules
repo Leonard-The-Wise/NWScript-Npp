@@ -1,6 +1,6 @@
-[submodule "lib/PCRE2"]
-	path = lib/PCRE2
-	url = https://github.com/Leonard-The-Wise/pcre2
 [submodule "lib/NscLib"]
 	path = lib/NscLib
 	url = https://github.com/Leonard-The-Wise/NscLib
+[submodule "lib/lunasvg"]
+	path = lib/lunasvg
+	url = https://github.com/Leonard-The-Wise/lunasvg

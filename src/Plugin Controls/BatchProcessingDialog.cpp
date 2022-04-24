@@ -61,6 +61,10 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 				EnableWindow(GetDlgItem(_hSelf, IDC_BTOUTPUTDIRBATCH), false);
 			}
 
+			// Window icon
+			_hWindowIcon = loadSVGFromResourceIcon(_hInst, IDI_COMPILEBATCH, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hWindowIcon));
+
 			return TRUE;
 		}
 

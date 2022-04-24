@@ -4,7 +4,7 @@
  * Original idea extracted from simple example here:
  * https://iq.direct/blog/336-code-sample-retrieve-c-application-version-from-vs-version-resource.html
  *
- * To use this file, you MUST add "version.lib" to your project Linker's "Aditional Dependencies"
+ * To use this file, you MUST add "version.lib" to your project Linker's "Additional Dependencies"
  * (the VersionInfo.h header already do that for you)
  *
  **/

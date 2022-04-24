@@ -27,8 +27,8 @@ namespace NWScriptPlugin {
 		~AboutDialog() {
 			if (_hLogo)
 				DeleteObject(_hLogo);
-			if (_hAboutIcon)
-				DeleteObject(_hAboutIcon);
+			if (_hWindowIcon)
+				DeleteObject(_hWindowIcon);
 		}
 
 		void setReplaceStrings(const std::map<generic_string, generic_string>& replaceStrings) {
@@ -62,7 +62,7 @@ namespace NWScriptPlugin {
 
 		int _currentDocumentID = 0;
 		HBITMAP _hLogo = nullptr;
-		HICON _hAboutIcon = nullptr;
+		HICON _hWindowIcon = nullptr;
 
 		generic_string _homePath;
 		generic_string _aboutText;

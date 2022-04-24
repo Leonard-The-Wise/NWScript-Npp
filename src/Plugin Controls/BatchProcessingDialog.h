@@ -19,6 +19,10 @@ namespace NWScriptPlugin {
 	public:
 		BatchProcessingDialog() = default;
 
+		~BatchProcessingDialog() {
+			DeleteObject(_hWindowIcon);
+		}
+
 		void setOkDialogCallback(void (*OkDialogCallback)(HRESULT decision)) {
 			_okDialogCallback = OkDialogCallback;
 		}
@@ -36,6 +40,8 @@ namespace NWScriptPlugin {
 		generic_string _tmpFiltersCompile;
 		generic_string _tmpFiltersDisasm;
 		Settings* _settings = nullptr;
+
+		HICON _hWindowIcon = nullptr;
 
 		void (*_okDialogCallback)(HRESULT decision) = nullptr;
 	};

@@ -23,6 +23,7 @@ namespace NWScriptPlugin {
 		~PathAccessDialog() {
 			DeleteObject(_hShield);
 			DeleteObject(_hShieldSmall);
+			DeleteObject(_hWindowIcon);
 		}
 
 		// Sets the warning text display
@@ -52,6 +53,10 @@ namespace NWScriptPlugin {
 			_iconID = iconID;
 		}
 
+		void SetMorphToCopyMode() {
+			_morphToCopy = true;
+		}
+
 		// Displays the Dialog box
 		virtual INT_PTR doDialog();
 
@@ -59,6 +64,7 @@ namespace NWScriptPlugin {
 		virtual INT_PTR CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
 		bool _bAdminMode = true;
+		bool _morphToCopy = false;
 		SHSTOCKICONID _iconID = SHSTOCKICONID::SIID_SHIELD;
 		generic_string _sWarning = {};
 		generic_string _sSolution = {};
@@ -66,6 +72,9 @@ namespace NWScriptPlugin {
 
 		HBITMAP _hShield;
 		HICON _hShieldSmall;
+		HICON _hWindowIcon;
+
+		void MorphToPluginCopyMode();
 	};
 
 }

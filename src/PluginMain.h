@@ -1,6 +1,6 @@
 /** @file PluginMain.h
  * Definitions for the plugin class
- * 
+ *
  **/
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
@@ -41,15 +41,17 @@ namespace NWScriptPlugin {
 		// Holds one Notepad Lexer.
 		struct NotepadLexer {
 			int langID = 0;
-			TCHAR* langName{};
+			generic_string langName;
 			bool isPluginLang = false;
 			ExternalLexerAutoIndentMode langIndent = ExternalLexerAutoIndentMode::Standard;
-			
-			void SetLexer(const int _LangID, TCHAR* _LangName, const bool _isPluginLang, const ExternalLexerAutoIndentMode _langIndent) {
-				langID = _LangID; langName = _LangName; isPluginLang = _isPluginLang, langIndent = _langIndent;
-			};
 
-			~NotepadLexer() { delete[] langName; }
+			void SetLexer(const int _LangID, TCHAR* _LangName, const bool _isPluginLang, const ExternalLexerAutoIndentMode _langIndent) 
+			{
+				langID = _LangID; 
+				langName = _LangName; 
+				isPluginLang = _isPluginLang;
+				langIndent = _langIndent;
+			};
 		};
 
 		// File checks results
@@ -66,7 +68,7 @@ namespace NWScriptPlugin {
 		// ### Class Instantiation
 
 		Plugin(Plugin& other) = delete;
-		void operator =(const Plugin &) = delete;
+		void operator =(const Plugin&) = delete;
 
 		// ### Initialization
 
@@ -78,7 +80,7 @@ namespace NWScriptPlugin {
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName.data(); }
 		// Returns the Plugin Menu Items count. Notepad++ Callback function
-		int GetFunctionCount() const; 
+		int GetFunctionCount() const;
 		// Returns the Plugin Menu Items pointer. Notepad++ Callback function
 		FuncItem* GetFunctions() const { return pluginFunctions; }
 		// Setup Notepad++ and Scintilla handles and finish initializing the
@@ -155,17 +157,21 @@ namespace NWScriptPlugin {
 		static PLUGINCOMMAND ResetUserTokens();
 		// Menu Command "Reset editor colors" function handler. 
 		static PLUGINCOMMAND ResetEditorColors();
+		// Menu Command "Reset editor colors" function handler. 
+		static PLUGINCOMMAND RepairFunctionList();
+		// Menu Command "Install Plugin's XML Config Files" function handler. 
+		static PLUGINCOMMAND InstallAdditionalFiles();
 		// Menu Command "About Me" function handler. 
 		static PLUGINCOMMAND AboutMe();
 
 	private:
 		Plugin(HMODULE dllModule)
-			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr)	{}
+			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr) {}
 
 		~Plugin() {
 			for (HBITMAP& b : _menuBitmaps)
 				DeleteObject(b);
-			for (int i = 0; i < std::size(_tbIcons); i++)
+			for (size_t i = 0; i < std::size(_tbIcons); i++)
 			{
 				DeleteObject(_tbIcons[i].hToolbarBmp);
 				DeleteObject(_tbIcons[i].hToolbarIcon);
@@ -178,29 +184,35 @@ namespace NWScriptPlugin {
 
 		// ### Initialization
 
+		// Make plugin's file paths
+		void MakePluginFilePaths();
 		// Setup plugin and Notepad++ Auto-Indentation Support.
 		// If it's a newer version of notepad++, we use the built-in auto-indentation, or else, we use our customized one
 		void SetAutoIndentSupport();
-		// Detects Dark Theme installation and setup the menu option for that action accordingly
-		void DetectDarkThemeInstall();
+		// Detects Dark Theme installation and setup the menu option for that action accordingly. Can auto-restart app if necessary
+		RestartMode DetectDarkThemeInstall();
 		// Load current Notepad++ Language Lexer when language changed.
 		// Called from messages: NPPN_READY, NPPN_LANGCHANGED and NPPN_BUFFERACTIVATED
 		void LoadNotepadLexer();
+		// Finds the language ID for our plugin
+		int FindPluginLangID();
 		// Initializes the compiler log window
 		void InitCompilerLogWindow();
 		// Displays/Hides the compiler window
 		void DisplayCompilerLogWindow(bool toShow = true);
 		// Checkup Engine Known objects file
-		void CheckupEngineObjectsFile();
+		void CheckupPluginObjectFiles();
 		// Checks dark mode usage (for legacy Notepad++ 8.3.3 and bellow)
 		void CheckDarkModeLegacy();
 		// Detects Dark Mode usage (for Notepad++ 8.3.4 and above)
 		void RefreshDarkMode(bool ForceUseDark = false, bool UseDark = false);
 
 		// ### Initialization -> Menu handling
-		
+
 		// Removes a menu item by ID or position (this last one used for commands without IDs like separators)
 		void RemovePluginMenuItem(int ID, bool byPosition = false);
+		// Do a scan to see which options may be removed
+		void RemoveUnusedMenuItems();
 		// Check Menu item enable state
 		bool IsPluginMenuItemEnabled(int ID);
 		// Enable/disable menu item
@@ -252,7 +264,7 @@ namespace NWScriptPlugin {
 		// Receives log notification messages and write to the compiler window
 		static void WriteToCompilerLog(const NWScriptLogger::CompilerMessage& message);
 		// Receives notifications from Compiler Window to open files and navigato to text inside it
-		static void NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage, 
+		static void NavigateToCode(const generic_string& fileName, size_t lineNum, const generic_string& rawMessage,
 			const fs::path& filePath = TEXT(""));
 		// Reposition the navigation cursor assynchronously
 		static void CALLBACK RunScheduledReposition(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime);
@@ -264,17 +276,23 @@ namespace NWScriptPlugin {
 		// Import a parsed result from User tokens definitions into our language XML file.
 		void DoImportUserTokens();
 		// Clear all user tokens
-		void DoResetUserTokens();
-		// Resets the Editor Colors
-		void DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
-		// Install Dark Theme
-		void DoInstallDarkTheme(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		RestartMode DoResetUserTokens(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Resets the Editor Colors. Returns a restart mode if necessary.
+		RestartMode DoResetEditorColors(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Install Dark Theme. Returns a restart mode if necessary.
+		RestartMode DoInstallDarkTheme(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Repair OverrideMap and FunctionList files. Returns a restart mode if necessary.
+		RestartMode DoRepairOverrideMap(RestartFunctionHook whichPhase = RestartFunctionHook::None);
+		// Copy required XML files to directories
+		RestartMode DoInstallAdditionalFiles(RestartFunctionHook whichPhase = RestartFunctionHook::None);
 		// Helper to patch the Dark Theme XML Styler
 		bool PatchDarkThemeXMLFile();
 		// Helper to patch the Default XML Styler. This is different, since we must preserve user information.
 		bool PatchDefaultThemeXMLFile();
 		// Helper to merge AutoComplete file
 		bool MergeAutoComplete();
+		// Patch the OverrideMap XML list
+		bool CheckAndPatchOverrideMapXMLFile();
 
 		// ### Dynamic Behavior
 
@@ -295,9 +313,11 @@ namespace NWScriptPlugin {
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
 		bool _NppSupportDarkModeMessages = false;
+		bool _OneTimeOffer = false;
+		bool _OneTimeOfferAccepted = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 		ULONGLONG _clockStart = 0;
-		
+
 		// Image handles
 		std::vector<HBITMAP> _menuBitmaps;
 		toolbarIconsWithDarkMode _tbIcons[3] = {};
@@ -336,18 +356,9 @@ namespace NWScriptPlugin {
 		std::atomic<bool> _batchInterrupt = false;
 
 		// Meta Information about the plugin paths
-		// Information included:
-		// - PluginPath                    (eg: %ProgramFiles%\Notepad++\plugins\Nwscript-Npp\NWScript-Npp.dll)
-		// - NotepadExecutablePath         (eg: %ProgramFiles%\Notepad++\Notepad++.exe)
-		// - NotepadDarkThemeFilePath      (eg: %ProgramFiles%\Notepad++\themes\DarkModeDefault.xml)
-		// - PluginAutoCompleteFilePath    (eg: %ProgramFiles%\Notepad++\autoCompletion\nwscript.xml)
-		// - PluginLexerConfigFilePath     (eg: %ProgramFiles%\Notepad++\plugins\config\NWScript-Npp.xml)
-		// - NotepadPseudoBatchRestartFile (eg: %AppData%\Notepad++\plugins\~doNWScriptNotepadRestart.bat)
 		std::map<std::string, fs::path> _pluginPaths;
 		// Plugin module name without extension (eg: NWScript-Npp)
 		generic_string _pluginFileName;
-		// Plugin Lexer config file (eg: NWScript-Npp.xml)
-		generic_string _pluginLexerConfigFile;
 
 	public:
 		// Compilation-time information

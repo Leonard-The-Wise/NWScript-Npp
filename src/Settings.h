@@ -19,7 +19,7 @@ namespace NWScriptPlugin {
 
 	struct Settings {
 
-		void InitSettings(generic_string& sPluginConfigPath)
+		void InitSettings(const generic_string& sPluginConfigPath)
 		{
 			iniFilePathName = sPluginConfigPath;
 			iniFilePath = std::make_unique<INIFile>(sPluginConfigPath);
@@ -95,6 +95,8 @@ namespace NWScriptPlugin {
 		bool compilerWindowConsoleShowErrors = true;
 		bool compilerWindowConsoleShowWarnings = false;
 		bool compilerWindowConsoleShowInfos = false;
+		bool compilerWindowVisible = false;
+		bool compilerWindowVisibleAllowChange = false;  // this setting is calculated on the fly... not to be saved
 
 
 		std::string getChosenInstallDir() {

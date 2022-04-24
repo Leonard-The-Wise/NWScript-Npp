@@ -102,7 +102,7 @@ void Settings::Load()
 	compilerWindowConsoleShowErrors = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowErrors"));
 	compilerWindowConsoleShowWarnings = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"));
 	compilerWindowConsoleShowInfos = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"));
-
+	compilerWindowVisible = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowVisible"));
 
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
 	if (!isValidDirectoryS(neverwinterOneInstallDir) && !isValidDirectoryS(neverwinterTwoInstallDir) && !ignoreInstallPaths)
@@ -223,6 +223,7 @@ void Settings::Save()
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowErrors"), compilerWindowConsoleShowErrors);
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"), compilerWindowConsoleShowWarnings);
 	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"), compilerWindowConsoleShowInfos);
+	SetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowVisible"), compilerWindowVisible);
 
 	if (!iniFilePath->write(*iniFile))
 		MessageBox(NULL,

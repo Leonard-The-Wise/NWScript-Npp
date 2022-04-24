@@ -87,20 +87,10 @@ void FileParseSummaryDialog::doDialog()
 
 void FileParseSummaryDialog::setLogo()
 {
-	SIZE imageSize = { 110, 93 };
-
 	// Get best image size based on DPI
-	int resourceID = 0;
-	resourceID = IDB_NWSCRIPTFILEPARSE;
-
 	RECT pctRect;
-	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), &pctRect);
-	_dpiManager.screenToClientEx(_hSelf, &pctRect);
-	imageSize.cx = _dpiManager.scaleX(imageSize.cx);
-	imageSize.cy = _dpiManager.scaleY(imageSize.cy);
-
-	_hFile = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+	GetClientRect(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILELOGOBOX), &pctRect);
+	_hFile = loadPNGFromResource(_hInst, IDB_NWSCRIPTFILEPARSE, pctRect.right, pctRect.bottom);
 	::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(_hFile));
-
 }
 

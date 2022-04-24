@@ -53,46 +53,5 @@
 			Condition="Exists('$(ProgramW6432)\Notepad++\plugins\$(TargetName)\') AND '$(Platform)'=='x64' AND '$(ProgramW6432)'!=''" 
 			Retries="0"
 			ContinueOnError="ErrorAndStop"/>
-
-	<!-- Deploy XML Lexer file from project to Notepad++ -->
-	<Warning Text="XML Configuration file ($(TargetDir)\$(TargetName).xml) not found. Please create it or copy it manually to your Notepad++ folder" 
-				Condition="!Exists('$(TargetDir)\$(TargetName).xml')" />
-	  
-	<!-- Win32 -->
-	<Message Text="   Creating directory -&gt; $(MSBuildProgramFiles32)\Notepad++\plugins\Config\" 
-				Condition="!Exists('$(MSBuildProgramFiles32)\Notepad++\plugins\Config') AND '$(Platform)'=='x86' 
-						AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				Importance="high" />
-	<MakeDir Directories="$(MSBuildProgramFiles32)\Notepad++\plugins\Config\" 
-				Condition="!Exists('$(MSBuildProgramFiles32)\Notepad++\plugins\Config') AND '$(Platform)'=='x86' 
-						AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				ContinueOnError="ErrorAndContinue"/>
-	<Message Text="Deploying Lexer XML Config file ($(TargetName).xml) to -&gt; $(MSBuildProgramFiles32)\Notepad++\plugins\Config\" 
-				Condition="Exists('$(MSBuildProgramFiles32)\Notepad++\plugins\Config') AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				Importance="high" />
-	<Copy SourceFiles="$(TargetDir)$(TargetName).xml" 
-			DestinationFolder="$(MSBuildProgramFiles32)\Notepad++\plugins\Config\" 
-			Condition="Exists('$(MSBuildProgramFiles32)\Notepad++\plugins\Config\') AND Exists('$(TargetDir)\$(TargetName).xml)') 
-					AND '$(Platform)'=='x86' AND Exists('$(TargetDir)\$(TargetName).xml')" 
-			Retries="0"
-			ContinueOnError="WarnAndContinue"/>
-	<!-- Win64 -->
-	<Message Text="   Creating directory -&gt; $(ProgramW6432)\Notepad++\plugins\Config\" 
-				Condition="!Exists('$(ProgramW6432)\Notepad++\plugins\Config') AND '$(Platform)'=='x64' AND '$(ProgramW6432)'!='' 
-				AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				Importance="high" />
-	<MakeDir Directories="$(ProgramW6432)\Notepad++\plugins\Config\" 
-				Condition="!Exists('$(ProgramW6432)\Notepad++\plugins\Config') AND '$(Platform)'=='x64' AND '$(ProgramW6432)'!='' 
-				AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				ContinueOnError="ErrorAndContinue"/>
-	<Message Text="Deploying Lexer XML Config file ($(TargetName).xml) to -&gt; $(ProgramW6432)\Notepad++\plugins\Config\" 
-				Condition="Exists('$(ProgramW6432)\Notepad++\plugins\Config') AND Exists('$(TargetDir)\$(TargetName).xml')" 
-				Importance="high" />
-	<Copy SourceFiles="$(TargetDir)$(TargetName).xml" 
-			DestinationFolder="$(ProgramW6432)\Notepad++\plugins\Config\" 
-			Condition="Exists('$(ProgramW6432)\Notepad++\plugins\Config\') AND Exists('$(TargetDir)\$(TargetName).xml') 
-			AND '$(Platform)'=='x64' AND '$(ProgramW6432)'!='' AND Exists('$(TargetDir)\$(TargetName).xml')" 
-			Retries="0"
-			ContinueOnError="WarnAndContinue"/>
   </Target>
 </Project>

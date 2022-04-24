@@ -189,6 +189,13 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 
+		case WM_SHOWWINDOW:
+		{
+			if (_settings->compilerWindowVisibleAllowChange)
+				_settings->compilerWindowVisible = static_cast<bool>(wParam);
+			break;
+		}
+
 		default:
 			return DockingDlgInterface::run_dlgProc(message, wParam, lParam);
 	}
@@ -613,7 +620,7 @@ void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignore
 		return;
 
 	// Retrieve the message index on list and store for future reference.
-	int itemIndex = 0;
+	size_t itemIndex = 0;
 	for (; itemIndex < _errorsList.size(); itemIndex++)
 	{
 		if (_errorsList[itemIndex] == message)

@@ -83,6 +83,10 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				EnableWindow(GetDlgItem(_hSelf, IDC_BTOUTPUTDIR), false);
 			}
 
+			// Window icon
+			_hWindowIcon = loadSVGFromResourceIcon(_hInst, IDI_SETTINGSGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hWindowIcon));
+
 			return TRUE;
 		}
 

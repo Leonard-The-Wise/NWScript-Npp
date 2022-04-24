@@ -17,6 +17,10 @@ namespace NWScriptPlugin {
 	public:
 		CompilerSettingsDialog() = default;
 
+		~CompilerSettingsDialog() {
+			DeleteObject(_hWindowIcon);
+		}
+
 		void appendSettings(Settings* settings)	{
 			_settings = settings;
 		}
@@ -29,6 +33,8 @@ namespace NWScriptPlugin {
 		bool keepSettings();
 
 		Settings* _settings = nullptr;
+
+		HICON _hWindowIcon = nullptr;
 	};
 
 }

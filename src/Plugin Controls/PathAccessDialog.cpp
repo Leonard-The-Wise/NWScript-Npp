@@ -60,7 +60,7 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			default:
 				shieldSize = (IconSize)_dpiManager.scaleIconSize(76);
 			}
-			HBITMAP _hShield = getStockIconBitmap(_iconID, shieldSize);
+			_hShield = getStockIconBitmap(_iconID, shieldSize);
 			::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE,
 				static_cast<WPARAM>(IMAGE_BITMAP),
 				reinterpret_cast<LPARAM>(_hShield));
@@ -68,9 +68,8 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			// Set visibility and mode for admin
 			if (!_bAdminMode)
 			{
-				// Hide the Admin button by calling 'Show Window'.. Yeah, Windows API...
 				::ShowWindow(GetDlgItem(_hSelf, IDOK), SW_HIDE);
-				::SetDlgItemText(_hSelf, IDCANCEL, TEXT("Understood"));
+				::SetDlgItemText(_hSelf, IDCANCEL, TEXT("Underst&ood"));
 			}
 			else
 			{
@@ -78,6 +77,15 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 				HICON _hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
 				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_hShieldSmall));
 			}
+
+			// Window icon
+			_hWindowIcon = loadSVGFromResourceIcon(_hInst, IDI_APPLICATIONACCESS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hWindowIcon));
+
+			ShowWindow(_hSelf, SW_NORMAL);
+
+			if (_morphToCopy)
+				MorphToPluginCopyMode();
 
 			return TRUE;
 		}
@@ -104,4 +112,32 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 INT_PTR PathAccessDialog::doDialog()
 {
 	return ShowModal(IDD_PATHACCESSDIALOG);
+}
+
+void PathAccessDialog::MorphToPluginCopyMode()
+{
+	// Change shield logo to plugin logo
+	DeleteObject(_hShield);
+
+	// Reposition window
+	RECT rcPctBox;
+	GetWindowRect(GetDlgItem(_hSelf, IDC_PCTFILEACCESSLOGOBOX), &rcPctBox);
+	_dpiManager.screenToClientEx(_hSelf, &rcPctBox);
+	MoveWindow(GetDlgItem(_hSelf, IDC_SHIELDICON), rcPctBox.left, rcPctBox.top, rcPctBox.right - rcPctBox.left, 
+		rcPctBox.bottom - rcPctBox.top, true);
+
+	RECT pctRect;
+	GetClientRect(GetDlgItem(_hSelf, IDC_PCTFILEACCESSLOGOBOX), &pctRect);
+	_hShield = loadPNGFromResource(_hInst, IDB_NWSCRIPTLOGO_SIMPLIFIED, pctRect.right, pctRect.bottom);
+	::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(_hShield));
+
+	// Change labels
+	SetWindowText(_hSelf, TEXT("Requesting permission to install additional files"));
+	::SetDlgItemText(_hSelf, IDC_LBLWARNING, TEXT("The NWScript Tools plugin requires some additional files to unlock it's full potential."));
+	::SetDlgItemText(_hSelf, IDC_LBLSOLUTION, TEXT("One or more of the files listed above requires elevated privileges to be written to.\r\n\
+- If you wish, we can write them for you (will restart Notepad++ as an Administrator); or\r\n\
+- You may manually copy the above files by yourself. See the help text on 'About Me' option for more info on where those are located."));
+
+	::SetDlgItemText(_hSelf, IDOK, TEXT("  &Yes, please, copy them for me"));
+	::SetDlgItemText(_hSelf, IDCANCEL, TEXT("I'd rather do it ma&nually"));
 }

@@ -1,6 +1,6 @@
 {\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1046\deflangfe1046{\fonttbl{\f0\fswiss\fprq2\fcharset0 Calibri;}{\f1\froman\fprq2\fcharset0 Cambria;}{\f2\fmodern\fprq1\fcharset0 Consolas;}{\f3\froman\fprq2\fcharset2 Symbol;}{\f4\fswiss\fprq2\fcharset0 Segoe UI Symbol;}}
 {\colortbl ;\red79\green129\blue189;\red84\green141\blue212;\red192\green80\blue77;\red0\green0\blue255;\red178\green161\blue199;\red255\green255\blue255;}
-{\stylesheet{ Normal;}{\s1 heading 1;}{\s2 heading 2;}{\s3 heading 3;}{\s4 heading 4;}}
+{\stylesheet{ Normal;}{\s1 heading 1;}{\s2 heading 2;}{\s3 heading 3;}}
 {\*\generator Riched20 10.0.22000}{\*\mmathPr\mdispDef1\mwrapIndent1440 }\viewkind4\uc1 
 \pard\keep\keepn\widctlpar\s1\sb480\qc\cf1\b\f0\fs32\lang1033 NWScript Tools for Notepad++ User\rquote s Manual\par
 
@@ -8,9 +8,17 @@
 
 \pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 PLUGIN USAGE:\par
 
-\pard\keep\keepn\widctlpar\s3\sb200\fs24 Automatic Syntax Highlighting\par
+\pard\keep\keepn\widctlpar\s3\sb200\fs24 Automatic Syntax Highlighting and first procedures\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab To see the colored syntax of \cf2\f2\fs20 NWScript files\cf0\f1\fs24 , select \cf2\f2\fs20 NWScript Language\cf0\f1\fs24  from Languages menu.\par
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab When first installed, the plugin will ask you permission to copy some extra \cf2\f2\fs20 XML\cf0\f1\fs24  files to (sometimes) a protected directory inside the \cf2\f2\fs20 Notepad++\cf0\f1\fs24  installation path. It is \b recommended\b0  that you allow this action to take place, and then the \cf2\f2\fs20 Automatic Syntax Coloring\cf0\f1\fs24  will happen. If you want to know why this is necessary, it is because when booted for the first time, the \cf2\f2\fs20 NWScript-Npp.xml\cf0\f1\fs24  definitions file for the plugin will be empty. This happens because the \cf2\f2\fs20 Auto Complete XML\cf0\f1\fs24  file will also not exist -> and this last one is usually placed inside a protected directory on Notepad++ installation path. Since the \cf2\f2\fs20 NWScript-Npp.xml\cf0\f1\fs24  and the \cf2\f2\fs20 Auto Complete XML\cf0\f1\fs24  files need to be in sync with each other at all times, the only startup option is to create a dummy \cf2\f2\fs20 NWScript-Npp.xml\cf0\f1\fs24  just to avoid \cf2\f2\fs20 Notepad++\cf0\f1\fs24  rejecting the plugin entirely, and then wait for the user to install the files - or allow us to do it for them. This action will often require \cf2\f2\fs20 elevation\cf0\f1\fs24  - so the Plugin will ask you to run \cf2\f2\fs20 Notepad++\cf0\f1\fs24  in \cf2\f2\fs20 Administrator Mode\cf0\f1\fs24  to copy the files automatically for you.\par
+\b Remark: \b0 If the plugin detects write permissions to those files \i (eg: you have a portable Notepad++ installation on an unprotected directory)\i0 , this process will happen automatically and no action on your part will be required.\par
+\bullet\tab And if for any reasons you'd rather not give the plugin \cf2\f2\fs20 Administrator\cf0\f1\fs24  access, you may also \b copy the required files manually\b0  to their respective destinations. When you download a release \cf2\f2\fs20 .zip\cf0\f1\fs24  file from the plugin \cf2\f2\fs20 Github page\cf0\f1\fs24  (see the \cf2\f2\fs20 link\cf0\f1\fs24  above help), inside that archive you will find two folders - one named \cf2\f2\fs20 autoCompletion\cf0\f1\fs24  and other \cf2\f2\fs20 functionList\cf0\f1\fs24 . Just put their respective contents inside the \cf2\f2\fs20 Notepad++\cf0\f1\fs24  installation path, overwriting any file if necessary. After placing the two folders, copy the \cf2\f2\fs20 NWScript-Npp.xml\cf0\f1\fs24  file to your \cf2\f2\fs20 %AppData%\\Notepad++\\plugins\\Config\cf0\f1\fs24  folder, overwriting the file present there (remember, it's a \cf2\f2\fs20 dummy\cf0\f1\fs24  file) and then you are done.\par
+\b Note:\b0  when the plugin does it, it does not overwrite the \cf2\f2\fs20 overrideMap.xml\cf0\f1\fs24 , instead we patch the file properly, so if you use multiple lexers you won't lose any pre-configured options for them, hence the option to give us admin access is the most recommended. But if you don't use other \cf2\f2\fs20 Lexer plugins\cf0\f1\fs24  or \cf2\f2\fs20 User-Defined Languages\cf0\f1\fs24  it is completely safe to just ovewrite the \cf2\f2\fs20 overrideMap.xml\cf0\f1\fs24  anyway.\par
+\bullet\tab After doing the above process, we also recommend you to take a moment to import your \cf2\f2\fs20 Custom Constants\cf0\f1\fs24  and \cf2\f2\fs20 functions\cf0\f1\fs24  to the plugin so we may Color Syntax them for you. Check the Menu Option \cf2\f2\fs20 Import User-Defined Tokens\cf0\f1\fs24  bellow. You may also want to install the \cf2\f2\fs20 Dark Theme\cf0\f1\fs24  lexer support for Notepad++ (this usually requires elevated privileges also), so when you switch between \cf2\f2\fs20 Dark\cf0\f1\fs24  and \cf2\f2\fs20 Light\cf0\f1\fs24  mode, the transition on your text will be seamless.\par
+\bullet\tab If for any reason you miss or deny the Plugin's first request to install the configuration files, there will be a Menu Option called \cf2\f2\fs20 Install Plugin's XML Config Files\cf0\f1\fs24  avaliable to you. This option only shows up when the plugin don't detect the files, so if you already installed them manually you won't see this option anymore.\par
+\par
+\b Remarks:\b0\par
+\bullet\tab To see the colored syntax of \cf2\f2\fs20 NWScript files\cf0\f1\fs24 , just select \cf2\f2\fs20 NWScript \cf0\f1\fs24 from the Languages menu. Do this \b after\b0  the required files are installed (and doing a \cf2\f2\fs20 Notepad++\cf0\f1\fs24  restart if necessary) or else you may not notice any difference.\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Auto-Indentation support:\par
 
@@ -42,8 +50,6 @@
 \pard\widctlpar\fi-360\li360\sb36\sa36\qj\b0\f3\'b7\tab\f1 The same \cf2\f2\fs20 include folders\cf0\f1\fs24  on the \cf2\f2\fs20 compiler settings\cf0\f1\fs24  will be used to \cf2\f2\fs20 batch process\cf0\f1\fs24  files, also the \cf2\f2\fs20 Neverwinter Installation Paths\cf0\f1\fs24 , etc., and other options not exclusive for batch processing.\par
 \f3\'b7\tab\f1 When writing file filters, you may use any normal Windows file wildcards. Also, this field accepts a list of file filters separated by commas. \b Do not\b0  use spaces in between commas. Example of valid filter: \cf2\f2\fs20 *x.nss,nw_s0_*.nss,nw_s1_*.nss\cf0\f1\fs24 .\par
 \f3\'b7\tab\f1 File filters are saved separately for \b Compile\b0  and \b Disassemble\b0  mode, hence you may have 2 different sets, one for each mode.\par
-
-\pard\widctlpar\sb36\sa36\qj\par
 
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Run last batch\rdblquote :\par
 
@@ -115,9 +121,21 @@
 
 \pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab This will reset all editor \cf2\f2\fs20 color styles\cf0\f1\fs24  to the \cf2\f2\fs20 default values\cf0\f1\fs24  - either for \cf2\f2\fs20 light\cf0\f1\fs24  and \cf2\f2\fs20 dark\cf0\f1\fs24  themes. No functions or constants definitions will be ereased in the process. The main purpose of this function is to correct a known \cf2\f2\fs20 Notepad++\cf0\f1\fs24  behavior that changes your \cf2\f2\fs20 Npp-Plugin.xml\cf0\f1\fs24  stylers when you change themes inside the \cf2\f2\fs20 Settings -> Style Configurator\cf0\f1\fs24  dialog box. Since \cf2\f2\fs20 Notepad++\cf0\f1\fs24  must edit the plugin styler directly to save the settings, that will overwrite whichever colors it had before, with no custom theme support. Hence, it is handy to have a \cf2\f2\fs20 reset\cf0\f1\fs24  option so when you change back themes you won't need to manually set ALL of the \cf2\f2\fs20 stylers\cf0\f1\fs24  manually again.\par
 
+\pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote Repair Function List\rdblquote :\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab This is useful if more than one Lexer plugin is present. Sometimes other plugins may overwrite the \cf2\f2\fs20 overrideMap.xml\cf0\f1\fs24  file inside the \cf2\f2\fs20 functionList\cf0\f1\fs24  directory, rendering the Functions List panel for NWScript files to not work anymore. In this case, the NWScript Tools can auto-fix that file for you (and this also will also cause the plugin to re-copy nwscript.xml into the \cf2\f2\fs20 functionList\cf0\f1\fs24  directory. \par
+
+\pard\widctlpar\sb180\sa180\b Remarks\b0\par
+
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\bullet\tab The plugin will always checkup the \cf2\f2\fs20 overrideMap.xml\cf0\f1\fs24  file integrity upon startup, so if everything is ok, then this option will not show up to you.\par
+\bullet\tab Unfortunately, up to version \cf2\f2\fs20 8.3.3\cf0\f1\fs24 , Notepad++ still does not support Function List for external languages (like of Plugin's). But still I found this option to be relevant for shipping on this release, because we are working on a patch for that, so when it comes (soon), the plugin will already be prepared for that.\par
+\par
+\cf1\b\f0 Menu option - \ldblquote Install Plugin's XML Config Files\rdblquote :\par
+\cf0\b0\f1\bullet\tab This option will only be avaliable when you choose to not let the plugin install the required XML files for it to function properly. If you select it, you'll be asked to run \cf2\f2\fs20 Notepad++\cf0\f1\fs24  in \cf2\f2\fs20 Administrator Mode\cf0\f1\fs24  if the plugin don't detect to have write permission to the required files.\par
+
 \pard\keep\keepn\widctlpar\s3\sb200\cf1\b\f0 Menu option - \ldblquote About me\rdblquote :\par
 
-\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens the \cf2\f2\fs20 About Dialog Box\cf0\f1\fs24  (yeah, really!). {\pict{\*\picprop{\sp{\sn wzDescription}{\sv Image}}{\sp{\sn posv}{\sv 1}}
+\pard\widctlpar\fi-480\li480\sb36\sa36\qj\cf0\b0\f1\bullet\tab Opens this \cf2\f2\fs20 About Dialog Box\cf0\f1\fs24  (yeah, really!). {\pict{\*\picprop{\sp{\sn wzDescription}{\sv Image}}{\sp{\sn posv}{\sv 1}}
 }\pngblip\picw503\pich529\picwgoal285\pichgoal300 
 89504e470d0a1a0a0000000d4948445200000013000000140802000000e0379123000000017352
 474200aece1ce90000000467414d410000b18f0bfc6105000000097048597300000ec100000ec5
@@ -174,10 +192,9 @@ ae426082
 } icons near some menu options, that's because if you want to use that option you must either run \cf2\f2\fs20 Notepad++\cf0\f1\fs24  with \cf2\f2\fs20 Administrator Privileges\cf0\f1\fs24  OR you may also manually provide write permissions to the option's required files, because they are located in a secured path like \cf2\f2\fs20 %ProgramFiles%\cf0\f1\fs24  or so. Don't worry, you will be notified of which file you need to provide permissions to for each operation.\par
 
 \pard\widctlpar\sb180\sa180\qj Options that requires elevated privileges will usually access these files bellow, in a combination of one or more files for each option:\par
-
-\pard\keep\keepn\widctlpar\s4\sb200\cf1\i\f2\fs22    %ProgramFiles%\\Notepad++\\themes\\DarkTheme.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\functions\\nwscript.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\plugins\\Config\\NWScript-Npp.xml\f0\fs24\par
-
-\pard\widctlpar\sb180\sa180\qj\cf0\i0\f1 So, unless you don't want to keep being bugged about files permissions, you can set write permission on those files permanently by going into the \cf2\f2\fs20 Windows Explorer\cf0\f1\fs24 , selecting the file's \cf2\f2\fs20 Properties\cf0\f1\fs24 , \cf2\f2\fs20 Security tab\cf0\f1\fs24 , selecting your \cf2\f2\fs20 Username\cf0\f1\fs24  and then marking all \cf2\f2\fs20 permission options\cf0\f1\fs24  avaliable. Then magically, the \cf2\f2\fs20 shield icons\cf0\f1\fs24  will vanish from your interface (requires a \cf2\f2\fs20 Notepad++\cf0\f1\fs24  restart).\par
+\cf1\i\f2\fs22    %ProgramFiles%\\Notepad++\\themes\\DarkTheme.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\autoCompletion\\nwscript.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\functionList\\nwscript.xml\f0\fs24\line\f2\fs22    %ProgramFiles%\\Notepad++\\functionList\\overrideMap.xml\f0\fs24\line\f2\fs22    %AppData%\\Notepad++\\plugins\\Config\\NWScript-Npp.xml\par
+\cf0\i0\f1\fs24 So, unless you don't want to keep being bugged about files permissions, you can set write permission on those files permanently by going into the \cf2\f2\fs20 Windows Explorer\cf0\f1\fs24 , selecting the file's \cf2\f2\fs20 Properties\cf0\f1\fs24 , \cf2\f2\fs20 Security tab\cf0\f1\fs24 , selecting your \cf2\f2\fs20 Username\cf0\f1\fs24  and then marking all \cf2\f2\fs20 permission options\cf0\f1\fs24  avaliable. Then magically, the \cf2\f2\fs20 shield icons\cf0\f1\fs24  will vanish from your interface (requires a \cf2\f2\fs20 Notepad++\cf0\f1\fs24  restart). \par
+\b Note: \b0 Files on the \cf2\f2\fs20 %AppData%\cf0\f1\fs24  folder usually are \ul\b not protected\ulnone\b0 , so that last one is listed there just for reference.\par
 
 \pard\keep\keepn\widctlpar\s2\sb200\cf1\b\f0\fs28 FINAL CONSIDERATIONS:\par
 

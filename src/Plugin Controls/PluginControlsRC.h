@@ -32,7 +32,6 @@
 #define IDI_USERBUILD                   162
 #define IDI_USERBUILDREMOVE             163
 #define IDI_RESTART                     165
-#define IDI_ABOUTDIALOGWINDOWICO        167
 #define IDR_ABOUTDOC                    168
 #define IDI_ERRORSQUIGGLE               169
 #define IDI_WORDWRAP                    174
@@ -40,12 +39,13 @@
 #define IDR_KNOWNOBJECTS                177
 #define IDB_NWSCRIPTFILEPARSE           180
 #define IDI_NEVERWINTERAPP              181
-#define IDR_RTF1                        182
 #define IDI_ANALISYS                    183
 #define IDI_DESCRIPTIONVIEWER           184
 #define IDI_FILEDESTINATION             185
-#define IDR_SVG2                        186
 #define IDI_GOTOLINE                    186
+#define IDI_REPAIR                      187
+#define IDB_NWSCRIPTLOGO_SIMPLIFIED     188
+#define IDI_APPLICATIONACCESS           189
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -101,7 +101,6 @@
 #define IDC_CHKAUTOOPENDISASSEMBLED     1055
 #define IDC_CHKAUTOOPENDEBUGSYMBOLS     1056
 #define IDC_CHKAUTOINSTALLDARKTHEME     1057
-#define IDC_CHKUSEDARKMODE              1058
 #define IDC_TABLOGGER                   1060
 #define IDC_TXTCONSOLE                  1062
 #define IDC_LSTERRORS                   1067
@@ -112,6 +111,10 @@
 #define IDC_BTFILTERERRORS              1074
 #define IDC_BTFILTERWARNINGS            1075
 #define IDC_BTFILTERINFO                1077
+#define IDC_LBLDARKMODEEXPLAIN          1077
+#define IDC_PCTNWSCRIPTFILELOGOBOX      1079
+#define IDC_PCTABOUTLOGOBOX             1080
+#define IDC_PCTFILEACCESSLOGOBOX        1081
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -120,9 +123,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        187
+#define _APS_NEXT_RESOURCE_VALUE        190
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1077
+#define _APS_NEXT_CONTROL_VALUE         1082
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -73,27 +73,29 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(PlatformShortName)\$(Configuration)\$(BaseIntermediateOutputPath)</IntDir>
+    <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)\$(BaseIntermediateOutputPath)</IntDir>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
@@ -137,7 +139,7 @@
       <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(SolutionDir)IncrementBuild.ps1" "$(SolutionDir)src\ProjectVersion.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Uptating project build version</Message>
+      <Message>Updating project build version</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -165,7 +167,7 @@
       <Command>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "$(SolutionDir)IncrementBuild.ps1" "$(SolutionDir)src\ProjectVersion.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Uptating project build version</Message>
+      <Message>Updating project build version</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -385,6 +387,7 @@
   <ItemGroup>
     <None Include="..\Media\icons-svg\AboutBox.svg" />
     <None Include="..\Media\icons-svg\Analysis.svg" />
+    <None Include="..\Media\icons-svg\ApplicationAccess.svg" />
     <None Include="..\Media\icons-svg\ClearWindow.svg" />
     <None Include="..\Media\icons-svg\CompilableFile.svg" />
     <None Include="..\Media\icons-svg\CompileBatch.svg" />
@@ -398,6 +401,7 @@
     <None Include="..\Media\icons-svg\ImmediateWindow.svg" />
     <None Include="..\Media\icons-svg\ImportSettings.svg" />
     <None Include="..\Media\icons-svg\NeverwinterApp.svg" />
+    <None Include="..\Media\icons-svg\Repair.svg" />
     <None Include="..\Media\icons-svg\RepeatLastRun.svg" />
     <None Include="..\Media\icons-svg\Report.svg" />
     <None Include="..\Media\icons-svg\Restart.svg" />
@@ -422,10 +426,8 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Media\HereBeDragons.png" />
-    <Image Include="..\Media\icons\About-Dialog-Ico.ico" />
     <Image Include="..\Media\NWScript-FileParse.png" />
-    <Image Include="..\Media\NWScriptLogo-200.png" />
-    <Image Include="..\Media\NWScriptLogo-300.png" />
+    <Image Include="..\Media\NWScriptLogo-Simplified.png" />
     <Image Include="..\Media\NWScriptLogo.png" />
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg" />
     <Image Include="..\Media\Sample-Colorization.jpg" />

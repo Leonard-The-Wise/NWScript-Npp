@@ -78,7 +78,7 @@ namespace NWScriptPlugin {
     };
 
     enum class RestartFunctionHook {
-        None, ResetEditorColorsPhase1, InstallDarkModePhase1
+        None, ResetUserTokensPhase1, ResetEditorColorsPhase1, InstallDarkModePhase1, RepairOverrideMapPhase1, InstallAdditionalFilesPhase1
     };
 }
 

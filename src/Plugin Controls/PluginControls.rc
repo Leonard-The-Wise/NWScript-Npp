@@ -52,7 +52,8 @@ STYLE DS_SETFONT | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THIC
 CAPTION "About NWScript Tools Plugin"
 FONT 10, "Cascadia Code", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,141,227,50,14
+    LTEXT           "",IDC_PCTABOUTLOGOBOX,8,9,137,102
+    DEFPUSHBUTTON   "&OK",IDOK,141,227,50,14
     CTEXT           "NWScript Tools for Notepad++",IDC_LBLPLUGINNAME,146,9,182,14
     CTEXT           "Copyright (C) 2022 - Leonardo Silva",IDC_LBLCOPYRIGHT,146,44,182,8
     CTEXT           "Special Thanks:\n\nDon HO for Notepad++ project\nNeil Hodgson for the Scintilla(R) C/C++ Lexer\nNWScript Compiler Library Team\r\n@Alort, @Deid, @Ikeoh, @Mom (moral support)",IDC_LBLSPECIALCREDITS,146,60,182,52
@@ -77,8 +78,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "File or Directory Access Denied"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "I'll provide the permissions manually",IDCANCEL,163,118,137,14
-    PUSHBUTTON      "  Run Notepad++ as an Administrator",IDOK,7,118,145,14
+    LTEXT           "",IDC_PCTFILEACCESSLOGOBOX,4,19,56,50
+    DEFPUSHBUTTON   "I'll provide the permissions ma&nually",IDCANCEL,163,118,137,14
+    PUSHBUTTON      "  Run Notepad++ as an Administrat&or",IDOK,7,118,145,14
     CONTROL         "",IDC_SHIELDICON,"Static",SS_BITMAP,11,21,43,39
     LTEXT           "WARNING - this action requires write permission to the following file(s):",IDC_LBLWARNING,66,15,236,21
     EDITTEXT        IDC_TXTREQUIREDFILES,63,36,239,33,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
@@ -90,11 +92,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "NWScript Tools - parsing results"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
+    LTEXT           "",IDC_PCTNWSCRIPTFILELOGOBOX,7,39,67,54
     DEFPUSHBUTTON   "&Yes",IDYES,83,126,50,14
     PUSHBUTTON      "&No",IDNO,177,126,50,14
     LTEXT           "The following results were obtained by our analisys...",IDC_STATIC,83,37,193,19
     LTEXT           "File Analisys Summary",IDC_LBLFILESUMARY,83,16,210,18
-    CONTROL         "",IDC_PCTNWSCRIPTFILE,"Static",SS_BITMAP,7,39,15,13
+    CONTROL         "",IDC_PCTNWSCRIPTFILE,"Static",SS_BITMAP,7,39,15,43
     LTEXT           "Engine Structures:",IDC_STATIC,83,56,60,8
     LTEXT           "Function Definitions:",IDC_STATIC,83,70,66,8
     LTEXT           "Global Constants:",IDC_STATIC,83,84,58,8
@@ -109,8 +112,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Compiler Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,143,293,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,254,293,50,14
+    DEFPUSHBUTTON   "&OK",IDOK,143,293,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,254,293,50,14
     GROUPBOX        "Neverwinter Nights Installation Folders (for loading nwscript.nss and other game resources)",IDC_STATIC,7,7,411,90
     LTEXT           "Neverwinter Nights 1 (or Enhanced Edition)",IDC_STATIC,87,20,293,8
     CONTROL         "Use this",IDC_USENWN1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,32,33,41,10
@@ -152,8 +155,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Batch Process Scripts"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Close",IDCLOSE,241,150,50,14
-    PUSHBUTTON      "Start",IDSTART,137,150,50,14
+    DEFPUSHBUTTON   "&Close",IDCLOSE,241,150,50,14
+    PUSHBUTTON      "&Start",IDSTART,137,150,50,14
     GROUPBOX        "Files Selection",IDC_STATIC,7,7,395,90
     LTEXT           "Starting Folder:",IDC_STATIC,18,26,51,8
     EDITTEXT        IDC_TXTBATCHDIRSTART,74,23,298,14,ES_AUTOHSCROLL
@@ -177,7 +180,7 @@ IDD_PROCESSFILES DIALOGEX 0, 0, 311, 78
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Cancel",IDCANCEL,125,57,50,14
+    DEFPUSHBUTTON   "&Cancel",IDCANCEL,125,57,50,14
     GROUPBOX        "Processing file(s)...",IDC_STATIC,7,7,297,44
     CTEXT           "Preparing file list...",IDC_LBLSTATUS,12,26,287,8,SS_WORDELLIPSIS
 END
@@ -187,8 +190,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "User's Preferences"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,82,101,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,184,101,50,14
+    DEFPUSHBUTTON   "&OK",IDOK,82,101,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,184,101,50,14
     GROUPBOX        "Preferences",IDC_STATIC,7,7,297,89
     CONTROL         "Auto-open disassembled (.ncs.pcode) binaries.",IDC_CHKAUTOOPENDISASSEMBLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,24,251,10
@@ -196,7 +199,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,40,260,10
     CONTROL         "Auto-reinstall Dark Theme support on Notepad++ upgrades.",IDC_CHKAUTOINSTALLDARKTHEME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,57,210,10
-    LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_STATIC,21,69,275,20
+    LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_LBLDARKMODEEXPLAIN,21,69,275,20
 END
 
 IDD_LOGGER DIALOGEX 0, 0, 509, 173
@@ -204,7 +207,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_CAPT
 CAPTION "NWScript Tools Compiler Console"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_TABLOGGER,"SysTabControl32",TCS_BOTTOM,2,2,504,167
+    CONTROL         "",IDC_TABLOGGER,"SysTabControl32",TCS_BOTTOM | WS_TABSTOP,2,2,504,167
 END
 
 IDD_LOGGER_ERRORS DIALOGEX 0, 0, 497, 135
@@ -221,11 +224,11 @@ FONT 10, "Consolas", 400, 0, 0x0
 BEGIN
     LTEXT           "Console Output",IDC_LBLCONSOLE,6,7,57,8
     PUSHBUTTON      "",IDC_BTCLEARCONSOLE,76,5,17,14,BS_ICON
-    CONTROL         "",IDC_BTTOGGLEWORDWRAP,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,98,5,17,14
-    CONTROL         "",IDC_TXTCONSOLE,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,3,23,418,105
-    CONTROL         "",IDC_BTFILTERERRORS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,353,5,17,14
-    CONTROL         "",IDC_BTFILTERWARNINGS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,374,5,17,14
-    CONTROL         "",IDC_BTFILTERINFO,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,396,5,17,14
+    CONTROL         "",IDC_BTTOGGLEWORDWRAP,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,98,5,17,14
+    CONTROL         "",IDC_TXTCONSOLE,"RichEdit50W",WS_BORDER | WS_VSCROLL | 0x804,3,23,418,105
+    CONTROL         "",IDC_BTFILTERERRORS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,353,5,17,14
+    CONTROL         "",IDC_BTFILTERWARNINGS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,374,5,17,14
+    CONTROL         "",IDC_BTFILTERINFO,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,396,5,17,14
 END
 
 
@@ -241,7 +244,7 @@ BEGIN
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 328
-        TOPMARGIN, 113
+        TOPMARGIN, 8
         BOTTOMMARGIN, 241
     END
 
@@ -396,13 +399,13 @@ IDB_NWSCRIPTLOGO        PNG                     "..\\..\\Media\\NWScriptLogo.png
 
 IDB_NWSCRIPTFILEPARSE   PNG                     "..\\..\\Media\\NWScript-FileParse.png"
 
+IDB_NWSCRIPTLOGO_SIMPLIFIED PNG                     "D:\\Projetos\\NWScript-Npp\\Media\\NWScriptLogo-Simplified.png"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // SVG
 //
-
-IDI_ABOUTDIALOGWINDOWICO SVG                     "..\\..\\Media\\icons\\About-Dialog-Ico.ico"
 
 IDI_ABOUTBOX            SVG                     "..\\..\\Media\\icons-svg\\AboutBox.svg"
 
@@ -451,6 +454,10 @@ IDI_DESCRIPTIONVIEWER   SVG                     "..\\..\\Media\\icons-svg\\Descr
 IDI_FILEDESTINATION     SVG                     "..\\..\\Media\\icons-svg\\FileDestination.svg"
 
 IDI_GOTOLINE            SVG                     "..\\..\\Media\\icons-svg\\GoToCurrentLine.svg"
+
+IDI_REPAIR              SVG                     "..\\..\\Media\\icons-svg\\Repair.svg"
+
+IDI_APPLICATIONACCESS   SVG                     "..\\..\\Media\\icons-svg\\ApplicationAccess.svg"
 
 
 /////////////////////////////////////////////////////////////////////////////

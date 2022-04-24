@@ -321,7 +321,6 @@ void AboutDialog::setLogo()
 	::SendMessage(GetDlgItem(_hSelf, IDC_PCTLOGO), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(_hLogo));
 }
 
-
 void AboutDialog::refreshDarkMode()
 {
 	if (!isCreated())
@@ -335,8 +334,8 @@ void AboutDialog::refreshDarkMode()
 	HICON hAboutOld = reinterpret_cast<HICON>(::SendMessage(_hSelf, WM_GETICON, ICON_SMALL, 0));
 	if (hAboutOld)
 		DeleteObject(hAboutOld);
-	_hAboutIcon = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-	::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hAboutIcon));
+	_hWindowIcon = loadSVGFromResourceIcon(_hInst, IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+	::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(_hWindowIcon));
 
 	InvalidateRect(_hSelf, NULL, true);
 	UpdateWindow(_hSelf);

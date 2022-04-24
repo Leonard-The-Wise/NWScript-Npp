@@ -18,8 +18,16 @@ namespace NWScriptPlugin {
 	public:
 		UsersPreferencesDialog() = default;
 
+		~UsersPreferencesDialog() {
+			DeleteObject(_hWindowIcon);
+		}
+
 		void appendSettings(Settings* settings) {
 			_settings = settings;
+		}
+
+		void setDarkModeInstalled(bool installed) {
+			_darkModeInstalled = installed;
 		}
 
 		void doDialog();
@@ -29,6 +37,10 @@ namespace NWScriptPlugin {
 	private:
 		void keepSettings();
 		Settings* _settings = nullptr;
+
+		bool _darkModeInstalled = false;
+
+		HICON _hWindowIcon = nullptr;
 	};
 
 }

@@ -1,8 +1,8 @@
 /** @file PluginMain.cpp
  * Controls the Plugin functions, processes all Plugin messages
- * 
+ *
  * Although this is the main object, the actual DLL Entry point is defined in PluginInterface.cpp
- * 
+ *
  **/
  // Copyright (C) 2022 - Leonardo Silva 
  // The License.txt file describes the conditions under which this software may be distributed.
@@ -57,8 +57,7 @@ using namespace LexerInterface;
 // Static members definition
 generic_string Plugin::pluginName = TEXT("NWScript Tools");
 
-// Menu functions order. Most of these is just to keep track of menu items.
-// Some are used to modificate menu items.
+// Menu functions order.
 // Needs to be Sync'ed with pluginFunctions[]
 #define PLUGINMENU_SWITCHAUTOINDENT 0
 #define PLUGINMENU_DASH1 1
@@ -80,8 +79,11 @@ generic_string Plugin::pluginName = TEXT("NWScript Tools");
 #define PLUGINMENU_IMPORTUSERTOKENS 17
 #define PLUGINMENU_RESETUSERTOKENS 18
 #define PLUGINMENU_RESETEDITORCOLORS 19
-#define PLUGINMENU_DASH6 20
-#define PLUGINMENU_ABOUTME 21
+#define PLUGINMENU_REPAIRXMLASSOCIATION 20
+#define PLUGINMENU_DASH6 21
+#define PLUGINMENU_INSTALLCOMPLEMENTFILES 22
+#define PLUGINMENU_DASH7 23
+#define PLUGINMENU_ABOUTME 24
 
 #define PLUGIN_HOMEPATH TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp")
 #define PLUGIN_ONLINEHELP TEXT("https://github.com/Leonard-The-Wise/NWScript-Npp/blob/master/OnlineHelp.md")
@@ -103,9 +105,9 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View NWScript dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
-    {TEXT("Toggle NWCompiler Console"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
+    {TEXT("Toggle NWScript Compiler Console"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
     {TEXT("---")},
-    {TEXT("NWCompiler settings..."), Plugin::CompilerSettings},
+    {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
@@ -113,35 +115,51 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Import user-defined tokens"), Plugin::ImportUserTokens},
     {TEXT("Reset user-defined tokens"), Plugin::ResetUserTokens},
     {TEXT("Reset editor colors"), Plugin::ResetEditorColors},
+    {TEXT("Repair Function List"), Plugin::RepairFunctionList},
+    {TEXT("---")},
+    {TEXT("Install Plugin's XML Config Files"), Plugin::InstallAdditionalFiles},
     {TEXT("---")},
     {TEXT("About me"), Plugin::AboutMe},
 };
 
 Plugin* Plugin::_instance(nullptr);
 
+// Static file and directory names
+
 // Notepad Plugin Configuration installation root directory. We made it const, since we're not retrieving this outside a plugin build 
-const generic_string NotepadPluginConfigRootDir = TEXT("config\\");
+constexpr const TCHAR NotepadPluginRootDir[] = TEXT("plugins\\");
+// Notepad Plugin Configuration installation root directory. We made it const, since we're not retrieving this outside a plugin build 
+constexpr const TCHAR NotepadPluginConfigRootDir[] = TEXT("plugins\\Config\\");
 // Notepad Default Themes install directory. We made it const, since we're not retrieving this outside a plugin build
-const generic_string NotepadDefaultThemesRootDir = TEXT("themes\\");
-// Notepad Default Dark Theme file. We made it const, since we're not retrieving this outside a plugin build
-const generic_string NotepadDefaultDarkThemeFile = TEXT("DarkModeDefault.xml");
+constexpr const TCHAR NotepadDefaultThemesRootDir[] = TEXT("themes\\");
 // Notepad Default Auto Completion directory.
-const generic_string NotepadAutoCompleteRootDir = TEXT("autoCompletion\\");
-// Default pseudo-batch file to create in case we need to restart notepad++
-const generic_string NotepadPseudoBatchRestartFile = TEXT("~doNWScriptNotepadRestart.bat");
-// NWScript known engine objects file
-const generic_string NWScriptEngineObjectsFile = TEXT("NWScript-Npp-EngineObjects.bin");
-// NWScript known user objects file
-const generic_string NWScriptUserObjectsFile = TEXT("NWScript-Npp-UserObjects.bin");
+constexpr const TCHAR NotepadAutoCompleteRootDir[] = TEXT("autoCompletion\\");
+// Notepad Default Function List directory.
+constexpr const TCHAR NotepadFunctionListRootDir[] = TEXT("functionList\\");
+
 // Notepad config file
-const generic_string NotepadConfigFile = TEXT("config.xml");
+constexpr const TCHAR NotepadConfigFile[] = TEXT("config.xml");
+
+// OverrideMap XML file
+constexpr const TCHAR OverrideMapFile[] = TEXT("overrideMap.xml");
+
+// Notepad Default Dark Theme file.
+constexpr const TCHAR NotepadDefaultDarkThemeFile[] = TEXT("DarkModeDefault.xml");
+
+// Default pseudo-batch file to create in case we need to restart notepad++
+constexpr const TCHAR PseudoBatchRestartFile[] = TEXT("~doNWScriptNotepadRestart.bat");
+// NWScript known engine objects file
+constexpr const TCHAR NWScriptEngineObjectsFile[] = TEXT("NWScript-Npp-EngineObjects.bin");
+// NWScript known user objects file
+constexpr const TCHAR NWScriptUserObjectsFile[] = TEXT("NWScript-Npp-UserObjects.bin");
+
 
 // Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
 // this will ever change, so we made them constants here.
-const std::string fixedPreProcInstructionSet = "#define #include";
-const std::string fixedInstructionSet = "break case continue default do else FALSE for if return switch TRUE while";
-const std::string fixedKeywordSet = "action command const float int string struct vector void";
-const std::string fixedObjKeywordSet = "object OBJECT_INVALID OBJECT_SELF";
+constexpr const char fixedPreProcInstructionSet[] = "#define #include";
+constexpr const char fixedInstructionSet[] = "break case continue default do else FALSE for if return switch TRUE while";
+constexpr const char fixedKeywordSet[] = "action command const float int string struct vector void";
+constexpr const char fixedObjKeywordSet[] = "object OBJECT_INVALID OBJECT_SELF";
 
 #pragma region
 
@@ -162,10 +180,7 @@ void Plugin::PluginInit(HANDLE hModule)
     TCHAR fTemp[MAX_PATH] = {};
     DWORD fSize = GetModuleFileName(static_cast<HMODULE>(hModule), fTemp, MAX_PATH);
     Instance()._pluginPaths.insert({ "PluginPath", fs::path(fTemp) });
-
     Instance()._pluginFileName = Instance()._pluginPaths["PluginPath"].stem();
-    Instance()._pluginLexerConfigFile = Instance()._pluginPaths["PluginPath"].stem();
-    Instance()._pluginLexerConfigFile.append(TEXT(".xml"));
 
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
@@ -196,6 +211,123 @@ int Plugin::GetFunctionCount() const
     return static_cast<int>(std::size(pluginFunctions));
 }
 
+// Create plugin's file paths variables
+void Plugin::MakePluginFilePaths()
+{
+    // Finish initializing the Plugin Metainformation
+    TCHAR fBuffer[MAX_PATH + 1] = {0};
+    generic_string sPath;
+
+    // Get main paths for program
+
+    Messenger().SendNppMessage(NPPM_GETNPPFULLFILEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fBuffer));
+    sPath = fBuffer;
+    _pluginPaths.insert({ "NotepadInstallExecutablePath", fs::path(fBuffer) });
+    _pluginPaths.insert({ "NotepadExecutableDir", fs::path(fBuffer).parent_path() });
+    Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fBuffer));
+    sPath = fBuffer;
+    _pluginPaths.insert({ "PluginConfigDir", fs::path(sPath) });
+    _pluginPaths.insert({ "NotepadUserConfigDir", fs::path(sPath).parent_path().parent_path() });
+
+    // Step 1:
+    // First we get all files avaliable from Plugin Config Dir if they are present there, because
+    // that's the Notepad++ priority list for loading config files
+
+    sPath = str2wstr(_pluginPaths["NotepadUserConfigDir"].string());
+    sPath.append(TEXT("\\")).append(NotepadConfigFile);
+    _pluginPaths.insert({ "NotepadConfigFile", fs::path(sPath) });
+
+    generic_string pluginLexerConfigFile = _pluginFileName;
+    sPath = str2wstr(_pluginPaths["PluginConfigDir"].string());
+    sPath.append(TEXT("\\")).append(pluginLexerConfigFile).append(TEXT(".xml"));
+    _pluginPaths.insert({ "PluginLexerConfigFilePath", fs::path(sPath) });
+
+    sPath = str2wstr(_pluginPaths["PluginConfigDir"].string());
+    sPath.append(TEXT("\\")).append(_pluginFileName).append(TEXT(".ini"));
+    _pluginPaths.insert({ "PluginSettingsFile", fs::path(sPath) });
+
+    // These files here are the one that can be in multiple places at one time
+
+    sPath = str2wstr(_pluginPaths["NotepadUserConfigDir"].string());
+    sPath.append(TEXT("\\")).append(NotepadDefaultThemesRootDir).append(NotepadDefaultDarkThemeFile);
+    _pluginPaths.insert({ "NotepadDarkThemeFilePath", fs::path(sPath) });
+
+    sPath = str2wstr(_pluginPaths["NotepadUserConfigDir"].string());
+    sPath.append(TEXT("\\")).append(NotepadAutoCompleteRootDir).append(str2wstr(LexerCatalogue::GetLexerName(0, true))).append(TEXT(".xml"));
+    _pluginPaths.insert({ "PluginAutoCompleteFilePath", fs::path(sPath) });
+
+    sPath = str2wstr(_pluginPaths["NotepadUserConfigDir"].string());
+    sPath.append(TEXT("\\")).append(NotepadFunctionListRootDir).append(OverrideMapFile);
+    _pluginPaths.insert({ "NotepadOverrideMapFile", fs::path(sPath) });
+
+    sPath = str2wstr(_pluginPaths["NotepadUserConfigDir"].string());
+    sPath.append(TEXT("\\")).append(NotepadFunctionListRootDir).append(str2wstr(LexerCatalogue::GetLexerName(0, true))).append(TEXT(".xml"));
+    _pluginPaths.insert({ "PluginFunctionListFile", fs::path(sPath) });
+
+    // Bellow are files that will always be on Plugin's config sPath
+
+    // Temporary batch we write in case we need to restart Notepad++ by ourselves. Root is Plugin config sPath
+    sPath = _pluginPaths["PluginConfigDir"];
+    sPath.append(TEXT("\\")).append(PseudoBatchRestartFile);
+    _pluginPaths.insert({ "PseudoBatchRestartFile", fs::path(sPath) });
+
+    // Known NWScript structures
+    sPath = _pluginPaths["PluginConfigDir"];
+    sPath.append(TEXT("\\")).append(NWScriptEngineObjectsFile);
+    _pluginPaths.insert({ "NWScriptEngineObjectsFile", fs::path(sPath) });
+
+    sPath = _pluginPaths["PluginConfigDir"];
+    sPath.append(TEXT("\\")).append(NWScriptUserObjectsFile);
+    _pluginPaths.insert({ "NWScriptUserObjectsFile", fs::path(sPath) });
+
+    // Step 2:
+    // For any file not present on Plugins Config Dir, we then check on the Notepad++ executable sPath.
+
+// Force Install paths tells the compiler to not test to files existences. This is used
+// while Notepad++ do not support custom paths for the mentioned files and always use the ones inside the installation dir
+#define FORCE_INSTALL_PATHS
+
+    if (!PathFileExists(str2wstr(_pluginPaths["NotepadDarkThemeFilePath"].string()).c_str()))
+    {
+        sPath = _pluginPaths["NotepadExecutableDir"];
+        sPath.append(TEXT("\\")).append(NotepadDefaultThemesRootDir).append(NotepadDefaultDarkThemeFile);
+#ifndef FORCE_INSTALL_PATHS
+        if (PathFileExists(sPath.c_str()))
+#endif
+            _pluginPaths["NotepadDarkThemeFilePath"] = sPath;
+    }
+
+    if (!PathFileExists(str2wstr(_pluginPaths["PluginAutoCompleteFilePath"].string()).c_str()))
+    {
+        sPath = _pluginPaths["NotepadExecutableDir"];
+        sPath.append(TEXT("\\")).append(NotepadAutoCompleteRootDir).append(str2wstr(LexerCatalogue::GetLexerName(0, true))).append(TEXT(".xml"));
+#ifndef FORCE_INSTALL_PATHS
+        if (PathFileExists(sPath.c_str()))
+#endif
+            _pluginPaths["PluginAutoCompleteFilePath"] = sPath;
+    }
+
+    if (!PathFileExists(str2wstr(_pluginPaths["NotepadOverrideMapFile"].string()).c_str()))
+    {
+        sPath = _pluginPaths["NotepadExecutableDir"];
+        sPath.append(TEXT("\\")).append(NotepadFunctionListRootDir).append(OverrideMapFile);
+#ifndef FORCE_INSTALL_PATHS
+        if (PathFileExists(sPath.c_str()))
+#endif
+            _pluginPaths["NotepadOverrideMapFile"] = sPath;
+    }
+
+    if (!PathFileExists(str2wstr(_pluginPaths["PluginFunctionListFile"].string()).c_str()))
+    {
+        sPath = _pluginPaths["NotepadExecutableDir"];
+        sPath.append(TEXT("\\")).append(NotepadFunctionListRootDir).append(str2wstr(LexerCatalogue::GetLexerName(0, true))).append(TEXT(".xml"));
+#ifndef FORCE_INSTALL_PATHS
+        if (PathFileExists(sPath.c_str()))
+#endif
+            _pluginPaths["PluginFunctionListFile"] = sPath;
+    }
+}
+
 // Setup Notepad++ and Scintilla handles and finish initializing the
 // plugin's objects that need a Windows Handle to work
 void Plugin::SetNotepadData(NppData& data)
@@ -206,76 +338,16 @@ void Plugin::SetNotepadData(NppData& data)
     //Keep a copy of Notepad HWND to easy access
     _notepadHwnd = Messenger().GetNotepadHwnd();
 
-    // Finish initializing the Plugin Metainformation
-    generic_string path;
-
-    TCHAR fName[MAX_PATH+1] = {};
-    ZeroMemory(fName, sizeof(fName));
-    Messenger().SendNppMessage(NPPM_GETNPPFULLFILEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    path = fName;
-    _pluginPaths.insert({ "NotepadExecutablePath", fs::path(fName) });
-
-    path = _pluginPaths["NotepadExecutablePath"].parent_path();
-    path.append(TEXT("\\"));
-    path.append(NotepadDefaultThemesRootDir);
-    path.append(NotepadDefaultDarkThemeFile);
-    _pluginPaths.insert({ "NotepadDarkThemeFilePath", fs::path(path) });
-
-    path = _pluginPaths["NotepadExecutablePath"].parent_path();
-    path.append(TEXT("\\"));
-    path.append(NotepadAutoCompleteRootDir);
-    path.append(str2wstr(LexerCatalogue::GetLexerName(0, true)));  // Need lowercase name. Also we're only returning the first lexer
-    path.append(TEXT(".xml"));
-    _pluginPaths.insert({ "PluginAutoCompleteFilePath", fs::path(path) });
-
-    ZeroMemory(fName, sizeof(fName));
-    Messenger().SendNppMessage(NPPM_GETPLUGINHOMEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    path = fName;
-    path.append(TEXT("\\"));
-    path.append(NotepadPluginConfigRootDir);
-    path.append(_pluginLexerConfigFile);
-    _pluginPaths.insert({ "PluginLexerConfigFilePath", fs::path(path) });
-
-    // Settings directory is different than Plugin Install Dir.
-    ZeroMemory(fName, sizeof(fName));
-    Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
-    generic_string sPluginConfigPath = fName;
-    _pluginPaths.insert({ "NotepadDataDir", fs::path(sPluginConfigPath).parent_path().parent_path() });
-
-    sPluginConfigPath = str2wstr(fs::path(sPluginConfigPath).parent_path().parent_path().string().c_str());
-    sPluginConfigPath.append(TEXT("\\"));
-    sPluginConfigPath.append(NotepadConfigFile);
-    _pluginPaths.insert({ "NotepadConfigFile", fs::path(sPluginConfigPath) });
-
-    sPluginConfigPath = fName;
-    sPluginConfigPath.append(TEXT("\\"));
-    sPluginConfigPath.append(_pluginFileName);
-    sPluginConfigPath.append(TEXT(".ini"));
-
-    // Temporary batch we write in case we need to restart Notepad++ by ourselves. Root is Plugin config path
-    path = fName;
-    path.append(TEXT("\\"));
-    path.append(NotepadPseudoBatchRestartFile);
-    _pluginPaths.insert({ "NotepadPseudoBatchRestartFile", fs::path(path) });
-
-    // Known NWScript structures
-    path = fName;
-    path.append(TEXT("\\"));
-    path.append(NWScriptEngineObjectsFile);
-    _pluginPaths.insert({ "NWScriptEngineObjectsFile", fs::path(path) });
-
-    path = fName;
-    path.append(TEXT("\\"));
-    path.append(NWScriptUserObjectsFile);
-    _pluginPaths.insert({ "NWScriptUserObjectsFile", fs::path(path) });
+    // Create the configuration files paths
+    MakePluginFilePaths();
 
     // Create settings instance and load all values
-    _settings.InitSettings(sPluginConfigPath);
+    _settings.InitSettings(str2wstr(_pluginPaths["PluginSettingsFile"].string()));
     Settings().Load();
 
     // Pick current Notepad++ version and compares with Settings, to se whether user gets a new 
     // Dark Mode install attempt or not...
-    VersionInfoEx currentNotepad = VersionInfoEx(_pluginPaths["NotepadExecutablePath"]);
+    VersionInfoEx currentNotepad = VersionInfoEx(_pluginPaths["NotepadInstallExecutablePath"]);
     if (Settings().notepadVersion.empty())
         Settings().notepadVersion = currentNotepad;
 
@@ -298,9 +370,9 @@ void Plugin::SetNotepadData(NppData& data)
     InitCompilerLogWindow();
 
     // Check engine objects file
-    CheckupEngineObjectsFile();
+    CheckupPluginObjectFiles();
 
-        
+    // The rest of initialization processes on Notepad++ SCI message NPPN_READY.
 }
 
 // Initializes the compiler log window
@@ -322,7 +394,13 @@ void Plugin::InitCompilerLogWindow()
 
     // Register the dialog box with Notepad++
     Messenger().SendNppMessage<void>(NPPM_DMMREGASDCKDLG, 0, (LPARAM)&_dockingData);
-    DisplayCompilerLogWindow(false);
+
+    if (_settings.compilerWindowVisible == false)
+        DisplayCompilerLogWindow(false);
+
+    // Allow modifications on compilerWindowVisible status (because Notepad++ internally calls show 
+    // window on creation and that would change the status of compilerWindowVisible unintentionally)
+    _settings.compilerWindowVisibleAllowChange = true;
 
     // Set the compiler log callback
     _compiler.setLoggerMessageCallback(WriteToCompilerLog);
@@ -339,7 +417,7 @@ void Plugin::DisplayCompilerLogWindow(bool toShow)
 }
 
 // Check the files for known engine objects
-void Plugin::CheckupEngineObjectsFile()
+void Plugin::CheckupPluginObjectFiles()
 {
     if (!PathFileExists(_pluginPaths["NWScriptEngineObjectsFile"].c_str()))
     {
@@ -370,7 +448,7 @@ void Plugin::CheckupEngineObjectsFile()
         }
         else
             MessageBox(NotepadHwnd(), TEXT("Could not allocate memory for resource buffer. Please report this error to the \
-plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"), TEXT("NWScript Plugin - Critical Error"), MB_OK | MB_ICONERROR);
+plugin creator:\r\n File: PluginMain.cpp, function 'CheckupPluginObjectFiles()'"), TEXT("NWScript Plugin - Critical Error"), MB_OK | MB_ICONERROR);
 
         FreeResource(hMemory);
 
@@ -381,7 +459,32 @@ plugin creator:\r\n File: PluginMain.cpp, function 'CheckupEngineObjectsFile()'"
         Settings().engineFunctionCount = _NWScriptParseResults->FunctionsCount;
         Settings().engineConstants = _NWScriptParseResults->ConstantsCount;
         _NWScriptParseResults = nullptr;
-    }        
+    }
+
+    // Create or restore the plugin XML configuration file
+    if (!PathFileExists(_pluginPaths["PluginLexerConfigFilePath"].c_str()))
+    {
+        // Create a dummy skeleton of the file from our resource string, so we don't crash...
+        // (the REAL file only installs if the user wants to)
+
+        // Set some Timestamp headers
+        char timestamp[128]; time_t currTime;  struct tm currTimeP;
+        time(&currTime);
+        errno_t error = localtime_s(&currTimeP, &currTime);
+        strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
+        std::string xmlHeaderComment = XMLDOCHEADER;
+        xmlHeaderComment.append(timestamp).append(".\r\n");
+        xmlHeaderComment = "<!--" + xmlHeaderComment + "-->\r\n";
+
+        std::string xmlConfigFile = xmlHeaderComment + XMLPLUGINLEXERCONFIG;
+
+        if (!bufferToFile(str2wstr(_pluginPaths["PluginLexerConfigFilePath"].string().c_str()), xmlConfigFile))
+            return; // End of the line, plugin will crash...
+
+        // Set an offer to install the plugin's definitions for the user later, when initialization finishes
+        // So we can get a pretty screen up. This is a one-time offer, since next time the user will have NWScript-Npp.xml already created
+        _OneTimeOffer = true;
+    }
 }
 
 // Properly detects if dark mode is enabled (Notepad++ 8.3.4 and above)
@@ -458,7 +561,7 @@ void Plugin::CheckDarkModeLegacy()
         PluginDarkMode::setDarkTone(C);
     }
     else
-        Instance().RefreshDarkMode(true, false);    
+        Instance().RefreshDarkMode(true, false);
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -467,7 +570,7 @@ void Plugin::CheckDarkModeLegacy()
 
 // Processes Raw messages from a Notepad++ window (the ones not handled by editor). 
 LRESULT Plugin::ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam)
-{        
+{
     return TRUE;
 }
 
@@ -477,131 +580,180 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
 {
     switch (notifyCode->nmhdr.code)
     {
-        case NPPN_READY:
-        {
-            // Do Initialization procedures
-            SetAutoIndentSupport();
-            DetectDarkThemeInstall();
-            LoadNotepadLexer();
+    case NPPN_READY:
+    {
+        // Do Initialization procedures.
+        // Note: The ORDER that many operations are performed here is important, so avoid changing it.
+
+        // We do this as first step, beause we are removing dash items that cannot be made by ID, so we need
+        // the proper position to be present. If we remove any other menus later, the positions might change a lot.
+        RemoveUnusedMenuItems();
+
+        // Starting from second step, these can be done on any order
+        SetAutoIndentSupport();
+        LoadNotepadLexer();
+
+        // Detects Dark Theme installation and possibly setup a hook to auto-install it.
+        // This step must be performed before SetupPluginMenuItems because that function depends on the detection
+        // of Dark Theme to properly setup the icons for menu. If an auto-update is to happen, this function
+        // causes the initialization process to cancel, so we preserve the restart hooks set in it.
+        if (DetectDarkThemeInstall() == RestartMode::Admin)
+            return;
+
+        // Check OverrideMap.xml and (possibly) auto-patch it - if other plugins had overwritten it.
+        if (CheckAndPatchOverrideMapXMLFile())
+            RemovePluginMenuItem(PLUGINMENU_REPAIRXMLASSOCIATION);
+
+        // Initially disable run last batch (until the user runs a batch in session)
+        EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+
+        // Detects Dark Mode support. Can be done by messaging Notepad++ for newer versions
+        // Or if the messages aren't supported (on a previous version), checks the installation on Notepad++ config.xml.
+        // Note: Dark Mode is different from Dark Theme - 1st is for the plugin GUI, the second is for NWScript file lexing.
+        if (_NppSupportDarkModeMessages)
+            RefreshDarkMode();
+        else
+            CheckDarkModeLegacy();
+
+        // Setup the rest of menu items. RefreshDarkMode checkups can build the menu icons for us by 
+        // calling SetupPluginMenuItems internally when DarkMode is present for legacy version (CheckDarkModeLegacy)
+        // and always for the other (RefreshDarkMode), so we check if no icons were set before to avoid double loading
+        if (_menuBitmaps.size() == 0)
             SetupPluginMenuItems();
 
-            // Detects Dark mode if supported
-            if (_NppSupportDarkModeMessages)
-                RefreshDarkMode();
-            else
-                CheckDarkModeLegacy();
+        // Checks the one-time offer to install the additional XML files when the plugin first initializes
+        // (or when NWScript-Npp.xml file was not present at initialization)
+        if (_OneTimeOffer)
+            InstallAdditionalFiles();
+        if (_OneTimeOfferAccepted)
+            return;
 
-            _isReady = true;
-
-            // Auto call a function that required restart during the previous session (because of privilege elevation)
-            // Up to now...
-            // 1 = ImportDefinitions
-            // 2 = Fix Editor's Colors
-            // Since all functions that required restart must have returned in Admin Mode, we check this
-            // to see if the user didn't cancel the UAC request.
-            // Also break processing here, since those functions can call another restart
-            if (IsUserAnAdmin())
+        // Auto call a function that required restart during the previous session (because of privilege elevation)
+        // Up to now...
+        // 1 = ImportDefinitions
+        // 2 = Fix Editor's Colors
+        // 3 = Repair OverrideMap file
+        // 4 = Install Additional
+        // Since all functions that required restart must have returned in Admin Mode, we check this
+        // to see if the user didn't cancel the UAC request.
+        if (IsUserAnAdmin())
+        {
+            switch (Settings().notepadRestartFunction)
             {
-                if (Settings().notepadRestartFunction == RestartFunctionHook::ResetEditorColorsPhase1)
-                {
-                    DoResetEditorColors(Settings().notepadRestartFunction);
-                    break;
-                }
-                if (Settings().notepadRestartFunction == RestartFunctionHook::InstallDarkModePhase1)
-                {
-                    DoInstallDarkTheme(Settings().notepadRestartFunction);
-                    break;
-                }
+            case RestartFunctionHook::ResetUserTokensPhase1:
+                if (DoResetUserTokens(Settings().notepadRestartFunction) != RestartMode::None)
+                    return;
+                break;
+            case RestartFunctionHook::ResetEditorColorsPhase1:
+                if (DoResetEditorColors(Settings().notepadRestartFunction) != RestartMode::None)
+                    return;
+                break;
+            case RestartFunctionHook::InstallDarkModePhase1:
+                if (DoInstallDarkTheme(Settings().notepadRestartFunction) != RestartMode::None)
+                    return;
+                break;
+            case RestartFunctionHook::RepairOverrideMapPhase1:
+                if (DoRepairOverrideMap(Settings().notepadRestartFunction) != RestartMode::None)
+                    return;
+                break;
+            case RestartFunctionHook::InstallAdditionalFilesPhase1:
+                if (DoInstallAdditionalFiles(Settings().notepadRestartFunction) != RestartMode::None)
+                    return;
+                break;
             }
-
-            // And then make sure to clear the hooks, temp files, etc. 
-            // Call as immediate to instant save on settings so we avoid losing it on a session crash also.
-            SetRestartHook(RestartMode::None, RestartFunctionHook::None);
-
-            break;
         }
-        case NPPN_CANCELSHUTDOWN:
-        {
-            // We're clearing any attempt to hook restarts here, have they been setup or not
-            SetRestartHook(RestartMode::None);
-            break;
-        }
-        case NPPN_SHUTDOWN:
-        {
-            _isReady = false;
-            Settings().Save();
 
-            // If we have a restart hook setup, call out shell to execute it.
-            if (Settings().notepadRestartMode != RestartMode::None)
-            {
-               runProcess(Settings().notepadRestartMode == RestartMode::Admin ? true : false, 
-                  Instance()._pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
-            }
+        // If it makes it here, make sure to clear the hooks, temp files, etc.
+        // This must always execute after processing the hooks.
+        SetRestartHook(RestartMode::None, RestartFunctionHook::None);
 
-            break;
-        }
-        case NPPN_LANGCHANGED:
+        // Mark plugin ready to use. Last step on the initialization chain
+        _isReady = true;
+
+        break;
+    }
+    case NPPN_CANCELSHUTDOWN:
+    {
+        // We're clearing any attempt to hook restarts here, have they been setup or not
+        SetRestartHook(RestartMode::None);
+        break;
+    }
+    case NPPN_SHUTDOWN:
+    {
+        _isReady = false;
+        Settings().Save();
+
+        // If we have a restart hook setup, call out shell to execute it.
+        if (Settings().notepadRestartMode != RestartMode::None)
         {
+            runProcess(Settings().notepadRestartMode == RestartMode::Admin ? true : false,
+                Instance()._pluginPaths["PseudoBatchRestartFile"].c_str());
+        }
+
+        break;
+    }
+    case NPPN_LANGCHANGED:
+    {
+        LoadNotepadLexer();
+        break;
+    }
+    case NPPN_BUFFERACTIVATED:
+    {
+        if (_isReady)
             LoadNotepadLexer();
-            break;
-        }
-        case NPPN_BUFFERACTIVATED:
-        {
-            if (_isReady)
-                LoadNotepadLexer();
-            break;
-        }
-        case SCN_CHARADDED:
-        {
-            // Conditions to perform the Auto-Indent:
-            // - Notepad is in Ready state;
-            // - Current Language is set to one of the plugin supported langs
-            // - Notepad version doesn't yet support Extended AutoIndent functionality
-            if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
-                && Settings().enableAutoIndentation)
-                Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
-            break;
-        }
-        case NPPN_DARKMODECHANGED:
-        {
-            RefreshDarkMode();
-            break;
-        }
-        case NPPN_TBMODIFICATION:
-        {
-            _tbIcons[0].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[0].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[0].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        break;
+    }
+    case SCN_CHARADDED:
+    {
+        // Conditions to perform the Auto-Indent:
+        // - Notepad is in Ready state;
+        // - Current Language is set to one of the plugin supported langs
+        // - Notepad version doesn't yet support Extended AutoIndent functionality
+        if (_isReady && IsPluginLanguage() && _needPluginAutoIndent
+            && Settings().enableAutoIndentation)
+            Indentor().IndentLine(static_cast<TCHAR>(notifyCode->ch));
+        break;
+    }
+    case NPPN_DARKMODECHANGED:
+    {
+        RefreshDarkMode();
+        break;
+    }
+    case NPPN_TBMODIFICATION:
+    {
+        _tbIcons[0].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[0].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[0].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
-            _tbIcons[1].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[1].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[1].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[1].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[1].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[1].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
-            _tbIcons[2].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[2].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            _tbIcons[2].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[2].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[2].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+        _tbIcons[2].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
-            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_COMPILESCRIPT]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[0]));
-            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_BATCHPROCESSING]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[1]));
-            Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[2]));
-        }
+        Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+            pluginFunctions[PLUGINMENU_COMPILESCRIPT]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[0]));
+        Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+            pluginFunctions[PLUGINMENU_BATCHPROCESSING]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[1]));
+        Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
+            pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[2]));
+    }
     }
 }
 
-// Setup a restart Hook. Normal or Admin mode. Save settings immediately after.
+// Setup a restart Hook. Normal or Admin mode. This function saves settings immediately.
 void Plugin::SetRestartHook(RestartMode type, RestartFunctionHook function)
 {
     Settings().notepadRestartMode = type; Settings().notepadRestartFunction = function;
     if (type == RestartMode::None)
     {
-        if (PathFileExists(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str()))
-            DeleteFile(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str());
+        if (PathFileExists(_pluginPaths["PseudoBatchRestartFile"].c_str()))
+            DeleteFile(_pluginPaths["PseudoBatchRestartFile"].c_str());
     }
     else
-        writePseudoBatchExecute(_pluginPaths["NotepadPseudoBatchRestartFile"].c_str(), _pluginPaths["NotepadExecutablePath"].c_str());
+        writePseudoBatchExecute(_pluginPaths["PseudoBatchRestartFile"].c_str(), _pluginPaths["NotepadInstallExecutablePath"].c_str());
 
     Settings().Save();
 }
@@ -653,10 +805,6 @@ void Plugin::SetAutoIndentSupport()
         Instance()._needPluginAutoIndent = false;
 
 #ifndef DEBUG_AUTO_INDENT_833
-        // Remove the "Use Auto-Indent" menu command and the following separator.
-        RemovePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT);
-        // Since the dash does not have an ID, got to the previous position.
-        RemovePluginMenuItem(PLUGINMENU_DASH1 - 1, true);
         // Auto-adjust the settings
         Instance().Settings().enableAutoIndentation = false;
 #endif
@@ -677,28 +825,29 @@ void Plugin::LoadNotepadLexer()
 
     // First call: retrieve buffer size. Second call, fill up name (from Manual).
     int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
-    TCHAR* lexerName = new TCHAR[buffSize + 1];
-    msg.SendNppMessage<void>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName));
+    std::unique_ptr<TCHAR[]> lexerName = make_unique<TCHAR[]>(buffSize + 1);
+    buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName.get()));
 
     // Try to get Language Auto-Indentation if it's one of the plugin installed languages
-    generic_stringstream lexerNameW;
+    generic_string lexerNameW;
     for (int i = 0; i < LexerCatalogue::GetLexerCount() && lexerSearch == false; i++)
     {
-        lexerNameW = {};
-        lexerNameW << str2wstr(LexerCatalogue::GetLexerName(i));
-        isPluginLanguage = (_tcscmp(lexerName, lexerNameW.str().c_str()) == 0);
+        lexerNameW = str2wstr(LexerCatalogue::GetLexerName(i));
+        isPluginLanguage = (_tcscmp(lexerName.get(), lexerNameW.c_str()) == 0);
 
         if (isPluginLanguage)
+        {
             lexerSearch = msg.SendNppMessage<int>(NPPM_GETEXTERNALLEXERAUTOINDENTMODE,
-                reinterpret_cast<WPARAM>(lexerNameW.str().c_str()), reinterpret_cast<LPARAM>(&langIndent));
+                reinterpret_cast<WPARAM>(lexerNameW.c_str()), reinterpret_cast<LPARAM>(&langIndent));
+        }
     }
 
     //Update Lexer
-    _notepadCurrentLexer.SetLexer(currLang, lexerName, isPluginLanguage, langIndent);
+    _notepadCurrentLexer.SetLexer(currLang, lexerName.get(), isPluginLanguage, langIndent);
 }
 
 // Detects if Dark Theme is already installed
-void Plugin::DetectDarkThemeInstall()
+RestartMode Plugin::DetectDarkThemeInstall()
 {
     // Here we are parsing the file silently
     tinyxml2::XMLDocument darkThemeDoc;
@@ -708,14 +857,14 @@ void Plugin::DetectDarkThemeInstall()
     {
         RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
         _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
-        return;
+        return RestartMode::None;
     }
 
     // Try to navigate to the XML node corresponding to the name of the installed language (nwscript). If not found, means uninstalled.
     if (!searchElement(darkThemeDoc.RootElement(), "LexerType", "name", LexerCatalogue::GetLexerName(0)))
         _pluginDarkThemeIs = DarkThemeStatus::Uninstalled;
     else
-    {    
+    {
         //Dark theme installed, mark it here.
         RemovePluginMenuItem(PLUGINMENU_INSTALLDARKTHEME);
         _pluginDarkThemeIs = DarkThemeStatus::Installed;
@@ -726,7 +875,7 @@ void Plugin::DetectDarkThemeInstall()
     {
         // Check to see if we already attempted a reinstall before, so we won't loop...
         if (_settings.darkThemeInstallAttempt)
-            return;
+            return RestartMode::None;
 
         // Set to true... this will only be reset upon a successfull installation.
         _settings.darkThemeInstallAttempt = true;
@@ -734,23 +883,42 @@ void Plugin::DetectDarkThemeInstall()
         // Check files permissions (redirect result to ignore since we already know file exists)...
         PathWritePermission fPerm = PathWritePermission::UndeterminedError;
         std::ignore = checkWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fPerm);
-        
+
         // Setup a restart hook...
         if (fPerm == PathWritePermission::RequiresAdminPrivileges && !IsUserAnAdmin())
         {
             SetRestartHook(RestartMode::Admin, RestartFunctionHook::InstallDarkModePhase1);
             Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
         }
         else
             // Since we've got perms... call the install function right on...
             DoInstallDarkTheme(RestartFunctionHook::InstallDarkModePhase1);
 
-        return;
+        return RestartMode::None;
     }
 
     // Mark it was previously installed
     if (_pluginDarkThemeIs == DarkThemeStatus::Installed && !_settings.darkThemePreviouslyInstalled)
         _settings.darkThemePreviouslyInstalled = true;
+
+    return RestartMode::None;
+}
+
+int Plugin::FindPluginLangID()
+{
+    TCHAR lexerName[64] = { 0 };
+    for (int i = 85; i < 115; i++)  // Language names start at 85 and supports up to 30 custom langs
+    {
+        Messenger().SendNppMessage<void>(NPPM_GETLANGUAGENAME, i, reinterpret_cast<LPARAM>(lexerName));
+        for (int j = 0; j < LexerCatalogue::GetLexerCount(); j++)
+        {
+            if (_tcscmp(lexerName, str2wstr(LexerCatalogue::GetLexerName(j)).c_str()) == 0)
+                return i;
+        }
+    }
+
+    return 0;
 }
 
 // Look for our language menu item among installed external languages and call it
@@ -829,7 +997,7 @@ void Plugin::EnablePluginMenuItem(int ID, bool enabled)
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        EnableMenuItem(hMenu, GetFunctions()[ID]._cmdID, (MF_BYCOMMAND | (enabled)) ? MF_ENABLED : MF_DISABLED );
+        EnableMenuItem(hMenu, GetFunctions()[ID]._cmdID, (MF_BYCOMMAND | (enabled)) ? MF_ENABLED : MF_DISABLED);
     }
 }
 
@@ -849,6 +1017,43 @@ void Plugin::RemovePluginMenuItem(int ID, bool byPosition)
                 RemoveMenu(hSubMenu, ID, MF_BYPOSITION);
         }
     }
+}
+
+void Plugin::RemoveUnusedMenuItems()
+{
+    // If we don't have ALL necessary files required for the plugin, we remove some functions here:
+    if (!PathFileExists(_pluginPaths["PluginAutoCompleteFilePath"].c_str()) ||
+        !PathFileExists(_pluginPaths["PluginFunctionListFile"].c_str()))
+    {
+        RemovePluginMenuItem(PLUGINMENU_IMPORTDEFINITIONS);
+        RemovePluginMenuItem(PLUGINMENU_IMPORTUSERTOKENS);
+        RemovePluginMenuItem(PLUGINMENU_RESETUSERTOKENS);
+        RemovePluginMenuItem(PLUGINMENU_RESETEDITORCOLORS);
+    }
+
+    // If notepad don't have overrideMap or functionList, remove the option to repair it
+    if (!PathFileExists(_pluginPaths["NotepadOverrideMapFile"].c_str()) ||
+        !PathFileExists(_pluginPaths["PluginFunctionListFile"].c_str()))
+        RemovePluginMenuItem(PLUGINMENU_REPAIRXMLASSOCIATION);
+
+    // If all files exist, remove the option to install them
+    if (PathFileExists(_pluginPaths["PluginAutoCompleteFilePath"].c_str()) &&
+        PathFileExists(_pluginPaths["PluginFunctionListFile"].c_str()) &&
+        PathFileExists(_pluginPaths["NotepadOverrideMapFile"].c_str()))
+    {
+        RemovePluginMenuItem(PLUGINMENU_DASH6, true);
+        RemovePluginMenuItem(PLUGINMENU_INSTALLCOMPLEMENTFILES);
+    }
+
+#ifndef DEBUG_AUTO_INDENT_833
+    if (!Instance()._needPluginAutoIndent)
+    {
+        // Remove the "Use Auto-Indent" menu command and the following separator.
+        RemovePluginMenuItem(PLUGINMENU_SWITCHAUTOINDENT);
+        // Since the dash does not have an ID, got to the previous position.
+        RemovePluginMenuItem(PLUGINMENU_DASH1 - 1, true);
+    }
+#endif
 }
 
 void Plugin::SetPluginMenuBitmap(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck)
@@ -887,6 +1092,7 @@ void Plugin::SetupPluginMenuItems()
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_IMPORTSETTINGS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPEATLASTRUN, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPAIR, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPORT, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_RESTART, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_SETTINGSGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
@@ -895,32 +1101,39 @@ void Plugin::SetupPluginMenuItems()
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILD, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILDREMOVE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
-
+    _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SOFTWARE, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
 
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
     bool bAutoComplete = false;
+    bool bOverrideMap = false;
+    bool bFunctionsList = false;
+
     PathWritePermission fLexerPerm = PathWritePermission::UndeterminedError;
     PathWritePermission fDarkThemePerm = PathWritePermission::UndeterminedError;
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
-
+    PathWritePermission fOverrideMap = PathWritePermission::UndeterminedError;
+    PathWritePermission fFunctionsList = PathWritePermission::UndeterminedError;
 
     SetPluginMenuBitmap(PLUGINMENU_COMPILESCRIPT, _menuBitmaps[2], true, false);
     SetPluginMenuBitmap(PLUGINMENU_DISASSEMBLESCRIPT, _menuBitmaps[5], true, false);
     SetPluginMenuBitmap(PLUGINMENU_BATCHPROCESSING, _menuBitmaps[1], true, false);
     SetPluginMenuBitmap(PLUGINMENU_RUNLASTBATCH, _menuBitmaps[9], true, false);
-    SetPluginMenuBitmap(PLUGINMENU_FETCHPREPROCESSORTEXT, _menuBitmaps[10], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_FETCHPREPROCESSORTEXT, _menuBitmaps[11], true, false);
     SetPluginMenuBitmap(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, _menuBitmaps[4], true, false);
     SetPluginMenuBitmap(PLUGINMENU_SHOWCONSOLE, _menuBitmaps[6], true, true);
-    SetPluginMenuBitmap(PLUGINMENU_SETTINGS, _menuBitmaps[12], true, false);
-    SetPluginMenuBitmap(PLUGINMENU_USERPREFERENCES, _menuBitmaps[13], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_SETTINGS, _menuBitmaps[13], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_USERPREFERENCES, _menuBitmaps[14], true, false);
     SetPluginMenuBitmap(PLUGINMENU_ABOUTME, _menuBitmaps[0], true, false);
 
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
+    SetPluginMenuBitmap(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[3], true, false);
     SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[7], true, false);
-    SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[15], true, false);
-    SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[16], true, false);
-    SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[11], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[16], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[17], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[12], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_REPAIRXMLASSOCIATION, _menuBitmaps[10], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_INSTALLCOMPLEMENTFILES, _menuBitmaps[19], true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -929,6 +1142,8 @@ void Plugin::SetupPluginMenuItems()
         bSuccessLexer = checkWritePermission(_pluginPaths["PluginLexerConfigFilePath"], fLexerPerm);
         bSuccessDark = checkWritePermission(_pluginPaths["NotepadDarkThemeFilePath"], fDarkThemePerm);
         bAutoComplete = checkWritePermission(_pluginPaths["PluginAutoCompleteFilePath"], fAutoCompletePerm);
+        bOverrideMap = checkWritePermission(_pluginPaths["NotepadOverrideMapFile"], fOverrideMap);
+        bFunctionsList = checkWritePermission(_pluginPaths["PluginFunctionListFile"], fFunctionsList);
 
         // If this file do not exist, we test the directory instead
         if (!bAutoComplete)
@@ -948,18 +1163,20 @@ void Plugin::SetupPluginMenuItems()
         // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
         {
-            SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[17], true, false);
-            SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[17], true, false);
-            SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[18], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[18], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[18], true, false);
         }
         // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
         if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
-            SetPluginMenuBitmap(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[18], true, false);
         // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
-            SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[18], true, false);
+        if (fOverrideMap == PathWritePermission::RequiresAdminPrivileges || fFunctionsList == PathWritePermission::RequiresAdminPrivileges)
+            SetPluginMenuBitmap(PLUGINMENU_REPAIRXMLASSOCIATION, _menuBitmaps[18], true, false);
     }
-   
+
 }
 
 void Plugin::LockPluginMenu(bool toLock)
@@ -980,7 +1197,7 @@ void Plugin::LockPluginMenu(bool toLock)
     EnablePluginMenuItem(PLUGINMENU_COMPILESCRIPT, !toLock);
     EnablePluginMenuItem(PLUGINMENU_DISASSEMBLESCRIPT, !toLock);
     EnablePluginMenuItem(PLUGINMENU_BATCHPROCESSING, !toLock);
-    
+
     EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, !toLock);
     EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, !toLock);
     EnablePluginMenuItem(PLUGINMENU_SHOWCONSOLE, !toLock);
@@ -1189,7 +1406,7 @@ void Plugin::DoImportDefinitions()
     errno_t error = localtime_s(&currTimeP, &currTime);
     strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
     std::string xmlHeaderComment = XMLDOCHEADER;
-    xmlHeaderComment.append(timestamp).append(".\n");
+    xmlHeaderComment.append(timestamp).append(".\r\n");
 
     // Since TinyXML only accepts ASCII filenames, we do a crude conversion here... hopefully we won't have any
     // intermediary directory using chinese characters here... :P
@@ -1212,7 +1429,7 @@ void Plugin::DoImportDefinitions()
     stripXMLInfo(nwscriptDoc.FirstChild());
 
     // Navigate to Keywords
-    tinyxml2::XMLElement *notepadPlus, *languages, *language, *Keywords, *lexerStyles;
+    tinyxml2::XMLElement* notepadPlus, * languages, * language, * Keywords, * lexerStyles;
     tinyxml2::XMLNode* lexerType;
     notepadPlus = nwscriptDoc.RootElement();
     if (notepadPlus)
@@ -1371,7 +1588,7 @@ void Plugin::DoImportUserTokens()
     errno_t error = localtime_s(&currTimeP, &currTime);
     strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
     std::string xmlHeaderComment = XMLDOCHEADER;
-    xmlHeaderComment.append(timestamp).append(".\n");
+    xmlHeaderComment.append(timestamp).append(".\r\n");
 
     // Since TinyXML only accepts ASCII filenames, we do a crude conversion here...
     std::string asciiFileStyler = wstr2str(_pluginPaths["PluginLexerConfigFilePath"]);
@@ -1529,8 +1746,11 @@ void Plugin::DoImportUserTokens()
     }
 }
 
-void Plugin::DoResetUserTokens()
+RestartMode Plugin::DoResetUserTokens(RestartFunctionHook whichPhase)
 {
+    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
+    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
+
     tinyxml2::XMLDocument nwscriptDoc;
 
     // Set some Timestamp headers
@@ -1539,7 +1759,7 @@ void Plugin::DoResetUserTokens()
     errno_t error = localtime_s(&currTimeP, &currTime);
     strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
     std::string xmlHeaderComment = XMLDOCHEADER;
-    xmlHeaderComment.append(timestamp).append(".\n");
+    xmlHeaderComment.append(timestamp).append(".\r\n");
 
     // Since TinyXML only accepts ASCII filenames, we do a crude conversion here...
     std::string asciiFileStyler = wstr2str(_pluginPaths["PluginLexerConfigFilePath"]);
@@ -1552,7 +1772,7 @@ void Plugin::DoResetUserTokens()
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
-        return;
+        return RestartMode::None;
     }
 
     // Navigate to Keywords
@@ -1587,7 +1807,7 @@ void Plugin::DoResetUserTokens()
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
-        return;
+        return RestartMode::None;
     }
 
     // We are only supporting our default lexer here
@@ -1598,7 +1818,7 @@ void Plugin::DoResetUserTokens()
         errorStream << TEXT("File might be corrupted!\r\n");
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
-        return;
+        return RestartMode::None;
     }
 
     // Call helper function to strip all comments from document, since we're merging the file, not recreating it.
@@ -1629,7 +1849,7 @@ void Plugin::DoResetUserTokens()
     _NWScriptParseResults->SerializeFromFile(_pluginPaths["NWScriptEngineObjectsFile"]);
 
     if (!MergeAutoComplete())
-        return;
+        return RestartMode::None;
 
     error = nwscriptDoc.SaveFile(asciiFileStyler.c_str());
     if (error)
@@ -1638,7 +1858,7 @@ void Plugin::DoResetUserTokens()
         errorStream << TEXT("Error ID: ") << nwscriptDoc.ErrorID();
         MessageBox(NotepadHwnd(), errorStream.str().c_str(), pluginName.c_str(), MB_OK | MB_ICONERROR);
         _NWScriptParseResults.reset();
-        return;
+        return RestartMode::None;
     }
 
     DeleteFile(_pluginPaths["NWScriptUserObjectsFile"].c_str());
@@ -1649,35 +1869,13 @@ void Plugin::DoResetUserTokens()
 
     // Close our results (for memory cleanup) and report back.
     _NWScriptParseResults.reset();
-    int mResult = MessageBox(NotepadHwnd(),
-        TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
-        TEXT("Import successful!"), MB_YESNO | MB_ICONINFORMATION);
-
-    if (mResult == IDYES)
-    {
-        // Setup our hook to auto-restart notepad++ normally and not run any other function on restart.
-        // Then send message for notepad to close itself.
-        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
-        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
-    }
-}
-
-void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
-{
-    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
-    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
-
-    if (!PatchDarkThemeXMLFile())
-        return;
-
-    if (!PatchDefaultThemeXMLFile())
-        return;
 
     // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
-    if (whichPhase == RestartFunctionHook::ResetEditorColorsPhase1)
+    if (whichPhase == RestartFunctionHook::ResetUserTokensPhase1)
     {
         SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
         Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        return RestartMode::Normal;
     }
     else
     {
@@ -1689,17 +1887,55 @@ void Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
         {
             SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
             Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
         }
     }
+
+    return RestartMode::None;
 }
 
-void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
+RestartMode Plugin::DoResetEditorColors(RestartFunctionHook whichPhase)
 {
     // For safeguard, reset all hooks, since we can be autocalling this and get another error.
     SetRestartHook(RestartMode::None, RestartFunctionHook::None);
 
     if (!PatchDarkThemeXMLFile())
-        return;
+        return RestartMode::None;
+
+    if (!PatchDefaultThemeXMLFile())
+        return RestartMode::None;
+
+    // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
+    if (whichPhase == RestartFunctionHook::ResetEditorColorsPhase1)
+    {
+        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        return RestartMode::Normal;
+    }
+    else
+    {
+        int mResult = MessageBox(NotepadHwnd(),
+            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
+            TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
+
+        if (mResult == IDYES)
+        {
+            SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
+        }
+    }
+
+    return RestartMode::None;
+}
+
+RestartMode Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
+{
+    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
+    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
+
+    if (!PatchDarkThemeXMLFile())
+        return RestartMode::None;
 
     // Clear install attempt marks, so next Notepad++ patch this will trigger a new auto-installation again (if set)...
     _settings.darkThemeInstallAttempt = false;
@@ -1709,6 +1945,7 @@ void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
     {
         SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
         Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        return RestartMode::Normal;
     }
     else
     {
@@ -1720,8 +1957,131 @@ void Plugin::DoInstallDarkTheme(RestartFunctionHook whichPhase)
         {
             SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
             Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
         }
     }
+
+    return RestartMode::None;
+}
+
+RestartMode Plugin::DoRepairOverrideMap(RestartFunctionHook whichPhase)
+{
+    // For safeguard, reset all hooks, since we can be autocalling this and get another error.
+    SetRestartHook(RestartMode::None, RestartFunctionHook::None);
+
+    if (!CheckAndPatchOverrideMapXMLFile())
+    {
+        MessageBox(NotepadHwnd(), (TEXT("Error patching \"") + str2wstr(_pluginPaths["NotepadOverrideMapFile"].string()) + TEXT("\"")).c_str(),
+            TEXT("Error patching file"), MB_ICONERROR | MB_OK);
+        return RestartMode::None;
+    }
+
+    // Reinstall functionList from resources
+
+    // Set some Timestamp headers
+    char timestamp[128]; time_t currTime;  struct tm currTimeP;
+    time(&currTime);
+    errno_t error = localtime_s(&currTimeP, &currTime);
+    strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
+    std::string xmlHeaderComment = XMLDOCHEADER;
+    xmlHeaderComment.append(timestamp).append(".\r\n");
+    xmlHeaderComment = "<!--" + xmlHeaderComment + "-->\r\n";
+
+    std::string xmlString = std::string(XMLMANIFEST) + xmlHeaderComment + XMLFUNCTIONLIST;
+    if (!bufferToFile(str2wstr(_pluginPaths["PluginFunctionListFile"].string()), xmlString))
+    {
+        MessageBox(NotepadHwnd(), (TEXT("Error writing file \"") + str2wstr(_pluginPaths["PluginFunctionListFile"].string()) + TEXT("\"")).c_str(),
+            TEXT("Error saving file"), MB_ICONERROR | MB_OK);
+        return RestartMode::None;
+    }
+
+    // Do restart. If it came from a callback, do it automatically. Else ask for it.
+    if (whichPhase == RestartFunctionHook::RepairOverrideMapPhase1)
+    {
+        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        return RestartMode::Normal;
+    }
+    else
+    {
+        int mResult = MessageBox(NotepadHwnd(),
+            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
+            TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
+
+        if (mResult == IDYES)
+        {
+            SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
+        }
+    }
+
+    return RestartMode::None;
+}
+
+RestartMode Plugin::DoInstallAdditionalFiles(RestartFunctionHook whichPhase)
+{
+    TCHAR fName[MAX_PATH];
+    Messenger().SendNppMessage(NPPM_GETPLUGINHOMEPATH, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
+
+    fName[MAX_PATH - 1] = { 0 };
+    generic_string PluginHome = fName;
+    PluginHome.append(TEXT("\\")).append(_pluginFileName).append(TEXT("\\"));
+
+    const int maxFiles = 4;
+    generic_string file[maxFiles] = {
+        PluginHome + _pluginFileName + TEXT(".xml"),
+        PluginHome + NotepadAutoCompleteRootDir + str2wstr(LexerCatalogue::GetLexerName(0, true)) + TEXT(".xml"),
+        PluginHome + NotepadFunctionListRootDir + OverrideMapFile,
+        PluginHome + NotepadFunctionListRootDir + str2wstr(LexerCatalogue::GetLexerName(0, true)) + TEXT(".xml")
+    };
+
+    bool pExists = true;
+    for (int i = 0; i < maxFiles; i++)
+        if (!PathFileExists(file[i].c_str()))
+            pExists = false;
+
+    if (!pExists)
+    {
+        generic_stringstream s;
+        s << "One or more files bellow are missing. Did you install all of the plugin's files properly? " << "\r\n";
+        for (int i = 0; i < maxFiles; i++)
+            s << file[1] << "\r\n";
+        MessageBox(NotepadHwnd(), s.str().c_str(), TEXT("Error while copying NWScript files"), MB_ICONERROR | MB_OK);
+        return RestartMode::None;
+    }
+
+    // Copy files
+    CopyFile(file[0].c_str(), str2wstr(_pluginPaths["PluginLexerConfigFilePath"].string().c_str()).c_str(), false);
+    CopyFile(file[1].c_str(), str2wstr(_pluginPaths["PluginAutoCompleteFilePath"].string().c_str()).c_str(), false);
+    CopyFile(file[2].c_str(), str2wstr(_pluginPaths["NotepadOverrideMapFile"].string().c_str()).c_str(), true); // Override map cannot be ovewritten
+    CopyFile(file[3].c_str(), str2wstr(_pluginPaths["PluginFunctionListFile"].string().c_str()).c_str(), false);
+
+    // To ensure overrideMap.xml patch integrity, we now force a patch.
+    CheckAndPatchOverrideMapXMLFile();
+
+    // Do restart. If it came from a previous restart callback, do it automatically. Else ask for it.
+    if (whichPhase == RestartFunctionHook::InstallAdditionalFilesPhase1)
+    {
+        SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+        Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+        return RestartMode::Normal;
+    }
+    else
+    {
+        int mResult = MessageBox(NotepadHwnd(),
+            TEXT("Notepad++ needs to be restarted for the new settings to be reflected. Do it now?"),
+            TEXT("Patch successful!"), MB_YESNO | MB_ICONINFORMATION);
+
+        if (mResult == IDYES)
+        {
+            SetRestartHook(RestartMode::Normal, RestartFunctionHook::None);
+            Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+            return RestartMode::Admin;
+        }
+    }
+
+    return RestartMode::None;
 }
 
 bool Plugin::PatchDefaultThemeXMLFile()
@@ -1785,11 +2145,11 @@ bool Plugin::PatchDefaultThemeXMLFile()
             if (first == second)
             {
                 bFound = true;
-                lexerWordsStyle->SetAttribute("fgColor",   patchTypeSeek->Attribute("fgColor"));
-                lexerWordsStyle->SetAttribute("bgColor",   patchTypeSeek->Attribute("bgColor"));
-                lexerWordsStyle->SetAttribute("fontName",  patchTypeSeek->Attribute("fontName"));
+                lexerWordsStyle->SetAttribute("fgColor", patchTypeSeek->Attribute("fgColor"));
+                lexerWordsStyle->SetAttribute("bgColor", patchTypeSeek->Attribute("bgColor"));
+                lexerWordsStyle->SetAttribute("fontName", patchTypeSeek->Attribute("fontName"));
                 lexerWordsStyle->SetAttribute("fontStyle", patchTypeSeek->Attribute("fontStyle"));
-                lexerWordsStyle->SetAttribute("fontSize",  patchTypeSeek->Attribute("fontSize"));
+                lexerWordsStyle->SetAttribute("fontSize", patchTypeSeek->Attribute("fontSize"));
             }
             patchTypeSeek = patchTypeSeek->NextSiblingElement("WordsStyle");
         }
@@ -1906,7 +2266,7 @@ bool Plugin::MergeAutoComplete()
     errno_t error = localtime_s(&currTimeP, &currTime);
     strftime(timestamp, 64, "Creation timestamp is: %B %d, %Y - %R", &currTimeP);
     std::string xmlHeaderComment = XMLDOCHEADER;
-    xmlHeaderComment.append(timestamp).append(".\n");
+    xmlHeaderComment.append(timestamp).append(".\r\n");
 
     std::string asciiFileAutoC = wstr2str(_pluginPaths["PluginAutoCompleteFilePath"]);
     tinyxml2::XMLDocument nwscriptAutoc;
@@ -1970,6 +2330,52 @@ bool Plugin::MergeAutoComplete()
     }
 
     return true;
+}
+
+bool Plugin::CheckAndPatchOverrideMapXMLFile()
+{
+    // Override map depends on "functionList\nwscript.xml" existing first, or else the patch will be useless...
+    if (!PathFileExists(str2wstr(_pluginPaths["PluginFunctionListFile"].string()).c_str()))
+        return false;
+
+    tinyxml2::XMLDocument overrideMapXML;
+
+    int PluginLangID = FindPluginLangID();
+    if (PluginLangID == 0)
+        return false;
+
+    std::string xmlAssociationID = LexerCatalogue::GetLexerName(0).c_str();
+    std::for_each(xmlAssociationID.begin(), xmlAssociationID.end(), [](char& c) {
+        c = ::tolower(c); });
+    xmlAssociationID.append(".xml");
+
+    if (overrideMapXML.LoadFile(wstr2str(_pluginPaths["NotepadOverrideMapFile"]).c_str()) != 0)
+        return false;
+
+    // File already patched
+    tinyxml2::XMLElement* associationType = searchElement(overrideMapXML.RootElement(), "association", "id", xmlAssociationID);
+    if (associationType)
+    {
+        if (associationType->Attribute("langID", std::to_string(PluginLangID).c_str()))
+            return true;
+
+        // Wrong langID association, patch...
+        associationType->SetAttribute("langID", std::to_string(PluginLangID).c_str());
+        return (overrideMapXML.SaveFile(wstr2str(_pluginPaths["NotepadOverrideMapFile"]).c_str()) == 0);
+    }
+
+    // Try to patch the file
+    tinyxml2::XMLElement* associationMap = searchElement(overrideMapXML.RootElement(), "associationMap");
+    if (!associationMap)
+        return false;
+
+    associationType = overrideMapXML.NewElement("association");
+    associationType->SetAttribute("id", xmlAssociationID.c_str());
+    associationType->SetAttribute("langID", std::to_string(PluginLangID).c_str());
+
+    associationMap->InsertEndChild(associationType);
+
+    return (overrideMapXML.SaveFile(wstr2str(_pluginPaths["NotepadOverrideMapFile"]).c_str()) == 0);
 }
 
 #pragma endregion XML Config Files Management
@@ -2046,7 +2452,7 @@ void Plugin::BatchProcessDialogCallback(HRESULT decision)
 
     // The rest processes when file filters are done in separate thread
 #ifdef USE_THREADS
-    std::thread tBuilder (&Plugin::BuildFilesList, &inst);
+    std::thread tBuilder(&Plugin::BuildFilesList, &inst);
     tBuilder.detach();
 #else
     inst.BuildFilesList();
@@ -2074,25 +2480,30 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
         _clockStart = GetTickCount64(); // Reset clock because user had opened configurations
     }
 
+    // If user canceled compiler settings...
     if (!Settings().compilerSettingsCreated)
+    {
+        if (batchOperations)
+            SendMessage(_processingFilesDialog->getHSelf(), WM_COMMAND, IDCANCEL, 0);
         return;
+    }
 
-    // If from scintilla, first, save the document, so we assure it got a valid filename and at least an output path.
+    // If from scintilla, first, save the document, so we assure it got a valid filename and at least an output sPath.
     // Then we get the script name, and then the file contents.
     if (fromCurrentScintilla)
     {
         // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
-        size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
-        _tempFileContents.resize(size + 1);
-        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&_tempFileContents[0]));
+        size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH) + 1;
+        _tempFileContents.resize(size);
+        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(_tempFileContents.data()));
 
         // And now, get the output filename
-        TCHAR nameBuffer[MAX_PATH] = {0};
+        TCHAR nameBuffer[MAX_PATH] = { 0 };
         Messenger().SendNppMessage<void>(NPPM_GETFULLCURRENTPATH, std::size(nameBuffer) - sizeof(TCHAR), reinterpret_cast<LPARAM>(nameBuffer));
         scriptPath = generic_string(nameBuffer);
     }
 
-    // Get output path
+    // Get output sPath
     if (!batchOperations)
     {
         if (Settings().useScriptPathToCompile)
@@ -2139,7 +2550,7 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
 #ifdef USE_THREADS
-    std::thread tProcessor (&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
+    std::thread tProcessor(&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
     tProcessor.detach();
 #else
     _compiler.processFile(fromCurrentScintilla, &_tempFileContents[0]);
@@ -2166,7 +2577,7 @@ void Plugin::BuildFilesList()
 }
 
 // Receives notifications when a "Compile" menu command ends
-void Plugin::CompileEndingCallback(HRESULT decision) 
+void Plugin::CompileEndingCallback(HRESULT decision)
 {
     NWScriptCompiler& compiler = Instance().Compiler();
 
@@ -2284,8 +2695,8 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
     {
         // Done processing, write messages to log, close processing dialog.
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
-        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Finished processing ") + 
-            to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.")});
+        WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Finished processing ") +
+            to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.") });
 
         inst._processingFilesDialog->display(false);
 
@@ -2380,7 +2791,7 @@ void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, cons
         // First search for filename inside the same folder as the script,
         // Then search all include paths on the compiler settings.
         // If still fails is because it's a script inside the Neverwinter
-        // path, so we don't open.
+        // sPath, so we don't open.
         generic_string tempPath = str2wstr(filePath.parent_path().string()) + TEXT("\\") + fileName;
         if (PathFileExists(tempPath.c_str()))
             finalPath = tempPath;
@@ -2649,7 +3060,7 @@ PLUGINCOMMAND Plugin::ViewScriptDependencies()
 PLUGINCOMMAND Plugin::CompilerSettings()
 {
     static CompilerSettingsDialog compilerSettings = {};
-    
+
     compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
     compilerSettings.appendSettings(&Instance()._settings);
     compilerSettings.doDialog();
@@ -2662,6 +3073,7 @@ PLUGINCOMMAND Plugin::UserPreferences()
 
     userPreferences.init(Instance().DllHModule(), Instance().NotepadHwnd());
     userPreferences.appendSettings(&Instance()._settings);
+    userPreferences.setDarkModeInstalled(Instance()._pluginDarkThemeIs == DarkThemeStatus::Installed);
     userPreferences.doDialog();
 }
 
@@ -2691,75 +3103,75 @@ All user's definitions outside reserved spaces will be preserved (read the "USAG
 
 You wish to Continue?)"
 
-    // Only warns the user once in a session.
-    static bool bWarnedUser = false;
+// Only warns the user once in a session.
+static bool bWarnedUser = false;
 
-    // Initialize our results dialog
-    static FileParseSummaryDialog parseDialog = {};
-    if (!parseDialog.isCreated())
-        parseDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
+// Initialize our results dialog
+static FileParseSummaryDialog parseDialog = {};
+if (!parseDialog.isCreated())
+parseDialog.init(Instance().DllHModule(), Instance().NotepadHwnd());
 
-    // Someone called this twice!
-    if (parseDialog.isVisible())
+// Someone called this twice!
+if (parseDialog.isVisible())
+return;
+
+// Do a file check for the necessary XML files
+std::vector<generic_string> sFiles;
+sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
+// The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
+if (PathFileExists(Instance()._pluginPaths["PluginAutoCompleteFilePath"].c_str()))
+sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+else
+sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+
+PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
+if (static_cast<int>(fResult) < 1)
+    return;
+
+// A last warning to the user
+if (!bWarnedUser)
+{
+    if (MessageBox(Instance().NotepadHwnd(), TEXT(WARNINGMESSAGE), TEXT("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDNO)
         return;
+}
+bWarnedUser = true;
 
-    // Do a file check for the necessary XML files
-    std::vector<generic_string> sFiles;
-    sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
-    // The auto complete file may or may not exist. If not exist, we check the directory permissions instead.
-    if (PathFileExists(Instance()._pluginPaths["PluginAutoCompleteFilePath"].c_str()))
-        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
-    else
-        sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+std::vector<generic_string> nFileName;
+if (openFileDialog(Instance().NotepadHwnd(), nFileName,
+    TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"),
+    properDirNameW(Instance().Settings().lastOpenedDir)))
+{
+    // Opens the NWScript file and parse it. Keep the results for later use
+    NWScriptParser nParser(Instance().NotepadHwnd());
 
-    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
-    if (static_cast<int>(fResult) < 1)
+    Instance()._NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
+    NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
+
+    bool bSuccess = nParser.ParseFile(nFileName[0], myResults);
+    if (!bSuccess)
+    {
+        MessageBox(Instance().NotepadHwnd(), (TEXT("Error while parsing file \"") +
+            nFileName[0] + TEXT("\".\r\n- File may be inaccessible.")).c_str(),
+            TEXT("Error parsing file"), MB_ICONERROR | MB_OK);
         return;
-
-    // A last warning to the user
-    if (!bWarnedUser)
-    {
-        if (MessageBox(Instance().NotepadHwnd(), TEXT(WARNINGMESSAGE), TEXT("Confirmation"), MB_YESNO | MB_ICONQUESTION) == IDNO)
-            return;
     }
-    bWarnedUser = true;
 
-    std::vector<generic_string> nFileName;
-    if (openFileDialog(Instance().NotepadHwnd(), nFileName,
-        TEXT("nwscritpt.nss\0nwscript.nss\0All Files (*.*)\0*.*"),
-        properDirNameW(Instance().Settings().lastOpenedDir )))
+    // Last check for results: File empty?
+    if (myResults.EngineStructuresCount == 0 && myResults.FunctionsCount == 0 && myResults.ConstantsCount == 0)
     {
-        // Opens the NWScript file and parse it. Keep the results for later use
-        NWScriptParser nParser(Instance().NotepadHwnd());
-        
-        Instance()._NWScriptParseResults = std::make_unique<NWScriptParser::ScriptParseResults>();
-        NWScriptParser::ScriptParseResults& myResults = *Instance()._NWScriptParseResults;
-
-        bool bSuccess = nParser.ParseFile(nFileName[0], myResults);
-        if (!bSuccess)
-        {
-            MessageBox(Instance().NotepadHwnd(), (TEXT("Error while parsing file \"") +
-                nFileName[0] + TEXT("\".\r\n- File may be inaccessible.")).c_str(),
-                TEXT("Error parsing file"), MB_ICONERROR | MB_OK);
-            return;
-        }
-
-        // Last check for results: File empty?
-        if (myResults.EngineStructuresCount == 0 && myResults.FunctionsCount == 0 && myResults.ConstantsCount == 0)
-        {
-            MessageBox(Instance().NotepadHwnd(), TEXT("File analysis didn't find anything to import!"), pluginName.c_str(),
-                MB_ICONEXCLAMATION | MB_OK);
-            return;
-        }
-
-        // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in ImportDefinitionsCallback.
-        parseDialog.setEngineStructuresCount(myResults.EngineStructuresCount);
-        parseDialog.setFunctionDefinitionsCount(myResults.FunctionsCount);
-        parseDialog.setConstantsCount(myResults.ConstantsCount);
-
-        parseDialog.setOkDialogCallback(&Plugin::ImportDefinitionsCallback);
-        parseDialog.doDialog();
+        MessageBox(Instance().NotepadHwnd(), TEXT("File analysis didn't find anything to import!"), pluginName.c_str(),
+            MB_ICONEXCLAMATION | MB_OK);
+        return;
     }
+
+    // Show File Parsing Results dialog message and since we don't want it to be modal, wait for callback in ImportDefinitionsCallback.
+    parseDialog.setEngineStructuresCount(myResults.EngineStructuresCount);
+    parseDialog.setFunctionDefinitionsCount(myResults.FunctionsCount);
+    parseDialog.setConstantsCount(myResults.ConstantsCount);
+
+    parseDialog.setOkDialogCallback(&Plugin::ImportDefinitionsCallback);
+    parseDialog.doDialog();
+}
 }
 
 // Menu Command "Import user-defined tokens" function handler. 
@@ -2790,7 +3202,7 @@ PLUGINCOMMAND Plugin::ImportUserTokens()
 
     std::vector<generic_string> nFileNames;
     if (openFileDialog(Instance().NotepadHwnd(), nFileNames,
-        TEXT("NWScript Files (*.nss)\0*.nss\0All Files (*.*)\0*.*"), 
+        TEXT("NWScript Files (*.nss)\0*.nss\0All Files (*.*)\0*.*"),
         properDirNameW(Instance().Settings().lastOpenedDir), true))
     {
         // Opens the NWScript file and parse it. Keep the results for later use
@@ -2828,6 +3240,10 @@ PLUGINCOMMAND Plugin::ImportUserTokens()
 // Menu Command "Reset user-defined tokens" function handler. 
 PLUGINCOMMAND Plugin::ResetUserTokens()
 {
+    if (MessageBox(Instance().NotepadHwnd(), TEXT("Warning: this action cannot be undone. Continue?"), TEXT("NWScript Tools - Confirmation required"),
+        MB_YESNO | MB_ICONQUESTION) == IDNO)
+        return;
+
     // Do a file check for the necessary XML files
     std::vector<generic_string> sFiles;
     sFiles.push_back(Instance()._pluginPaths["PluginLexerConfigFilePath"]);
@@ -2837,15 +3253,11 @@ PLUGINCOMMAND Plugin::ResetUserTokens()
     else
         sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
 
-    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::None);
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::ResetUserTokensPhase1);
     if (static_cast<int>(fResult) < 1)
         return;
 
-    if (MessageBox(Instance().NotepadHwnd(), TEXT("Warning: this action cannot be undone. Continue?"), TEXT("NWScript Tools - Confirmation required"),
-        MB_YESNO | MB_ICONQUESTION) == IDYES)
-    {
         Instance().DoResetUserTokens();
-    }
 }
 
 // Fixes the language colors to default
@@ -2863,35 +3275,113 @@ PLUGINCOMMAND Plugin::ResetEditorColors()
     Instance().DoResetEditorColors();
 }
 
+// Repairs the functionList xml and OverrideMap associations
+PLUGINCOMMAND Plugin::RepairFunctionList()
+{
+    // Do a file check for the necessary XML files
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginPaths["NotepadOverrideMapFile"]);
+    sFiles.push_back(Instance()._pluginPaths["PluginFunctionListFile"]);
+
+    PathCheckResults fResult = Instance().WritePermissionCheckup(sFiles, RestartFunctionHook::RepairOverrideMapPhase1);
+    if (static_cast<int>(fResult) < 1)
+        return;
+
+    Instance().DoRepairOverrideMap();
+}
+
+//-------------------------------------------------------------
+
+PLUGINCOMMAND Plugin::InstallAdditionalFiles()
+{
+    // Pick files to get permissions
+    std::vector<generic_string> sFiles;
+    sFiles.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"]);
+    sFiles.push_back(Instance()._pluginPaths["PluginFunctionListFile"]);
+    sFiles.push_back(Instance()._pluginPaths["NotepadOverrideMapFile"]);
+
+    std::vector<generic_string> sDirs;
+    sDirs.push_back(Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path());
+    sDirs.push_back(Instance()._pluginPaths["PluginFunctionListFile"].parent_path());
+
+    bool Permissioned = true;
+    for (const generic_string& f : sDirs)
+    {
+        PathWritePermission p;
+        if (!checkWritePermission(f, p))
+        {
+            MessageBox(Instance().NotepadHwnd(), (TEXT("Directory inaccessible or inexistent: ") + f).c_str(),
+                TEXT("NWScript Error"), MB_ICONERROR | MB_OK);
+            return;
+        }
+
+        if (p != PathWritePermission::WriteAllowed)
+            Permissioned = false;
+    }
+
+    if (Permissioned || IsUserAnAdmin())
+    {
+        RestartFunctionHook whichMode = Instance()._OneTimeOffer ? RestartFunctionHook::InstallAdditionalFilesPhase1 : RestartFunctionHook::None;
+        Instance().DoInstallAdditionalFiles(whichMode);
+        Instance()._OneTimeOfferAccepted = true; // Must set this flag here to avoid losing restart hooks
+        return;
+    }
+
+    // Show File Access dialog box in Admin Mode
+    PathAccessDialog ePermission = {};
+    ePermission.init(Instance().DllHModule(), Instance().NotepadHwnd());
+    ePermission.SetAdminMode(true);
+    ePermission.SetPathsText(sFiles);
+    // Morph dialog to ask the user to copy files.
+    ePermission.SetMorphToCopyMode();
+
+    INT_PTR RunAdmin = ePermission.doDialog();
+    if (RunAdmin == IDOK)
+    {
+        // Set our hook flag 2 to re-run Notepad++ in admin mode and call iFunctionToCallIfRestart upon restart
+        // Then tells notepad++ to quit.
+        Instance().SetRestartHook(RestartMode::Admin, RestartFunctionHook::InstallAdditionalFilesPhase1);
+        Instance().Messenger().SendNppMessage(WM_CLOSE, 0, 0);
+    }
+
+    // In case this option was called from One Time Offer
+    Instance()._OneTimeOfferAccepted = (RunAdmin == IDOK);
+}
+
 //-------------------------------------------------------------
 
 // Opens About Box
 PLUGINCOMMAND Plugin::AboutMe()
 {
     ::SendMessage(Instance()._loggerWindow->getHSelf(), WM_SIZE, 0, 0);
-     
+
     std::vector<generic_string> darkModeLabels = { TEXT("Uninstalled"), TEXT("Installed"), TEXT("Unsupported") };
 
     // Initialize some user information 
     std::map<generic_string, generic_string> replaceStrings;
     replaceStrings.insert({ TEXT("%PLUGINXMLFILE%"), Instance()._pluginPaths["PluginLexerConfigFilePath"] });
     replaceStrings.insert({ TEXT("%AUTOCOMPLETEFILE%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"] });
-    replaceStrings.insert({ TEXT("%AUTOCOMPLETEDIR%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path()});
+    replaceStrings.insert({ TEXT("%AUTOCOMPLETEDIR%"), Instance()._pluginPaths["PluginAutoCompleteFilePath"].parent_path() });
 
     DWORD bIsAutoIndentOn = Instance().Messenger().SendNppMessage<DWORD>(NPPM_ISAUTOINDENTON);
 
     // Diagnostic data.
     if (Instance()._needPluginAutoIndent)
-        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), TEXT("Use the built-in auto-indentation.") });
+    {
+        generic_string autoindent = TEXT("Use the plugin's auto-indentation. Currently set to [\\b ");
+        autoindent.append(Instance().Settings().enableAutoIndentation ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
+    }
     else
     {
-        generic_string autoindent = TEXT("Automatic. Currently set to [\\b "); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
+        generic_string autoindent = TEXT("Automatic. Currently set to [\\b ");
+        autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
         replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
     }
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });
 
     // Add user statistics
-    replaceStrings.insert({ TEXT("%COMPILEATTEMPTS%"), thousandSeparatorW(Instance().Settings().compileAttempts)});
+    replaceStrings.insert({ TEXT("%COMPILEATTEMPTS%"), thousandSeparatorW(Instance().Settings().compileAttempts) });
     replaceStrings.insert({ TEXT("%COMPILESUCCESSES%"), thousandSeparatorW(Instance().Settings().compileSuccesses) });
     replaceStrings.insert({ TEXT("%COMPILESFAILED%"), thousandSeparatorW(Instance().Settings().compileFails) });
     replaceStrings.insert({ TEXT("%DISASSEMBLEDFILES%"), thousandSeparatorW(Instance().Settings().disassembledFiles) });
