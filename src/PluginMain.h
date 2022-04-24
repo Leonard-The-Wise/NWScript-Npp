@@ -206,7 +206,7 @@ namespace NWScriptPlugin {
 		// Enable/disable menu item
 		void EnablePluginMenuItem(int ID, bool enabled);
 		// Set plugin menu icon
-		void SetPluginMenuIcon(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck);
+		void SetPluginMenuBitmap(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 		// Lock/Unlock all of the plugin's options

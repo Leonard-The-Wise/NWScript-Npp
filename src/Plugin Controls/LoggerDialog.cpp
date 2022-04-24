@@ -272,6 +272,50 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		}
+
+		case WM_NOTIFY:
+		{
+			if (wParam == IDC_LSTERRORS)
+			{
+				LPNMITEMACTIVATE lpnmia = (LPNMITEMACTIVATE)lParam;
+				NMHDR hdr = lpnmia->hdr;
+#pragma warning (push)
+#pragma warning (disable : 26454)
+				if (hdr.code == NM_CLICK)
+#pragma warning (pop)
+				{
+					// Invalid item or list is "locked" for user input at the time.
+					if (lpnmia->iItem < 0 || !_processInputForErrorList)
+						return FALSE;
+
+					HWND lstErrors = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
+
+					// Gather the item ID stored previously
+					int messageItem = -1;
+					LVITEM itemInfo;
+					itemInfo.mask = LVIF_PARAM;
+					itemInfo.iItem = lpnmia->iItem;
+					ListView_GetItem(lstErrors, &itemInfo);
+					messageItem = static_cast<int>(itemInfo.lParam);
+
+					CompilerMessage& r = _errorsList[messageItem];
+
+					// Dispatch to Plugin for processing.
+					generic_string fileName = r.fileName.empty() ? TEXT("") : r.fileName + TEXT(".") + r.fileExt;
+					int lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
+
+					// Only dispatch messages with valid line numbers
+					if (navigateToFileCallback && lineNumber > -1)
+					{
+						// HACK: To correct the file navigation issue, we store the current lineNumber being passed
+						// to navigateToFileCallback, so the timer on it can refer back to it.
+						_currentLine = lineNumber;
+						navigateToFileCallback(fileName, lineNumber, r.messageText, r.filePath);
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	return FALSE;

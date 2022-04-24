@@ -345,10 +345,11 @@ void Plugin::CheckupEngineObjectsFile()
     {
         // Rant message to the user if we already installed the file and then it's gone.
         if (Settings().installedEngineKnownObjects)
-            MessageBox(NotepadHwnd(), (TEXT("Could not find file ") + str2wstr(_pluginPaths["NWScriptEngineObjectsFile"].string()) + TEXT(".\r\n")
-                + TEXT("This file is necessary for the plugin to know which NWScript objects are already imported, please DO NOT delete it or you may lose some of your imported languages keywords.\r\n")
-                + TEXT("The file is going to be rebuilt from scratch now with the default predefinitions.")).c_str(),
-                TEXT("NWScript Tools - Warning"), MB_OK | MB_ICONERROR);
+            MessageBox(NotepadHwnd(), (TEXT("Could not find file:\r\n\r\n") + str2wstr(_pluginPaths["NWScriptEngineObjectsFile"].string()) + TEXT(".\r\n\r\n")
+                + TEXT("This file is necessary for the NWScript Tools Plugin to know which objects are already imported.\r\n\r\n")
+                + TEXT("Please DO NOT delete it or you may lose some of your imported languages keywords.\r\n\r\n")
+                + TEXT("The file is going to be rebuilt with the default predefinitions now.")).c_str(),
+                TEXT("NWScript Tools - Warning"), MB_OK | MB_ICONEXCLAMATION);
 
         // Load file from resources
         auto hResource = FindResourceW(DllHModule(), MAKEINTRESOURCE(IDR_KNOWNOBJECTS), L"BIN");
@@ -850,7 +851,7 @@ void Plugin::RemovePluginMenuItem(int ID, bool byPosition)
     }
 }
 
-void Plugin::SetPluginMenuIcon(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck)
+void Plugin::SetPluginMenuBitmap(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck)
 {
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
@@ -868,7 +869,7 @@ void Plugin::SetPluginMenuIcon(int commandID, HBITMAP bitmap, bool bSetToUncheck
 
 void Plugin::SetupPluginMenuItems()
 {
-    // Cleanup
+    // Cleanup if reloading
     if (_menuBitmaps.size() > 0)
     {
         for (HBITMAP& i : _menuBitmaps)
@@ -904,22 +905,22 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
 
-    SetPluginMenuIcon(PLUGINMENU_COMPILESCRIPT, _menuBitmaps[2], true, false);
-    SetPluginMenuIcon(PLUGINMENU_DISASSEMBLESCRIPT, _menuBitmaps[5], true, false);
-    SetPluginMenuIcon(PLUGINMENU_BATCHPROCESSING, _menuBitmaps[1], true, false);
-    SetPluginMenuIcon(PLUGINMENU_RUNLASTBATCH, _menuBitmaps[9], true, false);
-    SetPluginMenuIcon(PLUGINMENU_FETCHPREPROCESSORTEXT, _menuBitmaps[10], true, false);
-    SetPluginMenuIcon(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, _menuBitmaps[4], true, false);
-    SetPluginMenuIcon(PLUGINMENU_SHOWCONSOLE, _menuBitmaps[6], true, true);
-    SetPluginMenuIcon(PLUGINMENU_SETTINGS, _menuBitmaps[12], true, false);
-    SetPluginMenuIcon(PLUGINMENU_USERPREFERENCES, _menuBitmaps[13], true, false);
-    SetPluginMenuIcon(PLUGINMENU_ABOUTME, _menuBitmaps[0], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_COMPILESCRIPT, _menuBitmaps[2], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_DISASSEMBLESCRIPT, _menuBitmaps[5], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_BATCHPROCESSING, _menuBitmaps[1], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_RUNLASTBATCH, _menuBitmaps[9], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_FETCHPREPROCESSORTEXT, _menuBitmaps[10], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, _menuBitmaps[4], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_SHOWCONSOLE, _menuBitmaps[6], true, true);
+    SetPluginMenuBitmap(PLUGINMENU_SETTINGS, _menuBitmaps[12], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_USERPREFERENCES, _menuBitmaps[13], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_ABOUTME, _menuBitmaps[0], true, false);
 
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
-    SetPluginMenuIcon(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[7], true, false);
-    SetPluginMenuIcon(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[15], true, false);
-    SetPluginMenuIcon(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[16], true, false);
-    SetPluginMenuIcon(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[11], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[7], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[15], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[16], true, false);
+    SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[11], true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -947,16 +948,16 @@ void Plugin::SetupPluginMenuItems()
         // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
         {
-            SetPluginMenuIcon(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[17], true, false);
-            SetPluginMenuIcon(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[17], true, false);
-            SetPluginMenuIcon(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[17], true, false);
         }
         // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
         if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
-            SetPluginMenuIcon(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[17], true, false);
         // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
-            SetPluginMenuIcon(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[17], true, false);
+            SetPluginMenuBitmap(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[17], true, false);
     }
    
 }
