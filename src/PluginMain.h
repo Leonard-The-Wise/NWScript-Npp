@@ -192,8 +192,8 @@ namespace NWScriptPlugin {
 		void DisplayCompilerLogWindow(bool toShow = true);
 		// Checkup Engine Known objects file
 		void CheckupEngineObjectsFile();
-		// Sets dark mode usage (for legacy Notepad++ 8.3.3 and bellow)
-		static void SetDarkModeLegacy(bool UseDark);
+		// Checks dark mode usage (for legacy Notepad++ 8.3.3 and bellow)
+		void CheckDarkModeLegacy();
 		// Detects Dark Mode usage (for Notepad++ 8.3.4 and above)
 		void RefreshDarkMode(bool ForceUseDark = false, bool UseDark = false);
 

@@ -382,11 +382,6 @@ void LoggerDialog::SetupListView()
 
 	// Setup header images
 	HWND hHeader = ListView_GetHeader(listErrorsHWND);
-
-	LONG_PTR HeaderStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
-	HeaderStyle |= HDS_OVERFLOW;
-	SetWindowLongPtr(hHeader, GWL_STYLE, HeaderStyle);
-
 	Header_SetImageList(hHeader, _iconList16x16);
 
 	HDITEM hdi;
@@ -749,40 +744,6 @@ void LoggerDialog::RecreateTxtConsole()
 	//SendMessage(editControl, EM_SETTEXTEX, (WPARAM)&stex, (LPARAM)sTextBuffer.c_str());
 }
 
-void LoggerDialog::RecreateListErrors()
-{
-	RECT lstRect;
-	generic_string sTextBuffer;
-	HWND lstControl = GetDlgItem(_errorDlgHwnd, IDC_LSTERRORS);
-
-	// Get previous windows measures
-	GetWindowRect(lstControl, &lstRect);
-	_dpiManager.screenToClientEx(_errorDlgHwnd, &lstRect);
-
-	// Destroy current Control (and remove from anchor map)
-	ANCHOR_MAP_REMOVE(lstControl);
-	DestroyWindow(lstControl);
-
-	DWORD defaultStyles = WS_CHILD | LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP;
-
-	// Using HMENU trick to preserve control ID.
-	// https://social.msdn.microsoft.com/Forums/vstudio/en-US/aa81f991-85c9-431a-8804-2a580aa6a293/assigning-a-control-id-to-a-win32-button?forum=vcgeneral
-	SetLastError(0);
-	lstControl = CreateWindowEx(0, WC_LISTVIEW, 0, defaultStyles, lstRect.left, lstRect.top,
-		lstRect.right - lstRect.left, lstRect.bottom - lstRect.top, _errorDlgHwnd, (HMENU)IDC_LSTERRORS, _hInst, 0);
-	DWORD test = GetLastError();
-
-	// Redo visibility and anchor map
-	ShowWindow(lstControl, SW_NORMAL);
-	ANCHOR_MAP_DYNAMICCONTROL(lstControl, ANF_ALL);
-
-	SetupListView();
-	RebuildErrorsList();
-
-	InvalidateRect(lstControl, NULL, true);
-	UpdateWindow(lstControl);
-}
-
 void LoggerDialog::RecreateIcons()
 {
 	// Cleanup first
@@ -884,9 +845,11 @@ void LoggerDialog::CreateTooltips()
 
 void LoggerDialog::refreshDarkMode()
 {
+	if (!isCreated())
+		return;
+
 	RecreateIcons();
 	RecreateTxtConsole();
-	//RecreateListErrors();
 
 	PluginDarkMode::autoSetupWindowAndChildren(_hSelf);
 	PluginDarkMode::autoSetupWindowAndChildren(_consoleDlgHwnd);

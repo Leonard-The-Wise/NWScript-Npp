@@ -31,26 +31,6 @@ intptr_t CALLBACK UsersPreferencesDialog::run_dlgProc(UINT message, WPARAM wPara
 			CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDISASSEMBLED, _settings->autoDisplayDisassembled ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDEBUGSYMBOLS, _settings->autoDisplayDebugSymbols ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME, _settings->autoInstallDarkTheme ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton(_hSelf, IDC_CHKUSEDARKMODE, _settings->legacyDarkModeUse ? BST_CHECKED : BST_UNCHECKED);
-
-			if (!_UseDarkModeEnabledLegacy)
-			{
-				// Recreate control as 3-state.
-				RECT rc;
-				GetWindowRect(GetDlgItem(_hSelf, IDC_CHKUSEDARKMODE), &rc);
-				_dpiManager.screenToClientEx(_hSelf, &rc);
-				DestroyWindow(GetDlgItem(_hSelf, IDC_CHKUSEDARKMODE));
-
-				HWND newControl = CreateWindow(WC_BUTTON, TEXT(" Use Dark Mode interface (legacy option for Notepad++ 8.3.3 and bellow only)"), 
-					WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTO3STATE,
-					rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, _hSelf, (HMENU)IDC_CHKUSEDARKMODE, _hInst, 0);
-
-				HFONT hFont = GetWindowFont(_hSelf);
-				SetWindowFont(newControl, hFont, false);
-
-				CheckDlgButton(_hSelf, IDC_CHKUSEDARKMODE, BST_INDETERMINATE);
-				EnableWindow(newControl, false);
-			}
 
 			_dpiManager.resizeControl(_hSelf);
 			_dpiManager.resizeChildren(_hSelf, true);
@@ -67,11 +47,7 @@ intptr_t CALLBACK UsersPreferencesDialog::run_dlgProc(UINT message, WPARAM wPara
 			case IDCANCEL:
 			case IDOK:
 				if (wParam == IDOK)
-				{
 					keepSettings();
-					if (_UseDarkModeEnabledLegacy)
-						_UseDarkModeLegacy(_settings->legacyDarkModeUse);
-				}
 				display(false);
 				destroy();
 				return TRUE;
@@ -100,8 +76,5 @@ void UsersPreferencesDialog::keepSettings()
 	_settings->autoDisplayDisassembled = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOOPENDISASSEMBLED);
 	_settings->autoDisplayDebugSymbols = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOOPENDEBUGSYMBOLS);
 	_settings->autoInstallDarkTheme = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME);
-
-	if (_UseDarkModeEnabledLegacy)
-		_settings->legacyDarkModeUse = IsDlgButtonChecked(_hSelf, IDC_CHKUSEDARKMODE);
 }
 

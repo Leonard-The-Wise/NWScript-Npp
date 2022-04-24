@@ -1722,7 +1722,7 @@ namespace PluginDarkMode
 			hti.pt = cursorPos;
 			SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
 			int hotItem = hti.iItem;
-			vItemFocused = (hotItem == itemID);
+			vItemFocused = (hotItem == itemID) && ((hti.flags & HHT_ONHEADER) > 0);
 			vItemPressed = (vItemFocused && (GetKeyState(VK_LBUTTON) & 0x8000) != 0);
 
 			if (vItemPressed)
@@ -1732,8 +1732,6 @@ namespace PluginDarkMode
 			}
 			else if (vItemFocused)
 				FillRect(hdc, &txtRC, getSoftlightBackgroundBrush());
-			else
-				iTextStateID = HIS_HOT;
 		}
 
 		// Draw Sort arrow
@@ -1774,7 +1772,6 @@ namespace PluginDarkMode
 				ImageList_GetIconSize(imageList, &ix, &iy);
 				szBitmap = { ix, iy };
 				bitmapValid = true;
-				dxTextGap = 10; // To mimic the behavior of the normal listview
 			}
 
 			BITMAP bp = {};
@@ -1787,7 +1784,10 @@ namespace PluginDarkMode
 
 			// Create gap between text and image
 			if (bitmapValid)
+			{
 				dxGap = 5;
+				dxTextGap = Header_GetBitmapMargin(hHeader);
+			}
 
 			// if contains also text, align image relative to text
 			if (buffer[0] != 0)
@@ -1970,6 +1970,11 @@ namespace PluginDarkMode
 		hti.pt = cursorPos;
 		SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
 
+		// Currently, dark mode overflow style is somewhat buggy, don't see a way to properly fix.
+		// So we only draw the overflow if the user hits the box.
+		if ((hti.flags & HHT_ONOVERFLOW) == 0)
+			return S_OK;
+
 		SelectClipRgn(hdc, NULL);
 
 		DRAWTEXTPARAMS dt = {};
@@ -2043,7 +2048,7 @@ namespace PluginDarkMode
 		if ((PtInRect(&dropRc, cursorPos) && headerItem.lastDropDownTrackWasHot == false)
 			|| (!PtInRect(&dropRc, cursorPos) && headerItem.lastDropDownTrackWasHot))
 		{
-			// Redraw the only this item
+			// Redraw only this item
 			HDC hdc = GetDC(hHeader);
 			HFONT hFont = reinterpret_cast<HFONT>(SendMessage(hHeader, WM_GETFONT, 0, 0)); // must set the DC font first
 			HFONT hOldFont = SelectFont(hdc, hFont);
@@ -2150,59 +2155,6 @@ namespace PluginDarkMode
 	{
 		switch (uMsg)
 		{
-#ifdef USE_HEADER_CUSTOMDRAW
-		// This actually gets notifications from Listview Header, since ListView is the parent of the header
-		case WM_NOTIFY:
-		{
-			LPNMHDR nmhdr = reinterpret_cast<LPNMHDR>(lParam);
-			if (nmhdr->code == NM_CUSTOMDRAW)
-			{
-				LPNMCUSTOMDRAW lpcd = reinterpret_cast<LPNMCUSTOMDRAW>(lParam);
-				switch (lpcd->dwDrawStage)
-				{
-				case CDDS_PREPAINT:
-				{
-					if (!PluginDarkMode::isEnabled())
-						return CDRF_DODEFAULT;
-
-					// Calculates the undrawn border outside columns
-					HWND hHeader = lpcd->hdr.hwndFrom;
-					int count = static_cast<int>(Header_GetItemCount(hHeader));
-					int colsWidth = 0;
-					RECT wRc = {};
-					for (int i = 0; i < count; i++)
-					{
-						Header_GetItemRect(hHeader, i, &wRc);
-						colsWidth += wRc.right - wRc.left;
-					}
-
-					RECT clientRect;
-					GetClientRect(hHeader, &clientRect);
-					FillRect(lpcd->hdc, &lpcd->rc, getBackgroundBrush());
-					if (clientRect.right > (colsWidth))
-					{
-						clientRect.left = colsWidth;
-						ExcludeClipRect(lpcd->hdc, clientRect.left, clientRect.top, clientRect.right, clientRect.bottom);
-					}
-					return CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYPOSTERASE | CDRF_NOTIFYITEMDRAW;
-				}
-
-				case CDDS_ITEMPREPAINT:
-				{
-					return DrawHeaderItem(lpcd->hdr.hwndFrom, lpcd->hdc, lpcd->rc, lpcd->dwItemSpec);
-				}
-				case CDDS_POSTERASE:
-				case CDDS_ITEMPOSTERASE:
-				{
-					FillRect(lpcd->hdc, &lpcd->rc, getDarkerBackgroundBrush());
-
-					return CDRF_DODEFAULT;
-				}
-				}
-			}
-			break;
-		}
-#endif
 		case WM_THEMECHANGED:
 		{
 			HWND hHeader = ListView_GetHeader(hWnd);

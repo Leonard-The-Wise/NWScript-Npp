@@ -133,6 +133,8 @@ const generic_string NotepadPseudoBatchRestartFile = TEXT("~doNWScriptNotepadRes
 const generic_string NWScriptEngineObjectsFile = TEXT("NWScript-Npp-EngineObjects.bin");
 // NWScript known user objects file
 const generic_string NWScriptUserObjectsFile = TEXT("NWScript-Npp-UserObjects.bin");
+// Notepad config file
+const generic_string NotepadConfigFile = TEXT("config.xml");
 
 // Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
 // this will ever change, so we made them constants here.
@@ -238,9 +240,14 @@ void Plugin::SetNotepadData(NppData& data)
     ZeroMemory(fName, sizeof(fName));
     Messenger().SendNppMessage(NPPM_GETPLUGINSCONFIGDIR, static_cast<WPARAM>(MAX_PATH), reinterpret_cast<LPARAM>(fName));
     generic_string sPluginConfigPath = fName;
-    _pluginPaths.insert({ "AppDataDir", fs::path(sPluginConfigPath) });
+    _pluginPaths.insert({ "NotepadDataDir", fs::path(sPluginConfigPath).parent_path().parent_path() });
 
+    sPluginConfigPath = str2wstr(fs::path(sPluginConfigPath).parent_path().parent_path().string().c_str());
+    sPluginConfigPath.append(TEXT("\\"));
+    sPluginConfigPath.append(NotepadConfigFile);
+    _pluginPaths.insert({ "NotepadConfigFile", fs::path(sPluginConfigPath) });
 
+    sPluginConfigPath = fName;
     sPluginConfigPath.append(TEXT("\\"));
     sPluginConfigPath.append(_pluginFileName);
     sPluginConfigPath.append(TEXT(".ini"));
@@ -262,7 +269,6 @@ void Plugin::SetNotepadData(NppData& data)
     path.append(NWScriptUserObjectsFile);
     _pluginPaths.insert({ "NWScriptUserObjectsFile", fs::path(path) });
 
-
     // Create settings instance and load all values
     _settings.InitSettings(sPluginConfigPath);
     Settings().Load();
@@ -279,7 +285,7 @@ void Plugin::SetNotepadData(NppData& data)
         Settings().notepadVersion = currentNotepad;
     }
 
-    if (Settings().notepadVersion >= "8.3.4") 
+    if (currentNotepad >= "8.3.4")
         _NppSupportDarkModeMessages = true;
 
     // Adjust menu "Use Auto-Indentation" checked or not before creation
@@ -293,6 +299,8 @@ void Plugin::SetNotepadData(NppData& data)
 
     // Check engine objects file
     CheckupEngineObjectsFile();
+
+        
 }
 
 // Initializes the compiler log window
@@ -414,10 +422,42 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     _aboutDialog->refreshDarkMode();
 }
 
-// Set Dark Mode for Legacy Notepad++ versions
-void Plugin::SetDarkModeLegacy(bool UseDark)
+// Check Dark Mode for Legacy Notepad++ versions
+void Plugin::CheckDarkModeLegacy()
 {
-    Instance().RefreshDarkMode(true, UseDark);
+    tinyxml2::XMLDocument nppConfig;
+
+    fs::path notepadPath = _pluginPaths["NotepadConfigFile"];
+    int success = nppConfig.LoadFile(notepadPath.string().c_str());
+    if (success != 0)
+        return;
+
+    tinyxml2::XMLElement* GUIConfig = searchElement(nppConfig.RootElement(), "GUIConfig", "name", "DarkMode");
+    if (!GUIConfig)
+        return;
+
+    if (strcmp(GUIConfig->FindAttribute("enable")->Value(), "yes") == 0)
+    {
+        PluginDarkMode::Colors colors;
+        colors.background = stoi(GUIConfig->FindAttribute("customColorTop")->Value());
+        colors.darkerText = stoi(GUIConfig->FindAttribute("customColorDarkText")->Value());
+        colors.disabledText = stoi(GUIConfig->FindAttribute("customColorDisabledText")->Value());
+        colors.edge = stoi(GUIConfig->FindAttribute("customColorEdge")->Value());
+        colors.errorBackground = stoi(GUIConfig->FindAttribute("customColorError")->Value());
+        colors.hotBackground = stoi(GUIConfig->FindAttribute("customColorMenuHotTrack")->Value());
+        colors.linkText = stoi(GUIConfig->FindAttribute("customColorLinkText")->Value());
+        colors.pureBackground = stoi(GUIConfig->FindAttribute("customColorMain")->Value());
+        colors.softerBackground = stoi(GUIConfig->FindAttribute("customColorActive")->Value());
+        colors.text = stoi(GUIConfig->FindAttribute("customColorText")->Value());
+
+        PluginDarkMode::ColorTone C = static_cast<PluginDarkMode::ColorTone>(stoi(GUIConfig->FindAttribute("colorTone")->Value()));
+
+        Instance().RefreshDarkMode(true, true);
+        PluginDarkMode::changeCustomTheme(colors);
+        PluginDarkMode::setDarkTone(C);
+    }
+    else
+        Instance().RefreshDarkMode(true, false);    
 }
 
 #pragma endregion Plugin DLL Initialization
@@ -447,10 +487,8 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             // Detects Dark mode if supported
             if (_NppSupportDarkModeMessages)
                 RefreshDarkMode();
-
-            // Force dark mode for legacy Notepad++, settings dependant
-            if (!_NppSupportDarkModeMessages && Settings().legacyDarkModeUse)
-                RefreshDarkMode(true, true);
+            else
+                CheckDarkModeLegacy();
 
             _isReady = true;
 
@@ -2623,8 +2661,6 @@ PLUGINCOMMAND Plugin::UserPreferences()
 
     userPreferences.init(Instance().DllHModule(), Instance().NotepadHwnd());
     userPreferences.appendSettings(&Instance()._settings);
-    userPreferences.SetEnableDarkModeLegacy(!Instance()._NppSupportDarkModeMessages);
-    userPreferences.SetDarkModeLegacyFunction(Plugin::SetDarkModeLegacy);
     userPreferences.doDialog();
 }
 

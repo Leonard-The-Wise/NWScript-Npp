@@ -104,7 +104,6 @@ namespace NWScriptPlugin {
 		void WriteToErrorsList(const CompilerMessage& message, bool ignoreConsole = false);
 		void UpdateToolButtonLabels();
 		void RecreateTxtConsole();
-		void RecreateListErrors();
 		void RecreateIcons();
 		HWND CreateToolTip(HWND hDlg, int toolID, PCTSTR pszText);
 		void CreateTooltips();
