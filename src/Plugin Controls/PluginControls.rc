@@ -438,8 +438,6 @@ IDI_USERBUILD           SVG                     "..\\..\\Media\\icons-svg\\UserB
 
 IDI_USERBUILDREMOVE     SVG                     "..\\..\\Media\\icons-svg\\UserBuildRemove.svg"
 
-IDI_WEBWELCOMETUTORIAL  SVG                     "..\\..\\Media\\icons-svg\\WelcomeWebTutorial.svg"
-
 IDI_RESTART             SVG                     "..\\..\\Media\\icons-svg\\Restart.svg"
 
 IDI_ERRORSQUIGGLE       SVG                     "..\\..\\Media\\icons-svg\\ErrorSquiggleActive.svg"

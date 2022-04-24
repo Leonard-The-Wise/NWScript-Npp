@@ -17,6 +17,10 @@ namespace NWScriptPlugin {
 	public:
 		FileParseSummaryDialog() = default;
 
+		~FileParseSummaryDialog() {
+			DeleteObject(_hFile);
+		}
+
 		void setOkDialogCallback(void (*OkDialogCallback)(HRESULT decision)) {
 			_okDialogCallback = OkDialogCallback;
 		}
@@ -42,6 +46,6 @@ namespace NWScriptPlugin {
 
 		void (*_okDialogCallback)(HRESULT decision) = nullptr;
 
-
+		HBITMAP _hFile;
 	};
 }

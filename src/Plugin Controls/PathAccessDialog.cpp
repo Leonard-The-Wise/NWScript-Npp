@@ -60,10 +60,10 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			default:
 				shieldSize = (IconSize)_dpiManager.scaleIconSize(76);
 			}
-			HBITMAP hBitmap = getStockIconBitmap(_iconID, shieldSize);
+			HBITMAP _hShield = getStockIconBitmap(_iconID, shieldSize);
 			::SendMessage(GetDlgItem(_hSelf, IDC_SHIELDICON), STM_SETIMAGE,
 				static_cast<WPARAM>(IMAGE_BITMAP),
-				reinterpret_cast<LPARAM>(hBitmap));
+				reinterpret_cast<LPARAM>(_hShield));
 
 			// Set visibility and mode for admin
 			if (!_bAdminMode)
@@ -75,8 +75,8 @@ INT_PTR CALLBACK PathAccessDialog::run_dlgProc(UINT message, WPARAM wParam, LPAR
 			else
 			{
 				// Set a shield icon also to the Run as Admin button - to preserve Windows standards
-				HICON hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
-				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(hShieldSmall));
+				HICON _hShieldSmall = getStockIcon(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
+				::SendMessage(GetDlgItem(_hSelf, IDOK), BM_SETIMAGE, static_cast<WPARAM>(IMAGE_ICON), reinterpret_cast<LPARAM>(_hShieldSmall));
 			}
 
 			return TRUE;

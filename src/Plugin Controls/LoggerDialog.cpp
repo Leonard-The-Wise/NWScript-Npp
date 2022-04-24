@@ -380,6 +380,7 @@ void LoggerDialog::SetupListView()
 	newColumn.cx = 25;
 	ListView_InsertColumn(listErrorsHWND, 6, &newColumn);
 
+	// Setup header images
 	HWND hHeader = ListView_GetHeader(listErrorsHWND);
 
 	LONG_PTR HeaderStyle = GetWindowLongPtr(hHeader, GWL_STYLE);
@@ -387,14 +388,10 @@ void LoggerDialog::SetupListView()
 	SetWindowLongPtr(hHeader, GWL_STYLE, HeaderStyle);
 
 	Header_SetImageList(hHeader, _iconList16x16);
-	ImageList_AddIcon(_iconList16x16, loadSVGFromResourceIcon(_hInst, IDI_WEBWELCOMETUTORIAL,
-		PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleX(16)));
 
 	HDITEM hdi;
 	TCHAR buffer[260] = { 0 };
-	hdi.mask = HDI_TEXT | HDI_IMAGE | HDI_FORMAT;
-	hdi.cchTextMax = 260;
-	hdi.pszText = buffer;
+	hdi.mask = HDI_IMAGE;
 
 	Header_GetItem(hHeader, 2, &hdi);
 	hdi.fmt |= HDF_IMAGE;
@@ -402,7 +399,7 @@ void LoggerDialog::SetupListView()
 	Header_SetItem(hHeader, 2, &hdi);
 	
 	Header_GetItem(hHeader, 3, &hdi);
-	hdi.fmt |= HDF_IMAGE | HDF_SPLITBUTTON;
+	hdi.fmt |= HDF_IMAGE;
 	hdi.iImage = 7;
 	Header_SetItem(hHeader, 3, &hdi);
 

@@ -19,6 +19,11 @@ namespace NWScriptPlugin {
 	{
 	public:
 		PathAccessDialog() = default;
+		
+		~PathAccessDialog() {
+			DeleteObject(_hShield);
+			DeleteObject(_hShieldSmall);
+		}
 
 		// Sets the warning text display
 		void SetWarning(const generic_string& sWarning) {
@@ -58,6 +63,9 @@ namespace NWScriptPlugin {
 		generic_string _sWarning = {};
 		generic_string _sSolution = {};
 		generic_stringstream _sPaths = {};
+
+		HBITMAP _hShield;
+		HICON _hShieldSmall;
 	};
 
 }

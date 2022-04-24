@@ -123,9 +123,6 @@ namespace NWScriptPluginCommons {
     bool openFolderDialog(HWND hOwnerWnd, generic_string& outFolderName, const generic_string& startPath, 
         UINT flags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI | BIF_NONEWFOLDERBUTTON);
 
-    // Retrieves an HICON from the standard Windows libraries
-    HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
-
     // Converts a HICON to HBITMAP, preserving transparency channels
     // Extracted from example here:
     // https://cpp.hotexamples.com/pt/examples/-/-/DrawIconEx/cpp-drawiconex-function-examples.html
@@ -133,6 +130,9 @@ namespace NWScriptPluginCommons {
 
     // Converts a HBITMAP to HICON.
     HICON bitmapToIcon(HBITMAP hBitmap);
+
+    // Retrieves an HICON from the standard Windows libraries
+    HICON getStockIcon(SHSTOCKICONID stockIconID, IconSize iconSize);
 
     // Retrieves an HICON from the standard Windows libraries and convert it to a Device Independent Bitmap
     HBITMAP getStockIconBitmap(SHSTOCKICONID stockIconID, IconSize iconSize);

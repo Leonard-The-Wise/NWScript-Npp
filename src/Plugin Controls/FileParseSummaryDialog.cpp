@@ -99,8 +99,8 @@ void FileParseSummaryDialog::setLogo()
 	imageSize.cx = _dpiManager.scaleX(imageSize.cx);
 	imageSize.cy = _dpiManager.scaleY(imageSize.cy);
 
-	HBITMAP hFile = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
-	::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(hFile));
+	_hFile = loadPNGFromResource(_hInst, resourceID, imageSize.cx, imageSize.cy);
+	::SendMessage(GetDlgItem(_hSelf, IDC_PCTNWSCRIPTFILE), STM_SETIMAGE, static_cast<WPARAM>(IMAGE_BITMAP), reinterpret_cast<LPARAM>(_hFile));
 
 }
 

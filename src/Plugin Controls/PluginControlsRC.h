@@ -31,7 +31,6 @@
 #define IDI_UNDOCHECKBOXLIST            161
 #define IDI_USERBUILD                   162
 #define IDI_USERBUILDREMOVE             163
-#define IDI_WEBWELCOMETUTORIAL          164
 #define IDI_RESTART                     165
 #define IDI_ABOUTDIALOGWINDOWICO        167
 #define IDR_ABOUTDOC                    168

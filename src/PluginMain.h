@@ -74,10 +74,6 @@ namespace NWScriptPlugin {
 		static void PluginInit(HANDLE hModule);
 		// Performs the instance cleanup: Called from DLL Main message DLL_DETACH
 		static void PluginRelease();
-		// Checks if Dark Mode is enabled at initialization.
-		bool IsDarkModeEnabled() {
-			return _isNppDarkModeEnabled;
-		}
 
 		// Returns the Plugin Name. Notepad++ Callback function
 		TCHAR* GetName() const { return pluginName.data(); }
@@ -166,6 +162,17 @@ namespace NWScriptPlugin {
 		Plugin(HMODULE dllModule)
 			: _dllHModule(dllModule), _notepadHwnd(nullptr), _NWScriptParseResults(nullptr)	{}
 
+		~Plugin() {
+			for (HBITMAP& b : _menuBitmaps)
+				DeleteObject(b);
+			for (int i = 0; i < std::size(_tbIcons); i++)
+			{
+				DeleteObject(_tbIcons[i].hToolbarBmp);
+				DeleteObject(_tbIcons[i].hToolbarIcon);
+				DeleteObject(_tbIcons[i].hToolbarIconDarkMode);
+			}
+		}
+
 		// Returns TRUE if the current Lexer is one of the plugin's installed lexers
 		bool IsPluginLanguage() const { return _notepadCurrentLexer.isPluginLang; }
 
@@ -198,10 +205,8 @@ namespace NWScriptPlugin {
 		bool IsPluginMenuItemEnabled(int ID);
 		// Enable/disable menu item
 		void EnablePluginMenuItem(int ID, bool enabled);
-		// Set a plugin menu Icon to a given stock Shell Icon
-		bool SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck, bool bSetToCheck);
-		// Set a (scalable) plugin menu Icon from a SVG resource
-		bool SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck);
+		// Set plugin menu icon
+		void SetPluginMenuIcon(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck);
 		// Setup Menu Icons. Some of them are dynamic shown/hidden.
 		void SetupPluginMenuItems();
 		// Lock/Unlock all of the plugin's options
@@ -286,12 +291,16 @@ namespace NWScriptPlugin {
 
 		// Internal states
 
+		// General internal states
 		bool _isReady = false;
 		bool _needPluginAutoIndent = false;
-		bool _isNppDarkModeEnabled = false;
 		bool _NppSupportDarkModeMessages = false;
 		DarkThemeStatus _pluginDarkThemeIs = DarkThemeStatus::Unsupported;
 		ULONGLONG _clockStart = 0;
+		
+		// Image handles
+		std::vector<HBITMAP> _menuBitmaps;
+		toolbarIconsWithDarkMode _tbIcons[3] = {};
 
 		// Internal (global) classes
 
@@ -304,6 +313,7 @@ namespace NWScriptPlugin {
 		generic_string _dockingTitle;   // needs persistent info for docking data
 		std::unique_ptr<NWScriptParser::ScriptParseResults> _NWScriptParseResults;
 
+		// Persistent dialogs
 		std::unique_ptr<LoggerDialog> _loggerWindow;
 		std::unique_ptr<ProcessFilesDialog> _processingFilesDialog;
 		std::unique_ptr<AboutDialog> _aboutDialog;

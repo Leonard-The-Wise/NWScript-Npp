@@ -382,14 +382,16 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     if (!PluginDarkMode::isInitialized())
         PluginDarkMode::initDarkMode();
 
+    bool isDarkModeEnabled = false;
+
     // Legacy support
     if (ForceUseDark)
-        _isNppDarkModeEnabled = UseDark;
+        isDarkModeEnabled = UseDark;
 
     // Normal support overrides legacy
     if (_NppSupportDarkModeMessages)
     {
-        _isNppDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
+        isDarkModeEnabled = Messenger().SendNppMessage<bool>(NPPM_ISDARKMODEENABLED);
         PluginDarkMode::Colors newColors;
         bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, sizeof(newColors), reinterpret_cast<LPARAM>(&newColors));
         if (bSuccess)
@@ -402,12 +404,12 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
     }
 
     // Set Dark Mode for window/application
-    PluginDarkMode::setDarkMode(_isNppDarkModeEnabled, true);
+    PluginDarkMode::setDarkMode(isDarkModeEnabled, true);
 
     // Rebuild menu
     SetupPluginMenuItems();
 
-    // Refresh permanent dialogs dark mode
+    // Refresh persistent dialogs dark mode
     _loggerWindow->refreshDarkMode();
     _aboutDialog->refreshDarkMode();
 }
@@ -528,26 +530,24 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         }
         case NPPN_TBMODIFICATION:
         {
-            toolbarIconsWithDarkMode tbIcons[3] = {};
+            _tbIcons[0].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[0].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[0].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
-            tbIcons[0].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[0].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[0].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEFILE, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[1].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[1].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[1].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
-            tbIcons[1].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[1].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[1].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_COMPILEBATCH, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-
-            tbIcons[2].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[2].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-            tbIcons[2].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[2].hToolbarBmp = loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[2].hToolbarIcon = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, false, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+            _tbIcons[2].hToolbarIconDarkMode = loadSVGFromResourceIcon(DllHModule(), IDI_NEVERWINTERAPP, true, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
 
             Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_COMPILESCRIPT]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[0]));
+                pluginFunctions[PLUGINMENU_COMPILESCRIPT]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[0]));
             Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_BATCHPROCESSING]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[1]));
+                pluginFunctions[PLUGINMENU_BATCHPROCESSING]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[1]));
             Messenger().SendNppMessage<void>(NPPM_ADDTOOLBARICON_FORDARKMODE,
-                pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, reinterpret_cast<LPARAM>(&tbIcons[2]));
+                pluginFunctions[PLUGINMENU_SHOWCONSOLE]._cmdID, reinterpret_cast<LPARAM>(&_tbIcons[2]));
         }
     }
 }
@@ -812,48 +812,52 @@ void Plugin::RemovePluginMenuItem(int ID, bool byPosition)
     }
 }
 
-bool Plugin::SetPluginMenuItemSVG(int commandID, int resourceID, bool bSetToUncheck, bool bSetToCheck)
+void Plugin::SetPluginMenuIcon(int commandID, HBITMAP bitmap, bool bSetToUncheck, bool bSetToCheck)
 {
     HMENU hMenu = GetNppMainMenu();
     if (hMenu)
     {
-        HBITMAP hIconBmp = loadSVGFromResource(DllHModule(), resourceID, _isNppDarkModeEnabled, _dpiManager.scaleX(16), _dpiManager.scaleY(16));
-        bool bSuccess = false;
         if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
+            SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, bitmap, bitmap);
         if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
+            SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, bitmap, NULL);
         if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
-
-        return bSuccess;
+            SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, bitmap);
     }
 
-    return false;
-}
-
-bool Plugin::SetPluginStockMenuItemIcon(int commandID, SHSTOCKICONID stockIconID, bool bSetToUncheck = true, bool bSetToCheck = true)
-{
-    HMENU hMenu = GetNppMainMenu();
-    if (hMenu)
-    {
-        HBITMAP hIconBmp = getStockIconBitmap(stockIconID, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16));
-        bool bSuccess = false;
-        if (bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, hIconBmp);
-        if (bSetToUncheck && !bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, hIconBmp, NULL);
-        if (!bSetToUncheck && bSetToCheck)
-            bSuccess = SetMenuItemBitmaps(hMenu, GetFunctions()[commandID]._cmdID, MF_BYCOMMAND, NULL, hIconBmp);
-
-        return bSuccess;
-    }
-
-    return false;
+    return;
 }
 
 void Plugin::SetupPluginMenuItems()
 {
+    // Cleanup
+    if (_menuBitmaps.size() > 0)
+    {
+        for (HBITMAP& i : _menuBitmaps)
+            DeleteObject(i);
+        _menuBitmaps.clear();
+    }
+
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DARKTHEME, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DEPENCENCYGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DISASSEMBLECODE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_IMMEDIATEWINDOW, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_IMPORTSETTINGS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPEATLASTRUN, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPORT, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_RESTART, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_SETTINGSGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_SHOWASSIGNEDCONFIGURATION, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_UNDOCHECKBOXLIST, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILD, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILDREMOVE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
+
+
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
     bool bAutoComplete = false;
@@ -861,11 +865,23 @@ void Plugin::SetupPluginMenuItems()
     PathWritePermission fDarkThemePerm = PathWritePermission::UndeterminedError;
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
 
+
+    SetPluginMenuIcon(PLUGINMENU_COMPILESCRIPT, _menuBitmaps[2], true, false);
+    SetPluginMenuIcon(PLUGINMENU_DISASSEMBLESCRIPT, _menuBitmaps[5], true, false);
+    SetPluginMenuIcon(PLUGINMENU_BATCHPROCESSING, _menuBitmaps[1], true, false);
+    SetPluginMenuIcon(PLUGINMENU_RUNLASTBATCH, _menuBitmaps[9], true, false);
+    SetPluginMenuIcon(PLUGINMENU_FETCHPREPROCESSORTEXT, _menuBitmaps[10], true, false);
+    SetPluginMenuIcon(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, _menuBitmaps[4], true, false);
+    SetPluginMenuIcon(PLUGINMENU_SHOWCONSOLE, _menuBitmaps[6], true, true);
+    SetPluginMenuIcon(PLUGINMENU_SETTINGS, _menuBitmaps[12], true, false);
+    SetPluginMenuIcon(PLUGINMENU_USERPREFERENCES, _menuBitmaps[13], true, false);
+    SetPluginMenuIcon(PLUGINMENU_ABOUTME, _menuBitmaps[0], true, false);
+
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
-    SetPluginMenuItemSVG(PLUGINMENU_IMPORTDEFINITIONS, IDI_IMPORTSETTINGS, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_IMPORTUSERTOKENS, IDI_USERBUILD, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_RESETUSERTOKENS, IDI_USERBUILDREMOVE, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_RESETEDITORCOLORS, IDI_RESTART, true, false);
+    SetPluginMenuIcon(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[7], true, false);
+    SetPluginMenuIcon(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[15], true, false);
+    SetPluginMenuIcon(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[16], true, false);
+    SetPluginMenuIcon(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[11], true, false);
 
     // Don't use the shield icons when user runs in Administrator mode
     if (!IsUserAnAdmin())
@@ -893,32 +909,18 @@ void Plugin::SetupPluginMenuItems()
         // For users without permission to _pluginLexerConfigFilePath or _notepadAutoCompleteInstallPath, set shield on Import Definitions
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || fAutoCompletePerm == PathWritePermission::RequiresAdminPrivileges)
         {
-            SetPluginStockMenuItemIcon(PLUGINMENU_IMPORTDEFINITIONS, SHSTOCKICONID::SIID_SHIELD, true, false);
-            SetPluginStockMenuItemIcon(PLUGINMENU_IMPORTUSERTOKENS, SHSTOCKICONID::SIID_SHIELD, true, false);
-            SetPluginStockMenuItemIcon(PLUGINMENU_RESETUSERTOKENS, SHSTOCKICONID::SIID_SHIELD, true, false);
+            SetPluginMenuIcon(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[17], true, false);
+            SetPluginMenuIcon(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[17], true, false);
+            SetPluginMenuIcon(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[17], true, false);
         }
         // For users without permission to _notepadDarkThemeFilePath, set shield on Install Dark Theme if not already installed
         if (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs == DarkThemeStatus::Uninstalled)
-            SetPluginStockMenuItemIcon(PLUGINMENU_INSTALLDARKTHEME, SHSTOCKICONID::SIID_SHIELD, true, false);
+            SetPluginMenuIcon(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[17], true, false);
         // For users without permissions to any of the files (and also only checks Dark Theme support if file is existent and supported/not corrupted)...
         if (fLexerPerm == PathWritePermission::RequiresAdminPrivileges || (fDarkThemePerm == PathWritePermission::RequiresAdminPrivileges && _pluginDarkThemeIs != DarkThemeStatus::Unsupported))
-            SetPluginStockMenuItemIcon(PLUGINMENU_RESETEDITORCOLORS, SHSTOCKICONID::SIID_SHIELD, true, false);
+            SetPluginMenuIcon(PLUGINMENU_RESETEDITORCOLORS, _menuBitmaps[17], true, false);
     }
-    
-    // Setup icons for the rest of items
-    SetPluginMenuItemSVG(PLUGINMENU_COMPILESCRIPT, IDI_COMPILEFILE, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_DISASSEMBLESCRIPT, IDI_DISASSEMBLECODE, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_BATCHPROCESSING, IDI_COMPILEBATCH, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_FETCHPREPROCESSORTEXT, IDI_REPORT, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, IDI_DEPENCENCYGROUP, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_SHOWCONSOLE, IDI_IMMEDIATEWINDOW, true, true);
-    SetPluginMenuItemSVG(PLUGINMENU_SETTINGS, IDI_SETTINGSGROUP, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_USERPREFERENCES, IDI_SHOWASSIGNEDCONFIGURATION, true, false);
-    SetPluginMenuItemSVG(PLUGINMENU_ABOUTME, IDI_ABOUTBOX, true, false);
-    
-    // Menu run last batch: initially disabled
-    SetPluginMenuItemSVG(PLUGINMENU_RUNLASTBATCH, IDI_REPEATLASTRUN, true, false);
+   
 }
 
 void Plugin::LockPluginMenu(bool toLock)

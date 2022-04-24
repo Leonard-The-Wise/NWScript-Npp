@@ -17,6 +17,10 @@ namespace NWScriptPlugin {
 	public:
 		WarningDialog() = default;
 
+		~WarningDialog() {
+			DeleteObject(_hWarning);
+		}
+
 		void appendSettings(Settings* settings) {
 			_settings = settings;
 		}
@@ -27,6 +31,7 @@ namespace NWScriptPlugin {
 		virtual intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 	private:
 		Settings* _settings = nullptr;
+		HBITMAP _hWarning;
 	};
 
 }
