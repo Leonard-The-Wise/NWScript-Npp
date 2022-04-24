@@ -103,9 +103,9 @@ FuncItem Plugin::pluginFunctions[] = {
     {TEXT("Fetch preprocessed output"), Plugin::FetchPreprocessorText},
     {TEXT("View NWScript dependencies"), Plugin::ViewScriptDependencies},
     {TEXT("---")},
-    {TEXT("Toggle NWCompiler Console"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
+    {TEXT("Toggle NWScript Compiler Console"), Plugin::ToggleLogger, 0, false, &toggleConsoleKey},
     {TEXT("---")},
-    {TEXT("NWCompiler settings..."), Plugin::CompilerSettings},
+    {TEXT("Compiler settings..."), Plugin::CompilerSettings},
     {TEXT("User's preferences..."), Plugin::UserPreferences},
     {TEXT("---")},
     {TEXT("Install Dark Theme"), Plugin::InstallDarkTheme},
@@ -299,8 +299,6 @@ void Plugin::SetNotepadData(NppData& data)
 
     // Check engine objects file
     CheckupEngineObjectsFile();
-
-        
 }
 
 // Initializes the compiler log window
@@ -479,20 +477,6 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     {
         case NPPN_READY:
         {
-            // Do Initialization procedures
-            SetAutoIndentSupport();
-            DetectDarkThemeInstall();
-            LoadNotepadLexer();
-            SetupPluginMenuItems();
-
-            // Detects Dark mode if supported
-            if (_NppSupportDarkModeMessages)
-                RefreshDarkMode();
-            else
-                CheckDarkModeLegacy();
-
-            _isReady = true;
-
             // Auto call a function that required restart during the previous session (because of privilege elevation)
             // Up to now...
             // 1 = ImportDefinitions
@@ -517,6 +501,24 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
             // And then make sure to clear the hooks, temp files, etc. 
             // Call as immediate to instant save on settings so we avoid losing it on a session crash also.
             SetRestartHook(RestartMode::None, RestartFunctionHook::None);
+
+
+            // Do Initialization procedures
+            SetAutoIndentSupport();
+            LoadNotepadLexer();
+            DetectDarkThemeInstall();
+            SetupPluginMenuItems();
+
+            // Initially disable run last batch (until the user runs a batch in session)
+            EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
+
+            // Detects Dark mode if supported
+            if (_NppSupportDarkModeMessages)
+                RefreshDarkMode();
+            else
+                CheckDarkModeLegacy();
+
+            _isReady = true;
 
             break;
         }
@@ -896,14 +898,12 @@ void Plugin::SetupPluginMenuItems()
     _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILDREMOVE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
 
-
     bool bSuccessLexer = false;
     bool bSuccessDark = false;
     bool bAutoComplete = false;
     PathWritePermission fLexerPerm = PathWritePermission::UndeterminedError;
     PathWritePermission fDarkThemePerm = PathWritePermission::UndeterminedError;
     PathWritePermission fAutoCompletePerm = PathWritePermission::UndeterminedError;
-
 
     SetPluginMenuBitmap(PLUGINMENU_COMPILESCRIPT, _menuBitmaps[2], true, false);
     SetPluginMenuBitmap(PLUGINMENU_DISASSEMBLESCRIPT, _menuBitmaps[5], true, false);
@@ -917,6 +917,7 @@ void Plugin::SetupPluginMenuItems()
     SetPluginMenuBitmap(PLUGINMENU_ABOUTME, _menuBitmaps[0], true, false);
 
     //Setup icons for menus items that can be overriden later (because of UAC permissions)
+    SetPluginMenuBitmap(PLUGINMENU_INSTALLDARKTHEME, _menuBitmaps[3], true, false);
     SetPluginMenuBitmap(PLUGINMENU_IMPORTDEFINITIONS, _menuBitmaps[7], true, false);
     SetPluginMenuBitmap(PLUGINMENU_IMPORTUSERTOKENS, _menuBitmaps[15], true, false);
     SetPluginMenuBitmap(PLUGINMENU_RESETUSERTOKENS, _menuBitmaps[16], true, false);
@@ -2074,17 +2075,22 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
         _clockStart = GetTickCount64(); // Reset clock because user had opened configurations
     }
 
+    // If user canceled compiler settings...
     if (!Settings().compilerSettingsCreated)
+    {
+        if (batchOperations)
+            SendMessage(_processingFilesDialog->getHSelf(), WM_COMMAND, IDCANCEL, 0);
         return;
+    }
 
     // If from scintilla, first, save the document, so we assure it got a valid filename and at least an output path.
     // Then we get the script name, and then the file contents.
     if (fromCurrentScintilla)
     {
         // Gets text length and then push contents. Scintilla contents returns length + 0-terminator character bytes
-        size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH);
-        _tempFileContents.resize(size + 1);
-        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(&_tempFileContents[0]));
+        size_t size = Messenger().SendSciMessage<size_t>(SCI_GETLENGTH) + 1;
+        _tempFileContents.resize(size);
+        Messenger().SendSciMessage<void>(SCI_GETTEXT, size, reinterpret_cast<LPARAM>(_tempFileContents.data()));
 
         // And now, get the output filename
         TCHAR nameBuffer[MAX_PATH] = {0};
@@ -2662,6 +2668,7 @@ PLUGINCOMMAND Plugin::UserPreferences()
 
     userPreferences.init(Instance().DllHModule(), Instance().NotepadHwnd());
     userPreferences.appendSettings(&Instance()._settings);
+    userPreferences.setDarkModeInstalled(Instance()._pluginDarkThemeIs == DarkThemeStatus::Installed);
     userPreferences.doDialog();
 }
 
@@ -2882,10 +2889,15 @@ PLUGINCOMMAND Plugin::AboutMe()
 
     // Diagnostic data.
     if (Instance()._needPluginAutoIndent)
-        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), TEXT("Use the built-in auto-indentation.") });
+    {
+        generic_string autoindent = TEXT("Use the plugin's auto-indentation. Currently set to [\\b ");
+        autoindent.append(Instance().Settings().enableAutoIndentation ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
+        replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
+    }
     else
     {
-        generic_string autoindent = TEXT("Automatic. Currently set to [\\b "); autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
+        generic_string autoindent = TEXT("Automatic. Currently set to [\\b "); 
+        autoindent.append(bIsAutoIndentOn ? TEXT("ON") : TEXT("OFF")).append(TEXT("\\b0 ]"));
         replaceStrings.insert({ TEXT("%NWSCRIPTINDENT%"), autoindent });
     }
     replaceStrings.insert({ TEXT("%DARKTHEMESUPPORT%"), darkModeLabels[static_cast<int>(Instance()._pluginDarkThemeIs)] });

@@ -22,6 +22,10 @@ namespace NWScriptPlugin {
 			_settings = settings;
 		}
 
+		void setDarkModeInstalled(bool installed) {
+			_darkModeInstalled = installed;
+		}
+
 		void doDialog();
 
 	protected:
@@ -29,6 +33,8 @@ namespace NWScriptPlugin {
 	private:
 		void keepSettings();
 		Settings* _settings = nullptr;
+
+		bool _darkModeInstalled = false;
 	};
 
 }

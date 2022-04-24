@@ -103,7 +103,6 @@ void Settings::Load()
 	compilerWindowConsoleShowWarnings = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowWarnings"));
 	compilerWindowConsoleShowInfos = GetBoolean(TEXT("Compiler Window"), TEXT("compilerWindowConsoleShowInfos"));
 
-
 	// Sanity checks: avoid loading missing or corrupted data for compiled settings. Mark configurations invalid if inconsistency detected.
 	if (!isValidDirectoryS(neverwinterOneInstallDir) && !isValidDirectoryS(neverwinterTwoInstallDir) && !ignoreInstallPaths)
 	{

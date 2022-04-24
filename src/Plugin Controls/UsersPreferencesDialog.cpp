@@ -27,10 +27,17 @@ intptr_t CALLBACK UsersPreferencesDialog::run_dlgProc(UINT message, WPARAM wPara
 	{
 		case WM_INITDIALOG:
 		{
-
 			CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDISASSEMBLED, _settings->autoDisplayDisassembled ? BST_CHECKED : BST_UNCHECKED);
 			CheckDlgButton(_hSelf, IDC_CHKAUTOOPENDEBUGSYMBOLS, _settings->autoDisplayDebugSymbols ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME, _settings->autoInstallDarkTheme ? BST_CHECKED : BST_UNCHECKED);
+
+			if (_darkModeInstalled)
+				CheckDlgButton(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME, _settings->autoInstallDarkTheme ? BST_CHECKED : BST_UNCHECKED);
+			else
+			{
+				EnableWindow(GetDlgItem(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_LBLDARKMODEEXPLAIN), false);
+				SetWindowText(GetDlgItem(_hSelf, IDC_LBLDARKMODEEXPLAIN), TEXT("(To use this option, first install Dark Theme on menu options)"));
+			}
 
 			_dpiManager.resizeControl(_hSelf);
 			_dpiManager.resizeChildren(_hSelf, true);
@@ -75,6 +82,8 @@ void UsersPreferencesDialog::keepSettings()
 {
 	_settings->autoDisplayDisassembled = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOOPENDISASSEMBLED);
 	_settings->autoDisplayDebugSymbols = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOOPENDEBUGSYMBOLS);
-	_settings->autoInstallDarkTheme = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME);
+
+	if (_darkModeInstalled)
+		_settings->autoInstallDarkTheme = IsDlgButtonChecked(_hSelf, IDC_CHKAUTOINSTALLDARKTHEME);
 }
 

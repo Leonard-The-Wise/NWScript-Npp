@@ -196,7 +196,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,40,260,10
     CONTROL         "Auto-reinstall Dark Theme support on Notepad++ upgrades.",IDC_CHKAUTOINSTALLDARKTHEME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,57,210,10
-    LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_STATIC,21,69,275,20
+    LTEXT           "(will try to run with Administrative Privileges if permissions to ""DarkTheme.xml"" isn't provided. Also causes one extra Notepad++ auto-restart after upgrading versions).",IDC_LBLDARKMODEEXPLAIN,21,69,275,20
 END
 
 IDD_LOGGER DIALOGEX 0, 0, 509, 173
@@ -204,7 +204,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE | WS_CAPT
 CAPTION "NWScript Tools Compiler Console"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_TABLOGGER,"SysTabControl32",TCS_BOTTOM,2,2,504,167
+    CONTROL         "",IDC_TABLOGGER,"SysTabControl32",TCS_BOTTOM | WS_TABSTOP,2,2,504,167
 END
 
 IDD_LOGGER_ERRORS DIALOGEX 0, 0, 497, 135
@@ -221,11 +221,11 @@ FONT 10, "Consolas", 400, 0, 0x0
 BEGIN
     LTEXT           "Console Output",IDC_LBLCONSOLE,6,7,57,8
     PUSHBUTTON      "",IDC_BTCLEARCONSOLE,76,5,17,14,BS_ICON
-    CONTROL         "",IDC_BTTOGGLEWORDWRAP,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,98,5,17,14
-    CONTROL         "",IDC_TXTCONSOLE,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,3,23,418,105
-    CONTROL         "",IDC_BTFILTERERRORS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,353,5,17,14
-    CONTROL         "",IDC_BTFILTERWARNINGS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,374,5,17,14
-    CONTROL         "",IDC_BTFILTERINFO,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE | WS_TABSTOP,396,5,17,14
+    CONTROL         "",IDC_BTTOGGLEWORDWRAP,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,98,5,17,14
+    CONTROL         "",IDC_TXTCONSOLE,"RichEdit50W",WS_BORDER | WS_VSCROLL | 0x804,3,23,418,105
+    CONTROL         "",IDC_BTFILTERERRORS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,353,5,17,14
+    CONTROL         "",IDC_BTFILTERWARNINGS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,374,5,17,14
+    CONTROL         "",IDC_BTFILTERINFO,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,396,5,17,14
 END
 
 

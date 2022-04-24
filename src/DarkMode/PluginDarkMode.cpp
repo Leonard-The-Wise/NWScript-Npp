@@ -120,11 +120,13 @@ namespace PluginDarkMode
 		HPEN darkerTextPen = nullptr;
 		HPEN edgePen = nullptr;
 		HPEN lightEdgePen = nullptr;
+		HPEN darkEdgePen = nullptr;
 
 		Pens(const Colors& colors)
 			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
 			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
-			, lightEdgePen(::CreatePen(PS_SOLID, 1, invertLightness(colors.darkerText)))
+			, lightEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, 220)))
+			, darkEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, 60)))
 		{}
 
 		~Pens()
@@ -132,6 +134,7 @@ namespace PluginDarkMode
 			::DeleteObject(darkerTextPen);	darkerTextPen = nullptr;
 			::DeleteObject(edgePen);		edgePen = nullptr;
 			::DeleteObject(lightEdgePen);	lightEdgePen = nullptr;
+			::DeleteObject(darkEdgePen);	darkEdgePen = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -142,7 +145,8 @@ namespace PluginDarkMode
 
 			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
 			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
-			lightEdgePen = ::CreatePen(PS_SOLID, 1, invertLightness(colors.softerBackground));
+			lightEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, 220));
+			lightEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, 60));
 		}
 
 	};
@@ -541,6 +545,7 @@ namespace PluginDarkMode
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
 	HPEN getLightEdgePen()				  { return getTheme()._pens.lightEdgePen; }
+	HPEN getDarkEdgePen()				  { return getTheme()._pens.darkEdgePen; }
 
 	void setThemeColors(Colors& newColors)
 	{
@@ -1056,16 +1061,18 @@ namespace PluginDarkMode
 			DrawThemeParentBackground(hwnd, hdc, &rcClient);
 		if (iPartID == 1)
 		{
-			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
+			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0)); 
 			HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
 			if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
 				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
 
 			if (nStyle & WS_DISABLED)
-				SelectObject(hdc, PluginDarkMode::getDarkerTextPen());
-			else if ((nState & BST_FOCUS) || (nStyle & BS_DEFPUSHBUTTON))
+				SelectObject(hdc, PluginDarkMode::getDarkEdgePen());
+			else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
 				SelectObject(hdc, PluginDarkMode::getLightEdgePen());
-			else 
+			else if (nStyle & (BS_PUSHLIKE))
+				SelectObject(hdc, PluginDarkMode::getEdgePen());
+			else
 				SelectObject(hdc, PluginDarkMode::getEdgePen());
 
 			SelectObject(hdc, hBckBrush);
