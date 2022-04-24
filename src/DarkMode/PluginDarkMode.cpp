@@ -17,6 +17,8 @@
 // Which classes exist for themes?
 // https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
 
+// Generate debug info for this file
+//#define _DEBUG_DARK_MODE
 
 // Enable or disable precompiled headers
 #define USE_PCH 1
@@ -938,19 +940,19 @@ namespace PluginDarkMode
 			}
 		}
 
-		void drawSortArrow(HDC destDC, int iStateID, RECT& clientRect)
+		void drawSortArrow(HDC destDC, int iStateID, const RECT& clientRect)
 		{
 			drawArrow(destDC, iStateID, clientRect, false, false);
 		}
 
-		void drawComboArrow(HDC destDC, RECT& comboRect, bool Hot)
+		void drawComboArrow(HDC destDC, const RECT& comboRect, bool Hot)
 		{
 			drawArrow(destDC, HSAS_SORTEDDOWN, comboRect, true, Hot);
 		}
 
 	private:
 
-		void drawArrow(HDC destDC, int iStateID, RECT& clientRect, bool bComboArrow, bool Hot)
+		void drawArrow(HDC destDC, int iStateID, const RECT& clientRect, bool bComboArrow, bool Hot)
 		{
 			RECT rcArrow = {};
 			BITMAP bp;
@@ -1652,14 +1654,9 @@ namespace PluginDarkMode
 	constexpr UINT_PTR g_headerSubclassID = 42;
 	constexpr UINT_PTR g_listViewSubclassID = 42;
 
-	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcItem, int itemID, LONG_PTR headerStyle)
+	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, const RECT& rcItem, int itemID, LONG_PTR headerStyle,
+		const POINT& mousePosition, const HDHITTESTINFO& headerHitTest, const RECT& rcClient, const RECT& rcParentClient, int parentScrollPos)
 	{
-		POINT cursorPos;
-		HDHITTESTINFO hti = {};
-
-		GetCursorPos(&cursorPos);
-		ScreenToClient(hHeader, &cursorPos);
-
 		HTHEME hTheme = headerItem.hTheme;
 		SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
 
@@ -1719,12 +1716,18 @@ namespace PluginDarkMode
 		{
 			int iComboStateID = 0;
 
-			hti.pt = cursorPos;
-			SendMessage(hHeader, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
-			int hotItem = hti.iItem;
-			vItemFocused = (hotItem == itemID) && ((hti.flags & HHT_ONHEADER) > 0);
+			// Fix hit test bug with mouse position and parent scrolling
+			vItemFocused = headerHitTest.iItem == itemID && mousePosition.x >= parentScrollPos &&
+				mousePosition.x < rcParentClient.right + parentScrollPos;
 			vItemPressed = (vItemFocused && (GetKeyState(VK_LBUTTON) & 0x8000) != 0);
 
+#ifdef _DEBUG_DARK_MODE
+			TCHAR debug[128] = {0};
+			wsprintf(debug, L"HitTest(%d); MousePosition(%d, %d); Valid Boundaries(%d, %d, %d, %d). TS = %d\n",
+				headerHitTest.iItem, mousePosition.x, mousePosition.y, parentScrollPos, rcParentClient.top,
+				rcParentClient.right + parentScrollPos, rcParentClient.bottom, (int)GetTickCount64());
+			OutputDebugString(debug);
+#endif
 			if (vItemPressed)
 			{
 				FillRect(hdc, &txtRC, getHardlightBackgroundBrush());
@@ -1938,7 +1941,7 @@ namespace PluginDarkMode
 				FillRect(hdc, &dropDownRc, getSoftlightBackgroundBrush());
 
 			// Combo box part is not present, simulate with down arrow and an edge
-			headerItem.lastDropDownTrackWasHot = PtInRect(&dropDownRc, cursorPos);
+			headerItem.lastDropDownTrackWasHot = PtInRect(&dropDownRc, mousePosition);
 			headerItem.drawComboArrow(hdc, dropDownRc, headerItem.lastDropDownTrackWasHot);
 			::SelectObject(hdc, PluginDarkMode::getEdgePen());
 			POINT edges[] = {
@@ -2052,7 +2055,15 @@ namespace PluginDarkMode
 			HDC hdc = GetDC(hHeader);
 			HFONT hFont = reinterpret_cast<HFONT>(SendMessage(hHeader, WM_GETFONT, 0, 0)); // must set the DC font first
 			HFONT hOldFont = SelectFont(hdc, hFont);
-			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle);
+			RECT clientRect, parentRect;
+			GetClientRect(hHeader, &clientRect);
+			GetClientRect(GetParent(hHeader), &parentRect);
+			SCROLLINFO si = {};
+			si.cbSize = sizeof(si);
+			si.fMask = SIF_POS;
+			GetScrollInfo(GetParent(hHeader), SB_HORZ, &si);
+
+			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle, cursorPos, hti, clientRect, parentRect, si.nPos);
 			RedrawWindow(hHeader, &rcItem, NULL, RDW_VALIDATE);
 			SelectFont(hdc, hOldFont);
 			ReleaseDC(hHeader, hdc);
@@ -2081,10 +2092,23 @@ namespace PluginDarkMode
 				HDC hdc = BeginPaint(hWnd, &ps);
 
 				// Erase control background
-				RECT rcClient = {};
+				RECT rcClient, rcParentClient;
 				GetClientRect(hWnd, &rcClient);
+				GetClientRect(GetParent(hWnd), &rcParentClient);
 				FillRect(hdc, &rcClient, getDarkerBackgroundBrush());
 				LONG_PTR headerStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+
+				// Extra informations for item drawing
+				POINT mousePos;
+				GetCursorPos(&mousePos);
+				ScreenToClient(hWnd, &mousePos);
+				HDHITTESTINFO hti;
+				hti.pt = mousePos;
+				SendMessage(hWnd, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
+				SCROLLINFO si = {};
+				si.cbSize = sizeof(si);
+				si.fMask = SIF_POS;
+				GetScrollInfo(GetParent(hWnd), SB_HORZ, &si);
 
 				// Change font
 				HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
@@ -2096,7 +2120,7 @@ namespace PluginDarkMode
 				for (int i = 0; i < count; i++)
 				{
 					Header_GetItemRect(hWnd, i, &wRc);
-					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i, headerStyle);
+					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i, headerStyle, mousePos, hti, rcClient, rcParentClient, si.nPos);
 				}
 
 				// Draw header overflow if appliable
@@ -2682,9 +2706,9 @@ namespace PluginDarkMode
 
 				if (p.theme)
 				{
-					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_Explorer" : nullptr, nullptr);
+					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
 					if (hHeader)
-						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"ItemsView" : nullptr, nullptr);
+						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
 				}
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
@@ -2693,8 +2717,6 @@ namespace PluginDarkMode
 					if (hHeader)
 						RemoveWindowSubclass(hHeader, HeaderSubclass, g_listViewSubclassID);
 				}
-
-				::SetWindowPos(hHeader, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 			}
 
 			if (wcscmp(className, WC_TABCONTROL) == 0)
