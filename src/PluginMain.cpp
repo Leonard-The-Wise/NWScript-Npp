@@ -357,7 +357,7 @@ void Plugin::SetNotepadData(NppData& data)
         Settings().notepadVersion = currentNotepad;
     }
 
-    if (currentNotepad >= "8.3.4")
+    if (currentNotepad > "8.4")
         _NppSupportDarkModeMessages = true;
 
     // Adjust menu "Use Auto-Indentation" checked or not before creation
