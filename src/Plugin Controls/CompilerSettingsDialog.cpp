@@ -154,7 +154,7 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				case IDC_BTADDPATH:
 				{
 					TCHAR path[MAX_PATH] = { 0 };
-					GetDlgItemText(_hSelf, IDC_TXTADDPATH, path, std::size(path));
+					GetDlgItemText(_hSelf, IDC_TXTADDPATH, path, static_cast<int>(std::size(path)));
 					generic_string newPath = path;
 					if (!newPath.empty())
 					{
@@ -204,16 +204,16 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 					switch (wParam)
 					{
 					case IDC_BTNWN1INSTALL:
-						GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					case IDC_BTNWN2INSTALL:
-						GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					case IDC_BTSEARCHPATH:
-						GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					case IDC_BTOUTPUTDIR:
-						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					}
 
@@ -263,7 +263,7 @@ bool CompilerSettingsDialog::keepSettings()
 	{
 		if (IsDlgButtonChecked(_hSelf, IDC_USENWN1))
 		{
-			GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
+			GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 			if (!isValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
@@ -274,7 +274,7 @@ bool CompilerSettingsDialog::keepSettings()
 		}
 		else
 		{
-			GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
+			GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 			if (!isValidDirectory(tempBuffer))
 			{
 				errorString.append(tempBuffer).append(TEXT("\""));
@@ -287,7 +287,7 @@ bool CompilerSettingsDialog::keepSettings()
 
 	if (!IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR))
 	{
-		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
+		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 		if (!isValidDirectory(tempBuffer))
 		{
 			errorString.append(tempBuffer).append(TEXT("\""));
@@ -305,15 +305,15 @@ bool CompilerSettingsDialog::keepSettings()
 
 	myset.neverwinterInstallChoice = (IsDlgButtonChecked(_hSelf, IDC_USENWN1) ? 0 : 1);
 
-	GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTNWN1INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	myset.neverwinterOneInstallDir = properDirNameW(tempBuffer);
-	GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTNWN2INSTALL, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	myset.neverwinterTwoInstallDir = properDirNameW(tempBuffer);
 
 	myset.ignoreInstallPaths = IsDlgButtonChecked(_hSelf, IDC_CHKIGNOREINSTALLPATHS);
 
 	// If user has unsaved input in additional folders, save for him.
-	GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	if (tempBuffer[0] > 0)
 	{
 		if (static_cast<bool>(run_dlgProc(WM_COMMAND, IDC_BTADDPATH, 0)) == false)
@@ -343,7 +343,7 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.compileVersion = (ComboBox_GetCurSel(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION)) == 0) ? 174 : 169;
 
 	myset.useScriptPathToCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIR);
-	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIR, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	myset.outputCompileDir = properDirNameW(tempBuffer);
 
 	myset.compilerSettingsCreated = true;

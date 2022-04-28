@@ -21,10 +21,6 @@
 
 #pragma once
 
-#ifdef _MSC_VER
-#pragma warning(disable: 4514) // referenced inline function has been removed
-#endif
-
 #include <Windows.h>
 #include <tchar.h>
 #include <memory>
@@ -33,6 +29,10 @@
 
 #pragma warning(push)
 #pragma warning(disable : 26812)
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4514) // referenced inline function has been removed
+#endif
 
 
 enum UniMode { uni8Bit = 0, uniUTF8 = 1, uni16BE = 2, uni16LE = 3, uniCookie = 4, uni7Bit = 5, uni16BE_NoBOM = 6, uni16LE_NoBOM = 7, uniEnd };

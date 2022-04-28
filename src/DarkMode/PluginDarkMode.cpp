@@ -16,6 +16,10 @@
 
 // Which classes exist for themes?
 // https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
+//
+// Controls styles and states info:
+// https://docs.microsoft.com/en-us/windows/win32/controls/control-spy
+//
 
 // Generate debug info for this file
 //#define _DEBUG_DARK_MODE
@@ -72,6 +76,8 @@ namespace PluginDarkMode
 		HBRUSH errorBackground = nullptr;
 		HBRUSH hardlightBackground = nullptr;
 		HBRUSH softlightBackground = nullptr;
+		HBRUSH textColorBrush = nullptr;
+		HBRUSH darkerTextColorBrush = nullptr;
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -81,6 +87,8 @@ namespace PluginDarkMode
 			, errorBackground(::CreateSolidBrush(colors.errorBackground))
 			, hardlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER)))
 			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
+			, textColorBrush(::CreateSolidBrush(colors.text))
+			, darkerTextColorBrush(::CreateSolidBrush(colors.darkerText))
 
 		{}
 
@@ -93,6 +101,8 @@ namespace PluginDarkMode
 			::DeleteObject(errorBackground);	errorBackground = nullptr;
 			::DeleteObject(hardlightBackground);	hardlightBackground = nullptr;
 			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
+			::DeleteObject(textColorBrush);			textColorBrush = nullptr;
+			::DeleteObject(darkerTextColorBrush);	darkerTextColorBrush = nullptr;
 		}
 
 		void change(const Colors& colors)
@@ -104,6 +114,8 @@ namespace PluginDarkMode
 			::DeleteObject(errorBackground);
 			::DeleteObject(hardlightBackground);
 			::DeleteObject(softlightBackground);
+			::DeleteObject(textColorBrush);
+			::DeleteObject(darkerTextColorBrush);
 
 			background = ::CreateSolidBrush(colors.background);
 			softerBackground = ::CreateSolidBrush(colors.softerBackground);
@@ -112,6 +124,8 @@ namespace PluginDarkMode
 			errorBackground = ::CreateSolidBrush(colors.errorBackground);
 			hardlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER));
 			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
+			textColorBrush = ::CreateSolidBrush(colors.text);
+			darkerTextColorBrush = ::CreateSolidBrush(colors.darkerText);
 		}
 	};
 
@@ -389,7 +403,7 @@ namespace PluginDarkMode
 		WORD l = 0;
 		ColorRGBToHLS(c, &h, &l, &s);
 
-		l = 240 - l;
+		l = HLSMAXRANGE - l;
 
 		COLORREF invert_c = ColorHLSToRGB(h, l, s);
 
@@ -424,85 +438,6 @@ namespace PluginDarkMode
 		return newColor;
 	}
 
-	bool colorizeBitmap(HBITMAP image, COLORREF color, WORD extraLuminance)
-	{
-		struct { BITMAPINFO info = {}; RGBQUAD moreColors[255]; } bmi;
-		BITMAPINFOHEADER& bmh = bmi.info.bmiHeader;
-		BITMAP bm = {};
-
-		bmh.biSize = sizeof(bmh);
-		GetObject(image, sizeof(bm), &bm);
-
-		if (bm.bmBitsPixel != 32)
-			return false;
-
-		HDC memDC = CreateCompatibleDC(NULL);
-		if (!memDC)
-			return false;
-
-		std::unique_ptr<std::uint8_t[]> bitmapData;
-		if (bm.bmBits == NULL)
-		{
-			GetDIBits(memDC, image, 0, bm.bmHeight, NULL, &bmi.info, DIB_RGB_COLORS);
-			bitmapData = std::make_unique<std::uint8_t[]>(bmh.biSizeImage);
-			int scanCopied = 0;
-			scanCopied = GetDIBits(memDC, image, 0, bm.bmHeight, bitmapData.get(), &bmi.info, DIB_RGB_COLORS);
-
-			if (scanCopied < bm.bmHeight)
-			{
-				DeleteDC(memDC);
-				return false;
-			}
-		}
-
-		WORD srcH, srcL, srcS, h, l, s;
-		std::uint8_t r, g, b, a;
-		std::uint8_t* data, *initRowData, * rowData = bm.bmBits == NULL ? bitmapData.get() : static_cast<std::uint8_t*>(bm.bmBits);
-
-		DWORD stride = bm.bmWidthBytes;
-		COLORREF colorRes = 0;
-		ColorRGBToHLS(color, &h, &l, &s);
-
-		initRowData = rowData;
-		std::uint32_t bmHeight = static_cast<std::uint32_t>(bm.bmHeight);
-		std::uint32_t bmWidth = static_cast<std::uint32_t>(bm.bmWidth);
-		DWORD index = 0;
-		for (std::uint32_t y = 0; y < bmHeight; y++)
-		{
-			data = rowData;
-			for (std::uint32_t x = 0; x < bmWidth; x++)
-			{
-				index = x + (y * stride);
-				a = data[0];
-				r = data[3];
-				g = data[2];
-				b = data[1];
-
-				ColorRGBToHLS(RGB(r, g, b), &srcH, &srcL, &srcS);
-				srcH = h;
-				srcS = s;
-				if (extraLuminance > 0 && a > 0)
-					srcL += extraLuminance;
-				COLORREF colorRes = ColorHLSToRGB(srcH, srcL, srcS);
-
-				data[3] = GetRValue(colorRes);
-				data[2] = GetGValue(colorRes);
-				data[1] = GetBValue(colorRes);
-				data += 4;
-			}
-			rowData += stride;
-		}
-
-		int copied = 0;
-		copied = SetDIBits(memDC, image, 0, bm.bmHeight, initRowData, &bmi.info, DIB_RGB_COLORS);
-		DeleteDC(memDC);
-
-		if (copied < bm.bmHeight)
-			return false;
-		else
-			return true;
-	}
-
 	// adapted from https://stackoverflow.com/a/56678483
 	double calculatePerceivedLighness(COLORREF c)
 	{
@@ -535,13 +470,15 @@ namespace PluginDarkMode
 	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
 	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
 
-	HBRUSH getBackgroundBrush()           { return getTheme()._brushes.background; }
-	HBRUSH getSofterBackgroundBrush()     { return getTheme()._brushes.softerBackground; }
-	HBRUSH getHotBackgroundBrush()        { return getTheme()._brushes.hotBackground; }
-	HBRUSH getDarkerBackgroundBrush()     { return getTheme()._brushes.pureBackground; }
-	HBRUSH getErrorBackgroundBrush()      { return getTheme()._brushes.errorBackground; }
-	HBRUSH getHardlightBackgroundBrush()  { return getTheme()._brushes.hardlightBackground; }
-	HBRUSH getSoftlightBackgroundBrush()  { return getTheme()._brushes.softlightBackground; }
+	HBRUSH getBackgroundBrush()          { return getTheme()._brushes.background; }
+	HBRUSH getSofterBackgroundBrush()    { return getTheme()._brushes.softerBackground; }
+	HBRUSH getHotBackgroundBrush()       { return getTheme()._brushes.hotBackground; }
+	HBRUSH getDarkerBackgroundBrush()    { return getTheme()._brushes.pureBackground; }
+	HBRUSH getErrorBackgroundBrush()     { return getTheme()._brushes.errorBackground; }
+	HBRUSH getHardlightBackgroundBrush() { return getTheme()._brushes.hardlightBackground; }
+	HBRUSH getSoftlightBackgroundBrush() { return getTheme()._brushes.softlightBackground; }
+	HBRUSH getTextBrush()				 { return getTheme()._brushes.textColorBrush; }
+	HBRUSH getDarkerTextBrush()			 { return getTheme()._brushes.darkerTextColorBrush; }
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
@@ -842,6 +779,150 @@ namespace PluginDarkMode
 		::EnableDarkScrollBarForWindowAndChildren(hwnd);
 	}
 
+	bool colorizeBitmap(HBITMAP image, WORD h, WORD l, WORD s,
+		bool changeH, bool changeL, bool changeS, bool testAlphaForChange,
+		short rotateH, short displaceL, short displaceS, bool testAlphaForDisplace,
+		bool invertR, bool invertG, bool invertB, bool testAlphaForInvertColor,
+		bool invertLight, WORD invertLightCeiling, WORD invertLightFloor, bool testAlphaForInvertLight,
+		WORD luminosityMin, WORD luminosityMax, bool useLuminosityMin, bool useLuminosityMax, bool testAlphaForLuminosityThreshold,
+		bool alphaUnpremultiply)
+	{
+		// Get bitmap info and bits
+		struct { BITMAPINFO info = {}; RGBQUAD moreColors[255]; } bmi;
+		BITMAPINFOHEADER& bmh = bmi.info.bmiHeader;
+		BITMAP bm = {};
+
+		bmh.biSize = sizeof(bmh);
+		GetObject(image, sizeof(bm), &bm);
+
+		if (bm.bmBitsPixel != 32)
+			return false;
+
+		HDC memDC = CreateCompatibleDC(NULL);
+		if (!memDC)
+			return false;
+
+		std::unique_ptr<std::uint8_t[]> bitmapData;
+		if (bm.bmBits == NULL)
+		{
+			GetDIBits(memDC, image, 0, bm.bmHeight, NULL, &bmi.info, DIB_RGB_COLORS);
+			bitmapData = std::make_unique<std::uint8_t[]>(bmh.biSizeImage);
+			int scanCopied = 0;
+			scanCopied = GetDIBits(memDC, image, 0, bm.bmHeight, bitmapData.get(), &bmi.info, DIB_RGB_COLORS);
+
+			if (scanCopied < bm.bmHeight)
+			{
+				DeleteDC(memDC);
+				return false;
+			}
+		}
+
+		// Map bitmap memory
+		WORD srcH, srcL, srcS;
+		std::uint8_t r, g, b, a;
+		std::uint8_t* data, * initRowData, * rowData = bm.bmBits == NULL ? bitmapData.get() : static_cast<std::uint8_t*>(bm.bmBits);
+
+		DWORD stride = bm.bmWidthBytes;
+		COLORREF colorResult = 0;
+
+		initRowData = rowData;
+		std::uint32_t bmHeight = static_cast<std::uint32_t>(bm.bmHeight);
+		std::uint32_t bmWidth = static_cast<std::uint32_t>(bm.bmWidth);
+		DWORD index = 0;
+
+		// Image processing
+		for (std::uint32_t y = 0; y < bmHeight; y++)
+		{
+			data = rowData;
+			for (std::uint32_t x = 0; x < bmWidth; x++)
+			{
+				// Step 1 - Conversion
+				a = data[3];
+				r = data[2];
+				g = data[1];
+				b = data[0];
+
+				if (alphaUnpremultiply && a != 0)
+				{
+					r = (r * 255) / a;
+					g = (g * 255) / a;
+					b = (b * 255) / a;
+				}
+
+				ColorRGBToHLS(RGB(r, g, b), &srcH, &srcL, &srcS);
+
+				// Step 2 - Modification
+				if (!testAlphaForChange || (testAlphaForChange && a > 0))
+				{
+					if (changeH)
+						srcH = h;
+					if (changeL)
+						srcL = l;
+					if (changeS)
+						srcS = s;
+				}
+				if (!testAlphaForDisplace || (testAlphaForDisplace && a > 0))
+				{
+					if (rotateH != 0) // avoid unecessary large calcs
+						srcH = (((srcH + rotateH) / HLSMAXRANGE) * HLSMAXRANGE) + ((srcH + rotateH) % HLSMAXRANGE);
+					if (displaceL != 0)
+						srcL = displaceL > 0 ? std::min(HLSMAXRANGE, srcL + displaceL) : std::max(0, srcL - displaceL);
+					if (displaceS != 0)
+						srcS = displaceS > 0 ? std::min(HLSMAXRANGE, srcS + displaceS) : std::max(0, srcS - displaceS);;
+				}
+				if (invertLight)
+				{
+					if (!testAlphaForInvertColor || (testAlphaForInvertColor && a > 0))
+					{
+						srcL = std::min(invertLightCeiling - srcL, static_cast<int>(invertLightFloor));
+					}
+				}
+				if (!testAlphaForLuminosityThreshold || (testAlphaForLuminosityThreshold && a > 0))
+				{
+					if (useLuminosityMin)
+						srcL = std::max(srcL, luminosityMin);
+					if (useLuminosityMax)
+						srcL = std::min(srcL, luminosityMax);
+				}
+
+				// Step 3 - Sanitization
+				srcH = srcH < 0 ? 0 : (srcH > 240 ? 240 : srcH);
+				srcL = srcL < 0 ? 0 : (srcL > 240 ? 240 : srcL);
+				srcS = srcS < 0 ? 0 : (srcS > 240 ? 240 : srcS);
+
+				// Step 4 - back cast
+				colorResult = ColorHLSToRGB(srcH, srcL, srcS);
+				data[2] = GetRValue(colorResult);
+				data[1] = GetGValue(colorResult);
+				data[0] = GetBValue(colorResult);
+
+				// Step 5 - Color inversion
+				if (!testAlphaForInvertColor || (testAlphaForInvertColor && a > 0))
+				{
+					if (invertR)
+						data[2] = 255 - data[2];
+					if (invertG)
+						data[1] = 255 - data[1];
+					if (invertB)
+						data[0] = 255 - data[0];
+				}
+
+				data += 4;
+			}
+			rowData += stride;
+		}
+
+		// Modify bitmap bits
+		int copied = 0;
+		copied = SetDIBits(memDC, image, 0, bm.bmHeight, initRowData, &bmi.info, DIB_RGB_COLORS);
+		DeleteDC(memDC);
+
+		if (copied < bm.bmHeight)
+			return false;
+		else
+			return true;
+	}
+
 	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID, WORD extraLuminance)
 	{
 		HDC screenDC = GetDC(NULL);
@@ -864,12 +945,18 @@ namespace PluginDarkMode
 		SelectObject(hdc, hOldBitmap);
 		DeleteDC(hdc);
 
-		bool bsuccess = colorizeBitmap(hReturn, getBackgroundColor(), extraLuminance);
+		HLS backColors;
+		ColorRGBToHLS(getBackgroundColor(), &backColors.h, &backColors.l, &backColors.s);
+		bool bsuccess = colorizeBitmap(hReturn, backColors.h, backColors.l,	backColors.s, true, false, true, true, 0, 
+			extraLuminance, 0);
 		if (bsuccess)
 			return hReturn;
 
 		return NULL;
 	}
+
+	enum class SpinButtonType { LeftRight, UpDown };
+	enum class SpinArrowDirection { Left, Right, Up, Down };
 
 	struct ButtonData
 	{
@@ -912,7 +999,7 @@ namespace PluginDarkMode
 			closeTheme();
 		}
 
-		bool ensureTheme(HWND hwnd)
+		bool ensureTheme()
 		{
 			if (!hTheme)
 			{
@@ -991,13 +1078,299 @@ namespace PluginDarkMode
 		}
 	};
 
-	void renderButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
+	struct SpinData
+	{
+		HWND hWnd = nullptr;
+		HTHEME hTheme = nullptr;
+		SpinButtonType type = SpinButtonType::LeftRight;
+		RECT currentRcClient = {};
+		int iStateID1 = 0;
+		int iStateID2 = 0;
+
+		HBITMAP SpinArrowOne[4] = {};
+		HBITMAP SpinArrowTwo[4] = {};
+
+		~SpinData()
+		{
+			closeTheme();
+		}
+
+		bool ensureTheme(HWND hwnd)
+		{
+			RECT rcClient;
+			GetClientRect(hwnd, &rcClient);
+			if (!hTheme)
+			{
+				hTheme = OpenThemeData(hwnd, L"Spin");
+
+				if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
+					type = SpinButtonType::LeftRight;
+				else
+					type = SpinButtonType::UpDown;
+			}
+
+			reloadImages(rcClient);
+
+			return hTheme != nullptr;
+		}
+
+		void closeTheme()
+		{
+			if (hTheme)
+			{
+				CloseThemeData(hTheme);
+				DeleteObject(SpinArrowOne);
+				DeleteObject(SpinArrowTwo);
+				hTheme = nullptr;
+			}
+		}
+
+	private:
+		// Spin controls almost never resize, so loading bitmaps once for it is cheap and speeds draws later
+		void reloadImages(const RECT& rcClient)
+		{
+			if (!hTheme || EqualRect(&rcClient, &currentRcClient))
+				return;
+
+			int cx = rcClient.right - rcClient.left;
+			int cy = rcClient.bottom - rcClient.top;
+			HDC newDC = CreateCompatibleDC(NULL);
+			HBITMAP hOldBitmap = nullptr;
+
+			RECT spinRect = {};
+			HLS controlBack;
+			HLS colorDarkText;
+			ColorRGBToHLS(getBackgroundColor(), &controlBack.h, &controlBack.l, &controlBack.s);
+			ColorRGBToHLS(getDarkerTextColor(), &colorDarkText.h, &colorDarkText.l, &colorDarkText.s);
+			int internalStatus = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				internalStatus = i + 1;
+
+				// Create bitmaps
+				SpinArrowOne[i] = CreateBitmap(type == SpinButtonType::LeftRight ? cx / 2 : cx, cy, 1, 32, NULL);
+				SpinArrowTwo[i] = CreateBitmap(cx, type == SpinButtonType::UpDown ? cy / 2 : cy, 1, 32, NULL);
+
+				GetThemeBackgroundExtent(hTheme, newDC, SPNP_UPHORZ, i + 1, &rcClient, &spinRect);
+
+				if (type == SpinButtonType::LeftRight)
+					spinRect.right /= 2;
+				else
+					spinRect.bottom /= 2;
+
+				if (hOldBitmap == nullptr)
+					hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(newDC, SpinArrowOne[i]));
+				else
+					SelectObject(newDC, SpinArrowOne[i]);
+
+				// Draw theme buttons
+				// SPNP_DOWNHORZ = left arrow, SPNP_UPHORZ = right arrow
+				RECT arrowRc = { 0, 0, cx, cy };
+				FillRect(newDC, &arrowRc, getBackgroundBrush());
+				DrawThemeBackground(hTheme, newDC, type == SpinButtonType::LeftRight ? SPNP_DOWNHORZ : SPNP_UP, i + 1, &spinRect, NULL);
+				SelectObject(newDC, SpinArrowTwo[i]);
+				FillRect(newDC, &arrowRc, getBackgroundBrush());
+				DrawThemeBackground(hTheme, newDC, type == SpinButtonType::LeftRight ? SPNP_UPHORZ : SPNP_DOWN, i + 1, &spinRect, NULL);
+
+				if (hOldBitmap)
+					SelectObject(newDC, hOldBitmap);
+
+				// How to turn a "light themed" control into a Dark Mode one?
+
+				// Step 1 -> Invert colors
+				colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, true, true, true);
+				colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, true, true, true);
+
+				// Step 2 -> Attenuate minimum luminosity to control background's light.
+				colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, 
+					false, false, false, true, false, 240, 0, true, controlBack.l, 240, true);
+				colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
+					false, false, false, true, false, 240, 0, true, controlBack.l, 240, true);
+
+				// Step 3 -> Attenuate maximum luminosity to control light - for statuses UPS_NORMAL (1) and UPS_DISABLED (4)
+				if (internalStatus == UPS_NORMAL || internalStatus == UPS_DISABLED)
+				{
+					colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
+						false, false, false, true, false, 240, 0, true, 0, colorDarkText.l, false, true);
+					colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
+						false, false, false, true, false, 240, 0, true, 0, colorDarkText.l, false, true);
+				}
+
+				// Step 4 -> Colorize to theme
+				colorizeBitmap(SpinArrowOne[i], controlBack.h, 0, controlBack.s, true, false, true);
+				colorizeBitmap(SpinArrowTwo[i], controlBack.h, 0, controlBack.s, true, false, true);
+			}
+
+			currentRcClient = rcClient;
+			DeleteDC(newDC);
+		}
+	};
+
+	// Draws a BS_PUSBUTON or DEF_PUSHBUTTON or Checkbox with BS_PUSHLIKE control background
+	// nState is the same as static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
+	// nStyle is the same as GetWindowLongPtr(hwndButton, GWL_STYLE);
+	void renderButtonBackground(HDC hdc, DWORD nState, LONG_PTR nStyle, const RECT& rcClient)
+	{
+		HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
+		if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
+			hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
+
+		HPEN hOldPen = nullptr;
+		if (nStyle & WS_DISABLED)
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getDarkEdgePen()));
+		else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getLightEdgePen()));
+		else if (nStyle & (BS_PUSHLIKE))
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
+		else
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
+
+		HBRUSH hOldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, hBckBrush));
+		RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
+		SelectObject(hdc, hOldBrush);
+
+		if (hOldPen)
+			SelectObject(hdc, hOldPen);
+	}
+
+	void renderButton(HWND hwndButton, HDC hdc, HTHEME hTheme)
+	{
+		RECT rcClient = {};
+		WCHAR szText[256] = { '\0' };
+		DWORD nState = static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
+		LONG_PTR nStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
+		DWORD uiState = static_cast<DWORD>(SendMessage(hwndButton, WM_QUERYUISTATE, 0, 0));
+
+		GetClientRect(hwndButton, &rcClient);
+		GetWindowText(hwndButton, szText, _countof(szText));
+
+		HFONT hFont = nullptr;
+		HFONT hOldFont = nullptr;
+
+		renderButtonBackground(hdc, nState, nStyle, rcClient);
+
+		// Draw button image
+		RECT rcImage = rcClient;
+		RECT rcText = rcClient;
+
+		// Calculate actual text output rectangle and centralize
+		const int padding = _dpiManager.scaleX(4);
+		DrawText(hdc, szText, sizeof(szText), &rcImage, DT_CALCRECT);
+		rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
+		rcImage.right += padding + rcImage.left;
+
+		ICONINFO ii;
+		BITMAP bm;
+
+		HICON hIcon = reinterpret_cast<HICON>(SendMessage(hwndButton, BM_GETIMAGE, IMAGE_ICON, 0));
+		HBITMAP hBitmap = reinterpret_cast<HBITMAP>(hIcon); // BM_GETIMAGE returns the same handler for IMAGE_ICON and IMAGE_BITMAP.
+		BOOL bIcon = GetIconInfo(hIcon, &ii);
+		BOOL bBitmap = GetObject(hBitmap, sizeof(bm), &bm);
+
+		bool bStandalone = ((nStyle & BS_BITMAP) != 0) || ((nStyle & BS_ICON) != 0) || (szText[0] == '\0');
+
+		if (bIcon)
+		{
+			POINT pxIcon = {};
+			rcImage.left -= ii.xHotspot * 2;
+			pxIcon.x = bStandalone ? (rcClient.right - ii.xHotspot * 2) / 2 : rcImage.left;
+			pxIcon.y = (rcClient.bottom - (ii.yHotspot * 2)) / 2;
+			if (nState & BST_PUSHED)
+			{
+				pxIcon.x += _dpiManager.scaleX(1);
+				pxIcon.y += _dpiManager.scaleY(1);
+			}
+			DrawIconEx(hdc, pxIcon.x, pxIcon.y, hIcon, ii.xHotspot * 2, ii.yHotspot * 2, 0, NULL, DI_NORMAL);
+		}
+
+		if (bBitmap)
+		{
+			POINT pxBmp = {};
+			rcImage.left -= bm.bmWidth;
+			HDC memDC = CreateCompatibleDC(hdc);
+			pxBmp.x = bStandalone ? (rcClient.right - bm.bmWidth) / 2 : rcImage.left;
+			pxBmp.y = (rcClient.bottom - bm.bmHeight) / 2;
+			if (nState & BST_PUSHED)
+			{
+				pxBmp.x += _dpiManager.scaleX(1);
+				pxBmp.y += _dpiManager.scaleY(1);
+			}
+
+			HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, hBitmap));
+			if (bm.bmBitsPixel == 32)
+			{
+				BLENDFUNCTION bf1;
+				bf1.BlendOp = AC_SRC_OVER;
+				bf1.BlendFlags = 0;
+				bf1.SourceConstantAlpha = 0xff;
+				bf1.AlphaFormat = AC_SRC_ALPHA;
+				GdiAlphaBlend(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf1);
+			}
+			else
+				BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCCOPY);
+
+			SelectObject(memDC, oldBmp);
+			DeleteDC(memDC);
+		}
+
+		if (bIcon || bBitmap)
+			rcText.left += padding;
+
+		hFont = reinterpret_cast<HFONT>(SendMessage(hwndButton, WM_GETFONT, 0, 0));
+		hOldFont = static_cast<HFONT>(SelectObject(hdc, hFont));
+
+
+		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
+		dtto.crText = PluginDarkMode::getTextColor();
+
+		if (nStyle & WS_DISABLED)
+		{
+			dtto.crText = PluginDarkMode::getDisabledTextColor();
+		}
+
+		if (nState & BST_PUSHED)
+		{
+			rcText.left += _dpiManager.scaleX(1);
+			rcText.right += _dpiManager.scaleX(1);
+			rcText.top += _dpiManager.scaleY(1);
+			rcText.bottom += _dpiManager.scaleY(1);
+		}
+
+		DWORD dtFlags = DT_LEFT; // DT_LEFT is 0
+		dtFlags |= (nStyle & BS_MULTILINE) ? DT_WORDBREAK : DT_SINGLELINE;
+		dtFlags |= ((nStyle & BS_CENTER) == BS_CENTER) ? DT_CENTER : (nStyle & BS_RIGHT) ? DT_RIGHT : 0;
+		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
+		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
+
+		// Modifications to DrawThemeText
+		dtFlags &= ~(DT_RIGHT);
+		dtFlags |= DT_VCENTER | DT_CENTER;
+
+		int iStateID = PBS_NORMAL;
+		if (nStyle & WS_DISABLED)				iStateID = PBS_DISABLED;
+		else if (nState & BST_PUSHED)			iStateID = PBS_PRESSED;
+		else if (nState & BST_HOT)				iStateID = PBS_HOT;
+		else if (nStyle & BS_DEFPUSHBUTTON)		iStateID = PBS_DEFAULTED;
+
+		DrawThemeTextEx(hTheme, hdc, BP_PUSHBUTTON, iStateID, szText, -1, dtFlags, &rcText, &dtto);
+
+		if ((nState & BST_FOCUS) && !(uiState & UISF_HIDEFOCUS))
+		{
+			rcClient.left += _dpiManager.scaleX(2); rcClient.right -= _dpiManager.scaleX(2);
+			rcClient.top += _dpiManager.scaleY(2); rcClient.bottom -= _dpiManager.scaleY(2);
+			DrawFocusRect(hdc, &rcClient);
+		}
+
+		SelectObject(hdc, hOldFont);
+	}
+
+	void renderCheckboxOrRadioButton(HWND hwnd, HDC hdc, HTHEME hTheme, int iPartID, int iStateID)
 	{
 		RECT rcClient = {};
 		WCHAR szText[256] = { '\0' };
 		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
 		DWORD uiState = static_cast<DWORD>(SendMessage(hwnd, WM_QUERYUISTATE, 0, 0));
-		LONG_PTR nStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
+		DWORD nStyle = GetWindowLong(hwnd, GWL_STYLE);
 
 		HFONT hFont = nullptr;
 		HFONT hOldFont = nullptr;
@@ -1021,12 +1394,6 @@ namespace PluginDarkMode
 		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
 		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
 
-		if (iPartID == 1)
-		{
-			dtFlags &= ~(DT_RIGHT);
-			dtFlags |= DT_CENTER;
-		}
-
 		if (!(nStyle & BS_MULTILINE) && !(nStyle & BS_BOTTOM) && !(nStyle & BS_TOP))
 		{
 			dtFlags |= DT_VCENTER;
@@ -1037,11 +1404,6 @@ namespace PluginDarkMode
 
 		SIZE szBox = { 13, 13 };
 		GetThemePartSize(hTheme, hdc, iPartID, iStateID, NULL, TS_DRAW, &szBox);
-		if (iPartID == 1)
-		{
-			szBox.cx = rcClient.right;
-			szBox.cy = rcClient.bottom;
-		}
 
 		RECT rcText = rcClient;
 		GetThemeBackgroundContentRect(hTheme, hdc, iPartID, iStateID, &rcClient, &rcText);
@@ -1049,106 +1411,14 @@ namespace PluginDarkMode
 		RECT rcBackground = rcClient;
 		if (dtFlags & DT_SINGLELINE)
 		{
-			if (iPartID > 1)
-				rcBackground.top += (rcText.bottom - rcText.top - szBox.cy) / 2;
+			rcBackground.top += (rcText.bottom - rcText.top - szBox.cy) / 2;
 		}
 		rcBackground.bottom = rcBackground.top + szBox.cy;
 		rcBackground.right = rcBackground.left + szBox.cx;
+		rcText.left = rcBackground.right + 3;
 
-		if (iPartID > 1)
-			rcText.left = rcBackground.right + 3;
-
-		if (IsThemeBackgroundPartiallyTransparent(hTheme, iPartID, iStateID))
-			DrawThemeParentBackground(hwnd, hdc, &rcClient);
-		if (iPartID == 1)
-		{
-			DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0)); 
-			HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
-			if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
-				hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
-
-			if (nStyle & WS_DISABLED)
-				SelectObject(hdc, PluginDarkMode::getDarkEdgePen());
-			else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
-				SelectObject(hdc, PluginDarkMode::getLightEdgePen());
-			else if (nStyle & (BS_PUSHLIKE))
-				SelectObject(hdc, PluginDarkMode::getEdgePen());
-			else
-				SelectObject(hdc, PluginDarkMode::getEdgePen());
-
-			SelectObject(hdc, hBckBrush);
-			RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
-		}
-		else
-			DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBackground, nullptr);
-
-		// Draw button image
-		RECT rcImage = rcClient;
-		if (iPartID == 1)
-		{
-			// Calculate actual text output rectangle and centralize
-			int padding = _dpiManager.scaleX(4);
-			DrawText(hdc, szText, std::wstring(szText).size(), &rcImage, DT_CALCRECT);
-			rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
-			rcImage.right += padding + rcImage.left;
-
-			ICONINFO ii;
-			BITMAP bm;
-
-			HICON hIcon = reinterpret_cast<HICON>(SendMessage(hwnd, BM_GETIMAGE, IMAGE_ICON, 0));
-			HBITMAP hBitmap = reinterpret_cast<HBITMAP>(hIcon); // BM_GETIMAGE returns the same handler for IMAGE_ICON and IMAGE_BITMAP.
-			BOOL bIcon = GetIconInfo(hIcon, &ii);
-			BOOL bBitmap = GetObject(hBitmap, sizeof(bm), &bm);
-
-			bool bStandalone = ((nStyle & BS_BITMAP) != 0) || ((nStyle & BS_ICON) != 0) || (szText[0] == '\0');
-
-			if (bIcon)
-			{
-				POINT pxIcon = {};
-				rcImage.left -= ii.xHotspot * 2;
-				pxIcon.x = bStandalone ? (rcClient.right - ii.xHotspot * 2) / 2 : rcImage.left;
-				pxIcon.y = (rcClient.bottom - (ii.yHotspot * 2)) / 2;
-				if (nState & BST_PUSHED)
-				{
-					pxIcon.x += _dpiManager.scaleX(1);
-					pxIcon.y += _dpiManager.scaleY(1);
-				}
-				DrawIconEx(hdc, pxIcon.x, pxIcon.y, hIcon, ii.xHotspot * 2, ii.yHotspot * 2, 0, NULL, DI_NORMAL);
-			}
-
-			if (bBitmap)
-			{
-				POINT pxBmp = {};
-				rcImage.left -= bm.bmWidth;
-				HDC memDC = CreateCompatibleDC(hdc);
-				pxBmp.x = bStandalone ? (rcClient.right - bm.bmWidth) / 2 : rcImage.left;
-				pxBmp.y = (rcClient.bottom - bm.bmHeight) / 2;
-				if (nState & BST_PUSHED)
-				{
-					pxBmp.x += _dpiManager.scaleX(1);
-					pxBmp.y += _dpiManager.scaleY(1);
-				}
-
-				HBITMAP oldBmp = reinterpret_cast<HBITMAP>(SelectObject(memDC, hBitmap));
-				if (bm.bmBitsPixel == 32)
-				{
-					BLENDFUNCTION bf1;
-					bf1.BlendOp = AC_SRC_OVER;
-					bf1.BlendFlags = 0;
-					bf1.SourceConstantAlpha = 0xff;
-					bf1.AlphaFormat = AC_SRC_ALPHA;
-					GdiAlphaBlend(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, bm.bmWidth, bm.bmHeight, bf1);
-				}
-				else
-					BitBlt(hdc, pxBmp.x, pxBmp.y, bm.bmWidth, bm.bmHeight, memDC, 0, 0, SRCCOPY);
-
-				SelectObject(memDC, oldBmp);
-				DeleteDC(memDC);
-			}
-
-			if (bIcon || bBitmap)
-				rcText.left += padding;
-		}
+		DrawThemeParentBackground(hwnd, hdc, &rcClient);
+		DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBackground, nullptr);
 
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
 		dtto.crText = PluginDarkMode::getTextColor();
@@ -1158,13 +1428,6 @@ namespace PluginDarkMode
 			dtto.crText = PluginDarkMode::getDisabledTextColor();
 		}
 
-		if ((nState & BST_PUSHED) && iPartID == 1)
-		{
-			rcText.left += _dpiManager.scaleX(1);
-			rcText.right += _dpiManager.scaleX(1);
-			rcText.top += _dpiManager.scaleY(1);
-			rcText.bottom += _dpiManager.scaleY(1);
-		}
 		DrawThemeTextEx(hTheme, hdc, iPartID, iStateID, szText, -1, dtFlags, &rcText, &dtto);
 
 		if ((nState & BST_FOCUS) && !(uiState & UISF_HIDEFOCUS))
@@ -1176,16 +1439,8 @@ namespace PluginDarkMode
 			rcFocus.bottom++;
 			rcFocus.left--;
 			rcFocus.right++;
-
-			if (iPartID == 1)
-			{
-				rcClient.left += _dpiManager.scaleX(2); rcClient.right -= _dpiManager.scaleX(2);
-				rcClient.top += _dpiManager.scaleY(2); rcClient.bottom -= _dpiManager.scaleY(2);
-				DrawFocusRect(hdc, &rcClient);
-			}
-			else
-				DrawFocusRect(hdc, &rcFocus);
-		}		
+			DrawFocusRect(hdc, &rcFocus);
+		}
 
 		if (hCreatedFont) DeleteObject(hCreatedFont);
 		SelectObject(hdc, hOldFont);
@@ -1195,18 +1450,12 @@ namespace PluginDarkMode
 	{
 		DWORD nState = static_cast<DWORD>(SendMessage(hwnd, BM_GETSTATE, 0, 0));
 		LONG_PTR nStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
-		LONG_PTR nUserData = GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		DWORD nButtonStyle = nStyle & 0xF;
-		bool bNormalButton = false;
 
-		DWORD PushLike = nStyle & BS_PUSHLIKE;
-
-		int iPartID = BP_CHECKBOX;
-		if ((nStyle & BS_PUSHLIKE) || (nUserData == BS_PUSHLIKE))
+		int iPartID = 0;
+		if (nButtonStyle == BS_PUSHBUTTON || nButtonStyle == BS_DEFPUSHBUTTON || (nStyle & BS_PUSHLIKE) > 0)
 		{
 			iPartID = BP_PUSHBUTTON;
-			if (nUserData == BS_PUSHLIKE)
-				bNormalButton = true;
 		}
 		else if (nButtonStyle == BS_RADIOBUTTON || nButtonStyle == BS_AUTORADIOBUTTON)
 		{
@@ -1230,7 +1479,7 @@ namespace PluginDarkMode
 		else if (nState & BST_PUSHED)	iStateID = RBS_UNCHECKEDPRESSED;
 		else if (nState & BST_HOT)		iStateID = RBS_UNCHECKEDHOT;
 
-		if ((nState & BST_CHECKED) && !bNormalButton)		iStateID += 4;
+		if (nState & BST_CHECKED)		iStateID += 4;
 
 		if (BufferedPaintRenderAnimation(hwnd, hdc))
 		{
@@ -1254,11 +1503,17 @@ namespace PluginDarkMode
 		{
 			if (hdcFrom)
 			{
-				renderButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
+				if (iPartID == BP_PUSHBUTTON)
+					renderButton(hwnd, hdcFrom, buttonData.hTheme);
+				else
+					renderCheckboxOrRadioButton(hwnd, hdcFrom, buttonData.hTheme, iPartID, buttonData.iStateID);
 			}
 			if (hdcTo)
 			{
-				renderButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
+				if (iPartID == BP_PUSHBUTTON)
+					renderButton(hwnd, hdcTo, buttonData.hTheme);
+				else
+					renderCheckboxOrRadioButton(hwnd, hdcTo, buttonData.hTheme, iPartID, iStateID);
 			}
 
 			buttonData.iStateID = iStateID;
@@ -1267,7 +1522,10 @@ namespace PluginDarkMode
 		}
 		else
 		{
-			renderButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID);
+			if (iPartID == BP_PUSHBUTTON)
+				renderButton(hwnd, hdc, buttonData.hTheme);
+			else
+				renderCheckboxOrRadioButton(hwnd, hdc, buttonData.hTheme, iPartID, iStateID);
 
 			buttonData.iStateID = iStateID;
 		}
@@ -1290,36 +1548,38 @@ namespace PluginDarkMode
 
 		switch (uMsg)
 		{
-			case WM_UPDATEUISTATE:
-				if (HIWORD(wParam) & (UISF_HIDEACCEL | UISF_HIDEFOCUS))
-				{
-					InvalidateRect(hWnd, nullptr, FALSE);
-				}
+		case WM_UPDATEUISTATE:
+			if (HIWORD(wParam) & (UISF_HIDEACCEL | UISF_HIDEFOCUS))
+			{
+				InvalidateRect(hWnd, nullptr, FALSE);
+			}
+			break;
+		case WM_NCDESTROY:
+			RemoveWindowSubclass(hWnd, ButtonSubclass, g_buttonSubclassID);
+			delete pButtonData;
+			break;
+		case WM_ERASEBKGND:
+			if (PluginDarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+			{
+				return TRUE;
+			}
+			else
+			{
 				break;
-			case WM_NCDESTROY:
-				RemoveWindowSubclass(hWnd, ButtonSubclass, g_buttonSubclassID);
-				delete pButtonData;
-				break;
-			case WM_ERASEBKGND:
-				if (PluginDarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+			}
+		case WM_THEMECHANGED:
+			pButtonData->closeTheme();
+			break;
+		case WM_PRINTCLIENT:
+		case WM_PAINT:
+			if (PluginDarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
+			{
+				PAINTSTRUCT ps = {};
+				HDC hdc = reinterpret_cast<HDC>(wParam);
+				if (!hdc)
 				{
-					return TRUE;
+					hdc = BeginPaint(hWnd, &ps);
 				}
-				else
-				{
-					break;
-				}
-			case WM_THEMECHANGED:
-				pButtonData->closeTheme();
-				break;
-			case WM_PRINTCLIENT:
-			case WM_PAINT:
-				if (PluginDarkMode::isEnabled() && pButtonData->ensureTheme(hWnd))
-				{
-					PAINTSTRUCT ps = {};
-					HDC hdc = reinterpret_cast<HDC>(wParam);
-					if (!hdc)
-						hdc = BeginPaint(hWnd, &ps);
 
 					ULONG_PTR token = 0;
 					Gdiplus::GdiplusStartupInput input = NULL;
@@ -1327,8 +1587,10 @@ namespace PluginDarkMode
 
 					paintButton(hWnd, hdc, *pButtonData);
 
-					if (ps.hdc)
-						EndPaint(hWnd, &ps);
+				if (ps.hdc)
+				{
+					EndPaint(hWnd, &ps);
+				}
 
 					if (token)
 						Gdiplus::GdiplusShutdown(token);
@@ -1663,7 +1925,7 @@ namespace PluginDarkMode
 	constexpr UINT_PTR g_listViewSubclassID = 42;
 
 	LRESULT DrawHeaderItem(HeaderItemData& headerItem, HWND hHeader, HDC hdc, const RECT& rcItem, int itemID, LONG_PTR headerStyle,
-		const POINT& mousePosition, const HDHITTESTINFO& headerHitTest, const RECT& rcClient, const RECT& rcParentClient, int parentScrollPos)
+		const POINT& mousePosition, const HDHITTESTINFO& headerHitTest, const RECT& rcParentClient, int parentScrollPos)
 	{
 		HTHEME hTheme = headerItem.hTheme;
 		SIZE szItem = { rcItem.right - rcItem.left, rcItem.bottom - rcItem.top };
@@ -1676,7 +1938,7 @@ namespace PluginDarkMode
 		TCHAR buffer[MAX_PATH] = { '/0' };
 		hdItem.mask = HDI_TEXT | HDI_FORMAT | HDI_BITMAP | HDI_IMAGE;
 		hdItem.pszText = buffer;
-		hdItem.cchTextMax = std::size(buffer);
+		hdItem.cchTextMax = static_cast<int>(std::size(buffer));
 		Header_GetItem(hHeader, itemID, &hdItem);
 
 		// Temporary modifiable rectangle for item
@@ -1722,8 +1984,6 @@ namespace PluginDarkMode
 		bool vItemPressed = false, vItemFocused = false;
 		if (clickableHeaderStyle)
 		{
-			int iComboStateID = 0;
-
 			// Fix hit test bug with mouse position and parent scrolling
 			vItemFocused = headerHitTest.iItem == itemID && mousePosition.x >= parentScrollPos &&
 				mousePosition.x < rcParentClient.right + parentScrollPos;
@@ -1965,7 +2225,7 @@ namespace PluginDarkMode
 		return CDRF_SKIPDEFAULT;
 	}
 
-	LRESULT DrawHeaderOverflow(HeaderItemData& headerItem, HWND hHeader, HDC hdc, RECT& rcClient)
+	LRESULT DrawHeaderOverflow(HWND hHeader, HDC hdc, RECT& rcClient)
 	{
 		RECT overflowRect = {};
 		Header_GetOverflowRect(hHeader, &overflowRect);
@@ -1973,7 +2233,6 @@ namespace PluginDarkMode
 		if (overflowRect.left == overflowRect.right)
 			return S_OK;
 
-		HTHEME hTheme = headerItem.hTheme;
 		POINT cursorPos;
 		HDHITTESTINFO hti;
 		GetCursorPos(&cursorPos);
@@ -2071,7 +2330,7 @@ namespace PluginDarkMode
 			si.fMask = SIF_POS;
 			GetScrollInfo(GetParent(hHeader), SB_HORZ, &si);
 
-			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle, cursorPos, hti, clientRect, parentRect, si.nPos);
+			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle, cursorPos, hti, parentRect, si.nPos);
 			RedrawWindow(hHeader, &rcItem, NULL, RDW_VALIDATE);
 			SelectFont(hdc, hOldFont);
 			ReleaseDC(hHeader, hdc);
@@ -2091,10 +2350,10 @@ namespace PluginDarkMode
 
 		switch (uMsg)
 		{
-			case WM_PAINT:
-			{
-				//break;
-				pHeaderItem->ensureTheme(hWnd);
+		case WM_PAINT:
+		{
+			//break;
+			pHeaderItem->ensureTheme();
 
 				PAINTSTRUCT ps;
 				HDC hdc = BeginPaint(hWnd, &ps);
@@ -2122,18 +2381,18 @@ namespace PluginDarkMode
 				HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
 				HFONT oldFont = reinterpret_cast<HFONT>(SelectObject(hdc, lstFont));
 
-				// Draw items
-				int count = static_cast<int>(Header_GetItemCount(hWnd));
-				RECT wRc = {};
-				for (int i = 0; i < count; i++)
-				{
-					Header_GetItemRect(hWnd, i, &wRc);
-					DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i, headerStyle, mousePos, hti, rcClient, rcParentClient, si.nPos);
-				}
+			// Draw items
+			int count = static_cast<int>(Header_GetItemCount(hWnd));
+			RECT wRc = {};
+			for (int i = 0; i < count; i++)
+			{
+				Header_GetItemRect(hWnd, i, &wRc);
+				DrawHeaderItem(*pHeaderItem, hWnd, hdc, wRc, i, headerStyle, mousePos, hti, rcParentClient, si.nPos);
+			}
 
-				// Draw header overflow if appliable
-				if ((headerStyle & HDS_OVERFLOW) > 0)
-					DrawHeaderOverflow(*pHeaderItem, hWnd, hdc, rcClient);
+			// Draw header overflow if appliable
+			if ((headerStyle & HDS_OVERFLOW) > 0)
+				DrawHeaderOverflow(hWnd, hdc, rcClient);
 
 				//Cleanup
 				SelectObject(hdc, oldFont);
@@ -2232,7 +2491,241 @@ namespace PluginDarkMode
 		SetWindowSubclass(hwndListView, ListViewSubclass, g_listViewSubclassID, 0);
 	}
 
-	constexpr UINT_PTR g_staticSubclassID = 42;
+	constexpr UINT_PTR g_spinControlSubclassID = 42;
+
+	void renderArrow(HDC hdc, const RECT& rcArrow, SpinArrowDirection direction, bool bPressed, LONG_PTR nStyle)
+	{
+		struct FPOINT {
+			float x = 0.0f;
+			float y = 0.0f;
+		};
+
+		FPOINT ptTriangleF[3] = {};
+		POINT ptTriangle[3] = {};
+
+		switch (direction)
+		{
+		case SpinArrowDirection::Left:
+			ptTriangleF[0] = { 1.0f, 0.0f };  
+			ptTriangleF[1] = { 0.0f, 0.5f };
+			ptTriangleF[2] = { 1.0f, 1.0f };
+			break;
+		case SpinArrowDirection::Right:
+			ptTriangleF[0] = { 0.0f, 0.0f };
+			ptTriangleF[1] = { 1.0f, 0.5f };
+			ptTriangleF[2] = { 0.0f, 1.0f };
+			break;
+		case SpinArrowDirection::Up:
+			ptTriangleF[0] = { 0.0f, 1.0f };
+			ptTriangleF[1] = { 0.5f, 0.0f };
+			ptTriangleF[2] = { 1.0f, 1.0f };
+			break;
+		case SpinArrowDirection::Down:
+			ptTriangleF[0] = { 0.0f, 0.0f };
+			ptTriangleF[1] = { 0.5f, 1.0f };
+			ptTriangleF[2] = { 1.0f, 0.0f };
+			break;
+		}
+
+		SIZE szArrowRc = { rcArrow.right - rcArrow.left, rcArrow.bottom - rcArrow.top };
+		SIZE szTriangleRect = { _dpiManager.scaleX(2), _dpiManager.scaleY(2) };
+		for (int i = 0; i < 3; i++)
+		{
+			ptTriangle[i].x = ptTriangleF[i].x * szTriangleRect.cx; // Scale triangle
+			ptTriangle[i].y = ptTriangleF[i].y * szTriangleRect.cy;
+			ptTriangle[i].x += rcArrow.left + ((szArrowRc.cx - ptTriangle[i].x) / 2);    // Centralize
+			ptTriangle[i].y += rcArrow.top + ((szArrowRc.cy - ptTriangle[i].y) / 2);
+		}
+
+		SelectObject(hdc, (nStyle & WS_DISABLED) > 0 ? getLightEdgePen() : getEdgePen());
+		HBRUSH hTriangleBrush = (nStyle & WS_DISABLED) > 0 ? getDarkerTextBrush() : getTextBrush();
+		HBRUSH hOldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, hTriangleBrush));
+
+		Polygon(hdc, &ptTriangle[0], 3);
+		SelectObject(hdc, hOldBrush);
+	}
+
+	void renderSpinButton(const SpinData& pSpinData, HDC hdc, const RECT& rcArrowOne, const RECT& rcArrowTwo, int iStateID1, int iStateID2)
+	{
+		BLENDFUNCTION bf1;
+		bf1.BlendOp = AC_SRC_OVER;
+		bf1.BlendFlags = 0;
+		bf1.SourceConstantAlpha = 0xff;
+		bf1.AlphaFormat = AC_SRC_ALPHA;
+
+		SIZE rcSizes[2] = {
+			{ rcArrowOne.right - rcArrowOne.left, rcArrowOne.bottom - rcArrowOne.top },
+			{ rcArrowTwo.right - rcArrowTwo.left, rcArrowTwo.bottom - rcArrowTwo.top },
+		};
+
+		HDC memDC = CreateCompatibleDC(hdc);
+
+		HBITMAP hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(memDC, pSpinData.SpinArrowOne[iStateID1 - 1]));
+		BitBlt(hdc, rcArrowOne.left, rcArrowOne.top, rcSizes[0].cx, rcSizes[0].cy, memDC, 0, 0, SRCCOPY);
+		SelectObject(memDC, pSpinData.SpinArrowTwo[iStateID2 - 1]);
+		BitBlt(hdc, rcArrowTwo.left, rcArrowTwo.top, rcSizes[1].cx, rcSizes[1].cy, memDC, 0, 0, SRCCOPY);
+
+		SelectObject(memDC, hOldBitmap);
+		DeleteDC(memDC);
+	}
+
+	void paintUpDownButtons(HWND hWnd, HDC hdc, SpinData& pSpinData)
+	{
+		RECT rcClient{};
+		::GetClientRect(hWnd, &rcClient);
+
+		// Determines up/down or left/right
+		RECT rcArrowOne;
+		RECT rcArrowTwo;
+		SpinButtonType bSpinDirection = SpinButtonType::LeftRight;
+
+		if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
+		{
+			rcArrowOne = {
+				rcClient.left, rcClient.top,
+				rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
+			};
+			rcArrowTwo = {
+				rcArrowOne.right, rcClient.top,
+				rcClient.right, rcClient.bottom
+			};
+		}
+		else
+		{
+			bSpinDirection = SpinButtonType::UpDown;
+			rcArrowOne = {
+				rcClient.left, rcClient.top,
+				rcClient.right, rcClient.bottom - ((rcClient.bottom - rcClient.top) / 2)
+			};
+			rcArrowTwo = {
+				rcClient.left, rcArrowOne.bottom,
+				rcClient.right, rcClient.bottom
+			};
+		}
+
+		POINT ptCursor = {};
+		::GetCursorPos(&ptCursor);
+		::ScreenToClient(hWnd, &ptCursor);
+
+		bool isHotOne = ::PtInRect(&rcArrowOne, ptCursor);
+		bool isHotTwo = ::PtInRect(&rcArrowTwo, ptCursor);
+		bool bPressed = (GetKeyState(VK_LBUTTON) & 0x8000) != 0;
+		LONG_PTR nStyle = GetWindowLongPtr(hWnd, GWL_STYLE); // To check enabled / disabled
+
+		int iStateID1 = (bPressed && isHotOne) ? UPS_PRESSED : (isHotOne ? UPS_HOT : UPS_NORMAL);
+		int iStateID2 = (bPressed && isHotTwo) ? UPS_PRESSED : (isHotTwo ? UPS_HOT : UPS_NORMAL);
+		if (nStyle & WS_DISABLED)
+		{
+			iStateID1 = UPS_DISABLED;
+			iStateID2 = UPS_DISABLED;
+		}
+
+		if (BufferedPaintRenderAnimation(hWnd, hdc))
+		{
+			return;
+		}
+
+		BP_ANIMATIONPARAMS animParams = { sizeof(animParams) };
+		animParams.style = BPAS_LINEAR;
+		if (iStateID1 != pSpinData.iStateID1)
+			GetThemeTransitionDuration(pSpinData.hTheme, SPNP_UP, pSpinData.iStateID1, iStateID1, TMT_TRANSITIONDURATIONS, &animParams.dwDuration);
+		if (iStateID2 != pSpinData.iStateID2)
+			GetThemeTransitionDuration(pSpinData.hTheme, SPNP_UP, pSpinData.iStateID2, iStateID2, TMT_TRANSITIONDURATIONS, &animParams.dwDuration);
+
+		HDC hdcFrom = nullptr;
+		HDC hdcTo = nullptr;
+		HANIMATIONBUFFER hbpAnimation = nullptr; // BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		if (hbpAnimation)
+		{
+			if (hdcFrom)
+			{
+				renderSpinButton(pSpinData, hdcFrom, rcArrowOne, rcArrowTwo, pSpinData.iStateID1, pSpinData.iStateID2);
+			}
+			if (hdcTo)
+			{
+				renderSpinButton(pSpinData, hdcTo, rcArrowOne, rcArrowTwo, iStateID1, iStateID2);
+			}
+
+			pSpinData.iStateID1 = iStateID1;
+			pSpinData.iStateID2 = iStateID2;
+
+			EndBufferedAnimation(hbpAnimation, TRUE);
+		}
+		else
+		{
+			renderSpinButton(pSpinData, hdc, rcArrowOne, rcArrowTwo, iStateID1, iStateID2);
+			pSpinData.iStateID1 = iStateID1;
+			pSpinData.iStateID2 = iStateID2;
+		}
+	}
+
+	LRESULT CALLBACK SpinControlSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto pSpinData = reinterpret_cast<SpinData*>(dwRefData);
+
+		switch (uMsg)
+		{
+		case WM_PRINTCLIENT:
+		case WM_PAINT:
+		{
+			if (!PluginDarkMode::isEnabled())
+			{
+				break;
+			}
+
+			if (!pSpinData->ensureTheme(hWnd))
+			{
+				break;
+			}
+
+			PAINTSTRUCT ps{};
+			auto hdc = ::BeginPaint(hWnd, &ps);
+			paintUpDownButtons(hWnd, hdc, *pSpinData);
+			::EndPaint(hWnd, &ps);
+
+			return FALSE;
+		}
+
+		case WM_THEMECHANGED:
+		{
+			pSpinData->closeTheme();
+			break;
+		}
+
+		case WM_NCDESTROY:
+		{
+			::RemoveWindowSubclass(hWnd, SpinControlSubclass, uIdSubclass);
+			delete pSpinData;
+			break;
+		}
+
+		case WM_ERASEBKGND:
+		{
+			if (PluginDarkMode::isEnabled())
+			{
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+				::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, PluginDarkMode::getDarkerBackgroundBrush());
+				return TRUE;
+			}
+			break;
+		}
+		}
+		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	void subclassSpinControl(HWND hwnd)
+	{
+		auto pSpinData = reinterpret_cast<DWORD_PTR>(new SpinData());
+		SetWindowSubclass(hwnd, SpinControlSubclass, g_spinControlSubclassID, pSpinData);
+	}
 
 	constexpr UINT_PTR g_tabSubclassID = 42;
 
@@ -2430,7 +2923,6 @@ namespace PluginDarkMode
 			if (wcscmp(className, WC_LINK) == 0)
 			{
 				HDC hdc = reinterpret_cast<HDC>(wParam);
-				COLORREF c = PluginDarkMode::getLinkTextColor();
 				::SetTextColor(hdc, PluginDarkMode::getLinkTextColor());
 				::SetBkColor(hdc, PluginDarkMode::getDarkerBackgroundColor());
 				return reinterpret_cast<LRESULT>(PluginDarkMode::getDarkerBackgroundBrush());
@@ -2592,26 +3084,20 @@ namespace PluginDarkMode
 				auto nButtonStyle = ::GetWindowLongPtr(hwnd, GWL_STYLE) & 0xF;
 				switch (nButtonStyle)
 				{
+				case BS_PUSHBUTTON:
+				case BS_DEFPUSHBUTTON:
 				case BS_CHECKBOX:
 				case BS_AUTOCHECKBOX:
 				case BS_RADIOBUTTON:
 				case BS_AUTORADIOBUTTON:
 				{
-					auto nButtonAllStyles = ::GetWindowLongPtr(hwnd, GWL_STYLE);
-					if (nButtonAllStyles & BS_PUSHLIKE)
-					{
-						if (p.theme)
-							SetWindowTheme(hwnd, p.themeClassName, nullptr);
-						if (p.subclass)
-							PluginDarkMode::subclassButtonControl(hwnd);
-						break;
-					}
+					if (p.theme && (nButtonStyle == BS_PUSHBUTTON || nButtonStyle == BS_DEFPUSHBUTTON))
+						SetWindowTheme(hwnd, p.themeClassName, nullptr);
 
 					if (p.subclass && PluginDarkMode::isEnabled())
 						PluginDarkMode::subclassButtonControl(hwnd);
 					if (p.subclass && !PluginDarkMode::isEnabled())
 						RemoveWindowSubclass(hwnd, ButtonSubclass, g_buttonSubclassID);
-
 					break;
 				}
 				case BS_GROUPBOX:
@@ -2619,17 +3105,6 @@ namespace PluginDarkMode
 						PluginDarkMode::subclassGroupboxControl(hwnd);
 					if (p.subclass && !PluginDarkMode::isEnabled())
 						RemoveWindowSubclass(hwnd, GroupboxSubclass, g_groupboxSubclassID);
-					break;
-				case BS_DEFPUSHBUTTON:
-				case BS_PUSHBUTTON:
-					if (p.theme)
-						SetWindowTheme(hwnd, p.themeClassName, nullptr);
-					if (p.subclass)
-					{
-						SetWindowLongPtr(hwnd, GWLP_USERDATA, BS_PUSHLIKE);
-						PluginDarkMode::subclassButtonControl(hwnd);
-					}
-
 					break;
 				}
 				return TRUE;
@@ -2639,13 +3114,36 @@ namespace PluginDarkMode
 			{
 				auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
 				bool hasScrollBar = ((style & WS_HSCROLL) == WS_HSCROLL) || ((style & WS_VSCROLL) == WS_VSCROLL);
-				if (p.theme && (hasScrollBar || wcscmp(className, MSFTEDIT_CLASS) == 0 || wcscmp(className, RICHEDIT_CLASS) == 0))
-					//dark scrollbar for edit and richedit controls
+				if (p.theme && (hasScrollBar))
+					//dark scrollbar for edit controls
 					SetWindowTheme(hwnd, p.themeClassName, nullptr);
 
 				return TRUE;
 			}
 
+#ifdef RICHEDIT_CLASS
+			if (p.theme && wcscmp(className, RICHEDIT_CLASS) == 0)
+			{
+				SetWindowTheme(hwnd, p.themeClassName, nullptr);
+				return TRUE;
+			}
+#endif
+
+#ifdef MSFTEDIT_CLASS
+			if (p.theme && wcscmp(className, MSFTEDIT_CLASS) == 0)
+			{
+				SetWindowTheme(hwnd, p.themeClassName, nullptr);
+				return TRUE;
+			}
+#endif
+
+#ifdef RICHEDIT60_CLASS
+			if (p.theme && wcscmp(className, RICHEDIT60_CLASS) == 0)
+			{
+				SetWindowTheme(hwnd, p.themeClassName, nullptr);
+				return TRUE;
+			}
+#endif
 			if (wcscmp(className, WC_COMBOBOX) == 0)
 			{
 				auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
@@ -2694,11 +3192,9 @@ namespace PluginDarkMode
 				}
 			}
 
-			if (wcscmp(className, WC_LISTBOX) == 0)
+			if (p.theme && wcscmp(className, WC_LISTBOX) == 0)
 			{
-				if (p.theme)
-					SetWindowTheme(hwnd, p.themeClassName, nullptr); //dark scrollbar for listbox
-
+				SetWindowTheme(hwnd, p.themeClassName, nullptr); //dark scrollbar for listbox
 				return TRUE;
 			}
 
@@ -2714,7 +3210,7 @@ namespace PluginDarkMode
 
 				if (p.theme)
 				{
-					SetWindowTheme(hwnd, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
+					SetWindowTheme(hwnd, p.themeClassName, nullptr);
 					if (hHeader)
 						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
 				}
@@ -2739,6 +3235,17 @@ namespace PluginDarkMode
 			{
 				calculateTreeViewStyle();
 				setTreeViewStyle(hwnd);
+			}
+
+			if (wcscmp(className, UPDOWN_CLASS) == 0)
+			{
+				if (p.theme)
+					PluginDarkMode::setDarkExplorerTheme(hwnd);
+
+				if (p.subclass && PluginDarkMode::isEnabled())
+					PluginDarkMode::subclassSpinControl(hwnd);
+				if (p.subclass && !PluginDarkMode::isEnabled())
+					RemoveWindowSubclass(hwnd, SpinControlSubclass, g_spinControlSubclassID);
 			}
 
 			return TRUE;

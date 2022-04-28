@@ -132,10 +132,10 @@ namespace NWScriptPlugin {
 		{
 			friend class bitsery::Access;
 
-			int EngineStructuresCount = 0;
-			int FunctionsCount = 0;
-			int ConstantsCount = 0;
-			int KeywordCount = 0;
+			size_t EngineStructuresCount = 0;
+			size_t FunctionsCount = 0;
+			size_t ConstantsCount = 0;
+			size_t KeywordCount = 0;
 			std::set<ScriptMember, std::less<ScriptMember>> Members;
 
 			std::string MembersAsSpacedString(MemberID memberType) {

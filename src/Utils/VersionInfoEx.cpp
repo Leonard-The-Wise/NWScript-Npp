@@ -25,7 +25,7 @@ bool VersionInfoEx::LoadThisFromVersionString(const TCHAR* versionString)
 {
 	jpcre2::select<wchar_t>::VecNum version;
 	std::wstring subject(versionString);
-	int count = validator.setNumberedSubstringVector(&version).setSubject(subject).match();
+	size_t count = validator.setNumberedSubstringVector(&version).setSubject(subject).match();
 	if (count == 0)
 		return false;
 

@@ -106,10 +106,10 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 					switch (wParam)
 					{
 					case IDC_BTBATCHDIRSTART:
-						GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					case IDC_BTOUTPUTDIRBATCH:
-						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));
+						GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 						break;
 					}
 					generic_string newPath;
@@ -145,7 +145,7 @@ intptr_t CALLBACK BatchProcessingDialog::run_dlgProc(UINT message, WPARAM wParam
 				if (LOWORD(wParam) == IDC_TXTBATCHFILTERS)
 				{
 					TCHAR buffer[1024];
-					GetDlgItemText(_hSelf, IDC_TXTBATCHFILTERS, buffer, std::size(buffer));
+					GetDlgItemText(_hSelf, IDC_TXTBATCHFILTERS, buffer, static_cast<int>(std::size(buffer)));
 					if (IsDlgButtonChecked(_hSelf, IDC_RDCOMPILE))
 						_tmpFiltersCompile = buffer;
 					else
@@ -180,7 +180,7 @@ bool BatchProcessingDialog::keepSettings()
 	generic_string errorString;
 	errorString = TEXT("Invalid or Inexistent Directory: \"");
 
-	GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	testString = tempBuffer;
 	if (!testString.empty())
 	{
@@ -195,7 +195,7 @@ bool BatchProcessingDialog::keepSettings()
 
 	if (!IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIRBATCH))
 	{
-		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));
+		GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 		if (!PathFileExists(tempBuffer))
 		{
 			errorString.append(tempBuffer).append(TEXT("\""));
@@ -211,7 +211,7 @@ bool BatchProcessingDialog::keepSettings()
 	// Saving phase
 	Settings& myset = *_settings;
 
-	GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTBATCHDIRSTART, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	myset.startingBatchFolder = properDirNameW(tempBuffer);
 
 	myset.setFileFiltersCompile(_tmpFiltersCompile);
@@ -223,7 +223,7 @@ bool BatchProcessingDialog::keepSettings()
 	myset.batchCompileMode = IsDlgButtonChecked(_hSelf, IDC_RDCOMPILE) ? 0 : 1;
 
 	myset.useScriptPathToBatchCompile = IsDlgButtonChecked(_hSelf, IDC_CHKOUTPUTDIRBATCH);
-	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, std::size(tempBuffer));
+	GetDlgItemText(_hSelf, IDC_TXTOUTPUTDIRBATCH, tempBuffer, static_cast<int>(std::size(tempBuffer)));
 	myset.batchOutputCompileDir = properDirNameW(tempBuffer);
 
 	return true;

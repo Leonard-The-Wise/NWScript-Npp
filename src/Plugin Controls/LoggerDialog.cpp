@@ -392,7 +392,7 @@ void LoggerDialog::SetupListView()
 	newColumn.cxDefault = 95;
 	newColumn.cx = 95;
 	memcpy(columnName, TEXT("Code"), std::size(TEXT("Code")) * sizeof(TCHAR));
-	newColumn.cchTextMax = std::size(TEXT("Code"));
+	newColumn.cchTextMax = static_cast<int>(std::size(TEXT("Code")));
 	ListView_InsertColumn(listErrorsHWND, 2, &newColumn);
 
 	// Message Description
@@ -402,7 +402,7 @@ void LoggerDialog::SetupListView()
 	newColumn.cxDefault = 300;
 	newColumn.cx = 300;
 	memcpy(columnName, TEXT("Description"), std::size(TEXT("Description")) * sizeof(TCHAR));
-	newColumn.cchTextMax = std::size(TEXT("Description"));
+	newColumn.cchTextMax = static_cast<int>(std::size(TEXT("Description")));
 	ListView_InsertColumn(listErrorsHWND, 3, &newColumn);
 
 	// File
@@ -412,7 +412,7 @@ void LoggerDialog::SetupListView()
 	newColumn.cxIdeal = 120;
 	newColumn.cx = 120;
 	memcpy(columnName, TEXT("File"), std::size(TEXT("File")) * sizeof(TCHAR));
-	newColumn.cchTextMax = std::size(TEXT("File"));
+	newColumn.cchTextMax = static_cast<int>(std::size(TEXT("File")));
 	ListView_InsertColumn(listErrorsHWND, 4, &newColumn);
 
 	// Line
@@ -422,7 +422,7 @@ void LoggerDialog::SetupListView()
 	newColumn.cxIdeal = 80;
 	newColumn.cx = 80;
 	memcpy(columnName, TEXT("Line"), std::size(TEXT("Line")) * sizeof(TCHAR));
-	newColumn.cchTextMax = std::size(TEXT("Line"));
+	newColumn.cchTextMax = static_cast<int>(std::size(TEXT("Line")));
 	ListView_InsertColumn(listErrorsHWND, 5, &newColumn);
 
 	// Last column (a dummy empty terminator)
@@ -632,12 +632,12 @@ void LoggerDialog::WriteToErrorsList(const CompilerMessage& message, bool ignore
 	LVITEM newItem;
 	ZeroMemory(&newItem, sizeof(LVITEM));
 	newItem.mask = LVIF_PARAM;
-	newItem.iItem = currentItem;
+	newItem.iItem = static_cast<int>(currentItem);
 	newItem.lParam = (LPARAM)itemIndex;
 	currentItem = ListView_InsertItem(lstErrors, &newItem);
 
 	// Update all visible columns
-	newItem.iItem = currentItem;
+	newItem.iItem = static_cast<int>(currentItem);
 	newItem.mask = LVIF_TEXT | LVIF_IMAGE;  // Icon column
 	newItem.iSubItem = ERRORCOLUMN_MESSAGECODE;
 	newItem.iImage = (int)message.messageType;

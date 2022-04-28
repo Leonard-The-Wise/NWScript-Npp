@@ -87,11 +87,11 @@ void Settings::Load()
 	compileSuccesses = GetNumber<int>(TEXT("User Statistics"), TEXT("compileSuccesses"));
 	compileFails = GetNumber<int>(TEXT("User Statistics"), TEXT("compileFails"));
 	disassembledFiles = GetNumber<int>(TEXT("User Statistics"), TEXT("disassembledFiles"));
-	engineStructs = GetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"));
-	engineFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"));
-	engineConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"));
-	userFunctionCount = GetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"));
-	userConstants = GetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"));
+	engineStructs = GetNumber<size_t>(TEXT("User Statistics"), TEXT("engineStructs"));
+	engineFunctionCount = GetNumber<size_t>(TEXT("User Statistics"), TEXT("engineFunctionCount"));
+	engineConstants = GetNumber<size_t>(TEXT("User Statistics"), TEXT("engineConstants"));
+	userFunctionCount = GetNumber<size_t>(TEXT("User Statistics"), TEXT("userFunctionCount"));
+	userConstants = GetNumber<size_t>(TEXT("User Statistics"), TEXT("userConstants"));
 
 	// Compiler window settings
 	compilerWindowSelectedTab = GetNumber<int>(TEXT("Compiler Window"), TEXT("compilerWindowSelectedTab"));
@@ -208,11 +208,11 @@ void Settings::Save()
 	SetNumber<int>(TEXT("User Statistics"), TEXT("compileSuccesses"), compileSuccesses);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("compileFails"), compileFails);
 	SetNumber<int>(TEXT("User Statistics"), TEXT("disassembledFiles"), disassembledFiles);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("engineStructs"), engineStructs);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("engineFunctionCount"), engineFunctionCount);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("engineConstants"), engineConstants);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("userFunctionCount"), userFunctionCount);
-	SetNumber<int>(TEXT("User Statistics"), TEXT("userConstants"), userConstants);
+	SetNumber<size_t>(TEXT("User Statistics"), TEXT("engineStructs"), engineStructs);
+	SetNumber<size_t>(TEXT("User Statistics"), TEXT("engineFunctionCount"), engineFunctionCount);
+	SetNumber<size_t>(TEXT("User Statistics"), TEXT("engineConstants"), engineConstants);
+	SetNumber<size_t>(TEXT("User Statistics"), TEXT("userFunctionCount"), userFunctionCount);
+	SetNumber<size_t>(TEXT("User Statistics"), TEXT("userConstants"), userConstants);
 
 	// Compiler window settings
 	SetNumber<int>(TEXT("Compiler Window"), TEXT("compilerWindowSelectedTab"), compilerWindowSelectedTab);

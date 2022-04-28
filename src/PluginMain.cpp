@@ -44,7 +44,7 @@
 
 #include "PluginDarkMode.h"
 
-#pragma warning (disable : 6387)
+//#pragma warning (disable : 6387)
 
 //#define DEBUG_AUTO_INDENT_833      // Uncomment to test auto-indent with message
 #define USE_THREADS                  // Process compilations and batchs in multi-threaded operations

@@ -392,7 +392,7 @@ bool NWScriptCompiler::MakeDependenciesView(const std::set<std::string>& depende
 
         // Get first path in dependencies for comparisons.
         auto it = dependencies.begin();
-        int count = dependencyParser.setSubject(*it).match();
+        size_t count = dependencyParser.setSubject(*it).match();
         filesystem::path currentPath = matches[0][1];
         filesystem::path comparePath;
 

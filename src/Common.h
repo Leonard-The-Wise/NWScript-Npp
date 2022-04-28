@@ -96,11 +96,11 @@ namespace NWScriptPluginCommons {
 
     // Create a thousand separator string
     // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
-    std::string thousandSeparator(int number);
+    std::string thousandSeparator(long long number);
 
     // Create a thousand separator string
     // Extracted from: https://stackoverflow.com/questions/43482488/how-to-format-a-number-with-thousands-separator-in-c-c
-    generic_string thousandSeparatorW(int number);
+    generic_string thousandSeparatorW(long long number);
 
     // Since codecvt is now deprecated API and no replacement is provided, we write our own.
     std::wstring str2wstr(const std::string& string);

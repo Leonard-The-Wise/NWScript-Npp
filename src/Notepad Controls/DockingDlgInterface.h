@@ -44,7 +44,7 @@ public:
 
     void create(tTbData * data, bool isRTL = false) {
 		StaticDialog::create(_dlgID, isRTL);
-		::GetWindowText(_hSelf, _pluginName, std::size(_pluginName) - sizeof(TCHAR));
+		::GetWindowText(_hSelf, _pluginName, static_cast<int>(std::size(_pluginName) - sizeof(TCHAR)));
 
         // user information
 		data->hClient		= _hSelf;

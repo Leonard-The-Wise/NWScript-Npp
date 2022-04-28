@@ -16,6 +16,13 @@
 
 #pragma once
 
+#define BKLUMINANCE_BRIGHTER 140
+#define BKLUMINANCE_SOFTER 80
+
+// Defined according to documentation:
+// https://source.winehq.org/WineAPI/ColorRGBToHLS.html
+#define HLSMAXRANGE 240
+
 constexpr COLORREF HEXRGB(DWORD rrggbb) {
 	// from 0xRRGGBB like natural #RRGGBB
 	// to the little-endian 0xBBGGRR
@@ -74,6 +81,12 @@ namespace PluginDarkMode
 		dark = 2
 	};
 
+	struct HLS {
+		WORD h = 0;
+		WORD l = 0;
+		WORD s = 0;
+	};
+
 	void initDarkMode();
 
 	bool isInitialized();
@@ -86,9 +99,14 @@ namespace PluginDarkMode
 	COLORREF invertLightness(COLORREF c);
 	COLORREF invertLightnessSofter(COLORREF c);
 	COLORREF lightColor(COLORREF color, WORD luminance);
-	bool colorizeBitmap(HBITMAP image, COLORREF color, WORD extraLuminance = 0);
+	bool colorizeBitmap(HBITMAP image, WORD h = 0, WORD l = 0, WORD s = 0,
+		bool changeH = false, bool changeL = false, bool changeS = false, bool testAlphaForChange = true,
+		short rotateH = 0, short displaceL = 0, short displaceS = 0, bool testAlphaForDisplace = true,
+		bool invertR = false, bool invertG = false, bool invertB = false, bool testAlphaForInvertColor = false,
+		bool invertLight = false, WORD invertLightCeiling = 240, WORD invertLightFloor = 0, bool testAlphaForInvertLight = false,
+		WORD luminosityMin = 0, WORD luminosityMax = 240, bool useLuminosityMin = false, bool useLuminosityMax = false, 
+		bool testAlphaForLuminosityThreshold = false, bool alphaUnpremultiply = false);
 	double calculatePerceivedLighness(COLORREF c);
-
 	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID, WORD extraLuminance = 0);
 
 	void setDarkTone(ColorTone colorToneChoice);

@@ -80,11 +80,11 @@ namespace NWScriptPlugin {
 		int compileFails = 0;
 		int disassembledFiles = 0;
 
-		int engineStructs = 0;
-		int engineFunctionCount = 0;
-		int engineConstants = 0;
-		int userFunctionCount = 0;
-		int userConstants = 0;
+		size_t engineStructs = 0;
+		size_t engineFunctionCount = 0;
+		size_t engineConstants = 0;
+		size_t userFunctionCount = 0;
+		size_t userConstants = 0;
 
 		// Compiler window settings
 		int compilerWindowSelectedTab = 1;

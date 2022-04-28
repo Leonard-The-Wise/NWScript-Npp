@@ -47,9 +47,11 @@
 #ifndef JPCRE2_HPP
 #define JPCRE2_HPP
 
+#pragma warning (push)
+#pragma warning (disable : 4267)
+
 #ifndef PCRE2_CODE_UNIT_WIDTH
 
-#pragma warning (disable : 4267)
   ///@def PCRE2_CODE_UNIT_WIDTH
   ///This macro does not have any significance in JPCRE2 context.
   ///It is defined as 0 by default. Defining it before including jpcre2.hpp
@@ -5166,5 +5168,5 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
 
 #endif
 
-
+#pragma warning (pop)
 #endif

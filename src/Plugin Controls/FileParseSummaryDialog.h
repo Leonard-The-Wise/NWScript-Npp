@@ -24,13 +24,13 @@ namespace NWScriptPlugin {
 		void setOkDialogCallback(void (*OkDialogCallback)(HRESULT decision)) {
 			_okDialogCallback = OkDialogCallback;
 		}
-		void setEngineStructuresCount(int engineStructuresCount) {
+		void setEngineStructuresCount(size_t engineStructuresCount) {
 			_engineStructuresCount = std::to_wstring(engineStructuresCount);
 		}
-		void setFunctionDefinitionsCount(int functionDefinitionCount) {
+		void setFunctionDefinitionsCount(size_t functionDefinitionCount) {
 			_functionsDefinitionCount = std::to_wstring(functionDefinitionCount);
 		}
-		void setConstantsCount(int constantsCount) {
+		void setConstantsCount(size_t constantsCount) {
 			_constantsCount = std::to_wstring(constantsCount);
 		}
 		void doDialog();
