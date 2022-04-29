@@ -508,7 +508,8 @@ void Plugin::RefreshDarkMode(bool ForceUseDark, bool UseDark)
         bool bSuccess = Messenger().SendNppMessage<bool>(NPPM_GETDARKMODECOLORS, sizeof(newColors), reinterpret_cast<LPARAM>(&newColors));
         if (bSuccess)
         {
-            PluginDarkMode::setThemeColors(newColors);
+            PluginDarkMode::setDarkTone(PluginDarkMode::ColorTone::customizedTone);
+            PluginDarkMode::changeCustomTheme(newColors);
 
             // We override link colors
             PluginDarkMode::setLinkTextColor(HEXRGB(0xFFC000));
@@ -542,6 +543,8 @@ void Plugin::CheckDarkModeLegacy()
 
     if (strcmp(GUIConfig->FindAttribute("enable")->Value(), "yes") == 0)
     {
+        PluginDarkMode::initDarkMode();
+
         PluginDarkMode::Colors colors;
         colors.background = stoi(GUIConfig->FindAttribute("customColorTop")->Value());
         colors.darkerText = stoi(GUIConfig->FindAttribute("customColorDarkText")->Value());
@@ -556,9 +559,13 @@ void Plugin::CheckDarkModeLegacy()
 
         PluginDarkMode::ColorTone C = static_cast<PluginDarkMode::ColorTone>(stoi(GUIConfig->FindAttribute("colorTone")->Value()));
 
-        Instance().RefreshDarkMode(true, true);
         PluginDarkMode::changeCustomTheme(colors);
         PluginDarkMode::setDarkTone(C);
+
+        // We override link colors
+        PluginDarkMode::setLinkTextColor(HEXRGB(0xFFC000));
+
+        Instance().RefreshDarkMode(true, true);
     }
     else
         Instance().RefreshDarkMode(true, false);

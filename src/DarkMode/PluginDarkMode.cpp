@@ -61,10 +61,12 @@
 #define EDGELUMINANCE_BRIGHTER 220
 #define EDGELUMINANCE_DARKER 60
 
+
 namespace PluginDarkMode
 {
 	//Globals
-	ColorTone g_colorToneChoice = ColorTone::blackTone;
+	static bool g_initialized = false;
+	static ColorTone g_colorToneChoice = ColorTone::blackTone;
 	static DPIManager _dpiManager;      // dpi manager for some functions
 	static Options _options;			// actual runtime options
 
@@ -189,7 +191,7 @@ namespace PluginDarkMode
 		HEXRGB(0xE0E0E0),	// textColor
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
-		HEXRGB(0xFFC000),	// linkTextColor
+		HEXRGB(0xFFFF00),	// linkTextColor
 		HEXRGB(0x646464)	// edgeColor
 	};
 
@@ -203,7 +205,7 @@ namespace PluginDarkMode
 		HEXRGB(0xE0E0E0),	// textColor
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
-		HEXRGB(0xFFC000),	// linkTextColor
+		HEXRGB(0xFFFF00),	// linkTextColor
 		HEXRGB(0x908080)	// edgeColor
 	};
 
@@ -293,6 +295,7 @@ namespace PluginDarkMode
 
 	void setDarkTone(ColorTone colorToneChoice)
 	{
+		assert(g_initialized);
 		g_colorToneChoice = colorToneChoice;
 	}
 
@@ -330,29 +333,29 @@ namespace PluginDarkMode
 	{
 		switch (g_colorToneChoice)
 		{
-			case ColorTone::redTone:
-				return tR;
+		case ColorTone::redTone:
+			return tR;
 
-			case ColorTone::greenTone:
-				return tG;
+		case ColorTone::greenTone:
+			return tG;
 
-			case ColorTone::blueTone:
-				return tB;
+		case ColorTone::blueTone:
+			return tB;
 
-			case ColorTone::purpleTone:
-				return tP;
+		case ColorTone::purpleTone:
+			return tP;
 
-			case ColorTone::cyanTone:
-				return tC;
+		case ColorTone::cyanTone:
+			return tC;
 
-			case ColorTone::oliveTone:
-				return tO;
+		case ColorTone::oliveTone:
+			return tO;
 
-			case ColorTone::customizedTone:
-				return tCustom;
+		case ColorTone::customizedTone:
+			return tCustom;
 
-			default:
-				return tDefault;
+		default:
+			return tDefault;
 		}
 	}
 
@@ -369,7 +372,6 @@ namespace PluginDarkMode
 		return opt;
 	}
 
-	bool g_initialized = false;
 	void initDarkMode()
 	{
 		g_initialized = true;
@@ -406,6 +408,7 @@ namespace PluginDarkMode
 
 	bool isWindows11()
 	{
+		assert(g_initialized);
 		return IsWindows11();
 	}
 
@@ -472,16 +475,16 @@ namespace PluginDarkMode
 		return lighness;
 	}
 
-	COLORREF getBackgroundColor()         { return getTheme()._colors.background; }
-	COLORREF getSofterBackgroundColor()   { return getTheme()._colors.softerBackground; }
-	COLORREF getHotBackgroundColor()      { return getTheme()._colors.hotBackground; }
-	COLORREF getDarkerBackgroundColor()   { return getTheme()._colors.pureBackground; }
-	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
-	COLORREF getTextColor()               { return getTheme()._colors.text; }
-	COLORREF getDarkerTextColor()         { return getTheme()._colors.darkerText; }
-	COLORREF getDisabledTextColor()       { return getTheme()._colors.disabledText; }
-	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
-	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
+	COLORREF getBackgroundColor()        { return getTheme()._colors.background; }
+	COLORREF getSofterBackgroundColor()  { return getTheme()._colors.softerBackground; }
+	COLORREF getHotBackgroundColor()     { return getTheme()._colors.hotBackground; }
+	COLORREF getDarkerBackgroundColor()  { return getTheme()._colors.pureBackground; }
+	COLORREF getErrorBackgroundColor()   { return getTheme()._colors.errorBackground; }
+	COLORREF getTextColor()              { return getTheme()._colors.text; }
+	COLORREF getDarkerTextColor()        { return getTheme()._colors.darkerText; }
+	COLORREF getDisabledTextColor()      { return getTheme()._colors.disabledText; }
+	COLORREF getLinkTextColor()          { return getTheme()._colors.linkText; }
+	COLORREF getEdgeColor()              { return getTheme()._colors.edge; }
 
 	HBRUSH getBackgroundBrush()          { return getTheme()._brushes.background; }
 	HBRUSH getSofterBackgroundBrush()    { return getTheme()._brushes.softerBackground; }
@@ -496,18 +499,20 @@ namespace PluginDarkMode
 	HBRUSH getLightEdgeBrush()			 { return getTheme()._brushes.lightEdgeBackground; }
 	HBRUSH getDargEdgeBrush()			 { return getTheme()._brushes.darkEdgeBackground; }
 
-	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
-	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
-	HPEN getLightEdgePen()				  { return getTheme()._pens.lightEdgePen; }
-	HPEN getDarkEdgePen()				  { return getTheme()._pens.darkEdgePen; }
+	HPEN getDarkerTextPen()              { return getTheme()._pens.darkerTextPen; }
+	HPEN getEdgePen()                    { return getTheme()._pens.edgePen; }
+	HPEN getLightEdgePen()               { return getTheme()._pens.lightEdgePen; }
+	HPEN getDarkEdgePen()                { return getTheme()._pens.darkEdgePen; }
 
 	void setThemeColors(Colors& newColors)
 	{
+		assert(g_initialized);
 		getTheme().change(newColors);
 	}
 
 	void setBackgroundColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.background = c;
 		getTheme().change(clrs);
@@ -515,6 +520,7 @@ namespace PluginDarkMode
 
 	void setSofterBackgroundColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.softerBackground = c;
 		getTheme().change(clrs);
@@ -522,6 +528,7 @@ namespace PluginDarkMode
 
 	void setHotBackgroundColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.hotBackground = c;
 		getTheme().change(clrs);
@@ -529,6 +536,7 @@ namespace PluginDarkMode
 
 	void setDarkerBackgroundColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.pureBackground = c;
 		getTheme().change(clrs);
@@ -536,6 +544,7 @@ namespace PluginDarkMode
 
 	void setErrorBackgroundColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.errorBackground = c;
 		getTheme().change(clrs);
@@ -543,6 +552,7 @@ namespace PluginDarkMode
 
 	void setTextColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.text = c;
 		getTheme().change(clrs);
@@ -550,6 +560,7 @@ namespace PluginDarkMode
 
 	void setDarkerTextColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.darkerText = c;
 		getTheme().change(clrs);
@@ -557,6 +568,7 @@ namespace PluginDarkMode
 
 	void setDisabledTextColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.disabledText = c;
 		getTheme().change(clrs);
@@ -564,6 +576,7 @@ namespace PluginDarkMode
 
 	void setLinkTextColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.linkText = c;
 		getTheme().change(clrs);
@@ -571,6 +584,7 @@ namespace PluginDarkMode
 
 	void setEdgeColor(COLORREF c)
 	{
+		assert(g_initialized);
 		Colors clrs = getTheme()._colors;
 		clrs.edge = c;
 		getTheme().change(clrs);
@@ -578,11 +592,13 @@ namespace PluginDarkMode
 
 	Colors getDarkModeDefaultColors()
 	{
+		assert(g_initialized);
 		return darkColors;
 	}
 
 	void changeCustomTheme(const Colors& colors)
 	{
+		assert(g_initialized);
 		tCustom.change(colors);
 	}
 
@@ -952,7 +968,7 @@ namespace PluginDarkMode
 		ZeroMemory(bmpBits.get(), sSize.cx * sSize.cy * 4);
 
 		HBITMAP hReturn = CreateBitmap(sSize.cx, sSize.cy, 1, 32, bmpBits.get());
-		HBITMAP hOldBitmap = SelectBitmap(hdc, hReturn);
+		HBITMAP hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(hdc, hReturn));
 
 		RECT rcBitmap = { 0, 0, sSize.cx, sSize.cy };
 		DrawThemeBackground(hTheme, hdc, iPartID, iStateID, &rcBitmap, NULL);
@@ -987,7 +1003,7 @@ namespace PluginDarkMode
 		{
 			if (!hTheme)
 			{
-				hTheme = OpenThemeData(hwnd, L"Button");
+				hTheme = OpenThemeData(hwnd, WC_BUTTON);
 			}
 			return hTheme != nullptr;
 		}
@@ -1081,14 +1097,14 @@ namespace PluginDarkMode
 		void drawGlyph(HDC hdc, const RECT& finalRect, const HBITMAP glyph, const SIZE& glyphSize)
 		{
 			HDC srcDC = CreateCompatibleDC(NULL);
-			HBITMAP hOldBitmap = SelectBitmap(srcDC, glyph);
+			HBITMAP hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(srcDC, glyph));
 			BLENDFUNCTION bf1;
 			bf1.BlendOp = AC_SRC_OVER;
 			bf1.BlendFlags = 0;
 			bf1.SourceConstantAlpha = 0xff;
 			bf1.AlphaFormat = AC_SRC_ALPHA;
 			GdiAlphaBlend(hdc, finalRect.left, finalRect.top, glyphSize.cx, glyphSize.cy, srcDC, 0, 0, glyphSize.cx, glyphSize.cy, bf1);
-			SelectBitmap(srcDC, hOldBitmap);
+			SelectObject(srcDC, hOldBitmap);
 			DeleteDC(srcDC);
 		}
 	};
@@ -1605,40 +1621,32 @@ namespace PluginDarkMode
 					hdc = BeginPaint(hWnd, &ps);
 				}
 
-					ULONG_PTR token = 0;
-					Gdiplus::GdiplusStartupInput input = NULL;
-					Gdiplus::GdiplusStartup(&token, &input, NULL);
-
-					paintButton(hWnd, hdc, *pButtonData);
+				paintButton(hWnd, hdc, *pButtonData);
 
 				if (ps.hdc)
 				{
 					EndPaint(hWnd, &ps);
 				}
 
-					if (token)
-						Gdiplus::GdiplusShutdown(token);
-
-
-					return 0;
-				}
-				else
-				{
-					break;
-				}
-			case WM_SIZE:
-			case WM_DESTROY:
-				BufferedPaintStopAllAnimations(hWnd);
+				return 0;
+			}
+			else
+			{
 				break;
-			case WM_ENABLE:
-				if (PluginDarkMode::isEnabled())
-				{
-					// skip the button's normal wndproc so it won't redraw out of wm_paint
-					LRESULT lr = DefWindowProc(hWnd, uMsg, wParam, lParam);
-					InvalidateRect(hWnd, nullptr, FALSE);
-					return lr;
-				}
-				break;
+			}
+		case WM_SIZE:
+		case WM_DESTROY:
+			BufferedPaintStopAllAnimations(hWnd);
+			break;
+		case WM_ENABLE:
+			if (PluginDarkMode::isEnabled())
+			{
+				// skip the button's normal wndproc so it won't redraw out of wm_paint
+				LRESULT lr = DefWindowProc(hWnd, uMsg, wParam, lParam);
+				InvalidateRect(hWnd, nullptr, FALSE);
+				return lr;
+			}
+			break;
 		}
 		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -2014,7 +2022,7 @@ namespace PluginDarkMode
 			vItemPressed = (vItemFocused && (GetKeyState(VK_LBUTTON) & 0x8000) != 0);
 
 #ifdef _DEBUG_DARK_MODE
-			TCHAR debug[128] = {0};
+			TCHAR debug[128] = { 0 };
 			wsprintf(debug, L"HitTest(%d); MousePosition(%d, %d); Valid Boundaries(%d, %d, %d, %d). TS = %d\n",
 				headerHitTest.iItem, mousePosition.x, mousePosition.y, parentScrollPos, rcParentClient.top,
 				rcParentClient.right + parentScrollPos, rcParentClient.bottom, (int)GetTickCount64());
@@ -2141,7 +2149,7 @@ namespace PluginDarkMode
 			else if (hBitmap)
 			{
 				HDC memDC = CreateCompatibleDC(NULL);
-				HBITMAP hOldBitmap = SelectBitmap(memDC, hBitmap);
+				HBITMAP hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(memDC, hBitmap));
 
 				BLENDFUNCTION bf1;
 				bf1.BlendOp = AC_SRC_OVER;
@@ -2149,7 +2157,7 @@ namespace PluginDarkMode
 				bf1.SourceConstantAlpha = 0xff;
 				bf1.AlphaFormat = AC_SRC_ALPHA;
 				GdiAlphaBlend(hdc, rcBitmap.left, rcBitmap.top, szBitmap.cx, szBitmap.cy, memDC, 0, 0, szBitmap.cx, szBitmap.cy, bf1);
-				SelectBitmap(memDC, hOldBitmap);
+				SelectObject(memDC, hOldBitmap);
 				DeleteDC(memDC);
 			}
 		}
@@ -2277,9 +2285,9 @@ namespace PluginDarkMode
 
 		HFONT hFont = ::CreateFont(_dpiManager.scaleX(18), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, TEXT("Arial"));
-		HFONT hOldFont = SelectFont(hdc, hFont);
+		HFONT hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, hFont));
 
-		DrawTextEx(hdc, reinterpret_cast<LPWSTR>(std::wstring(TEXT("»")).data()), -1, &rcOutText,
+		DrawTextEx(hdc, (LPWSTR)TEXT("»"), -1, &rcOutText,
 			DT_RIGHT | DT_VCENTER | DT_CALCRECT, &dt);
 
 		SIZE szTextOut = { rcOutText.right - rcOutText.left, rcOutText.bottom };
@@ -2290,17 +2298,17 @@ namespace PluginDarkMode
 
 		if (hti.flags & HHT_ONOVERFLOW)
 		{
-			SelectPen(hdc, getLightEdgePen());
-			SelectBrush(hdc, getSoftlightBackgroundBrush());
+			SelectObject(hdc, getLightEdgePen());
+			SelectObject(hdc, getSoftlightBackgroundBrush());
 			RoundRect(hdc, rcOutText.left, rcOutText.top, rcOutText.right, rcOutText.bottom, 3, 3);
 		}
 
 		rcOutText.top -= 1;
 		SetTextColor(hdc, getTextColor());
 		SetBkMode(hdc, TRANSPARENT);
-		DrawTextEx(hdc, reinterpret_cast<LPWSTR>(std::wstring(TEXT("»")).data()), -1, &rcOutText,
+		DrawTextEx(hdc, (LPWSTR)TEXT("»"), -1, &rcOutText,
 			DT_RIGHT | DT_VCENTER, &dt);
-		SelectFont(hdc, hOldFont);
+		SelectObject(hdc, hOldFont);
 		DeleteObject(hFont);
 
 		return S_OK;
@@ -2345,7 +2353,7 @@ namespace PluginDarkMode
 			// Redraw only this item
 			HDC hdc = GetDC(hHeader);
 			HFONT hFont = reinterpret_cast<HFONT>(SendMessage(hHeader, WM_GETFONT, 0, 0)); // must set the DC font first
-			HFONT hOldFont = SelectFont(hdc, hFont);
+			HFONT hOldFont = reinterpret_cast<HFONT>(SelectObject(hdc, hFont));
 			RECT clientRect, parentRect;
 			GetClientRect(hHeader, &clientRect);
 			GetClientRect(GetParent(hHeader), &parentRect);
@@ -2356,7 +2364,7 @@ namespace PluginDarkMode
 
 			DrawHeaderItem(headerItem, hHeader, hdc, rcItem, hti.iItem, headerStyle, cursorPos, hti, parentRect, si.nPos);
 			RedrawWindow(hHeader, &rcItem, NULL, RDW_VALIDATE);
-			SelectFont(hdc, hOldFont);
+			SelectObject(hdc, hOldFont);
 			ReleaseDC(hHeader, hdc);
 		}
 	}
@@ -2379,31 +2387,31 @@ namespace PluginDarkMode
 			//break;
 			pHeaderItem->ensureTheme();
 
-				PAINTSTRUCT ps;
-				HDC hdc = BeginPaint(hWnd, &ps);
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hWnd, &ps);
 
-				// Erase control background
-				RECT rcClient, rcParentClient;
-				GetClientRect(hWnd, &rcClient);
-				GetClientRect(GetParent(hWnd), &rcParentClient);
-				FillRect(hdc, &rcClient, getDarkerBackgroundBrush());
-				LONG_PTR headerStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+			// Erase control background
+			RECT rcClient, rcParentClient;
+			GetClientRect(hWnd, &rcClient);
+			GetClientRect(GetParent(hWnd), &rcParentClient);
+			FillRect(hdc, &rcClient, getDarkerBackgroundBrush());
+			LONG_PTR headerStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
 
-				// Extra informations for item drawing
-				POINT mousePos;
-				GetCursorPos(&mousePos);
-				ScreenToClient(hWnd, &mousePos);
-				HDHITTESTINFO hti;
-				hti.pt = mousePos;
-				SendMessage(hWnd, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
-				SCROLLINFO si = {};
-				si.cbSize = sizeof(si);
-				si.fMask = SIF_POS;
-				GetScrollInfo(GetParent(hWnd), SB_HORZ, &si);
+			// Extra informations for item drawing
+			POINT mousePos;
+			GetCursorPos(&mousePos);
+			ScreenToClient(hWnd, &mousePos);
+			HDHITTESTINFO hti;
+			hti.pt = mousePos;
+			SendMessage(hWnd, HDM_HITTEST, 0, reinterpret_cast<LPARAM>(&hti));
+			SCROLLINFO si = {};
+			si.cbSize = sizeof(si);
+			si.fMask = SIF_POS;
+			GetScrollInfo(GetParent(hWnd), SB_HORZ, &si);
 
-				// Change font
-				HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
-				HFONT oldFont = reinterpret_cast<HFONT>(SelectObject(hdc, lstFont));
+			// Change font
+			HFONT lstFont = reinterpret_cast<HFONT>(::SendMessage(GetParent(hWnd), WM_GETFONT, 0, 0));
+			HFONT oldFont = reinterpret_cast<HFONT>(SelectObject(hdc, lstFont));
 
 			// Draw items
 			int count = static_cast<int>(Header_GetItemCount(hWnd));
@@ -2418,37 +2426,37 @@ namespace PluginDarkMode
 			if ((headerStyle & HDS_OVERFLOW) > 0)
 				DrawHeaderOverflow(hWnd, hdc, rcClient);
 
-				//Cleanup
-				SelectObject(hdc, oldFont);
-				EndPaint(hWnd, &ps);
+			//Cleanup
+			SelectObject(hdc, oldFont);
+			EndPaint(hWnd, &ps);
 
-				return TRUE;
-			}
+			return TRUE;
+		}
 
-			case WM_THEMECHANGED:
-			{
-				pHeaderItem->closeTheme();
-				break;
-			}
+		case WM_THEMECHANGED:
+		{
+			pHeaderItem->closeTheme();
+			break;
+		}
 
-			case WM_NCDESTROY:
-			{
-				RemoveWindowSubclass(hWnd, HeaderSubclass, g_headerSubclassID);
-				delete pHeaderItem;
-				break;
-			}
+		case WM_NCDESTROY:
+		{
+			RemoveWindowSubclass(hWnd, HeaderSubclass, g_headerSubclassID);
+			delete pHeaderItem;
+			break;
+		}
 
-			case WM_SIZE:
-			{
-				pHeaderItem->reloadStructBitmaps();
-				break;
-			}
+		case WM_SIZE:
+		{
+			pHeaderItem->reloadStructBitmaps();
+			break;
+		}
 
-			case WM_MOUSEMOVE:
-			{
-				HotTrackHeaderComboBox(*pHeaderItem, hWnd, static_cast<DWORD>(lParam));
-				break;
-			}
+		case WM_MOUSEMOVE:
+		{
+			HotTrackHeaderComboBox(*pHeaderItem, hWnd, static_cast<DWORD>(lParam));
+			break;
+		}
 		}
 
 		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
@@ -2488,6 +2496,7 @@ namespace PluginDarkMode
 
 				if (SUCCEEDED(GetThemeColor(hTheme, 0, 0, TMT_FILLCOLOR, &color)))
 				{
+					COLORREF color = PluginDarkMode::getSofterBackgroundColor();
 					ListView_SetTextBkColor(hWnd, PluginDarkMode::isEnabled() ? PluginDarkMode::getSofterBackgroundColor() : color);
 					ListView_SetBkColor(hWnd, PluginDarkMode::isEnabled() ? PluginDarkMode::getSofterBackgroundColor() : color);
 				}
@@ -2826,7 +2835,7 @@ namespace PluginDarkMode
 			TabCtrl_AdjustRect(hWnd, false, &rcClient);
 			FrameRect(hdc, &rcClient, PluginDarkMode::getSofterBackgroundBrush());
 
-			auto holdPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
+			auto holdPen = static_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
 
 			HRGN holdClip = CreateRectRgn(0, 0, 0, 0);
 			if (1 != GetClipRgn(hdc, holdClip))
@@ -2866,7 +2875,7 @@ namespace PluginDarkMode
 
 					SelectClipRgn(hdc, hClip);
 
-					SetTextColor(hdc, (bHot || (i == nSelTab) ) ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
+					SetTextColor(hdc, (bHot || (i == nSelTab)) ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
 
 					// for consistency getBackgroundBrush() 
 					// would be better, than getSofterBackgroundBrush(),
@@ -2971,6 +2980,146 @@ namespace PluginDarkMode
 	void subclassTabControl(HWND hwnd)
 	{
 		SetWindowSubclass(hwnd, TabSubclass, g_tabSubclassID, reinterpret_cast<DWORD_PTR>(new TabData()));
+	}
+
+	constexpr UINT_PTR g_tabUpDownSubclassID = 42;
+
+	LRESULT CALLBACK TabUpDownSubclass(
+		HWND hWnd,
+		UINT uMsg,
+		WPARAM wParam,
+		LPARAM lParam,
+		UINT_PTR uIdSubclass,
+		DWORD_PTR dwRefData
+	)
+	{
+		auto pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
+
+		switch (uMsg)
+		{
+		case WM_PRINTCLIENT:
+		case WM_PAINT:
+		{
+			if (!PluginDarkMode::isEnabled())
+			{
+				break;
+			}
+
+			bool hasTheme = pButtonData->ensureTheme(hWnd);
+
+			RECT rcClient{};
+			::GetClientRect(hWnd, &rcClient);
+
+			PAINTSTRUCT ps{};
+			auto hdc = ::BeginPaint(hWnd, &ps);
+
+			::FillRect(hdc, &rcClient, PluginDarkMode::getDarkerBackgroundBrush());
+
+			RECT rcArrowLeft = {
+				rcClient.left, rcClient.top,
+				rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
+			};
+
+			RECT rcArrowRight = {
+				rcArrowLeft.right, rcClient.top,
+				rcClient.right, rcClient.bottom
+			};
+
+			POINT ptCursor = {};
+			::GetCursorPos(&ptCursor);
+			::ScreenToClient(hWnd, &ptCursor);
+
+			bool isHotLeft = ::PtInRect(&rcArrowLeft, ptCursor);
+			bool isHotRight = ::PtInRect(&rcArrowRight, ptCursor);
+
+			::SetBkMode(hdc, TRANSPARENT);
+
+			if (hasTheme)
+			{
+				::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotLeft ? PBS_HOT : PBS_NORMAL, &rcArrowLeft, nullptr);
+				::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotRight ? PBS_HOT : PBS_NORMAL, &rcArrowRight, nullptr);
+			}
+			else
+			{
+				::FillRect(hdc, &rcArrowLeft, isHotLeft ? PluginDarkMode::getHotBackgroundBrush() : PluginDarkMode::getBackgroundBrush());
+				::FillRect(hdc, &rcArrowRight, isHotRight ? PluginDarkMode::getHotBackgroundBrush() : PluginDarkMode::getBackgroundBrush());
+			}
+
+			LOGFONT lf = {};
+			auto font = reinterpret_cast<HFONT>(SendMessage(hWnd, WM_GETFONT, 0, 0));
+			::GetObject(font, sizeof(lf), &lf);
+			lf.lfHeight = (_dpiManager.scaleY(16) - 5) * -1;
+			auto holdFont = static_cast<HFONT>(::SelectObject(hdc, CreateFontIndirect(&lf)));
+
+			auto mPosX = ((rcArrowLeft.right - rcArrowLeft.left - _dpiManager.scaleX(7) + 1) / 2);
+			auto mPosY = ((rcArrowLeft.bottom - rcArrowLeft.top + lf.lfHeight - _dpiManager.scaleY(1) - 3) / 2);
+
+			::SetTextColor(hdc, isHotLeft ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
+			::ExtTextOut(hdc,
+				rcArrowLeft.left + mPosX,
+				rcArrowLeft.top + mPosY,
+				ETO_CLIPPED,
+				&rcArrowLeft, L"<",
+				1,
+				nullptr);
+
+			::SetTextColor(hdc, isHotRight ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
+			::ExtTextOut(hdc,
+				rcArrowRight.left + mPosX - _dpiManager.scaleX(2) + 3,
+				rcArrowRight.top + mPosY,
+				ETO_CLIPPED,
+				&rcArrowRight, L">",
+				1,
+				nullptr);
+
+			if (!hasTheme)
+			{
+				auto holdPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
+				auto holdBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
+				::Rectangle(hdc, rcArrowLeft.left, rcArrowLeft.top, rcArrowLeft.right, rcArrowLeft.bottom);
+				::Rectangle(hdc, rcArrowRight.left, rcArrowRight.top, rcArrowRight.right, rcArrowRight.bottom);
+
+				::SelectObject(hdc, holdPen);
+				::SelectObject(hdc, holdBrush);
+			}
+
+			::SelectObject(hdc, holdFont);
+			::EndPaint(hWnd, &ps);
+			return FALSE;
+		}
+
+		case WM_THEMECHANGED:
+		{
+			pButtonData->closeTheme();
+			break;
+		}
+
+		case WM_NCDESTROY:
+		{
+			::RemoveWindowSubclass(hWnd, TabUpDownSubclass, uIdSubclass);
+			delete pButtonData;
+			break;
+		}
+
+		case WM_ERASEBKGND:
+		{
+			if (PluginDarkMode::isEnabled())
+			{
+				RECT rcClient{};
+				::GetClientRect(hWnd, &rcClient);
+				::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, PluginDarkMode::getDarkerBackgroundBrush());
+				return TRUE;
+			}
+			break;
+		}
+		}
+		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+	}
+
+	void subclassTabUpDownControl(HWND hwnd)
+	{
+		auto pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData());
+		SetWindowSubclass(hwnd, TabUpDownSubclass, g_tabUpDownSubclassID, pButtonData);
 	}
 
 	constexpr UINT_PTR g_windowSubclassID = 42;
@@ -3154,8 +3303,8 @@ namespace PluginDarkMode
 
 		::EnableThemeDialogTexture(hwndParent, theme && !PluginDarkMode::isEnabled() ? ETDT_ENABLE : ETDT_DISABLE);
 
-		EnumChildWindows(hwndParent, [](HWND hwnd, LPARAM lParam) WINAPI_LAMBDA {
-			auto& p = *reinterpret_cast<Params*>(lParam);
+		EnumChildWindows(hwndParent, [](HWND hwnd, LPARAM lParam) WINAPI_LAMBDA{
+			auto & p = *reinterpret_cast<Params*>(lParam);
 			const size_t classNameLen = 16;
 			TCHAR className[classNameLen] = { '\0' };
 			GetClassName(hwnd, className, classNameLen);
@@ -3191,7 +3340,7 @@ namespace PluginDarkMode
 				return TRUE;
 			}
 
-			if (wcscmp(className, WC_EDIT) == 0 || wcscmp(className, MSFTEDIT_CLASS) == 0 || wcscmp(className, RICHEDIT_CLASS) == 0)
+			if (wcscmp(className, WC_EDIT) == 0)
 			{
 				auto style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
 				bool hasScrollBar = ((style & WS_HSCROLL) == WS_HSCROLL) || ((style & WS_VSCROLL) == WS_VSCROLL);
@@ -3293,7 +3442,7 @@ namespace PluginDarkMode
 				{
 					SetWindowTheme(hwnd, p.themeClassName, nullptr);
 					if (hHeader)
-						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"DarkMode_ItemsView" : nullptr, nullptr);
+						SetWindowTheme(hHeader, PluginDarkMode::isEnabled() ? L"ItemsView" : nullptr, nullptr);
 				}
 
 				if (p.subclass && !PluginDarkMode::isEnabled())
@@ -3331,6 +3480,14 @@ namespace PluginDarkMode
 					RemoveWindowSubclass(hwnd, TabSubclass, g_tabSubclassID);
 			}
 
+			if (wcscmp(className, UPDOWN_CLASS) == 0)
+			{
+				subclassTabUpDownControl(hwnd);
+				setDarkExplorerTheme(hwnd);
+				::InvalidateRect(hwnd, nullptr, TRUE);
+				::UpdateWindow(hwnd);
+			}
+
 			if (wcscmp(className, WC_TREEVIEW) == 0)
 			{
 				calculateTreeViewStyle();
@@ -3349,7 +3506,7 @@ namespace PluginDarkMode
 			}
 
 			return TRUE;
-		}, reinterpret_cast<LPARAM>(&p));
+			}, reinterpret_cast<LPARAM>(&p));
 	}
 
 	void setDarkTitleBar(HWND hwnd)
@@ -3373,21 +3530,21 @@ namespace PluginDarkMode
 		UINT msg = 0;
 		switch (type)
 		{
-			case PluginDarkMode::ToolTipsType::toolbar:
-				msg = TB_GETTOOLTIPS;
-				break;
-			case PluginDarkMode::ToolTipsType::listview:
-				msg = LVM_GETTOOLTIPS;
-				break;
-			case PluginDarkMode::ToolTipsType::treeview:
-				msg = TVM_GETTOOLTIPS;
-				break;
-			case PluginDarkMode::ToolTipsType::tabbar:
-				msg = TCM_GETTOOLTIPS;
-				break;
-			default:
-				msg = 0;
-				break;
+		case PluginDarkMode::ToolTipsType::toolbar:
+			msg = TB_GETTOOLTIPS;
+			break;
+		case PluginDarkMode::ToolTipsType::listview:
+			msg = LVM_GETTOOLTIPS;
+			break;
+		case PluginDarkMode::ToolTipsType::treeview:
+			msg = TVM_GETTOOLTIPS;
+			break;
+		case PluginDarkMode::ToolTipsType::tabbar:
+			msg = TCM_GETTOOLTIPS;
+			break;
+		default:
+			msg = 0;
+			break;
 		}
 
 		if (msg == 0)
@@ -3611,7 +3768,7 @@ namespace PluginDarkMode
 		::SetBkColor(hdc, PluginDarkMode::getErrorBackgroundColor());
 		return reinterpret_cast<LRESULT>(PluginDarkMode::getErrorBackgroundBrush());
 	}
-	
+
 	LRESULT onCtlColorDarkerBGStaticText(HDC hdc, bool isTextEnabled)
 	{
 		if (!PluginDarkMode::isEnabled())
