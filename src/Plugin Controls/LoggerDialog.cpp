@@ -59,12 +59,16 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			INITCOMMONCONTROLSEX ix = { 0, 0 };
 			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
-			ix.dwICC = ICC_TAB_CLASSES;
+			ix.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
 			InitCommonControlsEx(&ix);
 
-			ix.dwSize = sizeof(INITCOMMONCONTROLSEX);
-			ix.dwICC = ICC_LISTVIEW_CLASSES;
-			InitCommonControlsEx(&ix);
+			// Create our child dialogs
+			_consoleDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
+			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
+
+			// Create image list with resolution based on DPI and populate
+			_iconList16x16 = ImageList_Create(_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16), ILC_COLOR32, 4, 1);
+			RecreateIcons();
 
 			_mainTabHwnd = GetDlgItem(_hSelf, IDC_TABLOGGER);
 
@@ -77,13 +81,17 @@ intptr_t LoggerDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 			tie.pszText = (TCHAR*)TEXT("Console Output");
 			TabCtrl_InsertItem(_mainTabHwnd, 1, &tie);
 
-			// Create our child dialogs
-			_consoleDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_CONSOLE), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
-			_errorDlgHwnd = CreateDialogParam(_hInst, MAKEINTRESOURCE(IDD_LOGGER_ERRORS), _hSelf, dlgProxy, reinterpret_cast<LPARAM>(this));
+			TabCtrl_SetImageList(_mainTabHwnd, _iconList16x16);
 
-			// Create image list with resolution based on DPI and populate
-			_iconList16x16 = ImageList_Create(_dpiManager.scaleIconSize(16), _dpiManager.scaleIconSize(16), ILC_COLOR32, 4, 1);
-			RecreateIcons();
+			// Set some dummy nodes to tab
+			for (int i = 2; i < 22; i++)
+			{
+				std::wstring name = TEXT("New Tab With Long Name: ");
+				name.append(std::to_wstring(i-1));
+				tie.pszText = (TCHAR*)name.c_str();
+				TabCtrl_InsertItem(_mainTabHwnd, i, &tie);
+			}
+
 
 			// Create toolbar
 			int ImageListID = 0;

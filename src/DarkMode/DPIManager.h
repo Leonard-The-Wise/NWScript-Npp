@@ -33,11 +33,26 @@ public:
     int getDPIY() { return _dpiY; };
     int getDPIScalePercent() { return (int)(((float)_dpiX / (float)96.0f)*100.0f); };
 
+    // Force a DPI setting.
+    void setDPIX(int newDpi) { _dpiX = newDpi; }
+    void setDPIY(int newDpi) { _dpiY = newDpi; }
+    void setDPI(int newDpi) {
+        setDPIX(newDpi);
+        setDPIY(newDpi);
+    }
+
     // Convert between raw pixels and relative pixels.
     int scaleX(int x) { return MulDiv(x, _dpiX, 96); };
     int scaleY(int y) { return MulDiv(y, _dpiY, 96); };
     int unscaleX(int x) { return MulDiv(x, 96, _dpiX); };
     int unscaleY(int y) { return MulDiv(y, 96, _dpiY); };
+
+    // Floating-point versions.
+    float scaleXf(float x) { return (static_cast<float>(x) * static_cast<float>(_dpiX)) / 96.0f; };
+    float scaleYf(float y) { return (static_cast<float>(y) * static_cast<float>(_dpiY)) / 96.0f; };
+    float unscaleXf(float x) { return (static_cast<float>(x) * 96.0f) / static_cast<float>(_dpiX); };
+    float unscaleYf(float y) { return (static_cast<float>(y) * 96.0f) / static_cast<float>(_dpiY); };
+
     // Scale by percent factor. Percent factor must be 100 = 1; 125 = 1.25; etc.
     int scaleByPercent(int number, int percentFactor) { return (int)((float)number * (float)percentFactor / 100.0f); }
 
@@ -135,7 +150,7 @@ public:
     }
 
     // Returns index of DPI scale (based on Microsoft's styles standards)
-    BYTE currentDpiIndex() 
+    BYTE getCurrentDpiIndex()
     {
         if (_dpiX >= 96 and _dpiX < 120)
             return 0;
@@ -151,6 +166,31 @@ public:
             return 5;
 
         return 6;
+    }
+
+    void setCurrentDpiIndex(int index)
+    {
+        switch (index)
+        {
+        case 0:
+            setDPI(96);
+            break;
+        case 1:
+            setDPI(120);
+            break;
+        case 2:
+            setDPI(144);
+            break;
+        case 3:
+            setDPI(192);
+            break;
+        case 4:
+            setDPI(240);
+            break;
+        case 5:
+            setDPI(288);
+            break;
+        }
     }
 
     bool screenToClientEx(HWND hWnd, RECT* pRect)
