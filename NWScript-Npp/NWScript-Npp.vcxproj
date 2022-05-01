@@ -225,6 +225,7 @@
   <ItemGroup>
     <ClInclude Include="..\lib\NscLib\_NscLib\Nsc.h" />
     <ClInclude Include="..\src\Common.h" />
+    <ClInclude Include="..\src\DarkMode\D2DRenderFactory.h" />
     <ClInclude Include="..\src\DarkMode\DarkMode.h" />
     <ClInclude Include="..\src\DarkMode\DPIManager.h" />
     <ClInclude Include="..\src\DarkMode\IatHook.h" />
@@ -289,6 +290,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Common.cpp" />
+    <ClCompile Include="..\src\DarkMode\D2DRenderFactory.cpp" />
     <ClCompile Include="..\src\DarkMode\DarkMode.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

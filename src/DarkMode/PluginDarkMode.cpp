@@ -16,34 +16,30 @@
 
 // Which classes exist for themes?
 // https://stackoverflow.com/questions/217532/what-are-the-possible-classes-for-the-openthemedata-function
-//
 // Controls styles and states info:
 // https://docs.microsoft.com/en-us/windows/win32/controls/control-spy
-//
 
 // Generate debug info for this file
 //#define _DEBUG_DARK_MODE
 
-// Enable or disable precompiled headers
-#define USE_PCH 1
-
 // Enable or disables using pre-rendered images from themes to draw some controls
 //#define USE_PRE_RENDEREDIMAGES
 
-#if (USE_PCH == 1)
 #include "pch.h"
-#else
-#include <Windows.h>
-#include <Uxtheme.h>
-#include <Vssym32.h>
-#include <Shlwapi.h>
-#include <Richedit.h>
-#include <cmath>
-#include <assert.h>
-#endif
+
+//#include <Windows.h>
+//#include <windowsx.h>
+//#include <Uxtheme.h>
+//#include <Vssym32.h>
+//#include <Shlwapi.h>
+//#include <Richedit.h>
+//#include <cmath>
+//#include <assert.h>
+
 
 #include "DPIManager.h"
 #include "PluginDarkMode.h"
+#include "D2DRenderFactory.h"
 
 #include "DarkMode.h"
 #include "UAHMenuBar.h"
@@ -56,130 +52,18 @@
 
 #pragma comment(lib, "uxtheme.lib")
 
-#define BKLUMINANCE_BRIGHTER 140
-#define BKLUMINANCE_SOFTER 80
-#define EDGELUMINANCE_BRIGHTER 220
-#define EDGELUMINANCE_DARKER 60
-
-
 namespace PluginDarkMode
 {
-	//Globals
+	// Globals
 	static bool g_initialized = false;
 	static ColorTone g_colorToneChoice = ColorTone::blackTone;
-	static DPIManager _dpiManager;      // dpi manager for some functions
-	static Options _options;			// actual runtime options
+	static DPIManager _dpiManager;				// DPI manager for some functions
+	static Options _options;					// Actual runtime options
+	static DarkModeD2DRenderFactory _renderFactory;
 
 	TreeViewStyle treeViewStyle = TreeViewStyle::classic;
 	COLORREF treeViewBg = 0;
 	double lighnessTreeView = 50.0;
-
-	struct Brushes
-	{
-		HBRUSH background = nullptr;
-		HBRUSH softerBackground = nullptr;
-		HBRUSH hotBackground = nullptr;
-		HBRUSH pureBackground = nullptr;
-		HBRUSH errorBackground = nullptr;
-		HBRUSH hardlightBackground = nullptr;
-		HBRUSH softlightBackground = nullptr;
-		HBRUSH textColorBrush = nullptr;
-		HBRUSH darkerTextColorBrush = nullptr;
-		HBRUSH edgeBackground = nullptr;
-		HBRUSH lightEdgeBackground = nullptr;
-		HBRUSH darkEdgeBackground = nullptr;
-
-		Brushes(const Colors& colors)
-			: background(::CreateSolidBrush(colors.background))
-			, softerBackground(::CreateSolidBrush(colors.softerBackground))
-			, hotBackground(::CreateSolidBrush(colors.hotBackground))
-			, pureBackground(::CreateSolidBrush(colors.pureBackground))
-			, errorBackground(::CreateSolidBrush(colors.errorBackground))
-			, hardlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER)))
-			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
-			, textColorBrush(::CreateSolidBrush(colors.text))
-			, darkerTextColorBrush(::CreateSolidBrush(colors.darkerText))
-			, edgeBackground(::CreateSolidBrush(colors.edge))
-			, lightEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
-			, darkEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER)))
-		{}
-
-		~Brushes()
-		{
-			::DeleteObject(background);			background = nullptr;
-			::DeleteObject(softerBackground);	softerBackground = nullptr;
-			::DeleteObject(hotBackground);		hotBackground = nullptr;
-			::DeleteObject(pureBackground);		pureBackground = nullptr;
-			::DeleteObject(errorBackground);	errorBackground = nullptr;
-			::DeleteObject(hardlightBackground);	hardlightBackground = nullptr;
-			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
-			::DeleteObject(textColorBrush);			textColorBrush = nullptr;
-			::DeleteObject(darkerTextColorBrush);	darkerTextColorBrush = nullptr;
-		}
-
-		void change(const Colors& colors)
-		{
-			::DeleteObject(background);
-			::DeleteObject(softerBackground);
-			::DeleteObject(hotBackground);
-			::DeleteObject(pureBackground);
-			::DeleteObject(errorBackground);
-			::DeleteObject(hardlightBackground);
-			::DeleteObject(softlightBackground);
-			::DeleteObject(textColorBrush);
-			::DeleteObject(darkerTextColorBrush);
-
-			background = ::CreateSolidBrush(colors.background);
-			softerBackground = ::CreateSolidBrush(colors.softerBackground);
-			hotBackground = ::CreateSolidBrush(colors.hotBackground);
-			pureBackground = ::CreateSolidBrush(colors.pureBackground);
-			errorBackground = ::CreateSolidBrush(colors.errorBackground);
-			hardlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER));
-			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
-			textColorBrush = ::CreateSolidBrush(colors.text);
-			darkerTextColorBrush = ::CreateSolidBrush(colors.darkerText);
-			edgeBackground = ::CreateSolidBrush(colors.edge);
-			lightEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
-			darkEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER));
-		}
-	};
-
-	struct Pens
-	{
-		HPEN darkerTextPen = nullptr;
-		HPEN edgePen = nullptr;
-		HPEN lightEdgePen = nullptr;
-		HPEN darkEdgePen = nullptr;
-
-		Pens(const Colors& colors)
-			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
-			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
-			, lightEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
-			, darkEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER)))
-		{}
-
-		~Pens()
-		{
-			::DeleteObject(darkerTextPen);	darkerTextPen = nullptr;
-			::DeleteObject(edgePen);		edgePen = nullptr;
-			::DeleteObject(lightEdgePen);	lightEdgePen = nullptr;
-			::DeleteObject(darkEdgePen);	darkEdgePen = nullptr;
-		}
-
-		void change(const Colors& colors)
-		{
-			::DeleteObject(darkerTextPen);
-			::DeleteObject(edgePen);
-			::DeleteObject(lightEdgePen);
-			::DeleteObject(darkEdgePen);
-
-			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
-			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
-			lightEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
-			darkEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER));
-		}
-
-	};
 
 	// black (default)
 	static const Colors darkColors{
@@ -293,31 +177,13 @@ namespace PluginDarkMode
 		HEXRGB(0x646464)	// edgeColor
 	};
 
-	void setDarkTone(ColorTone colorToneChoice)
+	void Theme::change(const Colors& colors) 
 	{
-		assert(g_initialized);
-		g_colorToneChoice = colorToneChoice;
-	}
-
-	struct Theme
-	{
-		Colors _colors;
-		Brushes _brushes;
-		Pens _pens;
-
-		Theme(const Colors& colors)
-			: _colors(colors)
-			, _brushes(colors)
-			, _pens(colors)
-		{}
-
-		void change(const Colors& colors)
-		{
 			_colors = colors;
 			_brushes.change(colors);
 			_pens.change(colors);
-		}
-	};
+			_renderFactory.refreshBrushes();
+	}
 
 	Theme tDefault(darkColors);
 	Theme tR(darkRedColors);
@@ -380,6 +246,12 @@ namespace PluginDarkMode
 
 		initExperimentalDarkMode();
 		setDarkMode(false, true);
+	}
+
+	void disposeDarkMode()
+	{
+		_renderFactory.dispose();
+		return;
 	}
 
 	bool isInitialized() {
@@ -503,6 +375,12 @@ namespace PluginDarkMode
 	HPEN getEdgePen()                    { return getTheme()._pens.edgePen; }
 	HPEN getLightEdgePen()               { return getTheme()._pens.lightEdgePen; }
 	HPEN getDarkEdgePen()                { return getTheme()._pens.darkEdgePen; }
+
+	void setDarkTone(ColorTone colorToneChoice)
+	{
+		assert(g_initialized);
+		g_colorToneChoice = colorToneChoice;
+	}
 
 	void setThemeColors(Colors& newColors)
 	{
@@ -1111,16 +989,17 @@ namespace PluginDarkMode
 
 	struct SpinData
 	{
-		HWND hWnd = nullptr;
+		bool isInitialized = false;
 		HTHEME hTheme = nullptr;
+
+		SpinButtonType type = SpinButtonType::LeftRight;
+
 		int iStateID1 = 0;
 		int iStateID2 = 0;
-		SpinButtonType type = SpinButtonType::LeftRight;
-#ifdef USE_PRE_RENDEREDIMAGES
-		RECT currentRcClient = {};
-		HBITMAP SpinArrowOne[4] = {};
-		HBITMAP SpinArrowTwo[4] = {};
-#endif
+		bool isHotOne = false;
+		bool isHotTwo = false;
+		RECT rcClient = {}, rcArrowOne = {}, rcArrowTwo = {};
+
 		~SpinData()
 		{
 			closeTheme();
@@ -1128,20 +1007,10 @@ namespace PluginDarkMode
 
 		bool ensureTheme(HWND hwnd)
 		{
-			RECT rcClient;
-			GetClientRect(hwnd, &rcClient);
 			if (!hTheme)
 			{
 				hTheme = OpenThemeData(hwnd, L"Spin");
-
-				if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
-					type = SpinButtonType::LeftRight;
-				else
-					type = SpinButtonType::UpDown;
 			}
-#ifdef USE_PRE_RENDEREDIMAGES
-			reloadImages(rcClient);
-#endif
 			return hTheme != nullptr;
 		}
 
@@ -1151,96 +1020,51 @@ namespace PluginDarkMode
 			{
 				CloseThemeData(hTheme);
 				hTheme = nullptr;
-#ifdef USE_PRE_RENDEREDIMAGES
-				DeleteObject(SpinArrowOne);
-				DeleteObject(SpinArrowTwo);
-#endif
 			}
 		}
-#ifdef USE_PRE_RENDEREDIMAGES
-	private:
-		// Spin controls almost never resize, so loading bitmaps once for it is cheap and speeds draws later
-		void reloadImages(const RECT& rcClient)
+
+		void updateSize(HWND hWnd)
 		{
-			if (!hTheme || EqualRect(&rcClient, &currentRcClient))
-				return;
+			GetClientRect(hWnd, &rcClient);
+			if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
+				type = SpinButtonType::LeftRight;
+			else
+				type = SpinButtonType::UpDown;
 
-			int cx = rcClient.right - rcClient.left;
-			int cy = rcClient.bottom - rcClient.top;
-			HDC newDC = CreateCompatibleDC(NULL);
-			HBITMAP hOldBitmap = nullptr;
-
-			RECT spinRect = {};
-			HLS controlBack;
-			HLS colorDarkText;
-			ColorRGBToHLS(getBackgroundColor(), &controlBack.h, &controlBack.l, &controlBack.s);
-			ColorRGBToHLS(getDarkerTextColor(), &colorDarkText.h, &colorDarkText.l, &colorDarkText.s);
-			int internalStatus = 0;
-			for (int i = 0; i < 4; i++)
+			if (type == SpinButtonType::LeftRight)
 			{
-				internalStatus = i + 1;
+				// Control has a small margin depending on orientation.
+				rcClient.top += 1;
+				rcClient.left += 1;
+				rcClient.right -= 1;
 
-				// Create bitmaps
-				SpinArrowOne[i] = CreateBitmap(type == SpinButtonType::LeftRight ? cx / 2 : cx, cy, 1, 32, NULL);
-				SpinArrowTwo[i] = CreateBitmap(cx, type == SpinButtonType::UpDown ? cy / 2 : cy, 1, 32, NULL);
-
-				GetThemeBackgroundExtent(hTheme, newDC, SPNP_UPHORZ, i + 1, &rcClient, &spinRect);
-
-				if (type == SpinButtonType::LeftRight)
-					spinRect.right /= 2;
-				else
-					spinRect.bottom /= 2;
-
-				if (hOldBitmap == nullptr)
-					hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(newDC, SpinArrowOne[i]));
-				else
-					SelectObject(newDC, SpinArrowOne[i]);
-
-				// Draw theme buttons
-				// SPNP_DOWNHORZ = left arrow, SPNP_UPHORZ = right arrow
-				RECT arrowRc = { 0, 0, cx, cy };
-				FillRect(newDC, &arrowRc, getBackgroundBrush());
-				DrawThemeBackground(hTheme, newDC, type == SpinButtonType::LeftRight ? SPNP_DOWNHORZ : SPNP_UP, i + 1, &spinRect, NULL);
-				SelectObject(newDC, SpinArrowTwo[i]);
-				FillRect(newDC, &arrowRc, getBackgroundBrush());
-				DrawThemeBackground(hTheme, newDC, type == SpinButtonType::LeftRight ? SPNP_UPHORZ : SPNP_DOWN, i + 1, &spinRect, NULL);
-
-				if (hOldBitmap)
-					SelectObject(newDC, hOldBitmap);
-
-				// How to turn a "light themed" control into a Dark Mode one?
-
-				// Step 1 -> Invert colors
-				colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, true, true, true);
-				colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, true, true, true);
-
-				// Step 2 -> Attenuate minimum luminosity to control background's light.
-				colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true, 
-					false, false, false, true, false, 240, 0, true, controlBack.l, 240, true);
-				colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
-					false, false, false, true, false, 240, 0, true, controlBack.l, 240, true);
-
-				// Step 3 -> Attenuate maximum luminosity to control light - for statuses UPS_NORMAL (1) and UPS_DISABLED (4)
-				if (internalStatus == UPS_NORMAL || internalStatus == UPS_DISABLED)
-				{
-					colorizeBitmap(SpinArrowOne[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
-						false, false, false, true, false, 240, 0, true, 0, colorDarkText.l, false, true);
-					colorizeBitmap(SpinArrowTwo[i], 0, 0, 0, false, false, false, true, 0, 0, 0, true,
-						false, false, false, true, false, 240, 0, true, 0, colorDarkText.l, false, true);
-				}
-
-				// Step 4 -> Colorize to theme
-				colorizeBitmap(SpinArrowOne[i], controlBack.h, 0, controlBack.s, true, false, true);
-				colorizeBitmap(SpinArrowTwo[i], controlBack.h, 0, controlBack.s, true, false, true);
+				rcArrowOne = {
+					rcClient.left, rcClient.top,
+					rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
+				};
+				rcArrowTwo = {
+					rcArrowOne.right, rcClient.top,
+					rcClient.right, rcClient.bottom
+				};
 			}
+			else
+			{
+				// Control has a small margin depending on orientation.
+				InflateRect(&rcClient, -1, -1);
 
-			currentRcClient = rcClient;
-			DeleteDC(newDC);
+				rcArrowOne = {
+					rcClient.left, rcClient.top,
+					rcClient.right, rcClient.bottom - ((rcClient.bottom - rcClient.top) / 2)
+				};
+				rcArrowTwo = {
+					rcClient.left, rcArrowOne.bottom,
+					rcClient.right, rcClient.bottom
+				};
+			}
 		}
-#endif
 	};
 
-	struct TabData 
+	struct TabData
 	{
 		HWND hSpinControl = nullptr;
 	};
@@ -1250,67 +1074,36 @@ namespace PluginDarkMode
 	// nStyle is the same as GetWindowLongPtr(hwndButton, GWL_STYLE);
 	void renderButtonBackground(HDC hdc, DWORD nState, LONG_PTR nStyle, const RECT& rcClient)
 	{
-		HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getDarkerBackgroundBrush();
+		ID2D1SolidColorBrush* bkBrush;
+		ID2D1SolidColorBrush* edgeBrush;
+
+		bkBrush = ((nState & BST_HOT) != 0) ? _renderFactory.getDarkBrush(D2DDarkBrushes::softlightBackground) : 
+			_renderFactory.getDarkBrush(D2DDarkBrushes::darkerBackground);
 		if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
-			hBckBrush = PluginDarkMode::getSofterBackgroundBrush();
+			bkBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::softerBackground);
 
-		HPEN hOldPen = nullptr;
 		if (nStyle & WS_DISABLED)
-			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getDarkEdgePen()));
+			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::darkEdgeColor);
 		else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
-			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getLightEdgePen()));
+			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::lightEdgeColor);
 		else if (nStyle & (BS_PUSHLIKE))
-			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
+			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::edgeColor);
 		else
-			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
+			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::edgeColor);
 
-		HBRUSH hOldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, hBckBrush));
-		FillRect(hdc, &rcClient, PluginDarkMode::getBackgroundBrush());
-		RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right,
-			rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
-		SelectObject(hdc, hOldBrush);
+		D2D1_ROUNDED_RECT buttonRect = D2D1::RoundedRect(D2D1::RectF(static_cast<float>(rcClient.left) + 1.0f, 
+			static_cast<float>(rcClient.top) + 1.0f,
+			static_cast<float>(rcClient.right) - 1.0f, 
+			static_cast<float>(rcClient.bottom) - 1.0f), 
+			_dpiManager.scaleXf(5.0f), _dpiManager.scaleYf(5.0f));
 
-		if (hOldPen)
-			SelectObject(hdc, hOldPen);
+		_renderFactory.getRenderer().DrawRoundedRectangle(buttonRect, edgeBrush, _dpiManager.scaleXf(2.0f));
+		_renderFactory.getRenderer().FillRoundedRectangle(buttonRect, bkBrush);
 	}
 
-	void renderButton(HWND hwndButton, HDC hdc, HTHEME hTheme)
+	void renderButtonImage(HWND hwndButton, HDC hdc, DWORD nState, LONG_PTR nStyle, 
+		RECT& rcImage, RECT& rcClient, RECT& rcText, WCHAR* szText, int padding)
 	{
-		RECT rcClient = {};
-		WCHAR szText[256] = { '\0' };
-		DWORD nState = static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
-		LONG_PTR nStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
-		DWORD uiState = static_cast<DWORD>(SendMessage(hwndButton, WM_QUERYUISTATE, 0, 0));
-
-		GetClientRect(hwndButton, &rcClient);
-		GetWindowText(hwndButton, szText, _countof(szText));
-
-		HFONT hFont = nullptr;
-		HFONT hOldFont = nullptr;
-
-		renderButtonBackground(hdc, nState, nStyle, rcClient);
-
-		// Draw button image
-		RECT rcImage = rcClient;
-		RECT rcText = rcClient;
-		InflateRect(&rcText, -3, -3);
-
-		DWORD dtFlags = DT_LEFT; // DT_LEFT is 0
-		dtFlags |= (nStyle & BS_MULTILINE) ? DT_WORDBREAK : DT_SINGLELINE;
-		dtFlags |= ((nStyle & BS_CENTER) == BS_CENTER) ? DT_CENTER : (nStyle & BS_RIGHT) ? DT_RIGHT : 0;
-		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
-		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
-
-		// Modifications to DrawThemeText
-		dtFlags &= ~(DT_RIGHT);
-		dtFlags |= DT_VCENTER | DT_CENTER;
-
-		// Calculate actual text output rectangle and centralize
-		const int padding = _dpiManager.scaleX(4);
-		DrawText(hdc, szText, sizeof(szText), &rcImage, dtFlags | DT_CALCRECT);
-		rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
-		rcImage.right += padding + rcImage.left;
-
 		ICONINFO ii;
 		BITMAP bm;
 
@@ -1367,10 +1160,56 @@ namespace PluginDarkMode
 
 		if (bIcon || bBitmap)
 			rcText.left += padding;
+	}
 
+	void renderButton(HWND hwndButton, HDC hdc, HTHEME hTheme)
+	{
+		RECT rcClient = {};
+		WCHAR szText[256] = { '\0' };
+		DWORD nState = static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
+		LONG_PTR nStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
+		DWORD uiState = static_cast<DWORD>(SendMessage(hwndButton, WM_QUERYUISTATE, 0, 0));
+
+		GetClientRect(hwndButton, &rcClient);
+		GetWindowText(hwndButton, szText, _countof(szText));
+
+		HFONT hFont = nullptr;
+		HFONT hOldFont = nullptr;
+
+		if (!_renderFactory.beginDrawFrame(hwndButton, hdc))
+			return;
+
+		renderButtonBackground(hdc, nState, nStyle, rcClient);
+
+		_renderFactory.endDrawFrame();
+
+		// Prepare to draw button image
+		RECT rcImage = rcClient;
+		RECT rcText = rcClient;
+		InflateRect(&rcText, -3, -3);
+
+		DWORD dtFlags = DT_LEFT; // DT_LEFT is 0
+		dtFlags |= (nStyle & BS_MULTILINE) ? DT_WORDBREAK : DT_SINGLELINE;
+		dtFlags |= ((nStyle & BS_CENTER) == BS_CENTER) ? DT_CENTER : (nStyle & BS_RIGHT) ? DT_RIGHT : 0;
+		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
+		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
+
+		// Modifications to DrawThemeText
+		dtFlags &= ~(DT_RIGHT);
+		dtFlags |= DT_VCENTER | DT_CENTER;
+
+		// Calculate actual text output rectangle and centralize with image
+		const int padding = _dpiManager.scaleX(4);
+		DrawText(hdc, szText, sizeof(szText), &rcImage, dtFlags | DT_CALCRECT);
+		rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
+		rcImage.right += padding + rcImage.left;
+
+		// Draw button image
+		renderButtonImage(hwndButton, hdc, nState, nStyle, rcImage, rcClient, rcText, szText, padding);
+
+		// Prepare to draw button text
 		hFont = reinterpret_cast<HFONT>(SendMessage(hwndButton, WM_GETFONT, 0, 0));
 		hOldFont = static_cast<HFONT>(SelectObject(hdc, hFont));
-
 
 		DTTOPTS dtto = { sizeof(DTTOPTS), DTT_TEXTCOLOR };
 		dtto.crText = PluginDarkMode::getTextColor();
@@ -2543,7 +2382,7 @@ namespace PluginDarkMode
 		switch (direction)
 		{
 		case SpinArrowDirection::Left:
-			ptTriangleF[0] = { 1.0f, 0.0f };  
+			ptTriangleF[0] = { 1.0f, 0.0f };
 			ptTriangleF[1] = { 0.0f, 0.5f };
 			ptTriangleF[2] = { 1.0f, 1.0f };
 			break;
@@ -2565,21 +2404,24 @@ namespace PluginDarkMode
 		}
 
 		FSIZE szArrowRc = { static_cast<float>(rcArrow.right - rcArrow.left), static_cast<float>(rcArrow.bottom - rcArrow.top) };
+		// Size on triangle actually begins at 0, so a 2x4 is actually a 3x5 triangle (harmonic triangles on screen have odd sizes). The remainder there is for scaling.
 		FSIZE szTriangleRect = { static_cast<float>(_dpiManager.scaleX(2)), static_cast<float>(_dpiManager.scaleY(4) + (_dpiManager.scaleY(4) % 2)) };
 		POINT ptTriangleFinal[3];
 		for (int i = 0; i < 3; i++)
 		{
 			ptTriangleF[i].x = ptTriangleF[i].x * szTriangleRect.cx; // Scale triangle
 			ptTriangleF[i].y = ptTriangleF[i].y * szTriangleRect.cy;
-			ptTriangleF[i].x += static_cast<float>(rcArrow.left) + ((szArrowRc.cx - szTriangleRect.cx) / 2.0f); // Centralize
-			ptTriangleF[i].y += static_cast<float>(rcArrow.top) + ((szArrowRc.cy - szTriangleRect.cy) / 2.0f);
+
+			// Centralize
+			ptTriangleF[i].x += static_cast<float>(rcArrow.left) + (szArrowRc.cx - szTriangleRect.cx - 1) / 2.0f;
+			ptTriangleF[i].y += static_cast<float>(rcArrow.top) + (szArrowRc.cy - szTriangleRect.cy - 1) / 2.0f;
 
 			// Convert to int point
 			ptTriangleFinal[i].x = static_cast<int>(ptTriangleF[i].x);
 			ptTriangleFinal[i].y = static_cast<int>(ptTriangleF[i].y);
 		}
 
-		HPEN trianglePen = (iStateID == UPS_HOT || iStateID == UPS_PRESSED) ? 
+		HPEN trianglePen = (iStateID == UPS_HOT || iStateID == UPS_PRESSED) ?
 			getLightEdgePen() : (iStateID == UPS_DISABLED) ? getDarkEdgePen() : getEdgePen();
 		HBRUSH hTriangleBrush = (iStateID == UPS_HOT || iStateID == UPS_PRESSED) ?
 			getLightEdgeBrush() : (iStateID == UPS_DISABLED) ? getDargEdgeBrush() : getEdgeBrush();
@@ -2613,85 +2455,59 @@ namespace PluginDarkMode
 	}
 #endif
 
-	void renderSpinButton(const SpinData& pSpinData, HDC hdc, const RECT& rcArrowOne, const RECT& rcArrowTwo, int iStateID1, int iStateID2)
+	void renderSpinButton(const SpinData& pSpinData, HDC hdc, int iStateID1, int iStateID2)
 	{
 #ifdef USE_PRE_RENDEREDIMAGES
 		SIZE rcSizes[2] = {
-			{ rcArrowOne.right - rcArrowOne.left, rcArrowOne.bottom - rcArrowOne.top },
-			{ rcArrowTwo.right - rcArrowTwo.left, rcArrowTwo.bottom - rcArrowTwo.top },
+			{ pSpinData.rcArrowOne.right - pSpinData.rcArrowOne.left, pSpinData.rcArrowOne.bottom - pSpinData.rcArrowOne.top },
+			{ pSpinData.rcArrowTwo.right - pSpinData.rcArrowTwo.left, pSpinData.rcArrowTwo.bottom - pSpinData.rcArrowTwo.top },
 		};
 
 		HDC memDC = CreateCompatibleDC(hdc);
 
 		HBITMAP hOldBitmap = reinterpret_cast<HBITMAP>(SelectObject(memDC, pSpinData.SpinArrowOne[iStateID1 - 1]));
-		BitBlt(hdc, rcArrowOne.left, rcArrowOne.top, rcSizes[0].cx, rcSizes[0].cy, memDC, 0, 0, SRCCOPY);
+		BitBlt(hdc, pSpinData.rcArrowOne.left, pSpinData.rcArrowOne.top, rcSizes[0].cx, rcSizes[0].cy, memDC, 0, 0, SRCCOPY);
 		SelectObject(memDC, pSpinData.SpinArrowTwo[iStateID2 - 1]);
-		BitBlt(hdc, rcArrowTwo.left, rcArrowTwo.top, rcSizes[1].cx, rcSizes[1].cy, memDC, 0, 0, SRCCOPY);
+		BitBlt(hdc, pSpinData.rcArrowTwo.left, pSpinData.rcArrowTwo.top, rcSizes[1].cx, rcSizes[1].cy, memDC, 0, 0, SRCCOPY);
 
 		SelectObject(memDC, hOldBitmap);
 		DeleteDC(memDC);
 #else
-		renderSpinButtonBackground(hdc, iStateID1, rcArrowOne);
-		renderSpinButtonBackground(hdc, iStateID2, rcArrowTwo);
-		renderSpinButtonArrow(hdc, rcArrowOne, 
+		renderSpinButtonBackground(hdc, iStateID1, pSpinData.rcArrowOne);
+		renderSpinButtonBackground(hdc, iStateID2, pSpinData.rcArrowTwo);
+
+		RECT rcArrowOne = pSpinData.rcArrowOne;
+		RECT rcArrowTwo = pSpinData.rcArrowTwo;
+		InflateRect(&rcArrowOne, -1, -1);
+		InflateRect(&rcArrowTwo, -1, -1);
+
+		renderSpinButtonArrow(hdc, rcArrowOne,
 			pSpinData.type == SpinButtonType::LeftRight ? SpinArrowDirection::Left : SpinArrowDirection::Up, iStateID1);
 		renderSpinButtonArrow(hdc, rcArrowTwo,
 			pSpinData.type == SpinButtonType::LeftRight ? SpinArrowDirection::Right : SpinArrowDirection::Down, iStateID2);
 #endif
 	}
 
-	void paintUpDownButtons(HWND hWnd, HDC hdc, SpinData& pSpinData)
+	void paintSpinButtons(HWND hWnd, HDC hdc, SpinData& pSpinData)
 	{
-		RECT rcClient{};
-		::GetClientRect(hWnd, &rcClient);
-
-		// Determines up/down or left/right
-		RECT rcArrowOne;
-		RECT rcArrowTwo;
-
-		if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
+		if (BufferedPaintRenderAnimation(hWnd, hdc))
 		{
-			rcArrowOne = {
-				rcClient.left, rcClient.top,
-				rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
-			};
-			rcArrowTwo = {
-				rcArrowOne.right, rcClient.top,
-				rcClient.right, rcClient.bottom
-			};
-		}
-		else
-		{
-			rcArrowOne = {
-				rcClient.left, rcClient.top,
-				rcClient.right, rcClient.bottom - ((rcClient.bottom - rcClient.top) / 2)
-			};
-			rcArrowTwo = {
-				rcClient.left, rcArrowOne.bottom,
-				rcClient.right, rcClient.bottom
-			};
+			return;
 		}
 
-		POINT ptCursor = {};
-		::GetCursorPos(&ptCursor);
-		::ScreenToClient(hWnd, &ptCursor);
+		RECT rcBackground;
+		::GetClientRect(hWnd, &rcBackground);
+		FillRect(hdc, &rcBackground, getBackgroundBrush());
 
-		bool isHotOne = ::PtInRect(&rcArrowOne, ptCursor);
-		bool isHotTwo = ::PtInRect(&rcArrowTwo, ptCursor);
 		bool bPressed = (GetKeyState(VK_LBUTTON) & 0x8000) != 0;
 		LONG_PTR nStyle = GetWindowLongPtr(hWnd, GWL_STYLE); // To check enabled / disabled
 
-		int iStateID1 = (bPressed && isHotOne) ? UPS_PRESSED : (isHotOne ? UPS_HOT : UPS_NORMAL);
-		int iStateID2 = (bPressed && isHotTwo) ? UPS_PRESSED : (isHotTwo ? UPS_HOT : UPS_NORMAL);
+		int iStateID1 = (bPressed && pSpinData.isHotOne) ? UPS_PRESSED : (pSpinData.isHotOne ? UPS_HOT : UPS_NORMAL);
+		int iStateID2 = (bPressed && pSpinData.isHotTwo) ? UPS_PRESSED : (pSpinData.isHotTwo ? UPS_HOT : UPS_NORMAL);
 		if (nStyle & WS_DISABLED)
 		{
 			iStateID1 = UPS_DISABLED;
 			iStateID2 = UPS_DISABLED;
-		}
-
-		if (BufferedPaintRenderAnimation(hWnd, hdc))
-		{
-			return;
 		}
 
 		BP_ANIMATIONPARAMS animParams = { sizeof(animParams) };
@@ -2703,16 +2519,18 @@ namespace PluginDarkMode
 
 		HDC hdcFrom = nullptr;
 		HDC hdcTo = nullptr;
-		HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
+		// HACK: zero animations
+		//animParams.dwDuration = 0;
+		HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &pSpinData.rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
 		if (hbpAnimation)
 		{
 			if (hdcFrom)
 			{
-				renderSpinButton(pSpinData, hdcFrom, rcArrowOne, rcArrowTwo, pSpinData.iStateID1, pSpinData.iStateID2);
+				renderSpinButton(pSpinData, hdcFrom, pSpinData.iStateID1, pSpinData.iStateID2);
 			}
 			if (hdcTo)
 			{
-				renderSpinButton(pSpinData, hdcTo, rcArrowOne, rcArrowTwo, iStateID1, iStateID2);
+				renderSpinButton(pSpinData, hdcTo, iStateID1, iStateID2);
 			}
 
 			pSpinData.iStateID1 = iStateID1;
@@ -2722,7 +2540,7 @@ namespace PluginDarkMode
 		}
 		else
 		{
-			renderSpinButton(pSpinData, hdc, rcArrowOne, rcArrowTwo, iStateID1, iStateID2);
+			renderSpinButton(pSpinData, hdc, iStateID1, iStateID2);
 			pSpinData.iStateID1 = iStateID1;
 			pSpinData.iStateID2 = iStateID2;
 		}
@@ -2738,6 +2556,10 @@ namespace PluginDarkMode
 	)
 	{
 		auto pSpinData = reinterpret_cast<SpinData*>(dwRefData);
+		if (!pSpinData->isInitialized)
+		{
+			pSpinData->updateSize(hWnd);
+		}
 
 		switch (uMsg)
 		{
@@ -2756,10 +2578,38 @@ namespace PluginDarkMode
 
 			PAINTSTRUCT ps{};
 			auto hdc = ::BeginPaint(hWnd, &ps);
-			paintUpDownButtons(hWnd, hdc, *pSpinData);
+			paintSpinButtons(hWnd, hdc, *pSpinData);
 			::EndPaint(hWnd, &ps);
 
 			return TRUE;
+		}
+		case WM_NCHITTEST:
+		{
+			POINT MousePos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+			RECT rcClient;
+			GetClientRect(hWnd, &rcClient);
+			::ScreenToClient(hWnd, &MousePos);
+
+			bool isHotOne = ::PtInRect(&pSpinData->rcArrowOne, MousePos);
+			bool isHotTwo = ::PtInRect(&pSpinData->rcArrowTwo, MousePos);
+
+			if (pSpinData->isHotOne != isHotOne || pSpinData->isHotTwo != isHotTwo)
+			{
+				BufferedPaintStopAllAnimations(hWnd);
+				pSpinData->isHotOne = isHotOne;
+				pSpinData->isHotTwo = isHotTwo;
+				InvalidateRect(hWnd, NULL, false);
+			}
+
+			break;
+		}
+		case WM_MOUSELEAVE:
+		{
+			BufferedPaintStopAllAnimations(hWnd);
+			pSpinData->isHotOne = false;
+			pSpinData->isHotTwo = false;
+			InvalidateRect(hWnd, NULL, false);
+			break;
 		}
 
 		case WM_THEMECHANGED:
@@ -2772,6 +2622,12 @@ namespace PluginDarkMode
 		{
 			::RemoveWindowSubclass(hWnd, SpinControlSubclass, uIdSubclass);
 			delete pSpinData;
+			break;
+		}
+
+		case WM_SIZE:
+		{
+			pSpinData->updateSize(hWnd);
 			break;
 		}
 
@@ -2961,9 +2817,9 @@ namespace PluginDarkMode
 				pTabData->hSpinControl = reinterpret_cast<HWND>(lParam);
 				setDarkExplorerTheme(pTabData->hSpinControl);
 				subclassSpinControl(pTabData->hSpinControl);
-				
+
 				break;
-			}			
+			}
 			case WM_DESTROY:
 			{
 				pTabData->hSpinControl = nullptr;
@@ -2980,146 +2836,6 @@ namespace PluginDarkMode
 	void subclassTabControl(HWND hwnd)
 	{
 		SetWindowSubclass(hwnd, TabSubclass, g_tabSubclassID, reinterpret_cast<DWORD_PTR>(new TabData()));
-	}
-
-	constexpr UINT_PTR g_tabUpDownSubclassID = 42;
-
-	LRESULT CALLBACK TabUpDownSubclass(
-		HWND hWnd,
-		UINT uMsg,
-		WPARAM wParam,
-		LPARAM lParam,
-		UINT_PTR uIdSubclass,
-		DWORD_PTR dwRefData
-	)
-	{
-		auto pButtonData = reinterpret_cast<ButtonData*>(dwRefData);
-
-		switch (uMsg)
-		{
-		case WM_PRINTCLIENT:
-		case WM_PAINT:
-		{
-			if (!PluginDarkMode::isEnabled())
-			{
-				break;
-			}
-
-			bool hasTheme = pButtonData->ensureTheme(hWnd);
-
-			RECT rcClient{};
-			::GetClientRect(hWnd, &rcClient);
-
-			PAINTSTRUCT ps{};
-			auto hdc = ::BeginPaint(hWnd, &ps);
-
-			::FillRect(hdc, &rcClient, PluginDarkMode::getDarkerBackgroundBrush());
-
-			RECT rcArrowLeft = {
-				rcClient.left, rcClient.top,
-				rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
-			};
-
-			RECT rcArrowRight = {
-				rcArrowLeft.right, rcClient.top,
-				rcClient.right, rcClient.bottom
-			};
-
-			POINT ptCursor = {};
-			::GetCursorPos(&ptCursor);
-			::ScreenToClient(hWnd, &ptCursor);
-
-			bool isHotLeft = ::PtInRect(&rcArrowLeft, ptCursor);
-			bool isHotRight = ::PtInRect(&rcArrowRight, ptCursor);
-
-			::SetBkMode(hdc, TRANSPARENT);
-
-			if (hasTheme)
-			{
-				::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotLeft ? PBS_HOT : PBS_NORMAL, &rcArrowLeft, nullptr);
-				::DrawThemeBackground(pButtonData->hTheme, hdc, BP_PUSHBUTTON, isHotRight ? PBS_HOT : PBS_NORMAL, &rcArrowRight, nullptr);
-			}
-			else
-			{
-				::FillRect(hdc, &rcArrowLeft, isHotLeft ? PluginDarkMode::getHotBackgroundBrush() : PluginDarkMode::getBackgroundBrush());
-				::FillRect(hdc, &rcArrowRight, isHotRight ? PluginDarkMode::getHotBackgroundBrush() : PluginDarkMode::getBackgroundBrush());
-			}
-
-			LOGFONT lf = {};
-			auto font = reinterpret_cast<HFONT>(SendMessage(hWnd, WM_GETFONT, 0, 0));
-			::GetObject(font, sizeof(lf), &lf);
-			lf.lfHeight = (_dpiManager.scaleY(16) - 5) * -1;
-			auto holdFont = static_cast<HFONT>(::SelectObject(hdc, CreateFontIndirect(&lf)));
-
-			auto mPosX = ((rcArrowLeft.right - rcArrowLeft.left - _dpiManager.scaleX(7) + 1) / 2);
-			auto mPosY = ((rcArrowLeft.bottom - rcArrowLeft.top + lf.lfHeight - _dpiManager.scaleY(1) - 3) / 2);
-
-			::SetTextColor(hdc, isHotLeft ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
-			::ExtTextOut(hdc,
-				rcArrowLeft.left + mPosX,
-				rcArrowLeft.top + mPosY,
-				ETO_CLIPPED,
-				&rcArrowLeft, L"<",
-				1,
-				nullptr);
-
-			::SetTextColor(hdc, isHotRight ? PluginDarkMode::getTextColor() : PluginDarkMode::getDarkerTextColor());
-			::ExtTextOut(hdc,
-				rcArrowRight.left + mPosX - _dpiManager.scaleX(2) + 3,
-				rcArrowRight.top + mPosY,
-				ETO_CLIPPED,
-				&rcArrowRight, L">",
-				1,
-				nullptr);
-
-			if (!hasTheme)
-			{
-				auto holdPen = static_cast<HPEN>(::SelectObject(hdc, PluginDarkMode::getEdgePen()));
-				auto holdBrush = ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
-				::Rectangle(hdc, rcArrowLeft.left, rcArrowLeft.top, rcArrowLeft.right, rcArrowLeft.bottom);
-				::Rectangle(hdc, rcArrowRight.left, rcArrowRight.top, rcArrowRight.right, rcArrowRight.bottom);
-
-				::SelectObject(hdc, holdPen);
-				::SelectObject(hdc, holdBrush);
-			}
-
-			::SelectObject(hdc, holdFont);
-			::EndPaint(hWnd, &ps);
-			return FALSE;
-		}
-
-		case WM_THEMECHANGED:
-		{
-			pButtonData->closeTheme();
-			break;
-		}
-
-		case WM_NCDESTROY:
-		{
-			::RemoveWindowSubclass(hWnd, TabUpDownSubclass, uIdSubclass);
-			delete pButtonData;
-			break;
-		}
-
-		case WM_ERASEBKGND:
-		{
-			if (PluginDarkMode::isEnabled())
-			{
-				RECT rcClient{};
-				::GetClientRect(hWnd, &rcClient);
-				::FillRect(reinterpret_cast<HDC>(wParam), &rcClient, PluginDarkMode::getDarkerBackgroundBrush());
-				return TRUE;
-			}
-			break;
-		}
-		}
-		return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-	}
-
-	void subclassTabUpDownControl(HWND hwnd)
-	{
-		auto pButtonData = reinterpret_cast<DWORD_PTR>(new ButtonData());
-		SetWindowSubclass(hwnd, TabUpDownSubclass, g_tabUpDownSubclassID, pButtonData);
 	}
 
 	constexpr UINT_PTR g_windowSubclassID = 42;
@@ -3482,7 +3198,7 @@ namespace PluginDarkMode
 
 			if (wcscmp(className, UPDOWN_CLASS) == 0)
 			{
-				subclassTabUpDownControl(hwnd);
+				subclassSpinControl(hwnd);
 				setDarkExplorerTheme(hwnd);
 				::InvalidateRect(hwnd, nullptr, TRUE);
 				::UpdateWindow(hwnd);

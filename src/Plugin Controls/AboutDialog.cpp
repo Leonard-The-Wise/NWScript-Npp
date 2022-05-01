@@ -104,6 +104,8 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 		rawText.assign((char*)ptr, _size);
 
 	// Replace %VARIABLE% strings from raw text
+	// HACK: change Bk Color of dark mode without messages
+	_replaceStrings.insert({ L"4210752", std::to_wstring(PluginDarkMode::getSofterBackgroundColor()) }); 
 	generic_string rawTextW = replaceStringsW(str2wstr(rawText), _replaceStrings);
 
 	// Free memory allocated for resource
@@ -141,6 +143,9 @@ void AboutDialog::LoadAboutTextEditor(int resourceID)
 		_aboutText.resize(SendMessage(editControl, EM_GETTEXTLENGTHEX, reinterpret_cast<WPARAM>(&tl), 0) + 1);
 		GETTEXTEX tex = { (DWORD)_aboutText.size() * sizeof(TCHAR), GT_RAWTEXT, 1200, NULL, NULL};
 		SendMessage(editControl, EM_GETTEXTEX, reinterpret_cast<LPARAM>(&tex), reinterpret_cast<LPARAM>(_aboutText.data()));
+
+		if (PluginDarkMode::isEnabled())
+			SendMessage(editControl, EM_SETBKGNDCOLOR, 0, PluginDarkMode::getSofterBackgroundColor());
 	}
 
 	// Free memory allocated for resource again

@@ -36,8 +36,6 @@
 #undef CUSTOM_MIN
 #endif
 
-
-
 #include <Richedit.h>
 #include <richole.h>
 
@@ -73,9 +71,6 @@
 
 #include "jpcre2.hpp"
 #include "tinyxml2.h"
-
-
-
 
 namespace fs = std::filesystem;
 

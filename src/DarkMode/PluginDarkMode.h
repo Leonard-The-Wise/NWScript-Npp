@@ -19,6 +19,10 @@
 // Defined according to documentation:
 // https://source.winehq.org/WineAPI/ColorRGBToHLS.html
 #define HLSMAXRANGE 240
+#define BKLUMINANCE_BRIGHTER 140
+#define BKLUMINANCE_SOFTER 80
+#define EDGELUMINANCE_BRIGHTER 220
+#define EDGELUMINANCE_DARKER 60
 
 constexpr COLORREF HEXRGB(DWORD rrggbb) {
 	// from 0xRRGGBB like natural #RRGGBB
@@ -43,12 +47,151 @@ namespace PluginDarkMode
 		COLORREF disabledText = 0;
 		COLORREF linkText = 0;
 		COLORREF edge = 0;
+
+		bool operator==(const Colors& other) {
+			return (background == other.background && softerBackground == other.softerBackground
+				&& hotBackground == other.hotBackground && pureBackground == other.pureBackground
+				&& errorBackground == other.errorBackground && text == other.text
+				&& darkerText == other.darkerText && disabledText == other.disabledText
+				&& linkText == other.linkText && edge == other.edge);
+		}
 	};
 
 	struct Options
 	{
 		bool enable = false;
 		bool enableMenubar = false;
+	};
+
+	COLORREF lightColor(COLORREF color, WORD luminance);
+
+	struct Brushes
+	{
+		// Win32 brushes
+		HBRUSH background = nullptr;
+		HBRUSH softerBackground = nullptr;
+		HBRUSH hotBackground = nullptr;
+		HBRUSH pureBackground = nullptr;
+		HBRUSH errorBackground = nullptr;
+		HBRUSH hardlightBackground = nullptr;
+		HBRUSH softlightBackground = nullptr;
+		HBRUSH textColorBrush = nullptr;
+		HBRUSH darkerTextColorBrush = nullptr;
+		HBRUSH edgeBackground = nullptr;
+		HBRUSH lightEdgeBackground = nullptr;
+		HBRUSH darkEdgeBackground = nullptr;
+
+		Brushes(const Colors& colors)
+			: background(::CreateSolidBrush(colors.background))
+			, softerBackground(::CreateSolidBrush(colors.softerBackground))
+			, hotBackground(::CreateSolidBrush(colors.hotBackground))
+			, pureBackground(::CreateSolidBrush(colors.pureBackground))
+			, errorBackground(::CreateSolidBrush(colors.errorBackground))
+			, hardlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER)))
+			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
+			, textColorBrush(::CreateSolidBrush(colors.text))
+			, darkerTextColorBrush(::CreateSolidBrush(colors.darkerText))
+			, edgeBackground(::CreateSolidBrush(colors.edge))
+			, lightEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
+			, darkEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER)))
+		{}
+
+		~Brushes()
+		{
+			::DeleteObject(background);			background = nullptr;
+			::DeleteObject(softerBackground);	softerBackground = nullptr;
+			::DeleteObject(hotBackground);		hotBackground = nullptr;
+			::DeleteObject(pureBackground);		pureBackground = nullptr;
+			::DeleteObject(errorBackground);	errorBackground = nullptr;
+			::DeleteObject(hardlightBackground);	hardlightBackground = nullptr;
+			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
+			::DeleteObject(textColorBrush);			textColorBrush = nullptr;
+			::DeleteObject(darkerTextColorBrush);	darkerTextColorBrush = nullptr;
+			::DeleteObject(edgeBackground);			edgeBackground = nullptr;
+			::DeleteObject(lightEdgeBackground);	lightEdgeBackground = nullptr;
+			::DeleteObject(darkEdgeBackground);		darkEdgeBackground = nullptr;
+		}
+
+		void change(const Colors& colors)
+		{
+			::DeleteObject(background);
+			::DeleteObject(softerBackground);
+			::DeleteObject(hotBackground);
+			::DeleteObject(pureBackground);
+			::DeleteObject(errorBackground);
+			::DeleteObject(hardlightBackground);
+			::DeleteObject(softlightBackground);
+			::DeleteObject(textColorBrush);
+			::DeleteObject(darkerTextColorBrush);
+			::DeleteObject(edgeBackground);
+			::DeleteObject(lightEdgeBackground);
+			::DeleteObject(darkEdgeBackground);
+
+			background = ::CreateSolidBrush(colors.background);
+			softerBackground = ::CreateSolidBrush(colors.softerBackground);
+			hotBackground = ::CreateSolidBrush(colors.hotBackground);
+			pureBackground = ::CreateSolidBrush(colors.pureBackground);
+			errorBackground = ::CreateSolidBrush(colors.errorBackground);
+			hardlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER));
+			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
+			textColorBrush = ::CreateSolidBrush(colors.text);
+			darkerTextColorBrush = ::CreateSolidBrush(colors.darkerText);
+			edgeBackground = ::CreateSolidBrush(colors.edge);
+			lightEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
+			darkEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER));
+		}
+	};
+
+	struct Pens
+	{
+		HPEN darkerTextPen = nullptr;
+		HPEN edgePen = nullptr;
+		HPEN lightEdgePen = nullptr;
+		HPEN darkEdgePen = nullptr;
+
+		Pens(const Colors& colors)
+			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
+			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
+			, lightEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
+			, darkEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER)))
+		{}
+
+		~Pens()
+		{
+			::DeleteObject(darkerTextPen);	darkerTextPen = nullptr;
+			::DeleteObject(edgePen);		edgePen = nullptr;
+			::DeleteObject(lightEdgePen);	lightEdgePen = nullptr;
+			::DeleteObject(darkEdgePen);	darkEdgePen = nullptr;
+		}
+
+		void change(const Colors& colors)
+		{
+			::DeleteObject(darkerTextPen);
+			::DeleteObject(edgePen);
+			::DeleteObject(lightEdgePen);
+			::DeleteObject(darkEdgePen);
+
+			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
+			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
+			lightEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
+			darkEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER));
+		}
+
+	};
+
+	struct Theme
+	{
+		Colors _colors;
+		Brushes _brushes;
+		Pens _pens;
+
+		Theme(const Colors& colors)
+			: _colors(colors)
+			, _brushes(colors)
+			, _pens(colors)
+		{}
+
+		void change(const Colors& colors);
 	};
 
 	enum class ToolTipsType
@@ -85,6 +228,7 @@ namespace PluginDarkMode
 	};
 
 	void initDarkMode();
+	void disposeDarkMode();  // if using Direct2D MUST call dispose when shutting down or else you'll crash.
 
 	bool isInitialized();
 	bool isEnabled();
@@ -95,7 +239,6 @@ namespace PluginDarkMode
 
 	COLORREF invertLightness(COLORREF c);
 	COLORREF invertLightnessSofter(COLORREF c);
-	COLORREF lightColor(COLORREF color, WORD luminance);
 	bool colorizeBitmap(HBITMAP image, WORD h = 0, WORD l = 0, WORD s = 0,
 		bool changeH = false, bool changeL = false, bool changeS = false, bool testAlphaForChange = true,
 		short rotateH = 0, short displaceL = 0, short displaceS = 0, bool testAlphaForDisplace = false,
@@ -107,6 +250,7 @@ namespace PluginDarkMode
 	HBITMAP createCustomThemeBackgroundBitmap(HTHEME hTheme, int iPartID, int iStateID, WORD extraLuminance = 0);
 
 	void setDarkTone(ColorTone colorToneChoice);
+	Theme& getTheme();
 
 	COLORREF getBackgroundColor();
 	COLORREF getSofterBackgroundColor();
@@ -196,5 +340,8 @@ namespace PluginDarkMode
 	LRESULT onCtlColorDarker(HDC hdc);
 	LRESULT onCtlColorError(HDC hdc);
 	LRESULT onCtlColorDarkerBGStaticText(HDC hdc, bool isTextEnabled);
+
+
+
 }
 

@@ -711,7 +711,7 @@ private:
     // returns its index or returns -1 if the window was not found
     // Internal use.
     // ======================================================================
-    int findWindow(HWND hWnd);
+    size_t findWindow(HWND hWnd);
 
     // ======================================================================
     // Adds a control or window for docking/anchoring. Internal use...

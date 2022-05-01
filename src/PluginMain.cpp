@@ -179,17 +179,17 @@ void Plugin::PluginInit(HANDLE hModule)
     // Get metainformation about this plugin
     TCHAR fTemp[MAX_PATH] = {};
     DWORD fSize = GetModuleFileName(static_cast<HMODULE>(hModule), fTemp, MAX_PATH);
-    Instance()._pluginPaths.insert({ "PluginPath", fs::path(fTemp) });
-    Instance()._pluginFileName = Instance()._pluginPaths["PluginPath"].stem();
+    _instance->_pluginPaths.insert({ "PluginPath", fs::path(fTemp) });
+    _instance->_pluginFileName = Instance()._pluginPaths["PluginPath"].stem();
 
     // The rest of metainformation is get when Notepad Messenger is set...
     // Check on Plugin::SetNotepadData
 
     // Load latest Richedit library and only then create the about dialog
     LoadLibrary(TEXT("Msftedit.dll"));
-    Instance()._aboutDialog = std::make_unique<AboutDialog>();
-    Instance()._loggerWindow = std::make_unique<LoggerDialog>();
-    Instance()._processingFilesDialog = std::make_unique<ProcessFilesDialog>();
+    _instance->_aboutDialog = std::make_unique<AboutDialog>();
+    _instance->_loggerWindow = std::make_unique<LoggerDialog>();
+    _instance->_processingFilesDialog = std::make_unique<ProcessFilesDialog>();
 }
 
 // Cleanup Plugin memory upon deletion (called by Main DLL entry point - DETACH)
@@ -689,6 +689,8 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
     {
         _isReady = false;
         Settings().Save();
+
+        PluginDarkMode::disposeDarkMode();
 
         // If we have a restart hook setup, call out shell to execute it.
         if (Settings().notepadRestartMode != RestartMode::None)

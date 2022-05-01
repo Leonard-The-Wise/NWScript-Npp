@@ -333,8 +333,8 @@ void ControlAnchorMap::initialize(HWND hWndGlobalParent, DWORD dwFlags)
 
 intptr_t ControlAnchorMap::handleSizers()
 {
-    int             iCtrl = 0;
-    TCtrlEntry* pCtrl = nullptr;
+    size_t          iCtrl = 0;
+    TCtrlEntry     *pCtrl = nullptr;
     bool            bChanged = false;
     HDWP            hWdp = NULL;
     WINDOWPLACEMENT wpl = {};
@@ -403,7 +403,7 @@ intptr_t ControlAnchorMap::handleSizers()
     {
         int countDefer = controlGroupNum[i];
         hWdp = BeginDeferWindowPos(countDefer);
-        int prevPosition = curPosition;
+        size_t prevPosition = curPosition;
         for (iCtrl = curPosition; iCtrl < (prevPosition + countDefer); iCtrl++)
         {
             preProcess(m_Controls[iCtrl]);
@@ -456,7 +456,7 @@ bool ControlAnchorMap::eraseBackground(HDC hDC)
     HRGN        hRgn3 = NULL;
     RECT        rc;
     HBRUSH      hBrush = NULL;
-    int         iCtrl = 0;
+    size_t      iCtrl = 0;
     HWND        hWndChild = NULL;
     bool        bForceErase = false;
     bool        bVisible = false;
@@ -617,7 +617,7 @@ UINT ControlAnchorMap::applySizer(FSIZE& target, const SIZER& sizer, int flags) 
 
 // ============================== PRIVATE METHODS ====================================
 
-int ControlAnchorMap::findWindow(HWND hWnd) {
+size_t ControlAnchorMap::findWindow(HWND hWnd) {
 
     for (size_t i = 0; i < m_Controls.size(); i++)
         if (m_Controls[i].hWnd == hWnd) return i;
