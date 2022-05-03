@@ -16,6 +16,13 @@
 #include <Uxtheme.h>
 #include <Vssym32.h>
 
+#include <d2d1_3.h>
+#include <d3d11.h>
+#include <d2d1effects.h>
+#include <d2d1svg.h>
+#include <wrl/client.h>
+#include <wincodec.h>
+
 // Bug with GDI+ include...
 // https://developercommunity.visualstudio.com/t/gdiplustypesh-does-not-compile-with-nominmax/727770
 #ifndef max

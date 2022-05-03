@@ -39,7 +39,7 @@
 
 #include "DPIManager.h"
 #include "PluginDarkMode.h"
-#include "D2DRenderFactory.h"
+#include "D2DImageFactory.h"
 
 #include "DarkMode.h"
 #include "UAHMenuBar.h"
@@ -52,6 +52,8 @@
 
 #pragma comment(lib, "uxtheme.lib")
 
+using namespace D2DWrapper;
+
 namespace PluginDarkMode
 {
 	// Globals
@@ -59,7 +61,7 @@ namespace PluginDarkMode
 	static ColorTone g_colorToneChoice = ColorTone::blackTone;
 	static DPIManager _dpiManager;				// DPI manager for some functions
 	static Options _options;					// Actual runtime options
-	static DarkModeD2DRenderFactory _renderFactory;
+	static D2DDarkModeRenderer _renderer;       // Dark Mode Direct2D renderer
 
 	TreeViewStyle treeViewStyle = TreeViewStyle::classic;
 	COLORREF treeViewBg = 0;
@@ -182,7 +184,7 @@ namespace PluginDarkMode
 			_colors = colors;
 			_brushes.change(colors);
 			_pens.change(colors);
-			_renderFactory.refreshBrushes();
+			_renderer.refreshBrushes();
 	}
 
 	Theme tDefault(darkColors);
@@ -250,7 +252,7 @@ namespace PluginDarkMode
 
 	void disposeDarkMode()
 	{
-		_renderFactory.dispose();
+		_renderer.dispose();
 		return;
 	}
 
@@ -1077,19 +1079,19 @@ namespace PluginDarkMode
 		ID2D1SolidColorBrush* bkBrush;
 		ID2D1SolidColorBrush* edgeBrush;
 
-		bkBrush = ((nState & BST_HOT) != 0) ? _renderFactory.getDarkBrush(D2DDarkBrushes::softlightBackground) : 
-			_renderFactory.getDarkBrush(D2DDarkBrushes::darkerBackground);
+		bkBrush = ((nState & BST_HOT) != 0) ? _renderer.getDarkBrush(D2DDarkBrushes::softlightBackground) : 
+			_renderer.getDarkBrush(D2DDarkBrushes::darkerBackground);
 		if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
-			bkBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::softerBackground);
+			bkBrush = _renderer.getDarkBrush(D2DDarkBrushes::softerBackground);
 
 		if (nStyle & WS_DISABLED)
-			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::darkEdgeColor);
+			edgeBrush = _renderer.getDarkBrush(D2DDarkBrushes::darkEdgeColor);
 		else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
-			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::lightEdgeColor);
+			edgeBrush = _renderer.getDarkBrush(D2DDarkBrushes::lightEdgeColor);
 		else if (nStyle & (BS_PUSHLIKE))
-			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::edgeColor);
+			edgeBrush = _renderer.getDarkBrush(D2DDarkBrushes::edgeColor);
 		else
-			edgeBrush = _renderFactory.getDarkBrush(D2DDarkBrushes::edgeColor);
+			edgeBrush = _renderer.getDarkBrush(D2DDarkBrushes::edgeColor);
 
 		D2D1_ROUNDED_RECT buttonRect = D2D1::RoundedRect(D2D1::RectF(static_cast<float>(rcClient.left) + 1.0f, 
 			static_cast<float>(rcClient.top) + 1.0f,
@@ -1097,8 +1099,8 @@ namespace PluginDarkMode
 			static_cast<float>(rcClient.bottom) - 1.0f), 
 			_dpiManager.scaleXf(5.0f), _dpiManager.scaleYf(5.0f));
 
-		_renderFactory.getRenderer().DrawRoundedRectangle(buttonRect, edgeBrush, _dpiManager.scaleXf(2.0f));
-		_renderFactory.getRenderer().FillRoundedRectangle(buttonRect, bkBrush);
+		_renderer.getRenderer().DrawRoundedRectangle(buttonRect, edgeBrush, _dpiManager.scaleXf(2.0f));
+		_renderer.getRenderer().FillRoundedRectangle(buttonRect, bkBrush);
 	}
 
 	void renderButtonImage(HWND hwndButton, HDC hdc, DWORD nState, LONG_PTR nStyle, 
@@ -1176,12 +1178,12 @@ namespace PluginDarkMode
 		HFONT hFont = nullptr;
 		HFONT hOldFont = nullptr;
 
-		if (!_renderFactory.beginDrawFrame(hwndButton, hdc))
+		if (!_renderer.beginDrawFrame(hwndButton, hdc))
 			return;
 
 		renderButtonBackground(hdc, nState, nStyle, rcClient);
 
-		_renderFactory.endDrawFrame();
+		_renderer.endDrawFrame();
 
 		// Prepare to draw button image
 		RECT rcImage = rcClient;

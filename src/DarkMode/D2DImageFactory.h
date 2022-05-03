@@ -1,44 +1,35 @@
-// This file is part of Notepad++ project
-// Copyright (C) 2022 Leonardo Silva
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/** @file D2DImageFactory.h
+ * A Direct2D renderer and image processing class
+ *
+ **/
+ // Copyright (C) 2022 - Leonardo Silva 
+ // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
 
-#include <Windows.h>
-#include <d2d1_3.h>
-#include <d3d11.h>
-#include <wrl/client.h>
-#include <assert.h>
+//#include <Windows.h>
+//#include <d2d1_3.h>
+//#include <d2d1effects.h>
+//#include <d2d1svg.h>
+//#include <d3d11.h>
+//#include <wrl/client.h>
+//#include <wincodec.h> 
+//#include <assert.h>
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "d3d11.lib")
 
-namespace PluginDarkMode
+namespace D2DWrapper
 {
 
-	// Direct2D renderer for hardware accelerated anti-aliased and double-buffered drawings
-	class D2DRenderFactory
+	// A class to work with Direct2D rendering and WIC image compositioning
+	class D2DImageFactory
 	{
 	public:
 
-		D2DRenderFactory() {
+		D2DImageFactory() 
+		{
 			initialize();
-		}
-
-		~D2DRenderFactory() {
-			dispose();
 		}
 
 		// Begins drawing a frame to offscreen of the control.
@@ -65,11 +56,13 @@ namespace PluginDarkMode
 
 		void createBrush(COLORREF color, Microsoft::WRL::ComPtr<ID2D1SolidColorBrush>& brush);
 
+		HBITMAP loadSVGToHBITMAP(HMODULE module, int idResource, bool invertLuminosity = false, UINT32 width = 0, UINT32 height = 0);
+
 	protected:
 		bool bRendering = false;
 		RECT rcCurrentControl = {};
 
-		bool isInitialized(); // non-classes shouldn't be concerned if initialized or not
+		bool isInitialized(); // non-derived class members shouldn't be concerned if initialized or not
 		virtual bool refreshResources();
 		virtual HRESULT createDeviceResources();
 		virtual void discardDeviceResources();
@@ -80,9 +73,6 @@ namespace PluginDarkMode
 		HDC currentDC = nullptr;
 		bool dcNeedsRelease = false;
 
-		// Offscreen buffer - it often gets resized to the largest control in display
-		Microsoft::WRL::ComPtr<ID2D1Bitmap1> _pD2DBitmap;
-		Microsoft::WRL::ComPtr<ID2D1GdiInteropRenderTarget> _pGDIInteropRenderer; // For interoperability with GDI
 		RECT _rcBitmapRenderer = {};
 
 		// Direct2D resource management
@@ -100,13 +90,9 @@ namespace PluginDarkMode
 	};
 
 	// Direct2D Dark Mode renderer for hardware accelerated anti-aliased and double-buffered drawings
-	class DarkModeD2DRenderFactory : public D2DRenderFactory
+	class D2DDarkModeRenderer : public D2DImageFactory
 	{
 	public:
-
-		~DarkModeD2DRenderFactory() {
-			dispose();
-		}
 
 		// Begins drawing a frame to offscreen of the control.
 		// If the function succeeds, you must call endDrawFrame later to flush the data into the Device Context

@@ -24,6 +24,8 @@
 #include "LoggerDialog.h"
 #include "ProcessFilesDialog.h"
 
+#include "D2DImageFactory.h"
+
 
 typedef void(PLUGININTERNALS);
 #define PLUGINCOMMAND PLUGININTERNALS
@@ -319,6 +321,7 @@ namespace NWScriptPlugin {
 		ULONGLONG _clockStart = 0;
 
 		// Image handles
+		D2DWrapper::D2DImageFactory _imageFactory;
 		std::vector<HBITMAP> _menuBitmaps;
 		toolbarIconsWithDarkMode _tbIcons[3] = {};
 

@@ -201,6 +201,7 @@ void Plugin::PluginRelease()
         return;
     }
 
+//    Instance()._imageFactory.dispose();
     delete _instance;
     _instance = nullptr;
 }
@@ -1091,24 +1092,24 @@ void Plugin::SetupPluginMenuItems()
         _menuBitmaps.clear();
     }
 
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_COMPILEBATCH, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_COMPILEFILE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DARKTHEME, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DEPENCENCYGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_DISASSEMBLECODE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_IMMEDIATEWINDOW, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_IMPORTSETTINGS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_NEVERWINTERAPP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPEATLASTRUN, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPAIR, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_REPORT, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_RESTART, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_SETTINGSGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_SHOWASSIGNEDCONFIGURATION, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_UNDOCHECKBOXLIST, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILD, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
-    _menuBitmaps.push_back(loadSVGFromResource(DllHModule(), IDI_USERBUILDREMOVE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_ABOUTBOX, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_COMPILEBATCH, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_COMPILEFILE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_DARKTHEME, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_DEPENCENCYGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_DISASSEMBLECODE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_IMMEDIATEWINDOW, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_IMPORTSETTINGS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_NEVERWINTERAPP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_REPEATLASTRUN, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_REPAIR, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_REPORT, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_RESTART, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_SETTINGSGROUP, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_SHOWASSIGNEDCONFIGURATION, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_UNDOCHECKBOXLIST, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_USERBUILD, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
+    _menuBitmaps.push_back(_imageFactory.loadSVGToHBITMAP(DllHModule(), IDI_USERBUILDREMOVE, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16)));
     _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SHIELD, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
     _menuBitmaps.push_back(getStockIconBitmap(SHSTOCKICONID::SIID_SOFTWARE, (IconSize)_dpiManager.scaleIconSize((UINT)IconSize::Size16x16)));
 

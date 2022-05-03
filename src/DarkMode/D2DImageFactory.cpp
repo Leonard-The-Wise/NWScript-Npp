@@ -1,26 +1,18 @@
-// This file is part of Notepad++ project
-// Copyright (C) 2022 Leonardo Silva
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/** @file D2DImageFactory.cpp
+ * A Direct2D renderer and image processing class
+ *
+ * 
+ **/
+ // Copyright (C) 2022 - Leonardo Silva 
+ // The License.txt file describes the conditions under which this software may be distributed.
 
 #include "pch.h"
 
 #include "PluginDarkMode.h"
-#include "D2DRenderFactory.h"
+#include "D2DImageFactory.h"
 
 
-using namespace PluginDarkMode;
+using namespace D2DWrapper;
 
 // Main Direct3D and Direct2D objects (singleton objects)
 static Microsoft::WRL::ComPtr<ID2D1Factory7> _pD2DFactory;
@@ -29,11 +21,18 @@ static Microsoft::WRL::ComPtr<ID3D11DeviceContext> _pD3DDeviceContext;
 static Microsoft::WRL::ComPtr<IDXGIDevice1> _pDXGIDevice;
 static Microsoft::WRL::ComPtr<ID2D1Device6> _pD2DDevice;
 static Microsoft::WRL::ComPtr<ID2D1DeviceContext6> _pD2DDeviceContext;
+
+// Offscreen buffer - it often gets resized to the largest control in display
+static Microsoft::WRL::ComPtr<ID2D1Bitmap1> _pD2DBitmap;
+static Microsoft::WRL::ComPtr<ID2D1GdiInteropRenderTarget> _pGDIInteropRenderer; // For interoperability with GDI
+
+// Image factory to manipulate bitmaps
+static Microsoft::WRL::ComPtr<IWICImagingFactory2> _pWICImagingFactory;
 static D3D_FEATURE_LEVEL _d3dFeatureLevel = D3D_FEATURE_LEVEL_1_0_CORE;
 
 // Public Access
 
-bool D2DRenderFactory::beginDrawFrame(HWND hWndControl, HDC hdc)
+bool D2DImageFactory::beginDrawFrame(HWND hWndControl, HDC hdc)
 {
 	// BeginDraw cannot be called twice without a endDrawFrame in between
 	assert(bRendering == false);
@@ -71,7 +70,7 @@ bool D2DRenderFactory::beginDrawFrame(HWND hWndControl, HDC hdc)
 	return success;
 }
 
-bool D2DRenderFactory::endDrawFrame()
+bool D2DImageFactory::endDrawFrame()
 {
 	// Cannot call endDrawFrame if beginDraw wasn't successful
 	assert(bRendering == true);
@@ -110,19 +109,20 @@ bool D2DRenderFactory::endDrawFrame()
 	return true;
 }
 
-void D2DRenderFactory::disposeOffScreen()
+void D2DImageFactory::disposeOffScreen()
 {
 	_pGDIInteropRenderer.Reset();
 	_pD2DBitmap.Reset();
 }
 
-void D2DRenderFactory::dispose()
+void D2DImageFactory::dispose()
 {
 	discardDeviceResources();
+	_pWICImagingFactory.Reset();
 	_pD2DFactory.Reset();
 }
 
-void D2DRenderFactory::createBrush(COLORREF color, Microsoft::WRL::ComPtr<ID2D1SolidColorBrush>& brush)
+void D2DImageFactory::createBrush(COLORREF color, Microsoft::WRL::ComPtr<ID2D1SolidColorBrush>& brush)
 {
 	float r = GetRValue(color) / 255.0f;
 	float g = GetGValue(color) / 255.0f;
@@ -130,7 +130,7 @@ void D2DRenderFactory::createBrush(COLORREF color, Microsoft::WRL::ComPtr<ID2D1S
 	_pD2DDeviceContext->CreateSolidColorBrush(D2D1::ColorF(r, g, b), &brush);
 }
 
-bool D2DRenderFactory::refreshResources()
+bool D2DImageFactory::refreshResources()
 {
 	if (!_pD2DFactory)
 		return false;
@@ -138,7 +138,7 @@ bool D2DRenderFactory::refreshResources()
 	return (createDeviceResources() == S_OK);
 }
 
-bool D2DRenderFactory::initialize()
+bool D2DImageFactory::initialize()
 {
 	if (_pD2DFactory)
 		return true;
@@ -146,11 +146,11 @@ bool D2DRenderFactory::initialize()
 	return (createDeviceIndependentResources() == S_OK);
 }
 
-ID2D1DeviceContext& D2DRenderFactory::getRenderer() {
+ID2D1DeviceContext& D2DImageFactory::getRenderer() {
 	return *_pD2DDeviceContext.Get();
 }
 
-void D2DRenderFactory::getRendererTarget(ID2D1Image** Target)
+void D2DImageFactory::getRendererTarget(ID2D1Image** Target)
 {
 	if (_pD2DDeviceContext)
 		_pD2DDeviceContext->GetTarget(Target);
@@ -158,17 +158,151 @@ void D2DRenderFactory::getRendererTarget(ID2D1Image** Target)
 		*Target = nullptr;
 }
 
-bool D2DRenderFactory::isInitialized() {
+bool D2DImageFactory::isInitialized() {
 	return (_pD2DFactory != nullptr && _pD2DDeviceContext != nullptr);
 }
 
-
-HRESULT D2DRenderFactory::createDeviceIndependentResources()
+HBITMAP D2DImageFactory::loadSVGToHBITMAP(HMODULE module, int idResource, bool , UINT32 width, UINT32 height)
 {
-	return D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, IID_PPV_ARGS(&_pD2DFactory));
+	// Cannot load SVG to HBITMAP while rendering
+	assert(!bRendering);
+	if (bRendering)
+		return NULL;
+
+	if (!refreshResources())
+		return NULL;
+
+	HBITMAP destBitmap = NULL;
+
+	auto hResource = FindResourceW(module, MAKEINTRESOURCE(idResource), L"SVG");
+	size_t _size = SizeofResource(module, hResource);
+	auto hMemory = LoadResource(module, hResource);
+	LPVOID ptr = LockResource(hMemory);
+
+	// Copy SVG bytes into a real hglobal memory handle
+	hMemory = ::GlobalAlloc(GHND, _size);
+	if (hMemory)
+	{
+		void* pBuffer = ::GlobalLock(hMemory);
+		memcpy(pBuffer, ptr, _size);
+	}
+
+	// Create stream
+	IStream* pStream = nullptr;
+	HRESULT hr = CreateStreamOnHGlobal(hMemory, TRUE, &pStream);
+	if (SUCCEEDED(hr))
+	{
+		// Create WIC renderer to retrieve device context
+		Microsoft::WRL::ComPtr<IWICBitmap> wicBitmap;
+		Microsoft::WRL::ComPtr<ID2D1SvgDocument> svgDocument;
+		Microsoft::WRL::ComPtr<ID2D1SvgElement> svgRoot;
+		Microsoft::WRL::ComPtr<ID2D1RenderTarget> wicRenderer;
+		Microsoft::WRL::ComPtr<ID2D1DeviceContext5> wicDc;
+		hr = _pWICImagingFactory->CreateBitmap(width, height, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnDemand, &wicBitmap);
+		D2D1_RENDER_TARGET_PROPERTIES targetProps = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE);
+		targetProps.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+		hr = _pD2DFactory->CreateWicBitmapRenderTarget(wicBitmap.Get(), targetProps, &wicRenderer);
+		wicRenderer->QueryInterface(IID_PPV_ARGS(&wicDc));
+
+		// Create SVG document
+		D2D1_SIZE_F initSize = D2D1::SizeF(32.0f, 32.0f);  // Just the initial viewport...
+		hr = wicDc->CreateSvgDocument(pStream, initSize, &svgDocument);
+
+		if (SUCCEEDED(hr))
+		{
+			// Get SVG document size
+			svgDocument->GetRoot(&svgRoot);
+			D2D1_SVG_LENGTH svgWidth = {}, svgHeight = {};
+
+			if (svgRoot->IsAttributeSpecified(L"viewBox"))
+			{
+				D2D1_SVG_VIEWBOX viewBox;
+
+				hr = svgRoot->GetAttributeValue(L"viewBox", D2D1_SVG_ATTRIBUTE_POD_TYPE_VIEWBOX, &viewBox, sizeof(viewBox));
+				if (SUCCEEDED(hr))
+				{
+					svgWidth.value = viewBox.width;
+					svgHeight.value = viewBox.height;
+					svgDocument->SetViewportSize(D2D1::SizeF(viewBox.width, viewBox.height));
+				}
+			}
+			else
+			{
+				if (svgRoot->IsAttributeSpecified(L"width"))
+					svgRoot->GetAttributeValue(L"width", &svgWidth);
+				if (svgRoot->IsAttributeSpecified(L"height"))
+					svgRoot->GetAttributeValue(L"height", &svgHeight);
+			}
+
+			// Error: size not found
+			if (svgWidth.value == 0.0f || svgHeight.value == 0.0f)
+				return NULL;
+
+			// Render svgDocument to WICBitmap
+			if (SUCCEEDED(hr))
+			{
+				const float scale = std::min(static_cast<float>(width) / svgWidth.value, static_cast<float>(height) / svgHeight.value);
+				const D2D1_POINT_2F fCenter = D2D1::Point2F(static_cast<float>(width) / 2.0f, static_cast<float>(height) / 2.0f);
+				const D2D1_SIZE_F fTranslation = D2D1::SizeF((static_cast<float>(width) - svgWidth.value) / 2.0f, 
+					(static_cast<float>(height) - svgHeight.value) / 2.0f);
+
+				D2D1_MATRIX_3X2_F transform = D2D1::Matrix3x2F::Identity();
+				transform = transform * D2D1::Matrix3x2F::Translation(fTranslation);
+				transform = transform * D2D1::Matrix3x2F::Scale(scale, scale, fCenter);
+
+				wicDc->BeginDraw();
+				wicDc->SetTransform(transform);
+				wicDc->DrawSvgDocument(svgDocument.Get());
+				hr = wicDc->EndDraw();
+			}
+
+			// Get access to WIC bitmap pixel data
+			Microsoft::WRL::ComPtr<IWICBitmapLock> pBuffer;
+			UINT pBufferSize = 0;
+			BYTE* pv = nullptr;
+			hr = wicBitmap->Lock(NULL, WICBitmapLockRead, &pBuffer);
+			hr = pBuffer->GetDataPointer(&pBufferSize, &pv);
+
+			// Create HBITMAP as a DIB Section from pixel data
+			BITMAPINFOHEADER bmih = {};
+			bmih.biSize = sizeof(BITMAPINFOHEADER);
+			bmih.biWidth = width;
+			bmih.biHeight = -height;  // Height is inverted
+			bmih.biPlanes = 1;
+			bmih.biBitCount = 32;
+			bmih.biCompression = BI_RGB;
+			BITMAPINFO dbmi = {};
+			dbmi.bmiHeader = bmih;
+			HDC screenDC = GetDC(NULL);
+			void* pvDest = nullptr;
+			destBitmap = CreateDIBSection(screenDC, &dbmi, DIB_RGB_COLORS, &pvDest, NULL, 0);
+			ReleaseDC(NULL, screenDC);
+
+			// Copy contents to DIB section.
+			if (pv && pvDest)
+				memcpy(pvDest, pv, pBufferSize);
+		}
+		pStream->Release();
+	}
+
+	if (hMemory)
+		GlobalFree(hMemory);
+
+	return destBitmap;
 }
 
-HRESULT D2DRenderFactory::createDeviceResources()
+
+HRESULT D2DImageFactory::createDeviceIndependentResources()
+{
+	HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, IID_PPV_ARGS(&_pD2DFactory));
+	if (SUCCEEDED(hr))
+	{
+		hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&_pWICImagingFactory));
+	}
+	return hr;
+}
+
+HRESULT D2DImageFactory::createDeviceResources()
 {
 	HRESULT hr = S_OK;
 
@@ -241,7 +375,7 @@ HRESULT D2DRenderFactory::createDeviceResources()
 	return hr;
 }
 
-void D2DRenderFactory::discardDeviceResources()
+void D2DImageFactory::discardDeviceResources()
 {
 	_pGDIInteropRenderer.Reset();
 	_pD2DBitmap.Reset();
@@ -252,10 +386,9 @@ void D2DRenderFactory::discardDeviceResources()
 	_pD3DDevice.Reset();
 }
 
-
-bool DarkModeD2DRenderFactory::beginDrawFrame(HWND hWndControl, HDC hdc)
+bool D2DDarkModeRenderer::beginDrawFrame(HWND hWndControl, HDC hdc)
 {
-	if (!D2DRenderFactory::beginDrawFrame(hWndControl, hdc))
+	if (!D2DImageFactory::beginDrawFrame(hWndControl, hdc))
 		return false;
 
 	// Refresh brushes if they changed
@@ -269,7 +402,7 @@ bool DarkModeD2DRenderFactory::beginDrawFrame(HWND hWndControl, HDC hdc)
 	return true;
 }
 
-ID2D1SolidColorBrush* DarkModeD2DRenderFactory::getDarkBrush(D2DDarkBrushes brush)
+ID2D1SolidColorBrush* D2DDarkModeRenderer::getDarkBrush(D2DDarkBrushes brush)
 {
 	// Cannot access brushes if not initialized
 	assert(isInitialized());
@@ -309,7 +442,7 @@ ID2D1SolidColorBrush* DarkModeD2DRenderFactory::getDarkBrush(D2DDarkBrushes brus
 	return NULL;
 }
 
-void DarkModeD2DRenderFactory::refreshBrushes()
+void D2DDarkModeRenderer::refreshBrushes()
 {
 	// Brushes may not be refreshed instantly because _pBitmapRenderer may not yet be created.
 	// When beginDrawFrame is called, this is checked.
@@ -324,7 +457,7 @@ void DarkModeD2DRenderFactory::refreshBrushes()
 	bBrushesDirty = false;
 }
 
-void DarkModeD2DRenderFactory::discardBrushes()
+void D2DDarkModeRenderer::discardBrushes()
 {
 	d2dBackground.Reset();
 	d2dSofterBackground.Reset();
@@ -342,34 +475,34 @@ void DarkModeD2DRenderFactory::discardBrushes()
 	d2dDarkEdgeBackground.Reset();
 }
 
-void DarkModeD2DRenderFactory::reCreateBrushes()
+void D2DDarkModeRenderer::reCreateBrushes()
 {
 	// Backgrounds
-	createBrush(getTheme()._colors.background, d2dBackground);
-	createBrush(getTheme()._colors.softerBackground, d2dSofterBackground);
-	createBrush(getTheme()._colors.hotBackground, d2dHotBackground);
-	createBrush(getTheme()._colors.pureBackground, d2dPureBackground);
-	createBrush(getTheme()._colors.errorBackground, d2dErrorBackground);
-	createBrush(lightColor(getTheme()._colors.background, BKLUMINANCE_BRIGHTER), d2dHardlightBackground);
-	createBrush(lightColor(getTheme()._colors.background, BKLUMINANCE_SOFTER), d2dSoftlightBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.background, d2dBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.softerBackground, d2dSofterBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.hotBackground, d2dHotBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.pureBackground, d2dPureBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.errorBackground, d2dErrorBackground);
+	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.background, BKLUMINANCE_BRIGHTER), d2dHardlightBackground);
+	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.background, BKLUMINANCE_SOFTER), d2dSoftlightBackground);
 
 	// Text
-	createBrush(getTheme()._colors.text, d2dTextColorBrush);
-	createBrush(getTheme()._colors.darkerText, d2dDarkerTextColorBrush);
-	createBrush(getTheme()._colors.disabledText, d2dDisabledTextColorBrush);
-	createBrush(getTheme()._colors.linkText, d2dLinkTextColorBrush);
+	createBrush(PluginDarkMode::getTheme()._colors.text, d2dTextColorBrush);
+	createBrush(PluginDarkMode::getTheme()._colors.darkerText, d2dDarkerTextColorBrush);
+	createBrush(PluginDarkMode::getTheme()._colors.disabledText, d2dDisabledTextColorBrush);
+	createBrush(PluginDarkMode::getTheme()._colors.linkText, d2dLinkTextColorBrush);
 
 	// Shape edges
-	createBrush(getTheme()._colors.edge, d2dEdgeBackground);
-	createBrush(lightColor(getTheme()._colors.edge, EDGELUMINANCE_BRIGHTER), d2dLightEdgeBackground);
-	createBrush(lightColor(getTheme()._colors.edge, EDGELUMINANCE_DARKER), d2dDarkEdgeBackground);
+	createBrush(PluginDarkMode::getTheme()._colors.edge, d2dEdgeBackground);
+	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.edge, EDGELUMINANCE_BRIGHTER), d2dLightEdgeBackground);
+	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.edge, EDGELUMINANCE_DARKER), d2dDarkEdgeBackground);
 }
 
-bool DarkModeD2DRenderFactory::refreshResources()
+bool D2DDarkModeRenderer::refreshResources()
 {
 	bool wasInitialized = isInitialized();
 
-	if (!D2DRenderFactory::refreshResources())
+	if (!D2DImageFactory::refreshResources())
 		return false;
 
 	if (!wasInitialized)  // recreate resources if was not initialized before calling refreshResources
@@ -378,15 +511,15 @@ bool DarkModeD2DRenderFactory::refreshResources()
 	return true;
 }
 
-void DarkModeD2DRenderFactory::discardDeviceResources()
+void D2DDarkModeRenderer::discardDeviceResources()
 {
 	discardBrushes();
-	D2DRenderFactory::discardDeviceResources();
+	D2DImageFactory::discardDeviceResources();
 }
 
-void DarkModeD2DRenderFactory::dispose()
+void D2DDarkModeRenderer::dispose()
 {
 	discardBrushes();
-	D2DRenderFactory::dispose();
+	D2DImageFactory::dispose();
 }
 

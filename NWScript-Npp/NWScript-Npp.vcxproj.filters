@@ -211,7 +211,7 @@
     <ClInclude Include="..\src\DarkMode\DPIManager.h">
       <Filter>DarkMode</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DarkMode\D2DRenderFactory.h">
+    <ClInclude Include="..\src\DarkMode\D2DImageFactory.h">
       <Filter>DarkMode</Filter>
     </ClInclude>
   </ItemGroup>
@@ -308,7 +308,7 @@
     <ClCompile Include="..\src\DarkMode\PluginDarkMode.cpp">
       <Filter>DarkMode</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\DarkMode\D2DRenderFactory.cpp">
+    <ClCompile Include="..\src\DarkMode\D2DImageFactory.cpp">
       <Filter>DarkMode</Filter>
     </ClCompile>
   </ItemGroup>
