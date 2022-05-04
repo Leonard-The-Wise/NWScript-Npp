@@ -437,7 +437,7 @@ ID2D1SolidColorBrush* D2DDarkModeRenderer::getDarkBrush(D2DDarkBrushes brush)
 	case D2DDarkBrushes::edgeColor:
 		return d2dEdgeBackground.Get();
 	case D2DDarkBrushes::lightEdgeColor:
-		return d2dLightEdgeBackground.Get();
+		return d2dHotEdgeBackground.Get();
 	case D2DDarkBrushes::darkEdgeColor:
 		return d2dDarkEdgeBackground.Get();
 	}
@@ -474,7 +474,7 @@ void D2DDarkModeRenderer::discardBrushes()
 	d2dDisabledTextColorBrush.Reset();
 	d2dLinkTextColorBrush.Reset();
 	d2dEdgeBackground.Reset();
-	d2dLightEdgeBackground.Reset();
+	d2dHotEdgeBackground.Reset();
 	d2dDarkEdgeBackground.Reset();
 }
 
@@ -497,7 +497,7 @@ void D2DDarkModeRenderer::reCreateBrushes()
 
 	// Shape edges
 	createBrush(PluginDarkMode::getTheme()._colors.edge, d2dEdgeBackground);
-	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.edge, EDGELUMINANCE_BRIGHTER), d2dLightEdgeBackground);
+	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.edge, EDGELUMINANCE_BRIGHTER), d2dHotEdgeBackground);
 	createBrush(PluginDarkMode::lightColor(PluginDarkMode::getTheme()._colors.edge, EDGELUMINANCE_DARKER), d2dDarkEdgeBackground);
 }
 

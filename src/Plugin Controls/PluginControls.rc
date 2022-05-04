@@ -80,7 +80,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_PCTFILEACCESSLOGOBOX,4,19,56,50
     DEFPUSHBUTTON   "I'll provide the permissions ma&nually",IDCANCEL,163,118,137,14
-    PUSHBUTTON      "  Run Notepad++ as an Administrat&or",IDOK,7,118,145,14
+    PUSHBUTTON      "Run Notepad++ as an Administrator",IDOK,7,118,145,14
     CONTROL         "",IDC_SHIELDICON,"Static",SS_BITMAP,11,21,43,39
     LTEXT           "WARNING - this action requires write permission to the following file(s):",IDC_LBLWARNING,66,15,236,21
     EDITTEXT        IDC_TXTREQUIREDFILES,63,36,239,33,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL

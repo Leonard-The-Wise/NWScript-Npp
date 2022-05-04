@@ -139,7 +139,7 @@ namespace D2DWrapper
 		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dLinkTextColorBrush;
 
 		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dEdgeBackground;
-		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dLightEdgeBackground;
+		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dHotEdgeBackground;
 		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dDarkEdgeBackground;
 
 		void discardBrushes();
