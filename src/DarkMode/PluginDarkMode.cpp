@@ -1194,11 +1194,12 @@ namespace PluginDarkMode
 		}
 
 		// Text position is now centered but added the image size.
+		// Also remove horizontal alignment because we already calculated it.
 		if (bIcon || bBitmap)
 		{
 			rcText.left = rcImageAndText.left + imageCx + padding;
 			rcText.right = rcText.left + szImageText.cx;
-			dtFlags &= ~(DT_RIGHT | DT_CENTER);
+			dtFlags &= ~(DT_CENTER | DT_RIGHT); // DT_LEFT = 0
 		}
 	}
 
