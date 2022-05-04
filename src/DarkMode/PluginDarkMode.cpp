@@ -52,7 +52,13 @@
 
 #pragma comment(lib, "uxtheme.lib")
 
-using namespace D2DWrapper;
+#define BKLUMINANCE_BRIGHTER 140
+#define BKLUMINANCE_SOFTER 80
+#define EDGELUMINANCE_BRIGHTER 220
+#define EDGELUMINANCE_DARKER 60
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 namespace PluginDarkMode
 {
@@ -66,6 +72,113 @@ namespace PluginDarkMode
 	TreeViewStyle treeViewStyle = TreeViewStyle::classic;
 	COLORREF treeViewBg = 0;
 	double lighnessTreeView = 50.0;
+
+	struct Brushes
+	{
+		HBRUSH background = nullptr;
+		HBRUSH softerBackground = nullptr;
+		HBRUSH hotBackground = nullptr;
+		HBRUSH pureBackground = nullptr;
+		HBRUSH errorBackground = nullptr;
+		HBRUSH hardlightBackground = nullptr;
+		HBRUSH softlightBackground = nullptr;
+		HBRUSH textColorBrush = nullptr;
+		HBRUSH darkerTextColorBrush = nullptr;
+		HBRUSH edgeBackground = nullptr;
+		HBRUSH hotEdgeBackground = nullptr;
+		HBRUSH disabledEdgeBackground = nullptr;
+
+		Brushes(const Colors& colors)
+			: background(::CreateSolidBrush(colors.background))
+			, softerBackground(::CreateSolidBrush(colors.softerBackground))
+			, hotBackground(::CreateSolidBrush(colors.hotBackground))
+			, pureBackground(::CreateSolidBrush(colors.pureBackground))
+			, errorBackground(::CreateSolidBrush(colors.errorBackground))
+			, hardlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER)))
+			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
+			, textColorBrush(::CreateSolidBrush(colors.text))
+			, darkerTextColorBrush(::CreateSolidBrush(colors.darkerText))
+			, edgeBackground(::CreateSolidBrush(colors.edge))
+			, hotEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
+			, disabledEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER)))
+		{}
+
+		~Brushes()
+		{
+			::DeleteObject(background);			background = nullptr;
+			::DeleteObject(softerBackground);	softerBackground = nullptr;
+			::DeleteObject(hotBackground);		hotBackground = nullptr;
+			::DeleteObject(pureBackground);		pureBackground = nullptr;
+			::DeleteObject(errorBackground);	errorBackground = nullptr;
+			::DeleteObject(hardlightBackground);	hardlightBackground = nullptr;
+			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
+			::DeleteObject(textColorBrush);			textColorBrush = nullptr;
+			::DeleteObject(darkerTextColorBrush);	darkerTextColorBrush = nullptr;
+		}
+
+		void change(const Colors& colors)
+		{
+			::DeleteObject(background);
+			::DeleteObject(softerBackground);
+			::DeleteObject(hotBackground);
+			::DeleteObject(pureBackground);
+			::DeleteObject(errorBackground);
+			::DeleteObject(hardlightBackground);
+			::DeleteObject(softlightBackground);
+			::DeleteObject(textColorBrush);
+			::DeleteObject(darkerTextColorBrush);
+
+			background = ::CreateSolidBrush(colors.background);
+			softerBackground = ::CreateSolidBrush(colors.softerBackground);
+			hotBackground = ::CreateSolidBrush(colors.hotBackground);
+			pureBackground = ::CreateSolidBrush(colors.pureBackground);
+			errorBackground = ::CreateSolidBrush(colors.errorBackground);
+			hardlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_BRIGHTER));
+			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
+			textColorBrush = ::CreateSolidBrush(colors.text);
+			darkerTextColorBrush = ::CreateSolidBrush(colors.darkerText);
+			edgeBackground = ::CreateSolidBrush(colors.edge);
+			hotEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
+			disabledEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER));
+		}
+	};
+
+	struct Pens
+	{
+		HPEN darkerTextPen = nullptr;
+		HPEN edgePen = nullptr;
+		HPEN hotEdgePen = nullptr;
+		HPEN disabledEdgePen = nullptr;
+
+		Pens(const Colors& colors)
+			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
+			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
+			, hotEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
+			, disabledEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER)))
+		{}
+
+		~Pens()
+		{
+			::DeleteObject(darkerTextPen);	    darkerTextPen = nullptr;
+			::DeleteObject(edgePen);		    edgePen = nullptr;
+			::DeleteObject(hotEdgePen);	        hotEdgePen = nullptr;
+			::DeleteObject(disabledEdgePen);	disabledEdgePen = nullptr;
+		}
+
+		void change(const Colors& colors)
+		{
+			::DeleteObject(darkerTextPen);
+			::DeleteObject(edgePen);
+			::DeleteObject(hotEdgePen);
+			::DeleteObject(disabledEdgePen);
+
+			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
+			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
+			hotEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
+			disabledEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER));
+		}
+
+	};
 
 	// black (default)
 	static const Colors darkColors{
@@ -350,16 +463,17 @@ namespace PluginDarkMode
 		return lighness;
 	}
 
-	COLORREF getBackgroundColor()        { return getTheme()._colors.background; }
-	COLORREF getSofterBackgroundColor()  { return getTheme()._colors.softerBackground; }
-	COLORREF getHotBackgroundColor()     { return getTheme()._colors.hotBackground; }
-	COLORREF getDarkerBackgroundColor()  { return getTheme()._colors.pureBackground; }
-	COLORREF getErrorBackgroundColor()   { return getTheme()._colors.errorBackground; }
-	COLORREF getTextColor()              { return getTheme()._colors.text; }
-	COLORREF getDarkerTextColor()        { return getTheme()._colors.darkerText; }
-	COLORREF getDisabledTextColor()      { return getTheme()._colors.disabledText; }
-	COLORREF getLinkTextColor()          { return getTheme()._colors.linkText; }
-	COLORREF getEdgeColor()              { return getTheme()._colors.edge; }
+	COLORREF getBackgroundColor()         { return getTheme()._colors.background; }
+	COLORREF getSofterBackgroundColor()   { return getTheme()._colors.softerBackground; }
+	COLORREF getHotBackgroundColor()      { return getTheme()._colors.hotBackground; }
+	COLORREF getDarkerBackgroundColor()   { return getTheme()._colors.pureBackground; }
+	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
+	COLORREF getTextColor()               { return getTheme()._colors.text; }
+	COLORREF getHotTextColor()            { return lightColor(getTheme()._colors.text, 240); }
+	COLORREF getDarkerTextColor()         { return getTheme()._colors.darkerText; }
+	COLORREF getDisabledTextColor()       { return getTheme()._colors.disabledText; }
+	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
+	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
 
 	HBRUSH getBackgroundBrush()          { return getTheme()._brushes.background; }
 	HBRUSH getSofterBackgroundBrush()    { return getTheme()._brushes.softerBackground; }
@@ -371,13 +485,13 @@ namespace PluginDarkMode
 	HBRUSH getTextBrush()				 { return getTheme()._brushes.textColorBrush; }
 	HBRUSH getDarkerTextBrush()			 { return getTheme()._brushes.darkerTextColorBrush; }
 	HBRUSH getEdgeBrush()				 { return getTheme()._brushes.edgeBackground; }
-	HBRUSH getLightEdgeBrush()			 { return getTheme()._brushes.lightEdgeBackground; }
-	HBRUSH getDargEdgeBrush()			 { return getTheme()._brushes.darkEdgeBackground; }
+	HBRUSH getHotEdgeBrush()			 { return getTheme()._brushes.hotEdgeBackground; }
+	HBRUSH getDisabledEdgeBrush()		 { return getTheme()._brushes.disabledEdgeBackground; }
 
-	HPEN getDarkerTextPen()              { return getTheme()._pens.darkerTextPen; }
-	HPEN getEdgePen()                    { return getTheme()._pens.edgePen; }
-	HPEN getLightEdgePen()               { return getTheme()._pens.lightEdgePen; }
-	HPEN getDarkEdgePen()                { return getTheme()._pens.darkEdgePen; }
+	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
+	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }
+	HPEN getHotEdgePen()				  { return getTheme()._pens.hotEdgePen; }
+	HPEN getDisabledEdgePen()			  { return getTheme()._pens.disabledEdgePen; }
 
 	void setDarkTone(ColorTone colorToneChoice)
 	{
@@ -990,123 +1104,74 @@ namespace PluginDarkMode
 		}
 	};
 
-	struct SpinData
-	{
-		bool isInitialized = false;
-		HTHEME hTheme = nullptr;
-
-		SpinButtonType type = SpinButtonType::LeftRight;
-
-		int iStateID1 = 0;
-		int iStateID2 = 0;
-		bool isHotOne = false;
-		bool isHotTwo = false;
-		RECT rcClient = {}, rcArrowOne = {}, rcArrowTwo = {};
-
-		~SpinData()
-		{
-			closeTheme();
-		}
-
-		bool ensureTheme(HWND hwnd)
-		{
-			if (!hTheme)
-			{
-				hTheme = OpenThemeData(hwnd, L"Spin");
-			}
-			return hTheme != nullptr;
-		}
-
-		void closeTheme()
-		{
-			if (hTheme)
-			{
-				CloseThemeData(hTheme);
-				hTheme = nullptr;
-			}
-		}
-
-		void updateSize(HWND hWnd)
-		{
-			GetClientRect(hWnd, &rcClient);
-			if (rcClient.right - rcClient.left > rcClient.bottom - rcClient.top)
-				type = SpinButtonType::LeftRight;
-			else
-				type = SpinButtonType::UpDown;
-
-			if (type == SpinButtonType::LeftRight)
-			{
-				// Control has a small margin depending on orientation.
-				rcClient.top += 1;
-				rcClient.left += 1;
-				rcClient.right -= 1;
-
-				rcArrowOne = {
-					rcClient.left, rcClient.top,
-					rcClient.right - ((rcClient.right - rcClient.left) / 2) , rcClient.bottom
-				};
-				rcArrowTwo = {
-					rcArrowOne.right, rcClient.top,
-					rcClient.right, rcClient.bottom
-				};
-			}
-			else
-			{
-				// Control has a small margin depending on orientation.
-				InflateRect(&rcClient, -1, -1);
-
-				rcArrowOne = {
-					rcClient.left, rcClient.top,
-					rcClient.right, rcClient.bottom - ((rcClient.bottom - rcClient.top) / 2)
-				};
-				rcArrowTwo = {
-					rcClient.left, rcArrowOne.bottom,
-					rcClient.right, rcClient.bottom
-				};
-			}
-		}
-	};
-
-	struct TabData
-	{
-		HWND hSpinControl = nullptr;
-	};
-
 	// Draws a BS_PUSBUTON or DEF_PUSHBUTTON or Checkbox with BS_PUSHLIKE control background
 	// nState is the same as static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
 	// nStyle is the same as GetWindowLongPtr(hwndButton, GWL_STYLE);
 	void renderButtonBackground(HDC hdc, DWORD nState, LONG_PTR nStyle, const RECT& rcClient)
 	{
-		ID2D1SolidColorBrush* bkBrush;
-		ID2D1SolidColorBrush* edgeBrush;
-
-		bkBrush = ((nState & BST_HOT) != 0) ? _renderer->getDarkBrush(D2DDarkBrushes::softlightBackground) :
-			_renderer->getDarkBrush(D2DDarkBrushes::darkerBackground);
+		HBRUSH hBckBrush = ((nState & BST_HOT) != 0) ? PluginDarkMode::getSoftlightBackgroundBrush() : PluginDarkMode::getSofterBackgroundBrush();
 		if ((nState & BST_PUSHED) != 0 || ((nState & BST_CHECKED) != 0))
-			bkBrush = _renderer->getDarkBrush(D2DDarkBrushes::softerBackground);
+			hBckBrush = PluginDarkMode::getBackgroundBrush();
 
-		if (nStyle & WS_DISABLED)
-			edgeBrush = _renderer->getDarkBrush(D2DDarkBrushes::darkEdgeColor);
+		HPEN hOldPen = nullptr;
+		if ((nStyle & WS_DISABLED) != 0 || ((nState & BST_CHECKED) != 0))
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getDisabledEdgePen()));
 		else if ((nState & (BST_FOCUS) | (nState & BST_HOT)) || ((nStyle & BS_DEFPUSHBUTTON) && !(nStyle & BS_PUSHLIKE)))
-			edgeBrush = _renderer->getDarkBrush(D2DDarkBrushes::lightEdgeColor);
-		else if (nStyle & (BS_PUSHLIKE))
-			edgeBrush = _renderer->getDarkBrush(D2DDarkBrushes::edgeColor);
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getHotEdgePen()));
 		else
-			edgeBrush = _renderer->getDarkBrush(D2DDarkBrushes::edgeColor);
+			hOldPen = reinterpret_cast<HPEN>(SelectObject(hdc, PluginDarkMode::getEdgePen()));
 
-		D2D1_ROUNDED_RECT buttonRect = D2D1::RoundedRect(D2D1::RectF(static_cast<float>(rcClient.left) + 1.0f, 
-			static_cast<float>(rcClient.top) + 1.0f,
-			static_cast<float>(rcClient.right) - 1.0f, 
-			static_cast<float>(rcClient.bottom) - 1.0f), 
-			_dpiManager.scaleXf(5.0f), _dpiManager.scaleYf(5.0f));
+		FillRect(hdc, &rcClient, PluginDarkMode::getBackgroundBrush());
+		HBRUSH hOldBrush = reinterpret_cast<HBRUSH>(SelectObject(hdc, hBckBrush));
+		if (isWindows11())
+			RoundRect(hdc, rcClient.left, rcClient.top, rcClient.right,
+				rcClient.bottom, _dpiManager.scaleX(5), _dpiManager.scaleY(5));
+		else
+			Rectangle(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
 
-		_renderer->getRenderer().DrawRoundedRectangle(buttonRect, edgeBrush, _dpiManager.scaleXf(2.0f));
-		_renderer->getRenderer().FillRoundedRectangle(buttonRect, bkBrush);
+		SelectObject(hdc, hOldBrush);
+
+		if (hOldPen)
+			SelectObject(hdc, hOldPen);
 	}
 
-	void renderButtonImage(HWND hwndButton, HDC hdc, DWORD nState, LONG_PTR nStyle, 
-		RECT& rcImage, RECT& rcClient, RECT& rcText, WCHAR* szText, int padding)
+	void renderButton(HWND hwndButton, HDC hdc, HTHEME hTheme)
 	{
+		RECT rcClient = {};
+		WCHAR szText[256] = { '\0' };
+		DWORD nState = static_cast<DWORD>(SendMessage(hwndButton, BM_GETSTATE, 0, 0));
+		LONG_PTR nStyle = GetWindowLongPtr(hwndButton, GWL_STYLE);
+		DWORD uiState = static_cast<DWORD>(SendMessage(hwndButton, WM_QUERYUISTATE, 0, 0));
+
+		GetClientRect(hwndButton, &rcClient);
+		GetWindowText(hwndButton, szText, _countof(szText));
+
+		HFONT hFont = nullptr;
+		HFONT hOldFont = nullptr;
+
+		renderButtonBackground(hdc, nState, nStyle, rcClient);
+
+		// Draw button image
+		RECT rcImage = rcClient;
+		RECT rcText = rcClient;
+		InflateRect(&rcText, -3, -3);
+
+		DWORD dtFlags = DT_LEFT; // DT_LEFT is 0
+		dtFlags |= (nStyle & BS_MULTILINE) ? DT_WORDBREAK : DT_SINGLELINE;
+		dtFlags |= ((nStyle & BS_CENTER) == BS_CENTER) ? DT_CENTER : (nStyle & BS_RIGHT) ? DT_RIGHT : 0;
+		dtFlags |= ((nStyle & BS_VCENTER) == BS_VCENTER) ? DT_VCENTER : (nStyle & BS_BOTTOM) ? DT_BOTTOM : 0;
+		dtFlags |= (uiState & UISF_HIDEACCEL) ? DT_HIDEPREFIX : 0;
+
+		// Modifications to DrawThemeText
+		dtFlags &= ~(DT_RIGHT);
+		dtFlags |= DT_VCENTER | DT_CENTER;
+
+		// Calculate actual text output rectangle and centralize
+		const int padding = _dpiManager.scaleX(4);
+		DrawText(hdc, szText, -1, &rcImage, dtFlags | DT_CALCRECT);
+		rcImage.left = padding + (rcClient.right - rcImage.right) / 2;
+		rcImage.right += padding + rcImage.left;
+
 		ICONINFO ii;
 		BITMAP bm;
 
@@ -1163,7 +1228,10 @@ namespace PluginDarkMode
 
 		if (bIcon || bBitmap)
 			rcText.left += padding;
-	}
+
+		hFont = reinterpret_cast<HFONT>(SendMessage(hwndButton, WM_GETFONT, 0, 0));
+		hOldFont = static_cast<HFONT>(SelectObject(hdc, hFont));
+
 
 	void renderButton(HWND hwndButton, HDC hdc, HTHEME hTheme)
 	{
@@ -2140,7 +2208,7 @@ namespace PluginDarkMode
 
 		if (hti.flags & HHT_ONOVERFLOW)
 		{
-			SelectObject(hdc, getLightEdgePen());
+			SelectObject(hdc, getHotEdgePen());
 			SelectObject(hdc, getSoftlightBackgroundBrush());
 			RoundRect(hdc, rcOutText.left, rcOutText.top, rcOutText.right, rcOutText.bottom, 3, 3);
 		}
