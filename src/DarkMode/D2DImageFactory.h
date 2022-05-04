@@ -32,6 +32,11 @@ namespace D2DWrapper
 			initialize();
 		}
 
+		~D2DImageFactory()
+		{
+			dispose();
+		}
+
 		// Begins drawing a frame to offscreen of the control.
 		// If the function succeeds, you must call endDrawFrame later to flush the data into the Device Context
 		// of the window. It only fails if a driver has a problem or something like that.
@@ -47,9 +52,6 @@ namespace D2DWrapper
 
 		// Release the current off-screen image, so it will be rebuilt (useful when window is closed to free resources)
 		virtual void disposeOffScreen();
-
-		// Release all objects
-		virtual void dispose();
 
 		// Retrieves the back-buffer of the current renderer
 		virtual void getRendererTarget(ID2D1Image** Target);
@@ -78,6 +80,8 @@ namespace D2DWrapper
 		// Direct2D resource management
 		bool initialize();
 		HRESULT createDeviceIndependentResources();
+		// Release all objects
+		virtual void dispose();
 	};
 
 	// Selection of brushes for Dark Mode
@@ -94,13 +98,16 @@ namespace D2DWrapper
 	{
 	public:
 
+		~D2DDarkModeRenderer()
+		{
+			discardBrushes();
+		}
+
 		// Begins drawing a frame to offscreen of the control.
 		// If the function succeeds, you must call endDrawFrame later to flush the data into the Device Context
 		// of the window. It only fails if a driver has a problem or something like that.
 		// You may only call beginDrawFrame once before calling endDrawFrame.
 		virtual bool beginDrawFrame(HWND hWndControl, HDC hdc = nullptr) override;
-
-		virtual void dispose() override;
 
 		// Get a drawing brush (in Direct2D, the concept of PEN do not exist. It is all brushes).
 		ID2D1SolidColorBrush* getDarkBrush(D2DDarkBrushes brush);

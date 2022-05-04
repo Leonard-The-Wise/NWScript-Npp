@@ -15,20 +15,20 @@
 using namespace D2DWrapper;
 
 // Main Direct3D and Direct2D objects (singleton objects)
-static Microsoft::WRL::ComPtr<ID2D1Factory7> _pD2DFactory;
-static Microsoft::WRL::ComPtr<ID3D11Device> _pD3DDevice;
-static Microsoft::WRL::ComPtr<ID3D11DeviceContext> _pD3DDeviceContext;
-static Microsoft::WRL::ComPtr<IDXGIDevice1> _pDXGIDevice;
-static Microsoft::WRL::ComPtr<ID2D1Device6> _pD2DDevice;
-static Microsoft::WRL::ComPtr<ID2D1DeviceContext6> _pD2DDeviceContext;
+Microsoft::WRL::ComPtr<ID2D1Factory7> _pD2DFactory;
+Microsoft::WRL::ComPtr<ID3D11Device> _pD3DDevice;
+Microsoft::WRL::ComPtr<ID3D11DeviceContext> _pD3DDeviceContext;
+Microsoft::WRL::ComPtr<IDXGIDevice1> _pDXGIDevice;
+Microsoft::WRL::ComPtr<ID2D1Device6> _pD2DDevice;
+Microsoft::WRL::ComPtr<ID2D1DeviceContext6> _pD2DDeviceContext;
 
 // Offscreen buffer - it often gets resized to the largest control in display
-static Microsoft::WRL::ComPtr<ID2D1Bitmap1> _pD2DBitmap;
-static Microsoft::WRL::ComPtr<ID2D1GdiInteropRenderTarget> _pGDIInteropRenderer; // For interoperability with GDI
+Microsoft::WRL::ComPtr<ID2D1Bitmap1> _pD2DBitmap;
+Microsoft::WRL::ComPtr<ID2D1GdiInteropRenderTarget> _pGDIInteropRenderer; // For interoperability with GDI
 
 // Image factory to manipulate bitmaps
-static Microsoft::WRL::ComPtr<IWICImagingFactory2> _pWICImagingFactory;
-static D3D_FEATURE_LEVEL _d3dFeatureLevel = D3D_FEATURE_LEVEL_1_0_CORE;
+Microsoft::WRL::ComPtr<IWICImagingFactory2> _pWICImagingFactory;
+D3D_FEATURE_LEVEL _d3dFeatureLevel = D3D_FEATURE_LEVEL_1_0_CORE;
 
 // Public Access
 
@@ -267,7 +267,7 @@ HBITMAP D2DImageFactory::loadSVGToHBITMAP(HMODULE module, int idResource, bool ,
 			BITMAPINFOHEADER bmih = {};
 			bmih.biSize = sizeof(BITMAPINFOHEADER);
 			bmih.biWidth = width;
-			bmih.biHeight = -height;  // Height is inverted
+			bmih.biHeight = -static_cast<int>(height);  // Height is inverted
 			bmih.biPlanes = 1;
 			bmih.biBitCount = 32;
 			bmih.biCompression = BI_RGB;
@@ -290,7 +290,6 @@ HBITMAP D2DImageFactory::loadSVGToHBITMAP(HMODULE module, int idResource, bool ,
 
 	return destBitmap;
 }
-
 
 HRESULT D2DImageFactory::createDeviceIndependentResources()
 {
@@ -385,6 +384,10 @@ void D2DImageFactory::discardDeviceResources()
 	_pD3DDeviceContext.Reset();
 	_pD3DDevice.Reset();
 }
+
+
+// Dark Mode interface
+
 
 bool D2DDarkModeRenderer::beginDrawFrame(HWND hWndControl, HDC hdc)
 {
@@ -515,11 +518,5 @@ void D2DDarkModeRenderer::discardDeviceResources()
 {
 	discardBrushes();
 	D2DImageFactory::discardDeviceResources();
-}
-
-void D2DDarkModeRenderer::dispose()
-{
-	discardBrushes();
-	D2DImageFactory::dispose();
 }
 
