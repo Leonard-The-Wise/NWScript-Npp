@@ -39,6 +39,7 @@ namespace PluginDarkMode
 		COLORREF disabledText = 0;
 		COLORREF linkText = 0;
 		COLORREF edge = 0;
+		COLORREF hotEdge = 0;
 	};
 
 	struct Options
@@ -128,6 +129,7 @@ namespace PluginDarkMode
 	void setDisabledTextColor(COLORREF c);
 	void setLinkTextColor(COLORREF c);
 	void setEdgeColor(COLORREF c);
+	void setHotEdgeColor(COLORREF c);
 
 	Colors getDarkModeDefaultColors();
 	void changeCustomTheme(const Colors& colors);
