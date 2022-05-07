@@ -552,7 +552,6 @@ void Plugin::CheckDarkModeLegacy()
         colors.darkerText = stoi(GUIConfig->FindAttribute("customColorDarkText")->Value());
         colors.disabledText = stoi(GUIConfig->FindAttribute("customColorDisabledText")->Value());
         colors.edge = stoi(GUIConfig->FindAttribute("customColorEdge")->Value());
-        colors.hotEdge = stoi(GUIConfig->FindAttribute("customColorHotEdge")->Value());
         colors.errorBackground = stoi(GUIConfig->FindAttribute("customColorError")->Value());
         colors.hotBackground = stoi(GUIConfig->FindAttribute("customColorMenuHotTrack")->Value());
         colors.linkText = stoi(GUIConfig->FindAttribute("customColorLinkText")->Value());
