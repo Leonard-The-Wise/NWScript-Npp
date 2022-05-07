@@ -2257,7 +2257,6 @@ namespace PluginDarkMode
 		{
 		case WM_PAINT:
 		{
-			//break;
 			pHeaderItem->ensureTheme();
 
 			PAINTSTRUCT ps;
@@ -2437,7 +2436,8 @@ namespace PluginDarkMode
 		}
 
 		FSIZE szArrowRc = { static_cast<float>(rcArrow.right - rcArrow.left), static_cast<float>(rcArrow.bottom - rcArrow.top) };
-		// Size on triangle actually begins at 0, so a 2x4 is actually a 3x5 triangle (harmonic triangles on screen have odd sizes). The remainder there is for scaling.
+		// Size on triangle actually begins at 0, so a 2x4 is actually a 3x5 triangle 
+		// (harmonic triangles on screen have odd sizes - in pixels). The remainder there is for scaling.
 		FSIZE szTriangleRect;
 		if ((direction == SpinArrowDirection::Left) || (direction == SpinArrowDirection::Right))
 			szTriangleRect = { static_cast<float>(_dpiManager.scaleX(2)),
@@ -2590,8 +2590,7 @@ namespace PluginDarkMode
 
 		HDC hdcFrom = nullptr;
 		HDC hdcTo = nullptr;
-		// HACK: zero animations
-		//animParams.dwDuration = 0;
+
 		HANIMATIONBUFFER hbpAnimation = BeginBufferedAnimation(hWnd, hdc, &pSpinData.rcClient, BPBF_COMPATIBLEBITMAP, nullptr, &animParams, &hdcFrom, &hdcTo);
 		if (hbpAnimation)
 		{
