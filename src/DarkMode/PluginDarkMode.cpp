@@ -54,6 +54,7 @@
 
 #define BKLUMINANCE_BRIGHTER 140
 #define BKLUMINANCE_SOFTER 80
+#define TEXTLUMINANCE_MAX 240
 #define EDGELUMINANCE_BRIGHTER 220
 #define EDGELUMINANCE_DARKER 60
 
@@ -86,7 +87,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x646464)	// edgeColor
+		HEXRGB(0x646464),	// edgeColor
+		HEXRGB(0x9B9B9B)	// hotEdgeColor
 	};
 
 	// red tone
@@ -100,7 +102,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x908080)	// edgeColor
+		HEXRGB(0x908080),	// edgeColor
+		HEXRGB(0xBBABAB)	// hotEdgeColor
 	};
 
 	// green tone
@@ -114,7 +117,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x809080)	// edgeColor
+		HEXRGB(0x809080),	// edgeColor
+		HEXRGB(0xABBBAB)	// hotEdgeColor
 	};
 
 	// blue tone
@@ -128,7 +132,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x8080A0)	// edgeColor
+		HEXRGB(0x8080A0),	// edgeColor
+		HEXRGB(0xABABCB)	// hotEdgeColor
 	};
 
 	// purple tone
@@ -142,7 +147,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x9080A0)	// edgeColor
+		HEXRGB(0x9080A0),	// edgeColor
+		HEXRGB(0xBBABCB)	// hotEdgeColor
 	};
 
 	// cyan tone
@@ -156,7 +162,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x8090A0)	// edgeColor
+		HEXRGB(0x8090A0),	// edgeColor
+		HEXRGB(0xBBBBCB)	// hotEdgeColor
 	};
 
 	// olive tone
@@ -170,7 +177,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x909080)	// edgeColor
+		HEXRGB(0x909080),	// edgeColor
+		HEXRGB(0xBBBBAB)	// hotEdgeColor
 	};
 
 	// customized
@@ -184,7 +192,8 @@ namespace PluginDarkMode
 		HEXRGB(0xC0C0C0),	// darkerTextColor
 		HEXRGB(0x808080),	// disabledTextColor
 		HEXRGB(0xFFFF00),	// linkTextColor
-		HEXRGB(0x646464)	// edgeColor
+		HEXRGB(0x646464),	// edgeColor
+		HEXRGB(0x9B9B9B)	// hotEdgeColor
 	};
 
 	void Theme::change(const Colors& colors) 
@@ -364,11 +373,12 @@ namespace PluginDarkMode
 	COLORREF getDarkerBackgroundColor()   { return getTheme()._colors.pureBackground; }
 	COLORREF getErrorBackgroundColor()    { return getTheme()._colors.errorBackground; }
 	COLORREF getTextColor()               { return getTheme()._colors.text; }
-	COLORREF getHotTextColor()            { return lightColor(getTheme()._colors.text, 240); }
+	COLORREF getHotTextColor()            { return lightColor(getTheme()._colors.text, TEXTLUMINANCE_MAX); }
 	COLORREF getDarkerTextColor()         { return getTheme()._colors.darkerText; }
 	COLORREF getDisabledTextColor()       { return getTheme()._colors.disabledText; }
 	COLORREF getLinkTextColor()           { return getTheme()._colors.linkText; }
 	COLORREF getEdgeColor()               { return getTheme()._colors.edge; }
+	COLORREF getHotEdgeColor()            { return getTheme()._colors.hotEdge; }
 
 	HBRUSH getBackgroundBrush()          { return getTheme()._brushes.background; }
 	HBRUSH getSofterBackgroundBrush()    { return getTheme()._brushes.softerBackground; }
@@ -379,9 +389,9 @@ namespace PluginDarkMode
 	HBRUSH getSoftlightBackgroundBrush() { return getTheme()._brushes.softlightBackground; }
 	HBRUSH getTextBrush()				 { return getTheme()._brushes.textColorBrush; }
 	HBRUSH getDarkerTextBrush()			 { return getTheme()._brushes.darkerTextColorBrush; }
-	HBRUSH getEdgeBrush()				 { return getTheme()._brushes.edgeBackground; }
-	HBRUSH getHotEdgeBrush()			 { return getTheme()._brushes.hotEdgeBackground; }
-	HBRUSH getDisabledEdgeBrush()		 { return getTheme()._brushes.disabledEdgeBackground; }
+	HBRUSH getEdgeBrush()				 { return getTheme()._brushes.edgeBrush; }
+	HBRUSH getHotEdgeBrush()			 { return getTheme()._brushes.hotEdgeBrush; }
+	HBRUSH getDisabledEdgeBrush()		 { return getTheme()._brushes.disabledEdgeBrush; }
 
 	HPEN getDarkerTextPen()               { return getTheme()._pens.darkerTextPen; }
 	HPEN getEdgePen()                     { return getTheme()._pens.edgePen; }

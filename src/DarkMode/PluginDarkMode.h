@@ -47,13 +47,14 @@ namespace PluginDarkMode
 		COLORREF disabledText = 0;
 		COLORREF linkText = 0;
 		COLORREF edge = 0;
+		COLORREF hotEdge = 0;
 
 		bool operator==(const Colors& other) {
 			return (background == other.background && softerBackground == other.softerBackground
 				&& hotBackground == other.hotBackground && pureBackground == other.pureBackground
 				&& errorBackground == other.errorBackground && text == other.text
 				&& darkerText == other.darkerText && disabledText == other.disabledText
-				&& linkText == other.linkText && edge == other.edge);
+				&& linkText == other.linkText && edge == other.edge && hotEdge == other.hotEdge);
 		}
 	};
 
@@ -76,9 +77,9 @@ namespace PluginDarkMode
 		HBRUSH softlightBackground = nullptr;
 		HBRUSH textColorBrush = nullptr;
 		HBRUSH darkerTextColorBrush = nullptr;
-		HBRUSH edgeBackground = nullptr;
-		HBRUSH hotEdgeBackground = nullptr;
-		HBRUSH disabledEdgeBackground = nullptr;
+		HBRUSH edgeBrush = nullptr;
+		HBRUSH hotEdgeBrush = nullptr;
+		HBRUSH disabledEdgeBrush = nullptr;
 
 		Brushes(const Colors& colors)
 			: background(::CreateSolidBrush(colors.background))
@@ -90,9 +91,9 @@ namespace PluginDarkMode
 			, softlightBackground(::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER)))
 			, textColorBrush(::CreateSolidBrush(colors.text))
 			, darkerTextColorBrush(::CreateSolidBrush(colors.darkerText))
-			, edgeBackground(::CreateSolidBrush(colors.edge))
-			, hotEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
-			, disabledEdgeBackground(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER)))
+			, edgeBrush(::CreateSolidBrush(colors.edge))
+			, hotEdgeBrush(::CreateSolidBrush(colors.hotEdge))
+			, disabledEdgeBrush(::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER)))
 		{}
 
 		~Brushes()
@@ -106,6 +107,10 @@ namespace PluginDarkMode
 			::DeleteObject(softlightBackground);	softlightBackground = nullptr;
 			::DeleteObject(textColorBrush);			textColorBrush = nullptr;
 			::DeleteObject(darkerTextColorBrush);	darkerTextColorBrush = nullptr;
+			::DeleteObject(edgeBrush);				edgeBrush = nullptr;
+			::DeleteObject(hotEdgeBrush);			hotEdgeBrush = nullptr;
+			::DeleteObject(disabledEdgeBrush);		disabledEdgeBrush = nullptr;
+
 		}
 
 		void change(const Colors& colors)
@@ -119,6 +124,9 @@ namespace PluginDarkMode
 			::DeleteObject(softlightBackground);
 			::DeleteObject(textColorBrush);
 			::DeleteObject(darkerTextColorBrush);
+			::DeleteObject(edgeBrush);
+			::DeleteObject(hotEdgeBrush);
+			::DeleteObject(disabledEdgeBrush);
 
 			background = ::CreateSolidBrush(colors.background);
 			softerBackground = ::CreateSolidBrush(colors.softerBackground);
@@ -129,9 +137,9 @@ namespace PluginDarkMode
 			softlightBackground = ::CreateSolidBrush(lightColor(colors.background, BKLUMINANCE_SOFTER));
 			textColorBrush = ::CreateSolidBrush(colors.text);
 			darkerTextColorBrush = ::CreateSolidBrush(colors.darkerText);
-			edgeBackground = ::CreateSolidBrush(colors.edge);
-			hotEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
-			disabledEdgeBackground = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER));
+			edgeBrush = ::CreateSolidBrush(colors.edge);
+			hotEdgeBrush = ::CreateSolidBrush(colors.hotEdge);
+			disabledEdgeBrush = ::CreateSolidBrush(lightColor(colors.edge, EDGELUMINANCE_DARKER));
 		}
 	};
 
@@ -145,7 +153,7 @@ namespace PluginDarkMode
 		Pens(const Colors& colors)
 			: darkerTextPen(::CreatePen(PS_SOLID, 1, colors.darkerText))
 			, edgePen(::CreatePen(PS_SOLID, 1, colors.edge))
-			, hotEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER)))
+			, hotEdgePen(::CreatePen(PS_SOLID, 1, colors.hotEdge))
 			, disabledEdgePen(::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER)))
 		{}
 
@@ -166,7 +174,7 @@ namespace PluginDarkMode
 
 			darkerTextPen = ::CreatePen(PS_SOLID, 1, colors.darkerText);
 			edgePen = ::CreatePen(PS_SOLID, 1, colors.edge);
-			hotEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_BRIGHTER));
+			hotEdgePen = ::CreatePen(PS_SOLID, 1, colors.hotEdge);
 			disabledEdgePen = ::CreatePen(PS_SOLID, 1, lightColor(colors.edge, EDGELUMINANCE_DARKER));
 		}
 
