@@ -12,7 +12,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Portuguese (Brazil) resources
+// Português (Brasil) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_PTB)
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
@@ -137,7 +137,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,136,121,10
     CONTROL         "Generate (.ndb) debug symbols files",IDC_CHKCOMPNDBSYMBOLS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,153,132,10
-    CONTROL         "Enable scrict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,169,75,10
+    CONTROL         "Enable strict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,169,75,10
     CONTROL         "Create makefile (.d) dependencies files",IDC_CHKCOMPMAKEFILE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,185,141,10
     CONTROL         "Disable parsing of \\"" and \\\\ tokens",IDC_CHKCOMPDISABLESLASHPARSE,
@@ -477,7 +477,7 @@ IDR_ABOUTDOCDARK        RTF                     "..\\..\\Media\\OnlineHelp-Dark.
 
 IDR_KNOWNOBJECTS        BIN                     "..\\..\\Media\\NWScript-Npp-EngineObjects.bin"
 
-#endif    // Portuguese (Brazil) resources
+#endif    // Português (Brasil) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
