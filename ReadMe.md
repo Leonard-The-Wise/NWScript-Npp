@@ -32,13 +32,6 @@ The unity test file I used to take this screenshot is provided [here](Media/Unit
 
 ## Known Issues
 
-***`On NWN Enhanced Edition patch 8193.35`***:
-
-- This game version contains an NWScript.nss with a problem that won't let any script compile. The error is the following:
- <p align="center"><img src="https://user-images.githubusercontent.com/68194417/240757677-40e36a11-a7ce-4b15-bfa8-8df18a125643.png" width="45%" height="45%"></p>
-
--   The only way to fix this is getting an older version of NWScript.nss and do not use game path while compiling the script.
-
 ***`Up to Notepad++ 8.3.2 and prior versions`***:
 
 -   To use the plugin's built-in auto-indentation, you must first disable `Notepad++'s` Auto-Indentation function:
