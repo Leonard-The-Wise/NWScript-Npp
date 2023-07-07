@@ -34,7 +34,7 @@ namespace NWScriptPlugin
 			generic_string fileName;
 			generic_string fileExt;
 			generic_string lineNumber;
-			filesystem::path filePath;
+			fs::path filePath;
 
 			bool operator==(const CompilerMessage& b) {
 				return messageType == b.messageType && messageText == b.messageText &&
@@ -51,7 +51,7 @@ namespace NWScriptPlugin
 			return compilerMessages[index];
 		}
 
-		filesystem::path getIncludeFile(size_t index) {
+		fs::path getIncludeFile(size_t index) {
 			return includeFiles[index];
 		}
 
@@ -114,7 +114,7 @@ namespace NWScriptPlugin
 
 	private:
 		std::vector<CompilerMessage> compilerMessages;
-		std::vector<filesystem::path> includeFiles;
+		std::vector<fs::path> includeFiles;
 		std::stringstream processorContents;
 
 		void (*_messageCallback)(const CompilerMessage& message);

@@ -40,6 +40,7 @@ namespace PluginDarkMode
 		COLORREF linkText = 0;
 		COLORREF edge = 0;
 		COLORREF hotEdge = 0;
+		COLORREF disabledEdge = 0;
 	};
 
 	struct Options

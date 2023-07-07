@@ -33,7 +33,8 @@ enum LangType {
 	L_ASN1, L_AVS, L_BLITZBASIC, L_PUREBASIC, L_FREEBASIC, \
 	L_CSOUND, L_ERLANG, L_ESCRIPT, L_FORTH, L_LATEX, \
 	L_MMIXAL, L_NIM, L_NNCRONTAB, L_OSCRIPT, L_REBOL, \
-	L_REGISTRY, L_RUST, L_SPICE, L_TXT2TAGS, L_VISUALPROLOG, L_TYPESCRIPT, \
+	L_REGISTRY, L_RUST, L_SPICE, L_TXT2TAGS, L_VISUALPROLOG, \
+	L_TYPESCRIPT, L_JSON5, L_MSSQL, L_GDSCRIPT, L_HOLLYWOOD, \
 	// Don't use L_JS, use L_JAVASCRIPT instead
 	// The end of enumated language type, so it should be always at the end
 	L_EXTERNAL
@@ -41,7 +42,7 @@ enum LangType {
 enum class ExternalLexerAutoIndentMode { Standard, C_Like, Custom };
 enum class MacroStatus { Idle, RecordInProgress, RecordingStopped, PlayingBack };
 
-enum winVer { WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV_S2003, WV_XPX64, WV_VISTA, WV_WIN7, WV_WIN8, WV_WIN81, WV_WIN10 };
+enum winVer { WV_UNKNOWN, WV_WIN32S, WV_95, WV_98, WV_ME, WV_NT, WV_W2K, WV_XP, WV_S2003, WV_XPX64, WV_VISTA, WV_WIN7, WV_WIN8, WV_WIN81, WV_WIN10, WV_WIN11 };
 enum Platform { PF_UNKNOWN, PF_X86, PF_X64, PF_IA64, PF_ARM64 };
 
 
@@ -169,8 +170,8 @@ struct toolbarIcons {
 #define NPPM_MAKECURRENTBUFFERDIRTY (NPPMSG + 44)
 //BOOL NPPM_MAKECURRENTBUFFERDIRTY(0, 0)
 
-#define NPPM_GETENABLETHEMETEXTUREFUNC (NPPMSG + 45)
-//BOOL NPPM_GETENABLETHEMETEXTUREFUNC(0, 0)
+#define NPPM_GETENABLETHEMETEXTUREFUNC_DEPRECATED (NPPMSG + 45)
+//BOOL NPPM_GETENABLETHEMETEXTUREFUNC(0, 0) -- DEPRECATED : use EnableThemeDialogTexture from uxtheme.h instead
 
 #define NPPM_GETPLUGINSCONFIGDIR (NPPMSG + 46)
 //INT NPPM_GETPLUGINSCONFIGDIR(int strLen, TCHAR *str)
@@ -199,11 +200,31 @@ struct CommunicationInfo {
 //void NPPM_TRIGGERTABBARCONTEXTMENU(int view, int index2Activate)
 
 #define NPPM_GETNPPVERSION (NPPMSG + 50)
-// int NPPM_GETNPPVERSION(0, 0)
-// return version
-// ex : v4.6
-// HIWORD(version) == 4
-// LOWORD(version) == 6
+// int NPPM_GETNPPVERSION(BOOL ADD_ZERO_PADDING, 0)
+// Get Notepad++ version
+// HIWORD(returned_value) is major part of version: the 1st number
+// LOWORD(returned_value) is minor part of version: the 3 last numbers
+// 
+// ADD_ZERO_PADDING == TRUE
+// 
+// version  | HIWORD | LOWORD
+//------------------------------
+// 8.9.6.4  | 8      | 964
+// 9        | 9      | 0
+// 6.9      | 6      | 900
+// 6.6.6    | 6      | 660
+// 13.6.6.6 | 13     | 666
+// 
+// 
+// ADD_ZERO_PADDING == FALSE
+// 
+// version  | HIWORD | LOWORD
+//------------------------------
+// 8.9.6.4  | 8      | 964
+// 9        | 9      | 0
+// 6.9      | 6      | 9
+// 6.6.6    | 6      | 66
+// 13.6.6.6 | 13     | 666
 
 #define NPPM_HIDETABBAR (NPPMSG + 51)
 // BOOL NPPM_HIDETABBAR(0, BOOL hideOrNot)
@@ -508,13 +529,72 @@ struct toolbarIconsWithDarkMode {
 //		COLORREF linkText = 0;
 //		COLORREF edge = 0;
 //		COLORREF hotEdge = 0;
+//		COLORREF disabledEdge = 0;
 //	};
 // }
 //
 // Note: in the case of calling failure ("false" is returned), you may need to change NppDarkMode::Colors structure to:
 // https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/src/NppDarkMode.h#L32
 
+#define NPPM_GETCURRENTCMDLINE (NPPMSG + 109)
+// INT NPPM_GETCURRENTCMDLINE(size_t strLen, TCHAR *commandLineStr)
+// Get the Current Command Line string.
+// Returns the number of TCHAR copied/to copy.
+// Users should call it with commandLineStr as NULL to get the required number of TCHAR (not including the terminating nul character),
+// allocate commandLineStr buffer with the return value + 1, then call it again to get the current command line string.
 
+#define NPPM_CREATELEXER (NPPMSG + 110)
+// void* NPPM_CREATELEXER(0, const TCHAR *lexer_name)
+// Returns the ILexer pointer created by Lexilla
+
+#define NPPM_GETBOOKMARKID (NPPMSG + 111)
+// void* NPPM_GETBOOKMARKID(0, 0)
+// Returns the bookmark ID
+
+#define NPPM_DARKMODESUBCLASSANDTHEME (NPPMSG + 112)
+// ULONG NPPM_DARKMODESUBCLASSANDTHEME(ULONG dmFlags, HWND hwnd)
+// Add support for generic dark mode.
+//
+// Docking panels don't need to call NPPM_DARKMODESUBCLASSANDTHEME for main hwnd.
+// Subclassing is applied automatically unless DWS_USEOWNDARKMODE flag is used.
+//
+// Might not work properly in C# plugins.
+//
+// Returns succesful combinations of flags.
+//
+
+namespace NppDarkMode
+{
+	// Standard flags for main parent after its children are initialized.
+	constexpr ULONG dmfInit = 0x0000000BUL;
+
+	// Standard flags for main parent usually used in NPPN_DARKMODECHANGED.
+	constexpr ULONG dmfHandleChange = 0x0000000CUL;
+};
+
+// Examples:
+//
+// - after controls initializations in WM_INITDIALOG, in WM_CREATE or after CreateWindow:
+//
+//auto success = static_cast<ULONG>(::SendMessage(nppData._nppHandle, NPPM_DARKMODESUBCLASSANDTHEME, static_cast<WPARAM>(NppDarkMode::dmfInit), reinterpret_cast<LPARAM>(mainHwnd)));
+//
+// - handling dark mode change:
+//
+//extern "C" __declspec(dllexport) void beNotified(SCNotification * notifyCode)
+//{
+//	switch (notifyCode->nmhdr.code)
+//	{
+//		case NPPN_DARKMODECHANGED:
+//		{
+//			::SendMessage(nppData._nppHandle, NPPM_DARKMODESUBCLASSANDTHEME, static_cast<WPARAM>(dmfHandleChange), reinterpret_cast<LPARAM>(mainHwnd));
+//			::SetWindowPos(mainHwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED); // to redraw titlebar and window
+//			break;
+//		}
+//	}
+//}
+
+
+// For RUNCOMMAND_USER
 #define VAR_NOT_RECOGNIZED 0
 #define FULL_CURRENT_PATH 1
 #define CURRENT_DIRECTORY 2
@@ -530,6 +610,7 @@ struct toolbarIconsWithDarkMode {
 #define CURRENT_LINESTR 12
 
 #define	RUNCOMMAND_USER    (WM_USER + 3000)
+
 #define NPPM_GETFULLCURRENTPATH		(RUNCOMMAND_USER + FULL_CURRENT_PATH)
 #define NPPM_GETCURRENTDIRECTORY	(RUNCOMMAND_USER + CURRENT_DIRECTORY)
 #define NPPM_GETFILENAME			(RUNCOMMAND_USER + FILE_NAME)
@@ -553,7 +634,6 @@ struct toolbarIconsWithDarkMode {
 // return the caret current position column
 
 #define NPPM_GETNPPFULLFILEPATH			(RUNCOMMAND_USER + NPP_FULL_FILE_PATH)
-
 
 
 // Notification code
@@ -705,3 +785,12 @@ struct toolbarIconsWithDarkMode {
 //scnNotification->nmhdr.hwndFrom = hwndNpp;
 //scnNotification->nmhdr.idFrom = 0;
 
+#define NPPN_CMDLINEPLUGINMSG (NPPN_FIRST + 28)  // To notify plugins that the new argument for plugins (via '-pluginMessage="YOUR_PLUGIN_ARGUMENT"' in command line) is available
+//scnNotification->nmhdr.code = NPPN_CMDLINEPLUGINMSG;
+//scnNotification->nmhdr.hwndFrom = hwndNpp;
+//scnNotification->nmhdr.idFrom = pluginMessage; //where pluginMessage is pointer of type wchar_t
+
+#define NPPN_EXTERNALLEXERBUFFER (NPPN_FIRST + 29)  // To notify lexer plugins that the buffer (in idFrom) is just applied to a external lexer
+//scnNotification->nmhdr.code = NPPN_EXTERNALLEXERBUFFER;
+//scnNotification->nmhdr.hwndFrom = hwndNpp;
+//scnNotification->nmhdr.idFrom = BufferID; //where pluginMessage is pointer of type wchar_t

@@ -154,13 +154,6 @@ constexpr const TCHAR NWScriptEngineObjectsFile[] = TEXT("NWScript-Npp-EngineObj
 constexpr const TCHAR NWScriptUserObjectsFile[] = TEXT("NWScript-Npp-UserObjects.bin");
 
 
-// Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
-// this will ever change, so we made them constants here.
-constexpr const char fixedPreProcInstructionSet[] = "#define #include";
-constexpr const char fixedInstructionSet[] = "break case continue default do else FALSE for if return switch TRUE while";
-constexpr const char fixedKeywordSet[] = "action command const float int string struct vector void";
-constexpr const char fixedObjKeywordSet[] = "object OBJECT_INVALID OBJECT_SELF";
-
 #pragma region
 
 // Initializes the Plugin (called by Main DLL entry point - ATTACH)
@@ -548,18 +541,18 @@ void Plugin::CheckDarkModeLegacy()
         PluginDarkMode::initDarkMode();
 
         PluginDarkMode::Colors colors;
-        colors.background = stoi(GUIConfig->FindAttribute("customColorTop")->Value());
-        colors.darkerText = stoi(GUIConfig->FindAttribute("customColorDarkText")->Value());
-        colors.disabledText = stoi(GUIConfig->FindAttribute("customColorDisabledText")->Value());
-        colors.edge = stoi(GUIConfig->FindAttribute("customColorEdge")->Value());
-        colors.errorBackground = stoi(GUIConfig->FindAttribute("customColorError")->Value());
-        colors.hotBackground = stoi(GUIConfig->FindAttribute("customColorMenuHotTrack")->Value());
-        colors.linkText = stoi(GUIConfig->FindAttribute("customColorLinkText")->Value());
-        colors.pureBackground = stoi(GUIConfig->FindAttribute("customColorMain")->Value());
-        colors.softerBackground = stoi(GUIConfig->FindAttribute("customColorActive")->Value());
-        colors.text = stoi(GUIConfig->FindAttribute("customColorText")->Value());
+        colors.background = std::stoi(GUIConfig->FindAttribute("customColorTop")->Value());
+        colors.darkerText = std::stoi(GUIConfig->FindAttribute("customColorDarkText")->Value());
+        colors.disabledText = std::stoi(GUIConfig->FindAttribute("customColorDisabledText")->Value());
+        colors.edge = std::stoi(GUIConfig->FindAttribute("customColorEdge")->Value());
+        colors.errorBackground = std::stoi(GUIConfig->FindAttribute("customColorError")->Value());
+        colors.hotBackground = std::stoi(GUIConfig->FindAttribute("customColorMenuHotTrack")->Value());
+        colors.linkText = std::stoi(GUIConfig->FindAttribute("customColorLinkText")->Value());
+        colors.pureBackground = std::stoi(GUIConfig->FindAttribute("customColorMain")->Value());
+        colors.softerBackground = std::stoi(GUIConfig->FindAttribute("customColorActive")->Value());
+        colors.text = std::stoi(GUIConfig->FindAttribute("customColorText")->Value());
 
-        PluginDarkMode::ColorTone C = static_cast<PluginDarkMode::ColorTone>(stoi(GUIConfig->FindAttribute("colorTone")->Value()));
+        PluginDarkMode::ColorTone C = static_cast<PluginDarkMode::ColorTone>(std::stoi(GUIConfig->FindAttribute("colorTone")->Value()));
 
         PluginDarkMode::changeCustomTheme(colors);
         PluginDarkMode::setDarkTone(C);
@@ -577,7 +570,8 @@ void Plugin::CheckDarkModeLegacy()
 
 #pragma region 
 
-// Processes Raw messages from a Notepad++ window (the ones not handled by editor). 
+// Processes Raw messages from a Notepad++ window (the ones not handled by editor).
+// This function is dummy. Really all messages are from the Scintilla Editor.
 LRESULT Plugin::ProcessMessagesNpp(UINT Message, WPARAM wParam, LPARAM lParam)
 {
     return TRUE;
@@ -834,7 +828,7 @@ void Plugin::LoadNotepadLexer()
 
     // First call: retrieve buffer size. Second call, fill up name (from Manual).
     int buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(nullptr));
-    std::unique_ptr<TCHAR[]> lexerName = make_unique<TCHAR[]>(buffSize + 1);
+    std::unique_ptr<TCHAR[]> lexerName = std::make_unique<TCHAR[]>(buffSize + 1);
     buffSize = msg.SendNppMessage<int>(NPPM_GETLANGUAGENAME, currLang, reinterpret_cast<LPARAM>(lexerName.get()));
 
     // Try to get Language Auto-Indentation if it's one of the plugin installed languages
@@ -1403,12 +1397,6 @@ void Plugin::DoImportDefinitions()
     NWScriptParser::ScriptParseResults& myResults = *_NWScriptParseResults;
     tinyxml2::XMLDocument nwscriptDoc;
 
-    // We retrieve all fixed keywords and emplace them on results, so we can sort everything out
-    // because unsorted results won't work for auto-complete
-    std::string kw = fixedPreProcInstructionSet;
-    kw.append(" ").append(fixedInstructionSet).append(" ").append(fixedKeywordSet).append(" ").append(fixedObjKeywordSet);
-    myResults.AddSpacedStringAsKeywords(kw);
-
     // Set some Timestamp headers
     char timestamp[128]; time_t currTime;  struct tm currTimeP;
     time(&currTime);
@@ -1478,7 +1466,6 @@ void Plugin::DoImportDefinitions()
         return;
     }
 
-
     // Add new declaration and header
     nwscriptDoc.InsertFirstChild(nwscriptDoc.NewDeclaration());
     nwscriptDoc.InsertAfterChild(nwscriptDoc.FirstChild(), nwscriptDoc.NewComment(xmlHeaderComment.c_str()));
@@ -1492,14 +1479,32 @@ void Plugin::DoImportDefinitions()
 
     // We use a post-check to see whether all tags where updated. Also useful to avoid processing same tag twice 
     // (only happens if user tampered) with the file.
-    bool bType2 = false, bType4 = false, bType6 = false;
+    bool bInstre1 = false, bType1 = false, bType2 = false, bType3 = false, bType4 = false, bType6 = false;
     while (Keywords)
     {
+        if (Keywords->Attribute("name", "instre1") && !bInstre1)
+        {
+            Keywords->SetText(fixedInstructionSet);
+            bInstre1 = true;
+        }
+
+        if (Keywords->Attribute("name", "type1") && !bType1)
+        {
+            Keywords->SetText(fixedKeywordSet);
+            bType1 = true;
+        }
+
         if (Keywords->Attribute("name", "type2") && !bType2)
         {
             std::string generic_output = myResults.MembersAsSpacedString(NWScriptParser::MemberID::EngineStruct);
             Keywords->SetText(generic_output.c_str());
             bType2 = true;
+        }
+
+        if (Keywords->Attribute("name", "type3") && !bType3)
+        {
+            Keywords->SetText(fixedObjKeywordSet);
+            bType3 = true;
         }
 
         if (Keywords->Attribute("name", "type4") && !bType4)
@@ -1520,7 +1525,7 @@ void Plugin::DoImportDefinitions()
     }
 
     // Another error handling...
-    if (!bType2 || !bType4 || !bType6)
+    if (!bInstre1 || !bType1 || !bType2 || !bType3 || !bType4 || !bType6)
     {
         errorStream << TEXT("Error while parsing file: ") << _pluginPaths["PluginLexerConfigFilePath"] << "! \r\n";
         errorStream << TEXT("The following nodes could not be found!\r\n");
@@ -1540,6 +1545,13 @@ void Plugin::DoImportDefinitions()
         _NWScriptParseResults.reset();
         return;
     }
+
+    // Now building auto-complete file.
+    // We retrieve all fixed keywords and emplace them on results, so we can sort everything out
+    // because unsorted results won't work for auto-complete
+    std::string kw = fixedPreProcInstructionSet;
+    kw.append(" ").append(fixedInstructionSet).append(" ").append(fixedKeywordSet).append(" ").append(fixedObjKeywordSet);
+    myResults.AddSpacedStringAsKeywords(kw);
 
     // Merge with known user objects to rebuild autoComplete file
     NWScriptParser::ScriptParseResults knownUserObjects;
@@ -2705,7 +2717,7 @@ void Plugin::BatchProcessFilesCallback(HRESULT decision)
         // Done processing, write messages to log, close processing dialog.
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("") });
         WriteToCompilerLog({ LogType::ConsoleMessage, TEXT("Finished processing ") +
-            to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.") });
+            std::to_wstring(inst._batchFilesToProcess.size()) + TEXT(" files successfully.") });
 
         inst._processingFilesDialog->display(false);
 

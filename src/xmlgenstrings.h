@@ -271,10 +271,10 @@ NERDY STATISTICS:\r\n\
 			Notepad++ supports up to 8 keyword classes (or elements) definitions. Here we're setting all 8 classes 
 			to use with NWScript language - defined under the <Keywords name=""> attribute. These tags aren't mean
 			to be edited manually, use the Plugin import functions for user-defined types instead.
-				1) instre1 -> reserved for storing all basic language Instruction Set;
-				2) type1   -> reserved for storing all basic script variable names;
+				1) instre1 -> reserved for storing all basic language Instruction Set (fixed into engine);
+				2) type1   -> reserved for storing all basic script variable names (fixed into engine);
 				3) type2   -> reserved for storing all engine structures defined in nwscript.nss file;
-				4) type3   -> reserved for storing the exclusive markup of the "object" class and derivates (OBJECT_SELF and OBJECT_INVALID);
+				4) type3   -> reserved for storing the exclusive markup of the "object" class and derivates (OBJECT_SELF and OBJECT_INVALID) - (fixed into engine);
 				5) type4   -> reserved for storing all constant names defined in nwscript.nss file;
 				6) type5   -> open for user-defined constants (edit it in Settings -> Style Configurator, or import via the Tools);
 				7) type6   -> reserved for storing all engine functions defined in nwscript.nss file;
@@ -321,3 +321,10 @@ NERDY STATISTICS:\r\n\
     </LexerStyles>
 </NotepadPlus>
 )"
+
+// Bellow is a list of FIXED keywords NWScript engine uses and since it is part of the base syntax, hardly
+// this will ever change, so we made them constants here.
+constexpr const char fixedPreProcInstructionSet[] = "#define #include";
+constexpr const char fixedInstructionSet[] = "break case continue default do else FALSE for if return switch TRUE while";
+constexpr const char fixedKeywordSet[] = "action command const float int string struct vector void";
+constexpr const char fixedObjKeywordSet[] = "object OBJECT_INVALID OBJECT_SELF LOCATION_INVALID JSON_NULL JSON_FALSE JSON_TRUE JSON_OBJECT JSON_ARRAY JSON_STRING";

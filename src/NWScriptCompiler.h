@@ -52,26 +52,26 @@ namespace NWScriptPlugin
 		}
 
 		// Sets destination to a VALID and existing directory (or else get an error)
-		void setDestinationDirectory(filesystem::path dest) {
+		void setDestinationDirectory(fs::path dest) {
 			if (!isValidDirectory(str2wstr(dest.string()).c_str()))
 				throw;
 			_destDir = dest;
 		}
 
 		// Sets source path to a VALID and existing file path (or else get an error)
-		void setSourceFilePath(filesystem::path source) {
+		void setSourceFilePath(fs::path source) {
 			if (!PathFileExists(source.c_str()))
 				throw;
 			_sourcePath = source;
 		}
 
 		// Returns the current set Destination Directory
-		filesystem::path getDestinationDirectory() {
+		fs::path getDestinationDirectory() {
 			return _destDir;
 		}
 
 		// Returns the current set Source File path
-		filesystem::path getSourceFilePath() {
+		fs::path getSourceFilePath() {
 			return _sourcePath;
 		}
 
@@ -138,7 +138,7 @@ namespace NWScriptPlugin
 
 	private:
 		std::unique_ptr<ResourceManager> _resourceManager;
-		unique_ptr<NscCompiler> _compiler;
+		std::unique_ptr<NscCompiler> _compiler;
 		bool _fetchPreprocessorOnly = false;
 		bool _makeDependencyView = false;
 		int _compilerMode = 0;
@@ -146,8 +146,8 @@ namespace NWScriptPlugin
 
 		generic_string NWNHome;
 		std::vector<std::string> _includePaths;
-		filesystem::path _sourcePath;
-		filesystem::path _destDir;
+		fs::path _sourcePath;
+		fs::path _destDir;
 
 		Settings* _settings;
 

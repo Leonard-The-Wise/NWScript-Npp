@@ -149,6 +149,7 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
 
         // Create our compiler/disassembler
         _compiler = std::make_unique<NscCompiler>(*_resourceManager, _settings->useNonBiowareExtenstions);
+        _compiler->NscSetLogger(&_logger);
         _compiler->NscSetIncludePaths(_includePaths);
         _compiler->NscSetCompilerErrorPrefix(SCRIPTERRORPREFIX);
         _compiler->NscSetResourceCacheEnabled(true);
@@ -393,8 +394,8 @@ bool NWScriptCompiler::MakeDependenciesView(const std::set<std::string>& depende
         // Get first path in dependencies for comparisons.
         auto it = dependencies.begin();
         int count = dependencyParser.setSubject(*it).match();
-        filesystem::path currentPath = matches[0][1];
-        filesystem::path comparePath;
+        fs::path currentPath = matches[0][1];
+        fs::path comparePath;
 
         // For each different path, we write the topic information of that folder and then enumerate the files
         int topicNumber = 1;
