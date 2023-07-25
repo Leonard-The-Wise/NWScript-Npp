@@ -38,6 +38,9 @@
     <Filter Include="DarkMode">
       <UniqueIdentifier>{1d74ff3e-534a-469a-a3f1-7c3af1bf8e5e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Native Compiler">
+      <UniqueIdentifier>{7df729ef-c3bd-47b9-939f-b92d5bb8c0cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\PluginMain.h" />
@@ -211,6 +214,25 @@
     <ClInclude Include="..\src\DarkMode\DPIManager.h">
       <Filter>DarkMode</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\exobase.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\exotypes.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\scriptcomp.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\scripterrors.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\scriptinternal.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Native Compiler\xxhash.h">
+      <Filter>Native Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NWScriptCompilerV2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -305,6 +327,28 @@
     <ClCompile Include="..\src\DarkMode\PluginDarkMode.cpp">
       <Filter>DarkMode</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\exostring.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompcore.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompfinalcode.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompidentspec.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcomplexical.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompparsetree.cpp">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\xxhash.c">
+      <Filter>Native Compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NWScriptCompilerV2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -446,6 +490,9 @@
     </Text>
     <Text Include="..\src\Lexers\Lexilla\License.txt">
       <Filter>Custom Lexers\Lexilla</Filter>
+    </Text>
+    <Text Include="..\src\Native Compiler\gpl-3.0.txt">
+      <Filter>Native Compiler</Filter>
     </Text>
   </ItemGroup>
 </Project>

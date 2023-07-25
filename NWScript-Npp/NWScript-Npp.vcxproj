@@ -246,6 +246,12 @@
     <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
+    <ClInclude Include="..\src\Native Compiler\exobase.h" />
+    <ClInclude Include="..\src\Native Compiler\exotypes.h" />
+    <ClInclude Include="..\src\Native Compiler\scriptcomp.h" />
+    <ClInclude Include="..\src\Native Compiler\scripterrors.h" />
+    <ClInclude Include="..\src\Native Compiler\scriptinternal.h" />
+    <ClInclude Include="..\src\Native Compiler\xxhash.h" />
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
@@ -253,6 +259,7 @@
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
     <ClInclude Include="..\src\NWScriptCompiler.h" />
+    <ClInclude Include="..\src\NWScriptCompilerV2.h" />
     <ClInclude Include="..\src\NWScriptLogger.h" />
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\pch.h" />
@@ -328,9 +335,17 @@
     </ClCompile>
     <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
     <ClCompile Include="..\src\LineIndentor.cpp" />
+    <ClCompile Include="..\src\Native Compiler\exostring.cpp" />
+    <ClCompile Include="..\src\Native Compiler\scriptcompcore.cpp" />
+    <ClCompile Include="..\src\Native Compiler\scriptcompfinalcode.cpp" />
+    <ClCompile Include="..\src\Native Compiler\scriptcompidentspec.cpp" />
+    <ClCompile Include="..\src\Native Compiler\scriptcomplexical.cpp" />
+    <ClCompile Include="..\src\Native Compiler\scriptcompparsetree.cpp" />
+    <ClCompile Include="..\src\Native Compiler\xxhash.c" />
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />
+    <ClCompile Include="..\src\NWScriptCompilerV2.cpp" />
     <ClCompile Include="..\src\NWScriptLogger.cpp" />
     <ClCompile Include="..\src\NWScriptParser.cpp" />
     <ClCompile Include="..\src\pch.cpp">
@@ -435,6 +450,7 @@
   <ItemGroup>
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
     <Text Include="..\src\Lexers\Lexilla\License.txt" />
+    <Text Include="..\src\Native Compiler\gpl-3.0.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\lunasvg\lunasvg.vcxproj">
