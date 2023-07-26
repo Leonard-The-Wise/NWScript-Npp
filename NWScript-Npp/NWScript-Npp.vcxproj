@@ -122,7 +122,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -200,7 +200,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -335,13 +335,48 @@
     </ClCompile>
     <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
     <ClCompile Include="..\src\LineIndentor.cpp" />
-    <ClCompile Include="..\src\Native Compiler\exostring.cpp" />
-    <ClCompile Include="..\src\Native Compiler\scriptcompcore.cpp" />
-    <ClCompile Include="..\src\Native Compiler\scriptcompfinalcode.cpp" />
-    <ClCompile Include="..\src\Native Compiler\scriptcompidentspec.cpp" />
-    <ClCompile Include="..\src\Native Compiler\scriptcomplexical.cpp" />
-    <ClCompile Include="..\src\Native Compiler\scriptcompparsetree.cpp" />
-    <ClCompile Include="..\src\Native Compiler\xxhash.c" />
+    <ClCompile Include="..\src\Native Compiler\exostring.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompcore.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompfinalcode.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompidentspec.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcomplexical.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompparsetree.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\xxhash.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />

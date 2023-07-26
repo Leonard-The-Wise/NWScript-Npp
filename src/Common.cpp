@@ -897,6 +897,26 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
+    char* fileToBufferC(const generic_string& filePath, size_t* pBufferSize)
+    {
+        std::ifstream fileReadStream;
+
+        fileReadStream.open(filePath.c_str(), std::ios::in | std::ios::binary);
+        if (!fileReadStream.is_open())
+        {
+            return NULL;
+        }
+
+        fileReadStream.seekg(0, std::ios::end);
+        *pBufferSize = fileReadStream.tellg();
+        char* pRetValue = new char[*pBufferSize];
+        fileReadStream.seekg(0, std::ios::beg);
+        fileReadStream.read(pRetValue, *pBufferSize);
+        fileReadStream.close();
+
+        return pRetValue;
+    }
+
     // Saves a string buffer into a raw file 
     bool bufferToFile(const generic_string& filePath, const std::string& sContents)
     {
@@ -910,6 +930,16 @@ namespace NWScriptPluginCommons {
         s << sContents;
         s.close();
         return true;
+    }
+
+    // Removes the file extension from name
+    std::string removeFileExtension(const std::string& filename) 
+    {
+        size_t lastDotPos = filename.find_last_of(".");
+        if (lastDotPos != std::string::npos) {
+            return filename.substr(0, lastDotPos);
+        }
+        return filename;
     }
 
     // Writes a pseudo-batch file to store Notepad++ executable to be called by ShellExecute

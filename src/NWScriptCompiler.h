@@ -167,7 +167,7 @@ namespace NWScriptPlugin
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		// Disassemble a binary file into a pcode assembly text format
-		bool disassembleBinary(std::string& fileContents,
+		bool disassemblyBinary(std::string& fileContents,
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		// Dependencies files and views

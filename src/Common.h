@@ -183,8 +183,14 @@ namespace NWScriptPluginCommons {
     // Loads a raw file into a string buffer
     bool fileToBuffer(const generic_string& filePath, std::string& sContents);
 
+    // Loads a raw file into a char* buffer. pBufferSize returns the number of read bytes
+    char* fileToBufferC(const generic_string& filePath, size_t* pBufferSize);
+
     // Saves a string buffer into a raw file 
     bool bufferToFile(const generic_string& filePath, const std::string& sContents);
+
+    // Removes the file extension from name
+    std::string removeFileExtension(const std::string& filename);
 
     // Checks for a path's write permission.
     // returns false if not successful (eg: file/path doesn't exist), else returns true and fills outFilePermission enums

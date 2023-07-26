@@ -199,7 +199,7 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     else
     {
         _logger.log("Disassembling binary: " + _sourcePath.string(), LogType::ConsoleMessage);
-        bSuccess = disassembleBinary(inFileContents, fileResType, fileResRef);
+        bSuccess = disassemblyBinary(inFileContents, fileResType, fileResRef);
     }
 
     notifyCaller(bSuccess);
@@ -313,7 +313,7 @@ bool NWScriptCompiler::compileScript(std::string& fileContents,
     return true;
 }
 
-bool NWScriptCompiler::disassembleBinary(std::string& fileContents,
+bool NWScriptCompiler::disassemblyBinary(std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     std::string generatedCode;

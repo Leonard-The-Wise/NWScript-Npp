@@ -2571,7 +2571,7 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
 #ifdef USE_THREADS
-    std::thread tProcessor(&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
+    std::thread tProcessor(&NWScriptCompilerV2::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
     tProcessor.detach();
 #else
     _compiler.processFile(fromCurrentScintilla, &_tempFileContents[0]);
@@ -2600,7 +2600,7 @@ void Plugin::BuildFilesList()
 // Receives notifications when a "Compile" menu command ends
 void Plugin::CompileEndingCallback(HRESULT decision)
 {
-    NWScriptCompiler& compiler = Instance().Compiler();
+    NWScriptCompilerV2& compiler = Instance().Compiler();
 
     // Clear any content of temporary stash if exists
     Instance()._tempFileContents.clear();
@@ -2640,7 +2640,7 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 // Receives notifications when a "Disassemble" menu command ends
 void Plugin::DisassembleEndingCallback(HRESULT decision)
 {
-    NWScriptCompiler& compiler = Instance().Compiler();
+    NWScriptCompilerV2& compiler = Instance().Compiler();
 
     // Unlock controls to compiler log window
     Instance()._loggerWindow->LockControls(false);

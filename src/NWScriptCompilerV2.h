@@ -10,8 +10,9 @@
 #include <string>
 #include <vector>
 
-#include "Native Compiler/scriptcomp.h"		// New oficial compiler provided by Beamdog itself.
-#include "Nsc.h"							// Here we are using NscLib only for the game's resource manager
+#include "Native Compiler/exobase.h"		// New oficial compiler provided by Beamdog itself.
+#include "Native Compiler/scriptcomp.h"		// 
+#include "Nsc.h"							// Here we are using NscLib for older features like preprocessor and make dependency
 #include "Common.h"
 
 #include "Settings.h"
@@ -19,12 +20,53 @@
 
 namespace NWScriptPlugin
 {
+
+	// Copied from NscCompiler.cpp -> Resource Cache structures
+	struct ResourceCacheKey
+	{
+		NWN::ResRef32 ResRef;
+		NWN::ResType  ResType;
+
+		inline bool operator < (const ResourceCacheKey& other) const
+		{
+			return (ResType < other.ResType) ||
+				(memcmp(&ResRef, &other.ResRef, sizeof(ResRef)) < 0);
+		}
+
+		inline bool operator == (const ResourceCacheKey& other) const
+		{
+			return (ResType == other.ResType) &&
+				(memcmp(&ResRef, &other.ResRef, sizeof(ResRef)) == 0);
+		}
+	};
+
+	struct ResourceCacheEntry
+	{
+		bool                Allocated;
+		char*				Contents;
+		UINT32              Size;
+		std::string         Location;
+	};
+
+	typedef std::map<ResourceCacheKey, ResourceCacheEntry> ResourceCache;
+
+	struct NativeCompileResult
+	{
+		int32_t code;
+		char* str; // static buffer
+	};
+
+	// Function pointers to resolve new compiler Resource API requirements
+	static BOOL ResManUpdateResourceDirectory(const char* sAlias);
+	static int32_t ResManWriteToFile(const char* sFileName, RESTYPE nResType, const uint8_t* pData, size_t nSize, bool bBinary);
+	static const char* ResManLoadScriptSourceFile(const char* sFileName, RESTYPE nResType);
+	static const char* TlkResolve(STRREF strRef);
+
 	class NWScriptCompilerV2 final
 	{
 	public:
 
-		NWScriptCompilerV2() :
-			_resourceManager(nullptr), _settings(nullptr), _compiler(nullptr) {}
+		NWScriptCompilerV2();
 
 		bool isInitialized() {
 			return _resourceManager != nullptr;
@@ -41,6 +83,7 @@ namespace NWScriptPlugin
 		// Reset compiler state
 		void reset() {
 			_resourceManager = nullptr;
+			_compilerV2 = nullptr;
 			_compiler = nullptr;
 			_includePaths.clear();
 			_fetchPreprocessorOnly = false;
@@ -50,6 +93,13 @@ namespace NWScriptPlugin
 			setMode(0);
 			_processingEndCallback = nullptr;
 			clearLog();
+
+			// Free memory from Resource Cache to avoid memory leaks
+//			for (auto it = _ResourceCache.begin(); it != _ResourceCache.end(); ++it)
+//				if (it->second.Contents != NULL)
+//					delete it->second.Contents;
+
+			_ResourceCache.clear();
 		}
 
 		// Sets destination to a VALID and existing directory (or else get an error)
@@ -113,15 +163,15 @@ namespace NWScriptPlugin
 			_makeDependencyView = false;
 		}
 
-		int getMode() const {
+		inline int getMode() const {
 			return _compilerMode;
 		}
 
-		bool isViewDependencies() const {
+		inline bool isViewDependencies() const {
 			return _makeDependencyView;
 		}
 
-		bool isFetchPreprocessorOnly() const {
+		inline bool isFetchPreprocessorOnly() const {
 			return _fetchPreprocessorOnly;
 		}
 
@@ -129,18 +179,31 @@ namespace NWScriptPlugin
 			return _logger;
 		}
 
+		std::vector<std::string>& includePaths() {
+			return _includePaths;
+		}
+
 		// Returns if an output path is required for operation
-		bool isOutputDirRequired() {
+		inline bool isOutputDirRequired() {
 			return !(_fetchPreprocessorOnly || _makeDependencyView);
+		}
+
+		inline ResourceCache& getResourceCache() {
+			return _ResourceCache;
 		}
 
 
 		void processFile(bool fromMemory, char* fileContents);
 
 	private:
+
 		std::unique_ptr<ResourceManager> _resourceManager;
+		ResourceCache _ResourceCache;
+		std::unique_ptr<CScriptCompiler> _compilerV2;
+
+		// # TODO: Remove old compiler references
 		std::unique_ptr<NscCompiler> _compiler;
-		
+
 		bool _fetchPreprocessorOnly = false;
 		bool _makeDependencyView = false;
 		int _compilerMode = 0;
@@ -168,8 +231,11 @@ namespace NWScriptPlugin
 		bool compileScript(std::string& fileContents,
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
+		bool compileScriptV2(std::string& fileContents,
+			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
+
 		// Disassemble a binary file into a pcode assembly text format
-		bool disassembleBinary(std::string& fileContents,
+		bool disassemblyBinary(std::string& fileContents,
 			const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef);
 
 		// Dependencies files and views

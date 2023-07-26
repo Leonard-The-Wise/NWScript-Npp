@@ -1421,7 +1421,8 @@ CExoString CExoString::AsTAG() const
 	newBuffer[nIndex] = '\0';
 	newStr = newBuffer;
 
-#ifdef _DEBUG // 01/27/03 - PLR - Need to debug this properly!
+	// PATCH:: Modified _DEBUG macro
+#ifdef _DEBUG_EXOSTRING // 01/27/03 - PLR - Need to debug this properly!
 	if ( newStr != m_sString )
 	{
 		LOGSET("TAG CHANGE ===> (%s) -> (%s)\n", m_sString, newStr.CStr())LOGFLUSH
