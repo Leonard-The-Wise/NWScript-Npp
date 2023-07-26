@@ -2846,7 +2846,7 @@ void Plugin::NavigateToCode(const generic_string& fileName, size_t lineNum, cons
     // Navigate to line
     // HACK: For some reason, the normal operation won't work if the file doesn't have the focus.
     // So we schedule the execution to happen assynchronously with the smallest possible time frame.
-    if (success)
+    if (success && lineNum > -1)
     {
         SetTimer(Instance().NotepadHwnd(), NAGIVATECALLBACKTIMER, USER_TIMER_MINIMUM, (TIMERPROC)RunScheduledReposition);
     }

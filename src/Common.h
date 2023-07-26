@@ -114,6 +114,9 @@ namespace NWScriptPluginCommons {
     // Returns a new string replacing all input string %VARIABLES% variables with the associated string map(%VARIABLE%, %VALUE%)
     std::wstring replaceStringsW(const std::wstring& input, std::map<std::wstring, std::wstring>& replaceStrings);
 
+    // Makes a string to lower case
+    std::string toLowerCase(const std::string& str);
+
     // Opens a file dialog
     bool openFileDialog(HWND hOwnerWnd, std::vector<generic_string>& outSelectedFiles, 
         const TCHAR* sFilters = TEXT("All files (*.*)\0*.*"), 
@@ -184,7 +187,7 @@ namespace NWScriptPluginCommons {
     bool fileToBuffer(const generic_string& filePath, std::string& sContents);
 
     // Loads a raw file into a char* buffer. pBufferSize returns the number of read bytes
-    char* fileToBufferC(const generic_string& filePath, size_t* pBufferSize);
+    char* fileToNullTermBuffer(const generic_string& filePath, size_t* pBufferSize);
 
     // Saves a string buffer into a raw file 
     bool bufferToFile(const generic_string& filePath, const std::string& sContents);

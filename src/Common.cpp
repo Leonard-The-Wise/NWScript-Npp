@@ -152,6 +152,14 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
+    // Makes a string to lower case
+    std::string toLowerCase(const std::string& str) 
+    {
+        std::string result = str;
+        std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+        return result;
+    }
+
     // Opens a file dialog
     bool openFileDialog(HWND hOwnerWnd, std::vector<generic_string>& outSelectedFiles, const TCHAR* sFilters,
         const generic_string& lastOpenedFolder, bool multiFile)
@@ -897,24 +905,26 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
-    char* fileToBufferC(const generic_string& filePath, size_t* pBufferSize)
+    char* fileToNullTermBuffer(const generic_string& filePath, size_t* pBufferSize)
     {
-        std::ifstream fileReadStream;
+        std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 
-        fileReadStream.open(filePath.c_str(), std::ios::in | std::ios::binary);
-        if (!fileReadStream.is_open())
-        {
-            return NULL;
-        }
+        if (!file.is_open()) 
+            return nullptr;
 
-        fileReadStream.seekg(0, std::ios::end);
-        *pBufferSize = fileReadStream.tellg();
-        char* pRetValue = new char[*pBufferSize];
-        fileReadStream.seekg(0, std::ios::beg);
-        fileReadStream.read(pRetValue, *pBufferSize);
-        fileReadStream.close();
+        std::streampos fileSize = file.tellg();
+        *pBufferSize = fileSize;
 
-        return pRetValue;
+        char* buffer = new char[*pBufferSize + 1];
+
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, fileSize);
+        file.close();
+
+        buffer[fileSize] = 0;
+
+        *pBufferSize = fileSize;
+        return buffer;
     }
 
     // Saves a string buffer into a raw file 

@@ -43,108 +43,121 @@ static ResourceManager* g_ResourceManager = nullptr;
 static NWScriptCompilerV2* g_NWScriptCompilerV2 = nullptr;
 
 static std::map<int, std::string> CompileErrorTlk = {
-    {560, "Unexpected character"},
-    {561, "Fatal compiler error"},
-    {562, "Program compound statement at start"},
-    {563, "Unexpected end compound statement"},
-    {564, "After compound statement at end"},
-    {565, "Parsing variable list"},
-    {566, "Unknown state in compiler"},
-    {567, "Invalid declaration type"},
-    {568, "No left bracket on expression"},
-    {569, "No right bracket on expression"},
-    {570, "Bad start of statement"},
-    {571, "No left bracket on arg list"},
-    {572, "No right bracket on arg list"},
-    {573, "No semicolon after expression"},
-    {574, "Parsing assignment statement"},
-    {575, "Bad lvalue"},
-    {576, "Bad constant type"},
-    {577, "Identifier list full"},
-    {578, "Non integer id for integer constant"},
-    {579, "Non float id for float constant"},
-    {580, "Non string id for string constant"},
-    {581, "Variable already used within scope"},
-    {582, "Variable defined without type"},
-    {583, "Incorrect variable state left on stack"},
-    {584, "Non integer expression where integer required"},
-    {585, "Void expression where non void required"},
-    {586, "Invalid parameters for assignment"},
-    {587, "Declaration does not match parameters"},
-    {588, "Logical operation has invalid operands"},
-    {589, "Equality test has invalid operands"},
-    {590, "Comparison test has invalid operands"},
-    {591, "Shift operation has invalid operands"},
-    {592, "Arithmetic operation has invalid operands"},
-    {593, "Unknown operation in semantic check"},
-    {594, "Script too large"},
-    {595, "Return statement has no parameters"},
-    {596, "No while after do keyword"},
-    {597, "Function definition missing name"},
-    {598, "Function definition missing parameter list"},
-    {599, "Malformed parameter list"},
-    {600, "Bad type specifier"},
-    {601, "No semicolon after structure"},
-    {602, "Ellipsis in identifier"},
-    {603, "File not found"},
-    {604, "Include recursive"},
-    {605, "Include too many levels"},
-    {606, "Parsing return statement"},
-    {607, "Parsing identifier list"},
-    {608, "Parsing function declaration"},
-    {609, "Duplicate function implementation"},
-    {610, "Token too long"},
-    {611, "Undefined structure"},
-    {612, "Left of structure part not structure"},
-    {613, "Right of structure part not field in structure"},
-    {614, "Undefined field in structure"},
-    {615, "Structure redefined"},
-    {616, "Variable used twice in same structure"},
-    {617, "Function implementation and definition differ"},
-    {618, "Mismatched types"},
-    {619, "Integer not at top of stack"},
-    {620, "Return type and function type mismatched"},
-    {621, "Not all control paths return a value"},
-    {622, "Undefined identifier"},
-    {623, "No function main in script"},
-    {624, "Function main must have void return value"},
-    {625, "Function main must have no parameters"},
-    {626, "Non void function cannot be a statement"},
-    {627, "Bad variable name"},
-    {628, "Non optional parameter cannot follow optional parameter"},
-    {629, "Type does not have an optional parameter"},
-    {630, "Non constant in function declaration"},
-    {631, "Parsing constant vector"},
-    {1594, "Operand must be an integer lvalue"},
-    {1595, "Conditional requires second expression"},
-    {1596, "Conditional must have matching return types"},
-    {1597, "Multiple default statements within switch"},
-    {1598, "Multiple case constant statements within switch"},
-    {1599, "Case parameter not a constant integer"},
-    {1600, "Switch must evaluate to an integer"},
-    {1601, "No colon after default label"},
-    {1602, "No colon after case label"},
-    {1603, "No semicolon after statement"},
-    {4834, "Break outside of loop or case statement"},
-    {4835, "Too many parameters on function"},
-    {4836, "Unable to open file for writing"},
-    {4855, "Unterminated string constant"},
-    {5182, "No function intsc in script"},
-    {5183, "Function intsc must have void return value"},
-    {5184, "Function intsc must have no parameters"},
-    {6804, "Jumping over declaration statements case disallowed"},
-    {6805, "Jumping over declaration statements default disallowed"},
-    {6823, "Else without corresponding if"},
-    {3741, "Invalid type for const keyword"},
-    {3742, "Const keyword cannot be used on non global variables"},
-    {3752, "Invalid value assigned to constant"},
-    {9081, "Switch condition cannot be followed by a null statement"},
-    {9082, "While condition cannot be followed by a null statement"},
-    {9083, "For statement cannot be followed by a null statement"},
-    {9155, "Cannot include this file twice"},
+    {560, "Error: Unexpected character"},
+    {561, "Error: Fatal compiler error"},
+    {562, "Error: Program compound statement at start"},
+    {563, "Error: Unexpected end compound statement"},
+    {564, "Error: After compound statement at end"},
+    {565, "Error: Parsing variable list"},
+    {566, "Error: Unknown state in compiler"},
+    {567, "Error: Invalid declaration type"},
+    {568, "Error: No left bracket on expression"},
+    {569, "Error: No right bracket on expression"},
+    {570, "Error: Bad start of statement"},
+    {571, "Error: No left bracket on arg list"},
+    {572, "Error: No right bracket on arg list"},
+    {573, "Error: No semicolon after expression"},
+    {574, "Error: Parsing assignment statement"},
+    {575, "Error: Bad lvalue"},
+    {576, "Error: Bad constant type"},
+    {577, "Error: Identifier list full"},
+    {578, "Error: Non integer id for integer constant"},
+    {579, "Error: Non float id for float constant"},
+    {580, "Error: Non string id for string constant"},
+    {581, "Error: Variable already used within scope"},
+    {582, "Error: Variable defined without type"},
+    {583, "Error: Incorrect variable state left on stack"},
+    {584, "Error: Non integer expression where integer required"},
+    {585, "Error: Void expression where non void required"},
+    {586, "Error: Invalid parameters for assignment"},
+    {587, "Error: Declaration does not match parameters"},
+    {588, "Error: Logical operation has invalid operands"},
+    {589, "Error: Equality test has invalid operands"},
+    {590, "Error: Comparison test has invalid operands"},
+    {591, "Error: Shift operation has invalid operands"},
+    {592, "Error: Arithmetic operation has invalid operands"},
+    {593, "Error: Unknown operation in semantic check"},
+    {594, "Error: Script too large"},
+    {595, "Error: Return statement has no parameters"},
+    {596, "Error: No while after do keyword"},
+    {597, "Error: Function definition missing name"},
+    {598, "Error: Function definition missing parameter list"},
+    {599, "Error: Malformed parameter list"},
+    {600, "Error: Bad type specifier"},
+    {601, "Error: No semicolon after structure"},
+    {602, "Error: Ellipsis in identifier"},
+    {603, "Error: File not found"},
+    {604, "Error: Include recursive"},
+    {605, "Error: Include too many levels"},
+    {606, "Error: Parsing return statement"},
+    {607, "Error: Parsing identifier list"},
+    {608, "Error: Parsing function declaration"},
+    {609, "Error: Duplicate function implementation"},
+    {610, "Error: Token too long"},
+    {611, "Error: Undefined structure"},
+    {612, "Error: Left of structure part not structure"},
+    {613, "Error: Right of structure part not field in structure"},
+    {614, "Error: Undefined field in structure"},
+    {615, "Error: Structure redefined"},
+    {616, "Error: Variable used twice in same structure"},
+    {617, "Error: Function implementation and definition differ"},
+    {618, "Error: Mismatched types"},
+    {619, "Error: Integer not at top of stack"},
+    {620, "Error: Return type and function type mismatched"},
+    {621, "Error: Not all control paths return a value"},
+    {622, "Error: Undefined identifier"},
+    {623, "Error: No function main in script"},
+    {624, "Error: Function main must have void return value"},
+    {625, "Error: Function main must have no parameters"},
+    {626, "Error: Non void function cannot be a statement"},
+    {627, "Error: Bad variable name"},
+    {628, "Error: Non optional parameter cannot follow optional parameter"},
+    {629, "Error: Type does not have an optional parameter"},
+    {630, "Error: Non constant in function declaration"},
+    {631, "Error: Parsing constant vector"},
+    {1594, "Error: Operand must be an integer lvalue"},
+    {1595, "Error: Conditional requires second expression"},
+    {1596, "Error: Conditional must have matching return types"},
+    {1597, "Error: Multiple default statements within switch"},
+    {1598, "Error: Multiple case constant statements within switch"},
+    {1599, "Error: Case parameter not a constant integer"},
+    {1600, "Error: Switch must evaluate to an integer"},
+    {1601, "Error: No colon after default label"},
+    {1602, "Error: No colon after case label"},
+    {1603, "Error: No semicolon after statement"},
+    {4834, "Error: Break outside of loop or case statement"},
+    {4835, "Error: Too many parameters on function"},
+    {4836, "Error: Unable to open file for writing"},
+    {4855, "Error: Unterminated string constant"},
+    {5182, "Error: No function intsc in script"},
+    {5183, "Error: Function intsc must have void return value"},
+    {5184, "Error: Function intsc must have no parameters"},
+    {6804, "Error: Jumping over declaration statements case disallowed"},
+    {6805, "Error: Jumping over declaration statements default disallowed"},
+    {6823, "Error: Else without corresponding if"},
+    {3741, "Error: Invalid type for const keyword"},
+    {3742, "Error: Const keyword cannot be used on non global variables"},
+    {3752, "Error: Invalid value assigned to constant"},
+    {9081, "Error: Switch condition cannot be followed by a null statement"},
+    {9082, "Error: While condition cannot be followed by a null statement"},
+    {9083, "Error: For statement cannot be followed by a null statement"},
+    {9155, "Error: Cannot include this file twice"},
     {10407, "If condition cannot be followed by a null statement"},
     {40104, "Else cannot be followed by a null statement"}
 };
+
+// Now we define some plugin-exclusive compiler message codes
+#define NSC2001_RESOURCE_MANAGER_INITIALIZE_FAIL "NSC2001"
+#define NSC2002_OPEN_FILE_FAIL                   "NSC2002"
+#define NSC2003_RESERVED                         "NSC2003"
+#define NSC2004_UNKNOWN_COMPILE_ERROR            "NSC2004"
+#define NSC2005_COULD_NOT_WRITE_COMPILED_FILE    "NSC2005"
+#define NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE   "NSC2006"
+#define NSC2007_DISASSEMBLY_COMPILER_INIT_FAIL   "NSC2007"
+#define NSC2008_COULD_NOT_WRITE_DISASSEMBLY_FILE "NSC2008"
+#define NSC2009_COULD_NOT_WRITE_DEPENDENCY_FILE  "NSC2009"
+#define NSC2010_CANT_COMPILE_NWSCRIPT_NSS        "NSC2010"
+#define NSC2011_INCLUDE_FILE_IGNORED             "NSC2010"
 
 
 NWScriptCompilerV2::NWScriptCompilerV2() :
@@ -162,7 +175,7 @@ bool NWScriptCompilerV2::initialize() {
     }
     catch (std::runtime_error& e)
     {
-        _logger.log("Failed to initialize the resources manager: " + std::string(e.what()), LogType::Critical, "NSC2001");
+        _logger.log("Failed to initialize the resources manager: " + std::string(e.what()), LogType::Critical, NSC2001_RESOURCE_MANAGER_INITIALIZE_FAIL);
         return false;
     }
 
@@ -225,7 +238,8 @@ void NWScriptCompilerV2::processFile(bool fromMemory, char* fileContents)
     if (_stricmp(_sourcePath.filename().string().c_str(), "nwscript.nss") == 0 && _compilerMode == 0)
     {
         _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
-        _logger.log("Error: you can't explicitly compile any script named \"nwscript.nss\", this name is reserved for the main engine.", LogType::Critical, "NSC2010");
+        _logger.log("Error: you can't explicitly compile any script named \"nwscript.nss\", this name is reserved for the main engine.", 
+            LogType::Critical, NSC2010_CANT_COMPILE_NWSCRIPT_NSS);
         _logger.log("File ignored: " + _sourcePath.string() , LogType::Info);
         notifyCaller(false);
         return;
@@ -300,7 +314,7 @@ void NWScriptCompilerV2::processFile(bool fromMemory, char* fileContents)
     {
         if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
         {
-            _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, "NSC2002");
+            _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, NSC2002_OPEN_FILE_FAIL);
             notifyCaller(false);
             return;
         }
@@ -360,7 +374,7 @@ bool NWScriptCompilerV2::compileScriptV2(std::string& fileContents,
     uint32_t optimizationFlags = _settings->generateSymbols ? CSCRIPTCOMPILER_OPTIMIZE_NOTHING :
         _settings->optimizeScript ? CSCRIPTCOMPILER_OPTIMIZE_EVERYTHING : CSCRIPTCOMPILER_OPTIMIZE_NOTHING;
     _compilerV2->SetOptimizationFlags(optimizationFlags);
-    _compilerV2->SetCompileConditionalOrMain(true);
+    _compilerV2->SetCompileConditionalOrMain(1);
     _compilerV2->SetIdentifierSpecification("nwscript");
     _compilerV2->SetOutputAlias("");
 
@@ -381,16 +395,40 @@ bool NWScriptCompilerV2::compileScriptV2(std::string& fileContents,
         {
             ret.code = STRREF_CSCRIPTCOMPILER_ERROR_FATAL_COMPILER_ERROR*-1;
             _logger.log(CompileErrorTlk[ret.code],
-                LogType::Critical, std::string("NSC0") + std::to_string(ret.code));
+                LogType::Critical, std::string("NSC") + std::to_string(ret.code));
 
             return false;
         }
     }
 
-    ret.str = ret.code ? _compilerV2->GetCapturedError()->CStr() : (char*)"";
-
+    // Resolve error messages if apply
     if (ret.code)
-        _logger.log(ret.str, LogType::Error);
+    {
+        ret.str = ret.code ? _compilerV2->GetCapturedError()->CStr() : (char*)"";
+
+        std::string srcFileName = _sourcePath.stem().string();
+        std::string srcFileExt = _sourcePath.extension().string();
+        srcFileExt.erase(0, 1);  // Delete the . before the extension.
+
+        // Pre-process some known errors that are a bit different from the others (don't have line numbers, etc)
+        switch (abs(ret.code))
+        {
+        case 561:
+        case 594:
+            _logger.log(TlkResolve(ret.code), LogType::Error, "NSC" + ret.code, srcFileName, srcFileExt, "-");
+            break;
+
+        // This is about include files. Downgrade to warning...
+        case 623:
+            _logger.log("File [" + _sourcePath.filename().string() + "] appears to be an include file - no void main() or StartingConditional() inside. Ignored.", 
+                LogType::Warning, NSC2011_INCLUDE_FILE_IGNORED, srcFileName, srcFileExt, "-");
+            ret.code = 0;
+            break;
+        default:
+            _logger.WriteText(ret.str);
+            break;
+        }
+    }
 
     return (ret.code == 0);
 }
@@ -457,7 +495,7 @@ bool NWScriptCompilerV2::compileScript(std::string& fileContents,
 
     default:
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log("Unknown status code", LogType::Critical, "NSC2004");
+        _logger.log("Unknown status code", LogType::Critical, NSC2004_UNKNOWN_COMPILE_ERROR);
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -476,7 +514,7 @@ bool NWScriptCompilerV2::compileScript(std::string& fileContents,
     if (!bufferToFile(outputPath, dataRef))
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log(TEXT("Could not write compiled output file: ") + outputPath, LogType::Critical, TEXT("NSC2005"));
+        _logger.log(TEXT("Could not write compiled output file: ") + outputPath, LogType::Critical, TEXT(NSC2005_COULD_NOT_WRITE_COMPILED_FILE));
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -490,7 +528,7 @@ bool NWScriptCompilerV2::compileScript(std::string& fileContents,
         if (!bufferToFile(outputPath, dataRef))
         {
             _logger.log("", LogType::ConsoleMessage);
-            _logger.log(TEXT("Could not write generated symbols output file: ") + outputPath, LogType::Critical, TEXT("NSC2006"));
+            _logger.log(TEXT("Could not write generated symbols output file: ") + outputPath, LogType::Critical, TEXT(NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE));
             _logger.log("", LogType::ConsoleMessage);
             return false;
         }
@@ -515,7 +553,7 @@ bool NWScriptCompilerV2::disassemblyBinary(std::string& fileContents,
     if (generatedCode == "DISASSEMBLY ERROR: COMPILER INITIALIZATION FAILED!")
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log("Disassembler - Compiler Initialization failed!", LogType::Critical, "NSC2007");
+        _logger.log("Disassembler - Compiler Initialization failed!", LogType::Critical, NSC2007_DISASSEMBLY_COMPILER_INIT_FAIL);
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -534,7 +572,7 @@ bool NWScriptCompilerV2::disassemblyBinary(std::string& fileContents,
     if (!bufferToFile(outputPath, formatedCode.str()))
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log(TEXT("Could not write disassembled output file: ") + outputPath, LogType::Critical, TEXT("NSC2008"));
+        _logger.log(TEXT("Could not write disassembled output file: ") + outputPath, LogType::Critical, TEXT(NSC2008_COULD_NOT_WRITE_DISASSEMBLY_FILE));
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -640,7 +678,7 @@ bool NWScriptCompilerV2::MakeDependenciesFile(const std::set<std::string>& depen
         if (!bufferToFile(outputPath, sdependencies.str()))
         {
             _logger.log("", LogType::ConsoleMessage);
-            _logger.log(TEXT("Could not write dependency file: ") + outputPath, LogType::Critical, TEXT("NSC2009"));
+            _logger.log(TEXT("Could not write dependency file: ") + outputPath, LogType::Critical, TEXT(NSC2009_COULD_NOT_WRITE_DEPENDENCY_FILE));
             _logger.log("", LogType::ConsoleMessage);
             return false;
         }
@@ -706,10 +744,10 @@ int32_t NWScriptPlugin::ResManWriteToFile(const char* sFileName, RESTYPE nResTyp
         switch (nResType)
         {
         case NWN::ResNCS:
-            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write compiled output file: ") + outputPath, LogType::Critical, TEXT("NSC2005"));
+            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write compiled output file: ") + outputPath, LogType::Critical, TEXT(NSC2005_COULD_NOT_WRITE_COMPILED_FILE));
             break;
         case NWN::ResNDB:
-            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write generated symbols output file: ") + outputPath, LogType::Critical, TEXT("NSC2006"));
+            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write generated symbols output file: ") + outputPath, LogType::Critical, TEXT(NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE));
             break;
         }
 
@@ -732,7 +770,7 @@ const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RE
 
     try
     {
-        ResRef = g_ResourceManager->ResRef32FromStr(sFileNameStem);
+        ResRef = g_ResourceManager->ResRef32FromStr(toLowerCase(sFileNameStem));
     }
     catch (std::exception)
     {
@@ -768,17 +806,17 @@ const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RE
         Str += g_ResourceManager->ResTypeToExt(nResType);
 
         fileSize = 0;
-        fileContents = fileToBufferC(str2wstr(Str), &fileSize);
+        fileContents = fileToNullTermBuffer(str2wstr(Str), &fileSize);
         if (fileSize > 0)
         {
-            // #BUG: Discover why the last byte is always garbage
-            fileContents[fileSize] = 0;
-
             // Cache loaded file for future reference
-            g_NWScriptCompilerV2->logger().WriteText("INFO: Loaded File -> %s\n", Str.c_str());
             std::string res = *it + sFileNameStem + "." + g_ResourceManager->ResTypeToExt(nResType);
-
             CacheResource(fileContents, fileSize, true, ResRef, (NWN::ResType)nResType, res);
+
+            // If not the current compiling file being loaded (eg: loading an include), logs to console
+            std::string srcStem = g_NWScriptCompilerV2->getSourceFilePath().stem().string();
+            if (strcmp(toLowerCase(sFileNameStem).c_str(), toLowerCase(srcStem).c_str()) != 0)
+                g_NWScriptCompilerV2->logger().WriteText("INFO: Loaded File from disk path -> %s\n", Str.c_str());
 
             return fileContents;
         }            
@@ -801,7 +839,7 @@ const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RE
     {
         if (fileSize != 0)
         {
-            fileContents = new char[fileSize];
+            fileContents = new char[fileSize+1];  // Need a bigger buffer for NULL-Terminated string
 
             if (fileContents == NULL)
             {
@@ -826,6 +864,8 @@ const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RE
                 Offset += Read;
                 BytesLeft -= Read;
             }
+
+            fileContents[fileSize] = 0;
         }
         else
         {
@@ -856,10 +896,6 @@ const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RE
     // Closes file and appends results to cache
     g_ResourceManager->CloseFile(Handle);
     
-    // # BUG: Discover why last byte is always trash
-    if (fileContents != NULL)
-        fileContents[fileSize] = 0;
-
     CacheResource(fileContents, fileSize, true, ResRef, (NWN::ResType)nResType, res);
 
     return fileContents;
@@ -870,6 +906,6 @@ const char* NWScriptPlugin::TlkResolve(STRREF strRef)
     if (CompileErrorTlk.contains(strRef))
         return CompileErrorTlk[strRef].c_str();
     else
-        return (std::string("Unknown error code -> ") + std::to_string(strRef)).c_str();
+        return "Error: Unknown error code";
 }
 

@@ -13,6 +13,7 @@
 
 #define PREPROCESSORPARSE R"((?:[\w\s\\.\-\(\):]+)(?:[\w\s\\.\-\(\):]+)\((?:\d+)\):\s(?:\w+):\s(?:NSC6022): Preprocessed: (.*))"
 #define COMPILERREGEX R"((?<fileName>[\w\s\\.\-\(\):]+)\.(?<fileExt>[\w\s\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<code>NSC\d+):\s(?<message>.+))"
+#define COMPILERREGEXV2 R"((?<fileName>[\w\s\\.\-\(\):]+)\.(?<fileExt>[\w\s\\.\-\(\):]+)\((?<lineNumber>\d+)\):\s(?<type>\w+):\s(?<message>.+)\s(?<code>NSC\d+))"
 #define GENERALMESSAGE R"(\s*(?<type>WARNING|ERROR|INFO)\s*:\s*(?<message>.+))"
 #define INCLUDESPARSEREGEX R"( ShowIncludes: Handled resource ([^\/]+)\/([^\\\n]+))"
 
@@ -20,11 +21,13 @@ typedef jpcre2::select<char> pcre2;
 
 static const pcre2::Regex preprocessorRegex(PREPROCESSORPARSE, 0, jpcre2::JIT_COMPILE);
 static const pcre2::Regex fileParsingMessageRegex(COMPILERREGEX, 0, jpcre2::JIT_COMPILE);
+static const pcre2::Regex fileParsingMessageRegexV2(COMPILERREGEXV2, 0, jpcre2::JIT_COMPILE);
 static const pcre2::Regex generalMessageRegex(GENERALMESSAGE, PCRE2_CASELESS, jpcre2::JIT_COMPILE);
 static const pcre2::Regex includesRegex(INCLUDESPARSEREGEX, 0, jpcre2::JIT_COMPILE);
 
 static pcre2::RegexMatch preprocessorParsing(&preprocessorRegex);
 static pcre2::RegexMatch fileParsingMessage(&fileParsingMessageRegex);
+static pcre2::RegexMatch fileParsingMessageV2(&fileParsingMessageRegexV2);
 static pcre2::RegexMatch generalMessage(&generalMessageRegex);
 static pcre2::RegexMatch includeFile(&includesRegex);
 
@@ -84,6 +87,19 @@ void NWScriptLogger::WriteTextV(const char* fmt, va_list ap)
 	fileParsingMessage.setNamedSubstringVector(&namedGroup);
 	fileParsingMessage.setSubject(buf);
 	matches = fileParsingMessage.match();	
+	if (matches)
+	{
+		log(namedGroup[0]["message"],
+			(namedGroup[0]["type"] == "Error") ? LogType::Error : (namedGroup[0]["type"] == "Warning") ? LogType::Warning : LogType::Info,
+			namedGroup[0]["code"], namedGroup[0]["fileName"], namedGroup[0]["fileExt"], namedGroup[0]["lineNumber"]);
+
+		return;
+	}
+
+	// Parsing messages from new Beamdog's compiler
+	fileParsingMessageV2.setNamedSubstringVector(&namedGroup);
+	fileParsingMessageV2.setSubject(buf);
+	matches = fileParsingMessageV2.match();
 	if (matches)
 	{
 		log(namedGroup[0]["message"],

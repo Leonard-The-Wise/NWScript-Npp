@@ -95,9 +95,15 @@ namespace NWScriptPlugin
 			clearLog();
 
 			// Free memory from Resource Cache to avoid memory leaks
-//			for (auto it = _ResourceCache.begin(); it != _ResourceCache.end(); ++it)
-//				if (it->second.Contents != NULL)
-//					delete it->second.Contents;
+			for (auto& entry : _ResourceCache)
+			{
+				if (entry.second.Allocated && entry.second.Contents)
+				{
+					delete[] entry.second.Contents;
+					entry.second.Contents = nullptr;
+					entry.second.Allocated = false;
+				}
+			}
 
 			_ResourceCache.clear();
 		}

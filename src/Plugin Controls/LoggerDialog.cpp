@@ -309,10 +309,10 @@ intptr_t LoggerDialog::childrenDlgProc(UINT message, WPARAM wParam, LPARAM lPara
 
 					// Dispatch to Plugin for processing.
 					generic_string fileName = r.fileName.empty() ? TEXT("") : r.fileName + TEXT(".") + r.fileExt;
-					int lineNumber = r.lineNumber.empty() ? -1 : stoi(r.lineNumber);
+					int lineNumber = r.lineNumber.empty() || r.lineNumber[0] == '-' ? -1 : stoi(r.lineNumber);
 
 					// Only dispatch messages with valid line numbers
-					if (navigateToFileCallback && lineNumber > -1)
+					if (navigateToFileCallback && (lineNumber > -1 || !fileName.empty()))
 					{
 						// HACK: To correct the file navigation issue, we store the current lineNumber being passed
 						// to navigateToFileCallback, so the timer on it can refer back to it.
