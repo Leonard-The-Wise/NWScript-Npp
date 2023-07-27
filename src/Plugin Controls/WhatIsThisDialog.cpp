@@ -69,7 +69,10 @@ void WhatIsThisDialog::LoadHelpTextEditor(int resourceID)
 	if (ptr)
 		rawText.assign((char*)ptr, _size);
 
-	generic_string rawTextW = str2wstr(rawText);
+	// HACK: change Bk Color of dark mode without messages
+	std::map<generic_string, generic_string> replaceStrings;
+	replaceStrings.insert({ L"4210752", std::to_wstring(PluginDarkMode::getSofterBackgroundColor()) });
+	generic_string rawTextW = replaceStringsW(str2wstr(rawText), replaceStrings);
 
 	// Free memory allocated for resource
 	if (hMemory)

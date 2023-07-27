@@ -9,6 +9,8 @@
 #include "StaticDialog.h"
 #include "AnchorMap.h"
 
+#include "Common.h"
+
 namespace NWScriptPlugin {
 
 	class WhatIsThisDialog : public StaticDialog
