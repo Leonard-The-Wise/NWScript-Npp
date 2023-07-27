@@ -292,11 +292,8 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				case NM_CLICK:
 				case NM_RETURN:
 
-					if (!whatIsThisDialog.isCreated())
-						whatIsThisDialog.init(_hInst, _hSelf);
-
-					if (!whatIsThisDialog.isVisible())
-						whatIsThisDialog.showDialog();
+					whatIsThisDialog.init(_hInst, _hSelf);
+					whatIsThisDialog.doDialog();
 					
 					return TRUE;
 				}

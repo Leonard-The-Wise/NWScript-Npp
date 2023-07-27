@@ -144,8 +144,28 @@ intptr_t CALLBACK WhatIsThisDialog::run_dlgProc(UINT message, WPARAM wParam, LPA
 			// Setup control anchors
 			InitAnchors();
 
+			// Load PNG image for window logo
+			HICON hAbout = loadSVGFromResourceIcon(_hInst, IDI_HELPTABLECONTENTS, PluginDarkMode::isEnabled(), _dpiManager.scaleX(16), _dpiManager.scaleY(16));
+			::SendMessage(_hSelf, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hAbout));
+
 			return TRUE;
 		}
+
+		/*
+		case WM_KEYDOWN:
+		{
+			WORD vkCode = LOWORD(wParam);                                 // virtual-key code
+			WORD keyFlags = HIWORD(lParam);
+
+			switch (vkCode)
+			{
+			case VK_RETURN:
+			case VK_ESCAPE:
+				EndDialog(_hSelf, wParam);
+				return TRUE;
+			}
+		}
+		*/
 
 		case WM_COMMAND:
 		{
@@ -153,9 +173,8 @@ intptr_t CALLBACK WhatIsThisDialog::run_dlgProc(UINT message, WPARAM wParam, LPA
 			{
 			case IDOK:
 			case IDCANCEL:
-				display(false);
-				destroy();
-				return TRUE;
+				EndDialog(_hSelf, wParam);
+				break;
 			}
 			break;
 		}
@@ -213,12 +232,7 @@ void WhatIsThisDialog::LaunchHyperlink(const ENLINK& link)
 }
 
 
-void WhatIsThisDialog::showDialog()
+INT_PTR WhatIsThisDialog::doDialog()
 {
-	// Create from resource
-	if (!isCreated())
-		create(IDD_WHATISTHIS);
-
-	//Show and centralize
-	goToCenter();
+	return ShowModal(IDD_WHATISTHIS);
 }

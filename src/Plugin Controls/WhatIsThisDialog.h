@@ -6,19 +6,24 @@
  // The License.txt file describes the conditions under which this software may be distributed.
 
 #pragma once
-#include "StaticDialog.h"
+#include "ModalDialog.h"
 #include "AnchorMap.h"
 
 #include "Common.h"
 
 namespace NWScriptPlugin {
 
-	class WhatIsThisDialog : public StaticDialog
+	class WhatIsThisDialog : public ModalDialog
 	{
 	public:
 		WhatIsThisDialog() = default;
 
-		void showDialog();
+		~WhatIsThisDialog() {
+			if (_hWindowIcon)
+				DeleteObject(_hWindowIcon);
+		}
+
+		INT_PTR doDialog();
 
 		void setInterruptFlag(std::atomic<bool>& interruptFlagVariable) {
 			_interruptFlagVariable = &interruptFlagVariable;
@@ -41,8 +46,9 @@ namespace NWScriptPlugin {
 		RECTSIZER txtHelpSize = {};
 
 		generic_string _helpText;
-
 		int _currentDocumentID = 0;
+
+		HICON _hWindowIcon = nullptr;
 
 		void LoadHelpTextEditor(int resourceID);
 		void LaunchHyperlink(const ENLINK& link);

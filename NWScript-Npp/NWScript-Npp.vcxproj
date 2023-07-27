@@ -450,6 +450,7 @@
     <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg" />
     <None Include="..\Media\icons-svg\FileDestination.svg" />
     <None Include="..\Media\icons-svg\GoToCurrentLine.svg" />
+    <None Include="..\Media\icons-svg\HelpTableOfContents.svg" />
     <None Include="..\Media\icons-svg\ImmediateWindow.svg" />
     <None Include="..\Media\icons-svg\ImportSettings.svg" />
     <None Include="..\Media\icons-svg\NeverwinterApp.svg" />

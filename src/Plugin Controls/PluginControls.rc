@@ -237,12 +237,12 @@ BEGIN
 END
 
 IDD_WHATISTHIS DIALOGEX 0, 0, 347, 195
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
-EXSTYLE WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_NOPARENTNOTIFY | WS_EX_WINDOWEDGE
 CAPTION "What is this?"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,147,174,50,14
+    DEFPUSHBUTTON   "&OK",IDOK,147,174,50,14
     CONTROL         "",IDC_TXTHELP,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,7,333,158
 END
 
@@ -486,6 +486,8 @@ IDI_GOTOLINE            SVG                     "..\\..\\Media\\icons-svg\\GoToC
 IDI_REPAIR              SVG                     "..\\..\\Media\\icons-svg\\Repair.svg"
 
 IDI_APPLICATIONACCESS   SVG                     "..\\..\\Media\\icons-svg\\ApplicationAccess.svg"
+
+IDI_HELPTABLECONTENTS   SVG                     "..\\..\\Media\\icons-svg\\HelpTableOfContents.svg"
 
 
 /////////////////////////////////////////////////////////////////////////////

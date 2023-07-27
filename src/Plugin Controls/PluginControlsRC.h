@@ -49,6 +49,8 @@
 #define IDD_WHATISTHIS                  190
 #define IDR_COMPILERENGINE              192
 #define IDR_COMPILERENGINEDARK          193
+#define IDR_SVG1                        194
+#define IDI_HELPTABLECONTENTS           194
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -132,7 +134,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        194
+#define _APS_NEXT_RESOURCE_VALUE        195
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101
