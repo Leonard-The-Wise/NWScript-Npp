@@ -259,7 +259,6 @@
     <ClInclude Include="..\src\Notepad Controls\StaticDialog.h" />
     <ClInclude Include="..\src\Notepad Controls\Window.h" />
     <ClInclude Include="..\src\NWScriptCompiler.h" />
-    <ClInclude Include="..\src\NWScriptCompilerV2.h" />
     <ClInclude Include="..\src\NWScriptLogger.h" />
     <ClInclude Include="..\src\NWScriptParser.h" />
     <ClInclude Include="..\src\pch.h" />
@@ -272,6 +271,8 @@
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\UsersPreferencesDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\WarningDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\WhatIsThisDialog.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -291,7 +292,6 @@
     <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
     <ClInclude Include="..\src\Utils\VersionInfoEx.h" />
-    <ClInclude Include="..\src\WarningDialog.h" />
     <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
   <ItemGroup>
@@ -380,7 +380,6 @@
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />
-    <ClCompile Include="..\src\NWScriptCompilerV2.cpp" />
     <ClCompile Include="..\src\NWScriptLogger.cpp" />
     <ClCompile Include="..\src\NWScriptParser.cpp" />
     <ClCompile Include="..\src\pch.cpp">
@@ -397,6 +396,8 @@
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\WarningDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\WhatIsThisDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -428,13 +429,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Utils\VersionInfoEx.cpp" />
-    <ClCompile Include="..\src\WarningDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc" />
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\CompilerEngine-Dark.rtf" />
+    <None Include="..\Media\CompilerEngine.rtf" />
     <None Include="..\Media\icons-svg\AboutBox.svg" />
     <None Include="..\Media\icons-svg\Analysis.svg" />
     <None Include="..\Media\icons-svg\ApplicationAccess.svg" />

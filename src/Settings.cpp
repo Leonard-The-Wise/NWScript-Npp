@@ -52,6 +52,7 @@ void Settings::Load()
 	neverwinterTwoInstallDir = properDirNameW(GetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir")));
 	ignoreInstallPaths = GetBoolean(TEXT("Compiler Settings"), TEXT("ignoreInstallPaths"));
 	additionalIncludeDirs = GetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"));
+	compilerEngine = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerEngine"));
 	compilerFlags = GetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"));
 	optimizeScript = GetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"));
 	useNonBiowareExtenstions = GetBoolean(TEXT("Compiler Settings"), TEXT("useNonBiowareExtenstions"));
@@ -173,6 +174,7 @@ void Settings::Save()
 	SetString(TEXT("Compiler Settings"), TEXT("neverwinterTwoInstallDir"), neverwinterTwoInstallDir);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("ignoreInstallPaths"), ignoreInstallPaths);
 	SetString(TEXT("Compiler Settings"), TEXT("additionalIncludeDirs"), additionalIncludeDirs);
+	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerEngine "), compilerEngine);
 	SetNumber<int>(TEXT("Compiler Settings"), TEXT("compilerFlags"), compilerFlags);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("optimizeScript"), optimizeScript);
 	SetBoolean(TEXT("Compiler Settings"), TEXT("useNonBiowareExtenstions"), useNonBiowareExtenstions);

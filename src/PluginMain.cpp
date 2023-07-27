@@ -610,6 +610,18 @@ void Plugin::ProcessMessagesSci(SCNotification* notifyCode)
         // Initially disable run last batch (until the user runs a batch in session)
         EnablePluginMenuItem(PLUGINMENU_RUNLASTBATCH, false);
 
+        // Check whether to enable legacy options based on script engine chosen
+        if (Settings().compilerEngine == 0)
+        {
+            EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, false);
+            EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, false);
+        }
+        else
+        {
+            EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, true);
+            EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, true);
+        }
+
         // Detects Dark Mode support. Can be done by messaging Notepad++ for newer versions
         // Or if the messages aren't supported (on a previous version), checks the installation on Notepad++ config.xml.
         // Note: Dark Mode is different from Dark Theme - 1st is for the plugin GUI, the second is for NWScript file lexing.
@@ -1201,8 +1213,26 @@ void Plugin::LockPluginMenu(bool toLock)
     EnablePluginMenuItem(PLUGINMENU_DISASSEMBLESCRIPT, !toLock);
     EnablePluginMenuItem(PLUGINMENU_BATCHPROCESSING, !toLock);
 
-    EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, !toLock);
-    EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, !toLock);
+    // These depend also on engine settings
+    if (!toLock)
+    {
+        if (Settings().compilerEngine == 0)
+        {
+            EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, false);
+            EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, false);
+        }
+        else
+        {
+            EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, true);
+            EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, true);
+        }
+    }
+    else
+    {
+        EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, false);
+        EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, false);
+    }
+
     EnablePluginMenuItem(PLUGINMENU_SHOWCONSOLE, !toLock);
     EnablePluginMenuItem(PLUGINMENU_SETTINGS, !toLock);
     EnablePluginMenuItem(PLUGINMENU_USERPREFERENCES, !toLock);
@@ -2571,7 +2601,7 @@ void Plugin::DoCompileOrDisasm(generic_string filePath, bool fromCurrentScintill
     // Process script.
     _compiler.setSourceFilePath(scriptPath);
 #ifdef USE_THREADS
-    std::thread tProcessor(&NWScriptCompilerV2::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
+    std::thread tProcessor(&NWScriptCompiler::processFile, &_compiler, fromCurrentScintilla, &_tempFileContents[0]);
     tProcessor.detach();
 #else
     _compiler.processFile(fromCurrentScintilla, &_tempFileContents[0]);
@@ -2600,7 +2630,7 @@ void Plugin::BuildFilesList()
 // Receives notifications when a "Compile" menu command ends
 void Plugin::CompileEndingCallback(HRESULT decision)
 {
-    NWScriptCompilerV2& compiler = Instance().Compiler();
+    NWScriptCompiler& compiler = Instance().Compiler();
 
     // Clear any content of temporary stash if exists
     Instance()._tempFileContents.clear();
@@ -2640,7 +2670,7 @@ void Plugin::CompileEndingCallback(HRESULT decision)
 // Receives notifications when a "Disassemble" menu command ends
 void Plugin::DisassembleEndingCallback(HRESULT decision)
 {
-    NWScriptCompilerV2& compiler = Instance().Compiler();
+    NWScriptCompiler& compiler = Instance().Compiler();
 
     // Unlock controls to compiler log window
     Instance()._loggerWindow->LockControls(false);
@@ -3085,6 +3115,20 @@ PLUGINCOMMAND Plugin::CompilerSettings()
     compilerSettings.init(Instance().DllHModule(), Instance().NotepadHwnd());
     compilerSettings.appendSettings(&Instance()._settings);
     compilerSettings.doDialog();
+
+    // Disable or enable some menu options depending which engine was chosen
+    Plugin& inst = Instance();
+
+    if (inst.Settings().compilerEngine == 0)
+    {
+        inst.EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, false);
+        inst.EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, false);
+    }
+    else
+    {
+        inst.EnablePluginMenuItem(PLUGINMENU_FETCHPREPROCESSORTEXT, true);
+        inst.EnablePluginMenuItem(PLUGINMENU_VIEWSCRIPTDEPENDENCIES, true);
+    }
 }
 
 // Opens the user's preferences.

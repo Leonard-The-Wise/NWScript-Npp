@@ -15,6 +15,7 @@
 #include "VersionInfoEx.h"
 
 using namespace NWScriptPlugin;
+
 typedef NWScriptLogger::LogType LogType;
 
 #define DEPENDENCYHEADER " \
@@ -35,6 +36,136 @@ typedef jpcre2::select<char> pcre2;
 static pcre2::Regex assemblyLine(FORMATDISASMREGEX, PCRE2_MULTILINE, jpcre2::JIT_COMPILE);
 static pcre2::Regex dependencyParse(DEPENDENCYPARSEREGEX, 0, jpcre2::JIT_COMPILE);
 
+// This new global resource manager pointer is required for new compiler.
+// It will only point to the compiler's instance ResourceManager
+// Since it needs a global resource, we also make a global pointer to the script compiler itself
+static ResourceManager* g_ResourceManager = nullptr;
+static NWScriptCompiler* g_NWScriptCompilerV2 = nullptr;
+
+static std::map<int, std::string> CompileErrorTlk = {
+    {560, "Error: Unexpected character"},
+    {561, "Error: Fatal compiler error"},
+    {562, "Error: Program compound statement at start"},
+    {563, "Error: Unexpected end compound statement"},
+    {564, "Error: After compound statement at end"},
+    {565, "Error: Parsing variable list"},
+    {566, "Error: Unknown state in compiler"},
+    {567, "Error: Invalid declaration type"},
+    {568, "Error: No left bracket on expression"},
+    {569, "Error: No right bracket on expression"},
+    {570, "Error: Bad start of statement"},
+    {571, "Error: No left bracket on arg list"},
+    {572, "Error: No right bracket on arg list"},
+    {573, "Error: No semicolon after expression"},
+    {574, "Error: Parsing assignment statement"},
+    {575, "Error: Bad lvalue"},
+    {576, "Error: Bad constant type"},
+    {577, "Error: Identifier list full"},
+    {578, "Error: Non integer id for integer constant"},
+    {579, "Error: Non float id for float constant"},
+    {580, "Error: Non string id for string constant"},
+    {581, "Error: Variable already used within scope"},
+    {582, "Error: Variable defined without type"},
+    {583, "Error: Incorrect variable state left on stack"},
+    {584, "Error: Non integer expression where integer required"},
+    {585, "Error: Void expression where non void required"},
+    {586, "Error: Invalid parameters for assignment"},
+    {587, "Error: Declaration does not match parameters"},
+    {588, "Error: Logical operation has invalid operands"},
+    {589, "Error: Equality test has invalid operands"},
+    {590, "Error: Comparison test has invalid operands"},
+    {591, "Error: Shift operation has invalid operands"},
+    {592, "Error: Arithmetic operation has invalid operands"},
+    {593, "Error: Unknown operation in semantic check"},
+    {594, "Error: Script too large"},
+    {595, "Error: Return statement has no parameters"},
+    {596, "Error: No while after do keyword"},
+    {597, "Error: Function definition missing name"},
+    {598, "Error: Function definition missing parameter list"},
+    {599, "Error: Malformed parameter list"},
+    {600, "Error: Bad type specifier"},
+    {601, "Error: No semicolon after structure"},
+    {602, "Error: Ellipsis in identifier"},
+    {603, "Error: File not found"},
+    {604, "Error: Include recursive"},
+    {605, "Error: Include too many levels"},
+    {606, "Error: Parsing return statement"},
+    {607, "Error: Parsing identifier list"},
+    {608, "Error: Parsing function declaration"},
+    {609, "Error: Duplicate function implementation"},
+    {610, "Error: Token too long"},
+    {611, "Error: Undefined structure"},
+    {612, "Error: Left of structure part not structure"},
+    {613, "Error: Right of structure part not field in structure"},
+    {614, "Error: Undefined field in structure"},
+    {615, "Error: Structure redefined"},
+    {616, "Error: Variable used twice in same structure"},
+    {617, "Error: Function implementation and definition differ"},
+    {618, "Error: Mismatched types"},
+    {619, "Error: Integer not at top of stack"},
+    {620, "Error: Return type and function type mismatched"},
+    {621, "Error: Not all control paths return a value"},
+    {622, "Error: Undefined identifier"},
+    {623, "Error: No function main in script"},
+    {624, "Error: Function main must have void return value"},
+    {625, "Error: Function main must have no parameters"},
+    {626, "Error: Non void function cannot be a statement"},
+    {627, "Error: Bad variable name"},
+    {628, "Error: Non optional parameter cannot follow optional parameter"},
+    {629, "Error: Type does not have an optional parameter"},
+    {630, "Error: Non constant in function declaration"},
+    {631, "Error: Parsing constant vector"},
+    {1594, "Error: Operand must be an integer lvalue"},
+    {1595, "Error: Conditional requires second expression"},
+    {1596, "Error: Conditional must have matching return types"},
+    {1597, "Error: Multiple default statements within switch"},
+    {1598, "Error: Multiple case constant statements within switch"},
+    {1599, "Error: Case parameter not a constant integer"},
+    {1600, "Error: Switch must evaluate to an integer"},
+    {1601, "Error: No colon after default label"},
+    {1602, "Error: No colon after case label"},
+    {1603, "Error: No semicolon after statement"},
+    {4834, "Error: Break outside of loop or case statement"},
+    {4835, "Error: Too many parameters on function"},
+    {4836, "Error: Unable to open file for writing"},
+    {4855, "Error: Unterminated string constant"},
+    {5182, "Error: No function intsc in script"},
+    {5183, "Error: Function intsc must have void return value"},
+    {5184, "Error: Function intsc must have no parameters"},
+    {6804, "Error: Jumping over declaration statements case disallowed"},
+    {6805, "Error: Jumping over declaration statements default disallowed"},
+    {6823, "Error: Else without corresponding if"},
+    {3741, "Error: Invalid type for const keyword"},
+    {3742, "Error: Const keyword cannot be used on non global variables"},
+    {3752, "Error: Invalid value assigned to constant"},
+    {9081, "Error: Switch condition cannot be followed by a null statement"},
+    {9082, "Error: While condition cannot be followed by a null statement"},
+    {9083, "Error: For statement cannot be followed by a null statement"},
+    {9155, "Error: Cannot include this file twice"},
+    {10407, "If condition cannot be followed by a null statement"},
+    {40104, "Else cannot be followed by a null statement"}
+};
+
+// Now we define some plugin-exclusive compiler message codes
+#define NSC2001_RESOURCE_MANAGER_INITIALIZE_FAIL "NSC2001"
+#define NSC2002_OPEN_FILE_FAIL                   "NSC2002"
+#define NSC2003_RESERVED                         "NSC2003"
+#define NSC2004_UNKNOWN_COMPILE_ERROR            "NSC2004"
+#define NSC2005_COULD_NOT_WRITE_COMPILED_FILE    "NSC2005"
+#define NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE   "NSC2006"
+#define NSC2007_DISASSEMBLY_COMPILER_INIT_FAIL   "NSC2007"
+#define NSC2008_COULD_NOT_WRITE_DISASSEMBLY_FILE "NSC2008"
+#define NSC2009_COULD_NOT_WRITE_DEPENDENCY_FILE  "NSC2009"
+#define NSC2010_CANT_COMPILE_NWSCRIPT_NSS        "NSC2010"
+#define NSC2011_INCLUDE_FILE_IGNORED             "NSC2010"
+
+
+NWScriptCompiler::NWScriptCompiler() :
+    _resourceManager(nullptr), _settings(nullptr), _compilerLegacy(nullptr)
+{
+    g_NWScriptCompilerV2 = this;
+}
+
 bool NWScriptCompiler::initialize() {
 
     // Critical path, initialize resources
@@ -44,13 +175,40 @@ bool NWScriptCompiler::initialize() {
     }
     catch (std::runtime_error& e)
     {
-        _logger.log("Failed to initialize the resources manager: " + std::string(e.what()), LogType::Critical, "NSC2001");
+        _logger.log("Failed to initialize the resources manager: " + std::string(e.what()), LogType::Critical, NSC2001_RESOURCE_MANAGER_INITIALIZE_FAIL);
         return false;
     }
 
     NWNHome = getNwnHomePath(_settings->compileVersion);
 
     return true;
+}
+
+void NWScriptCompiler::reset() {
+    _resourceManager = nullptr;
+    _compilerNative = nullptr;
+    _compilerLegacy = nullptr;
+    _includePaths.clear();
+    _fetchPreprocessorOnly = false;
+    _makeDependencyView = false;
+    _sourcePath = "";
+    _destDir = "";
+    setMode(0);
+    _processingEndCallback = nullptr;
+    clearLog();
+
+    // Free memory from Resource Cache
+    for (auto& entry : _ResourceCache)
+    {
+        if (entry.second.Allocated && entry.second.Contents)
+        {
+            delete[] entry.second.Contents;
+            entry.second.Contents = nullptr;
+            entry.second.Allocated = false;
+        }
+    }
+
+    _ResourceCache.clear();
 }
 
 bool NWScriptCompiler::loadScriptResources()
@@ -107,7 +265,8 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     if (_stricmp(_sourcePath.filename().string().c_str(), "nwscript.nss") == 0 && _compilerMode == 0)
     {
         _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
-        _logger.log("Error: you can't explicitly compile any script named \"nwscript.nss\", this name is reserved for the main engine.", LogType::Critical, "NSC2010");
+        _logger.log("Error: you can't explicitly compile any script named \"nwscript.nss\", this name is reserved for the main engine.", 
+            LogType::Critical, NSC2010_CANT_COMPILE_NWSCRIPT_NSS);
         _logger.log("File ignored: " + _sourcePath.string() , LogType::Info);
         notifyCaller(false);
         return;
@@ -147,12 +306,24 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
             _includePaths.push_back(properDirNameA(wstr2str(s)) + "\\");
         }
 
+        // Set global resource variable to current resource manager
+        g_ResourceManager = _resourceManager.get();
+
+        // Create compiler. Points functions of API to our own.
+        CScriptCompilerAPI cAPI;
+        cAPI.ResManLoadScriptSourceFile = ResManLoadScriptSourceFile;
+        cAPI.ResManUpdateResourceDirectory = ResManUpdateResourceDirectory;
+        cAPI.ResManWriteToFile = ResManWriteToFile;
+        cAPI.TlkResolve = TlkResolve;
+
+        _compilerNative = std::make_unique<CScriptCompiler>(NWN::ResNSS, NWN::ResNCS, NWN::ResNDB, cAPI);
+
         // Create our compiler/disassembler
-        _compiler = std::make_unique<NscCompiler>(*_resourceManager, _settings->useNonBiowareExtenstions);
-        _compiler->NscSetLogger(&_logger);
-        _compiler->NscSetIncludePaths(_includePaths);
-        _compiler->NscSetCompilerErrorPrefix(SCRIPTERRORPREFIX);
-        _compiler->NscSetResourceCacheEnabled(true);
+        _compilerLegacy = std::make_unique<NscCompiler>(*_resourceManager, _settings->useNonBiowareExtenstions);
+        _compilerLegacy->NscSetLogger(&_logger);
+        _compilerLegacy->NscSetIncludePaths(_includePaths);
+        _compilerLegacy->NscSetCompilerErrorPrefix(SCRIPTERRORPREFIX);
+        _compilerLegacy->NscSetResourceCacheEnabled(true);
     }
 
     // Acquire information about NWN Resource Type of the file. Warning of ignored result is incorrect.
@@ -169,7 +340,7 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     {
         if (!fileToBuffer(_sourcePath.c_str(), inFileContents))
         {
-            _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, "NSC2002");
+            _logger.log("Could not load the specified file: " + wstr2str(_sourcePath), LogType::Critical, NSC2002_OPEN_FILE_FAIL);
             notifyCaller(false);
             return;
         }
@@ -190,11 +361,28 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
     bool bSuccess = false;
     if (_compilerMode == 0)
     {
+        // Use old library to fetch preprocessor and make dependencies, since the new Beamdog's compiler don't support them
         if (_fetchPreprocessorOnly)
+        {
             _logger.log("Fetching preprocessor output for: " + _sourcePath.string(), LogType::ConsoleMessage);
-        else
+            bSuccess = compileScriptLegacy(inFileContents, fileResType, fileResRef);
+        }
+
+        if (_makeDependencyView)
+        {
+            _logger.log("Making dependency view for: " + _sourcePath.string(), LogType::ConsoleMessage);
+            bSuccess = compileScriptLegacy(inFileContents, fileResType, fileResRef);
+        }
+
+        // Use new library for compiling to support NWScript latest features
+        if (!_fetchPreprocessorOnly && !_makeDependencyView)
+        {
             _logger.log("Compiling script: " + _sourcePath.string(), LogType::ConsoleMessage);
-        bSuccess = compileScript(inFileContents, fileResType, fileResRef);
+            if (_settings->compilerEngine == 0)
+                bSuccess = compileScriptNative(inFileContents, fileResType, fileResRef);
+            else
+                bSuccess = compileScriptLegacy(inFileContents, fileResType, fileResRef);
+        }        
     }
     else
     {
@@ -206,7 +394,75 @@ void NWScriptCompiler::processFile(bool fromMemory, char* fileContents)
 }
 
 
-bool NWScriptCompiler::compileScript(std::string& fileContents,
+bool NWScriptCompiler::compileScriptNative(std::string& fileContents,
+    const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
+{
+    // Setup compiler according to user's preferences
+    _compilerNative->SetGenerateDebuggerOutput(_settings->generateSymbols);
+    uint32_t optimizationFlags = _settings->generateSymbols ? CSCRIPTCOMPILER_OPTIMIZE_NOTHING :
+        _settings->optimizeScript ? CSCRIPTCOMPILER_OPTIMIZE_EVERYTHING : CSCRIPTCOMPILER_OPTIMIZE_NOTHING;
+    _compilerNative->SetOptimizationFlags(optimizationFlags);
+    _compilerNative->SetCompileConditionalOrMain(1);
+    _compilerNative->SetIdentifierSpecification("nwscript");
+    _compilerNative->SetOutputAlias("");
+
+    // Compile memory allocated file
+    NativeCompileResult ret;
+
+    ret.code = _compilerNative->CompileFile(_sourcePath.string());
+
+    //ret.code = _compilerV2->CompileScriptChunk(fileContents, false);
+
+    // Sometimes, CompileFile returns 1 or -1; in which case the error sould be in CapturedError.
+    // Forward from there.
+    if (ret.code == 1 || ret.code == -1)
+    {
+        ret.code = _compilerNative->GetCapturedErrorStrRef();
+        assert(ret.code != 0);
+        if (ret.code == 0)
+        {
+            ret.code = STRREF_CSCRIPTCOMPILER_ERROR_FATAL_COMPILER_ERROR*-1;
+            _logger.log(CompileErrorTlk[ret.code],
+                LogType::Critical, std::string("NSC") + std::to_string(ret.code));
+
+            return false;
+        }
+    }
+
+    // Resolve error messages if apply
+    if (ret.code)
+    {
+        ret.str = ret.code ? _compilerNative->GetCapturedError()->CStr() : (char*)"";
+
+        std::string srcFileName = _sourcePath.stem().string();
+        std::string srcFileExt = _sourcePath.extension().string();
+        srcFileExt.erase(0, 1);  // Delete the . before the extension.
+
+        // Pre-process some known errors that are a bit different from the others (don't have line numbers, etc)
+        switch (abs(ret.code))
+        {
+        case 561:
+        case 594:
+            _logger.log(TlkResolve(ret.code), LogType::Error, "NSC" + ret.code, srcFileName, srcFileExt, "-");
+            break;
+
+        // This is about include files. Downgrade to warning...
+        case 623:
+            _logger.log("File [" + _sourcePath.filename().string() + "] appears to be an include file - no void main() or StartingConditional() inside. Ignored.", 
+                LogType::Warning, NSC2011_INCLUDE_FILE_IGNORED, srcFileName, srcFileExt, "-");
+            ret.code = 0;
+            break;
+        default:
+            _logger.WriteText(ret.str);
+            break;
+        }
+    }
+
+    return (ret.code == 0);
+}
+
+
+bool NWScriptCompiler::compileScriptLegacy(std::string& fileContents,
     const NWN::ResType& fileResType, const NWN::ResRef32& fileResRef)
 {
     // We always ignore include files. And for our project, the compiler ALWAYS
@@ -243,7 +499,7 @@ bool NWScriptCompiler::compileScript(std::string& fileContents,
     swutil::ByteVec debugSymbols;
     std::set<std::string> fileDependencies;
 
-    NscResult result = _compiler->NscCompileScript(fileResRef, fileContents.c_str(), fileContents.size(), _settings->compileVersion,
+    NscResult result = _compilerLegacy->NscCompileScript(fileResRef, fileContents.c_str(), fileContents.size(), _settings->compileVersion,
         bOptimize, bIgnoreIncludes, &_logger, compilerFlags, generatedCode, debugSymbols, fileDependencies, _settings->generateSymbols);
 
     switch (result)
@@ -267,7 +523,7 @@ bool NWScriptCompiler::compileScript(std::string& fileContents,
 
     default:
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log("Unknown status code", LogType::Critical, "NSC2004");
+        _logger.log("Unknown status code", LogType::Critical, NSC2004_UNKNOWN_COMPILE_ERROR);
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -286,7 +542,7 @@ bool NWScriptCompiler::compileScript(std::string& fileContents,
     if (!bufferToFile(outputPath, dataRef))
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log(TEXT("Could not write compiled output file: ") + outputPath, LogType::Critical, TEXT("NSC2005"));
+        _logger.log(TEXT("Could not write compiled output file: ") + outputPath, LogType::Critical, TEXT(NSC2005_COULD_NOT_WRITE_COMPILED_FILE));
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -300,7 +556,7 @@ bool NWScriptCompiler::compileScript(std::string& fileContents,
         if (!bufferToFile(outputPath, dataRef))
         {
             _logger.log("", LogType::ConsoleMessage);
-            _logger.log(TEXT("Could not write generated symbols output file: ") + outputPath, LogType::Critical, TEXT("NSC2006"));
+            _logger.log(TEXT("Could not write generated symbols output file: ") + outputPath, LogType::Critical, TEXT(NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE));
             _logger.log("", LogType::ConsoleMessage);
             return false;
         }
@@ -319,13 +575,13 @@ bool NWScriptCompiler::disassemblyBinary(std::string& fileContents,
     std::string generatedCode;
 
     // Main disassemble step.
-    _compiler->NscDisassembleScript(fileContents.c_str(), fileContents.size(), generatedCode);
+    _compilerLegacy->NscDisassembleScript(fileContents.c_str(), fileContents.size(), generatedCode);
 
     // This is the way the library returns errors to us on that routine... :D
     if (generatedCode == "DISASSEMBLY ERROR: COMPILER INITIALIZATION FAILED!")
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log("Disassembler - Compiler Initialization failed!", LogType::Critical, "NSC2007");
+        _logger.log("Disassembler - Compiler Initialization failed!", LogType::Critical, NSC2007_DISASSEMBLY_COMPILER_INIT_FAIL);
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -344,7 +600,7 @@ bool NWScriptCompiler::disassemblyBinary(std::string& fileContents,
     if (!bufferToFile(outputPath, formatedCode.str()))
     {
         _logger.log("", LogType::ConsoleMessage);
-        _logger.log(TEXT("Could not write disassembled output file: ") + outputPath, LogType::Critical, TEXT("NSC2008"));
+        _logger.log(TEXT("Could not write disassembled output file: ") + outputPath, LogType::Critical, TEXT(NSC2008_COULD_NOT_WRITE_DISASSEMBLY_FILE));
         _logger.log("", LogType::ConsoleMessage);
         return false;
     }
@@ -450,7 +706,7 @@ bool NWScriptCompiler::MakeDependenciesFile(const std::set<std::string>& depende
         if (!bufferToFile(outputPath, sdependencies.str()))
         {
             _logger.log("", LogType::ConsoleMessage);
-            _logger.log(TEXT("Could not write dependency file: ") + outputPath, LogType::Critical, TEXT("NSC2009"));
+            _logger.log(TEXT("Could not write dependency file: ") + outputPath, LogType::Critical, TEXT(NSC2009_COULD_NOT_WRITE_DEPENDENCY_FILE));
             _logger.log("", LogType::ConsoleMessage);
             return false;
         }
@@ -458,3 +714,226 @@ bool NWScriptCompiler::MakeDependenciesFile(const std::set<std::string>& depende
 
     return true;
 }
+
+
+bool CacheResource(const char* ResFileContents, UINT32 ResFileLength, bool Allocated,
+    const NWN::ResRef32& ResRef, NWN::ResType ResType, const std::string& sLocation)
+{
+    try
+    {
+        ResourceCacheKey   Key;
+        ResourceCacheEntry Entry;
+        bool               Inserted;
+
+        Key.ResRef = ResRef;
+        Key.ResType = ResType;
+
+        Entry.Allocated = Allocated;
+        Entry.Contents = (char*)ResFileContents;
+        Entry.Size = ResFileLength;
+        Entry.Location = sLocation;
+
+        Inserted = g_NWScriptCompilerV2->getResourceCache().insert(ResourceCache::value_type(Key, Entry)).second;
+
+        assert(Inserted == true);
+    }
+    catch (std::exception)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// Dummy function. Interface to new compiler - we do nothing here.
+BOOL NWScriptPlugin::ResManUpdateResourceDirectory(const char* sAlias)
+{
+    return false;
+}
+
+// Intercepts ResManWriteToFile from CScriptCompiler API. 
+int32_t NWScriptPlugin::ResManWriteToFile(const char* sFileName, RESTYPE nResType, const uint8_t* pData, size_t nSize, bool bBinary)
+{
+
+    // Decides which type of file to write depending on ResType.
+
+    std::string dataRef;
+    dataRef.assign(reinterpret_cast<const char*>(pData), nSize);
+
+    generic_string outputPath = str2wstr(g_NWScriptCompilerV2->getDestinationDirectory().string() 
+        + "\\" + fs::path(sFileName).stem().string()
+        + "." + g_ResourceManager->ResTypeToExt(nResType)
+    );
+
+    if (!bufferToFile(outputPath, dataRef))
+    {
+        g_NWScriptCompilerV2->logger().log("", LogType::ConsoleMessage);
+
+        switch (nResType)
+        {
+        case NWN::ResNCS:
+            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write compiled output file: ") + outputPath, LogType::Critical, TEXT(NSC2005_COULD_NOT_WRITE_COMPILED_FILE));
+            break;
+        case NWN::ResNDB:
+            g_NWScriptCompilerV2->logger().log(TEXT("Unable to write generated symbols output file: ") + outputPath, LogType::Critical, TEXT(NSC2006_COULD_NOT_GENERATE_SYMBOL_FILE));
+            break;
+        }
+
+        g_NWScriptCompilerV2->logger().log("", LogType::ConsoleMessage);
+        return -1;
+    }
+
+    return 0;
+}
+
+const char* NWScriptPlugin::ResManLoadScriptSourceFile(const char* sFileName, RESTYPE nResType)
+{
+
+    // Try to find resource on cache first.
+    NWN::ResRef32 ResRef;
+    ResourceCacheKey CacheKey;
+    
+
+    std::string sFileNameStem = fs::path(sFileName).stem().string();
+
+    try
+    {
+        ResRef = g_ResourceManager->ResRef32FromStr(toLowerCase(sFileNameStem));
+    }
+    catch (std::exception)
+    {
+        return NULL;
+    }
+
+    CacheKey.ResRef = ResRef;
+    CacheKey.ResType = (NWN::ResType)nResType;
+
+    ResourceCache::const_iterator it = g_NWScriptCompilerV2->getResourceCache().find(CacheKey);
+
+    if (it != g_NWScriptCompilerV2->getResourceCache().end())
+    {
+        return it->second.Contents;
+    }
+
+    size_t fileSize = 0;
+    char* fileContents = NULL;
+
+    // Not found: try search include paths first.
+    for (auto it = g_NWScriptCompilerV2->includePaths().begin(); it != g_NWScriptCompilerV2->includePaths().end(); ++it)
+    {
+        std::string Str(*it);
+#ifdef _WINDOWS
+        if (Str.back() != '\\')
+            Str += "\\";
+#else
+        if (Str.back() != '/')
+            Str += "/";
+#endif
+        Str += sFileNameStem;
+        Str += ".";
+        Str += g_ResourceManager->ResTypeToExt(nResType);
+
+        fileSize = 0;
+        fileContents = fileToNullTermBuffer(str2wstr(Str), &fileSize);
+        if (fileSize > 0)
+        {
+            // Cache loaded file for future reference
+            std::string res = *it + sFileNameStem + "." + g_ResourceManager->ResTypeToExt(nResType);
+            CacheResource(fileContents, fileSize, true, ResRef, (NWN::ResType)nResType, res);
+
+            // If not the current compiling file being loaded (eg: loading an include), logs to console
+            std::string srcStem = g_NWScriptCompilerV2->getSourceFilePath().stem().string();
+            if (strcmp(toLowerCase(sFileNameStem).c_str(), toLowerCase(srcStem).c_str()) != 0)
+                g_NWScriptCompilerV2->logger().WriteText("INFO: Loaded File from disk path -> %s\n", Str.c_str());
+
+            return fileContents;
+        }            
+    }
+
+    // Not found: try opening via resource files
+    ResourceManager::FileHandle Handle = g_ResourceManager->OpenFile(ResRef, nResType);
+
+    if (Handle == ResourceManager::INVALID_FILE)
+        return NULL;
+
+    // Read entire file upfront
+    fileSize = g_ResourceManager->GetEncapsulatedFileSize(Handle);
+
+    size_t BytesLeft = fileSize;
+    size_t Offset = 0;
+    size_t Read = 0;
+
+    try
+    {
+        if (fileSize != 0)
+        {
+            fileContents = new char[fileSize+1];  // Need a bigger buffer for NULL-Terminated string
+
+            if (fileContents == NULL)
+            {
+                g_NWScriptCompilerV2->logger().log("Critical failure: Memory allocation for resource [" + std::string(sFileName) + "] failed.", LogType::Critical, "NSC2101");
+                throw std::bad_alloc();
+            }
+
+            while (BytesLeft)
+            {
+                if (!g_ResourceManager->ReadEncapsulatedFile(Handle, Offset, BytesLeft, &Read, &fileContents[Offset]))
+                {
+                    g_NWScriptCompilerV2->logger().log("Critical failure: ReadEncapsulatedFile did not succeeded.", LogType::Critical, "NSC2101");
+                    throw std::runtime_error("Critical failure: ReadEncapsulatedFile did not succeeded");
+                }
+
+                if (Read == 0) 
+                {
+                    g_NWScriptCompilerV2->logger().log("Critical failure: read 0 bytes from resource file [" + std::string(sFileName) + "]", LogType::Critical, "NSC2102");
+                    throw std::runtime_error("Critical failure: read 0 bytes from resource file");
+                }
+
+                Offset += Read;
+                BytesLeft -= Read;
+            }
+
+            fileContents[fileSize] = 0;
+        }
+        else
+        {
+            fileContents = NULL;
+        }
+    }
+    catch (std::exception)
+    {
+        if (fileContents)
+            delete[] fileContents;
+
+        g_ResourceManager->CloseFile(Handle);
+        return NULL;
+    }
+
+    std::string res = "";
+    std::string AccessorName;
+    try
+    {
+        g_ResourceManager->GetResourceAccessorName(Handle, AccessorName);
+        res = AccessorName + "/" + sFileNameStem + "." + g_ResourceManager->ResTypeToExt(nResType);
+    }
+    catch (std::exception) {}
+
+    // Show includes always. Filter in script plugin
+    g_NWScriptCompilerV2->logger().WriteText("INFO: Loaded file from game's resources -> %s\n", res.c_str());
+
+    // Closes file and appends results to cache
+    g_ResourceManager->CloseFile(Handle);
+    
+    CacheResource(fileContents, fileSize, true, ResRef, (NWN::ResType)nResType, res);
+
+    return fileContents;
+}
+
+const char* NWScriptPlugin::TlkResolve(STRREF strRef)
+{
+    if (CompileErrorTlk.contains(strRef))
+        return CompileErrorTlk[strRef].c_str();
+    else
+        return "Error: Unknown error code";
+}
+

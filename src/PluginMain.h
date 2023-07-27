@@ -18,7 +18,7 @@
 #include "LineIndentor.h"
 #include "Settings.h"
 #include "NWScriptParser.h"
-#include "NWScriptCompilerV2.h"
+#include "NWScriptCompiler.h"
 
 #include "AboutDialog.h"
 #include "LoggerDialog.h"
@@ -99,7 +99,7 @@ namespace NWScriptPlugin {
 		// Retrieve's Plugin's LineIndentor Object
 		LineIndentor& Indentor() { return _indentor; }
 		// Retrieve the Compiler Object
-		NWScriptCompilerV2& Compiler() { return _compiler; };
+		NWScriptCompiler& Compiler() { return _compiler; };
 		// Retrieve's Plugin's Module Handle
 		HMODULE DllHModule() const { return _dllHModule; }
 		// Retrieves Notepad++ HWND
@@ -327,7 +327,7 @@ namespace NWScriptPlugin {
 		NotepadLexer _notepadCurrentLexer;
 		PluginMessenger _messageInstance;
 		LineIndentor _indentor;
-		NWScriptCompilerV2 _compiler;
+		NWScriptCompiler _compiler;
 		tTbData _dockingData;			// needs persistent info for docking data
 		HICON _dockingIcon;				// needs persistent info for docking data
 		generic_string _dockingTitle;   // needs persistent info for docking data

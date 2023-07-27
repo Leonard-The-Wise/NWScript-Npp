@@ -129,9 +129,6 @@
     <ClInclude Include="..\src\Utils\tinyxml2.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\WarningDialog.h">
-      <Filter>Plugin Dialogs</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -161,7 +158,6 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\NWScriptLogger.h" />
-    <ClInclude Include="..\src\NWScriptCompiler.h" />
     <ClInclude Include="..\src\Plugin Controls\CompilerSettingsDialog.h">
       <Filter>Plugin Dialogs</Filter>
     </ClInclude>
@@ -232,7 +228,13 @@
     <ClInclude Include="..\src\Native Compiler\xxhash.h">
       <Filter>Native Compiler</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\NWScriptCompilerV2.h" />
+    <ClInclude Include="..\src\NWScriptCompiler.h" />
+    <ClInclude Include="..\src\Plugin Controls\WhatIsThisDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Plugin Controls\WarningDialog.h">
+      <Filter>Plugin Dialogs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\PluginMain.cpp" />
@@ -266,9 +268,6 @@
     <ClCompile Include="..\src\Utils\tinyxml2.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\WarningDialog.cpp">
-      <Filter>Plugin Dialogs</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Plugin Controls\PathAccessDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
@@ -286,7 +285,6 @@
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NWScriptLogger.cpp" />
-    <ClCompile Include="..\src\NWScriptCompiler.cpp" />
     <ClCompile Include="..\src\Plugin Controls\CompilerSettingsDialog.cpp">
       <Filter>Plugin Dialogs</Filter>
     </ClCompile>
@@ -348,7 +346,13 @@
     <ClCompile Include="..\src\Native Compiler\xxhash.c">
       <Filter>Native Compiler</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\NWScriptCompilerV2.cpp" />
+    <ClCompile Include="..\src\NWScriptCompiler.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\WhatIsThisDialog.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Plugin Controls\WarningDialog.cpp">
+      <Filter>Plugin Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc">
@@ -368,95 +372,101 @@
     <None Include="..\ReadMe.md">
       <Filter>Media</Filter>
     </None>
-    <None Include="..\Media\OnlineHelp.rtf">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\OnlineHelp-Dark.rtf">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\Media\NWScript-Npp-EngineObjects.bin">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\Media\icons-svg\AboutBox.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\ClearWindow.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\CompilableFile.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\CompileBatch.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\DarkTheme.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\DependancyGraph.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\DisassemblyCode.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\ImmediateWindow.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\ImportSettings.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\RepeatLastRun.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\Report.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\Restart.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\SettingsGroup.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\ShowAssignedConfigurations.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\UndoCheckBoxList.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\UserBuild.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\UserBuildRemove.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\WelcomeWebTutorial.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\WordWrap.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\NeverwinterApp.svg">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
     </None>
     <None Include="..\Media\icons-svg\Analysis.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\DescriptionViewer.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\FileDestination.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\GoToCurrentLine.svg">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Media\icons-svg\Repair.svg">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
     </None>
     <None Include="..\Media\icons-svg\ApplicationAccess.svg">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ClearWindow.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\CompilableFile.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\CompileBatch.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DarkTheme.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DependancyGraph.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DescriptionViewer.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\DisassemblyCode.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\FileDestination.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\GoToCurrentLine.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ImmediateWindow.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ImportSettings.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\NeverwinterApp.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\OnlineHelp.rtf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\OnlineHelp-Dark.rtf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\Repair.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\RepeatLastRun.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\Report.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\Restart.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\SettingsGroup.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\ShowAssignedConfigurations.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UndoCheckBoxList.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UserBuild.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\UserBuildRemove.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\WelcomeWebTutorial.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\icons-svg\WordWrap.svg">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\CompilerEngine.rtf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="..\Media\CompilerEngine-Dark.rtf">
+      <Filter>Media</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -471,17 +481,17 @@
     <Image Include="..\Media\Sample-Colorization-DarkMode.jpg">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="..\Media\NWScriptLogo.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Media\HereBeDragons.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
     </Image>
     <Image Include="..\Media\NWScript-FileParse.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="..\Media\NWScriptLogo.png">
+      <Filter>Media</Filter>
     </Image>
     <Image Include="..\Media\NWScriptLogo-Simplified.png">
-      <Filter>Resource Files</Filter>
+      <Filter>Media</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

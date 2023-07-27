@@ -1416,8 +1416,7 @@ int32_t CScriptCompiler::CompileScriptConditional(const CExoString &sScriptCondi
 
 int32_t CScriptCompiler::GetCompiledScriptCode(char **ppnCode, int32_t *pnCodeSize)
 {
-	// PATCH: This function seems to be returning the wrong values
-	*pnCodeSize = m_nOutputCodeLength; //m_nOutputCodeSize;
+	*pnCodeSize = m_nOutputCodeSize;
 	*ppnCode = m_pchOutputCode;
 
 	return 0;
