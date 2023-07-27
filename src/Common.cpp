@@ -152,6 +152,14 @@ namespace NWScriptPluginCommons {
         return output;
     }
 
+    // Makes a string to lower case
+    std::string toLowerCase(const std::string& str) 
+    {
+        std::string result = str;
+        std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+        return result;
+    }
+
     // Opens a file dialog
     bool openFileDialog(HWND hOwnerWnd, std::vector<generic_string>& outSelectedFiles, const TCHAR* sFilters,
         const generic_string& lastOpenedFolder, bool multiFile)
@@ -897,6 +905,28 @@ namespace NWScriptPluginCommons {
         return true;
     }
 
+    char* fileToNullTermBuffer(const generic_string& filePath, size_t* pBufferSize)
+    {
+        std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+
+        if (!file.is_open()) 
+            return nullptr;
+
+        std::streampos fileSize = file.tellg();
+        *pBufferSize = fileSize;
+
+        char* buffer = new char[*pBufferSize + 1];
+
+        file.seekg(0, std::ios::beg);
+        file.read(buffer, fileSize);
+        file.close();
+
+        buffer[fileSize] = 0;
+
+        *pBufferSize = fileSize;
+        return buffer;
+    }
+
     // Saves a string buffer into a raw file 
     bool bufferToFile(const generic_string& filePath, const std::string& sContents)
     {
@@ -910,6 +940,16 @@ namespace NWScriptPluginCommons {
         s << sContents;
         s.close();
         return true;
+    }
+
+    // Removes the file extension from name
+    std::string removeFileExtension(const std::string& filename) 
+    {
+        size_t lastDotPos = filename.find_last_of(".");
+        if (lastDotPos != std::string::npos) {
+            return filename.substr(0, lastDotPos);
+        }
+        return filename;
     }
 
     // Writes a pseudo-batch file to store Notepad++ executable to be called by ShellExecute

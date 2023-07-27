@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by PluginControls.rc
+// Arquivo de inclusão gerado pelo Microsoft Visual C++.
+// Usado por PluginControls.rc
 //
 #define IDD_ABOUT                       102
 #define IDB_HEREBEDRAGONS               103
@@ -46,6 +46,11 @@
 #define IDI_REPAIR                      187
 #define IDB_NWSCRIPTLOGO_SIMPLIFIED     188
 #define IDI_APPLICATIONACCESS           189
+#define IDD_WHATISTHIS                  190
+#define IDR_COMPILERENGINE              192
+#define IDR_COMPILERENGINEDARK          193
+#define IDR_SVG1                        194
+#define IDI_HELPTABLECONTENTS           194
 #define IDC_LNKHOMEPAGE                 1000
 #define IDC_TXTABOUT                    1001
 #define IDC_LBLPLUGINNAME               1002
@@ -115,6 +120,12 @@
 #define IDC_PCTNWSCRIPTFILELOGOBOX      1079
 #define IDC_PCTABOUTLOGOBOX             1080
 #define IDC_PCTFILEACCESSLOGOBOX        1081
+#define IDC_USEBEAMDOGCOMPILER          1082
+#define IDC_USELEGACYCOMPILER           1083
+#define IDC_WHATISTHIS                  1084
+#define IDC_LNKWHATISTHIS               1084
+#define IDC_LBLTARGETVERSION            1085
+#define IDC_TXTHELP                     1086
 #define IDC_STATIC                      -1
 #define IDC_HEREBEDRAGONS               -1
 #define IDC_LBLSOLUTION                 -1
@@ -123,9 +134,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        190
+#define _APS_NEXT_RESOURCE_VALUE        195
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1082
+#define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

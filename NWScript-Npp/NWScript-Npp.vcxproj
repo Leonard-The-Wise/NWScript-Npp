@@ -122,7 +122,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;_DEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -200,7 +200,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NOMINMAX;PCRE2_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;WIN64;_WIN64;WIN32;_WIN32;NDEBUG;_USRDLL;DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\src\;$(ProjectDir)..\src\Lexers;$(ProjectDir)..\src\Lexers\Lexlib;$(ProjectDir)..\src\Lexers\Scintilla;$(ProjectDir)..\src\Plugin Controls;$(ProjectDir)..\src\Plugin Interface;$(ProjectDir)..\src\Notepad Controls;$(ProjectDir)..\src\Utils;$(SolutionDir)lib\NscLib\Exports;$(SolutionDir)lib\lunasvg\include;$(ProjectDir)..\src\DarkMode</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -246,6 +246,12 @@
     <ClInclude Include="..\src\Lexers\Scintilla\Scintilla.h" />
     <ClInclude Include="..\src\Lexers\Scintilla\Sci_Position.h" />
     <ClInclude Include="..\src\LineIndentor.h" />
+    <ClInclude Include="..\src\Native Compiler\exobase.h" />
+    <ClInclude Include="..\src\Native Compiler\exotypes.h" />
+    <ClInclude Include="..\src\Native Compiler\scriptcomp.h" />
+    <ClInclude Include="..\src\Native Compiler\scripterrors.h" />
+    <ClInclude Include="..\src\Native Compiler\scriptinternal.h" />
+    <ClInclude Include="..\src\Native Compiler\xxhash.h" />
     <ClInclude Include="..\src\Notepad Controls\Docking.h" />
     <ClInclude Include="..\src\Notepad Controls\DockingDlgInterface.h" />
     <ClInclude Include="..\src\Notepad Controls\dockingResource.h" />
@@ -265,6 +271,8 @@
     <ClInclude Include="..\src\Plugin Controls\PluginControlsRC.h" />
     <ClInclude Include="..\src\Plugin Controls\ProcessFilesDialog.h" />
     <ClInclude Include="..\src\Plugin Controls\UsersPreferencesDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\WarningDialog.h" />
+    <ClInclude Include="..\src\Plugin Controls\WhatIsThisDialog.h" />
     <ClInclude Include="..\src\Plugin Interface\DllMain.h" />
     <ClInclude Include="..\src\Plugin Interface\LexerInterface.h" />
     <ClInclude Include="..\src\Plugin Interface\menuCmdID.h" />
@@ -284,7 +292,6 @@
     <ClInclude Include="..\src\Utils\tinyxml2.h" />
     <ClInclude Include="..\src\Utils\Utf8_16.h" />
     <ClInclude Include="..\src\Utils\VersionInfoEx.h" />
-    <ClInclude Include="..\src\WarningDialog.h" />
     <ClInclude Include="..\src\XMLGenStrings.h" />
   </ItemGroup>
   <ItemGroup>
@@ -328,6 +335,48 @@
     </ClCompile>
     <ClCompile Include="..\src\Lexers\LexNWScript.cpp" />
     <ClCompile Include="..\src\LineIndentor.cpp" />
+    <ClCompile Include="..\src\Native Compiler\exostring.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompcore.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompfinalcode.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompidentspec.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcomplexical.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\scriptcompparsetree.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\Native Compiler\xxhash.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\Notepad Controls\ModalDialog.cpp" />
     <ClCompile Include="..\src\Notepad Controls\StaticDialog.cpp" />
     <ClCompile Include="..\src\NWScriptCompiler.cpp" />
@@ -347,6 +396,8 @@
     <ClCompile Include="..\src\Plugin Controls\FileParseSummaryDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\ProcessFilesDialog.cpp" />
     <ClCompile Include="..\src\Plugin Controls\UsersPreferencesDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\WarningDialog.cpp" />
+    <ClCompile Include="..\src\Plugin Controls\WhatIsThisDialog.cpp" />
     <ClCompile Include="..\src\Plugin Interface\LexerInterface.cpp" />
     <ClCompile Include="..\src\PluginMain.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -378,13 +429,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\Utils\VersionInfoEx.cpp" />
-    <ClCompile Include="..\src\WarningDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\Plugin Controls\PluginControls.rc" />
     <ResourceCompile Include="..\src\ProjectVersion.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Media\CompilerEngine-Dark.rtf" />
+    <None Include="..\Media\CompilerEngine.rtf" />
     <None Include="..\Media\icons-svg\AboutBox.svg" />
     <None Include="..\Media\icons-svg\Analysis.svg" />
     <None Include="..\Media\icons-svg\ApplicationAccess.svg" />
@@ -398,6 +450,7 @@
     <None Include="..\Media\icons-svg\ErrorSquiggleActive.svg" />
     <None Include="..\Media\icons-svg\FileDestination.svg" />
     <None Include="..\Media\icons-svg\GoToCurrentLine.svg" />
+    <None Include="..\Media\icons-svg\HelpTableOfContents.svg" />
     <None Include="..\Media\icons-svg\ImmediateWindow.svg" />
     <None Include="..\Media\icons-svg\ImportSettings.svg" />
     <None Include="..\Media\icons-svg\NeverwinterApp.svg" />
@@ -435,6 +488,7 @@
   <ItemGroup>
     <Text Include="..\src\Lexers\Config\Raw Regular Expressions.txt" />
     <Text Include="..\src\Lexers\Lexilla\License.txt" />
+    <Text Include="..\src\Native Compiler\gpl-3.0.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\lib\lunasvg\lunasvg.vcxproj">

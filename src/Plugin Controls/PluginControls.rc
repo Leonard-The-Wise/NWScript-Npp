@@ -114,17 +114,17 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&OK",IDOK,143,293,50,14
     PUSHBUTTON      "&Cancel",IDCANCEL,254,293,50,14
-    GROUPBOX        "Neverwinter Nights Installation Folders (for loading nwscript.nss and other game resources)",IDC_STATIC,7,7,411,90
-    LTEXT           "Neverwinter Nights 1 (or Enhanced Edition)",IDC_STATIC,87,20,293,8
-    CONTROL         "Use this",IDC_USENWN1,"Button",BS_AUTORADIOBUTTON | WS_GROUP,32,33,41,10
-    CONTROL         "Use this",IDC_USENWN2,"Button",BS_AUTORADIOBUTTON,32,63,41,10
-    EDITTEXT        IDC_TXTNWN1INSTALL,86,31,294,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BTNWN1INSTALL,386,31,20,14
-    LTEXT           "Neverwinter Nights 2",IDC_STATIC,87,50,291,8
-    EDITTEXT        IDC_TXTNWN2INSTALL,85,60,294,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BTNWN2INSTALL,385,60,20,14
+    GROUPBOX        "Neverwinter Nights Installation Folders",IDC_STATIC,7,7,284,90
+    LTEXT           "Neverwinter Nights 1 (or Enhanced Edition)",IDC_STATIC,58,20,174,8
+    CONTROL         "Use this",IDC_USENWN1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,15,33,41,10
+    CONTROL         "Use this",IDC_USENWN2,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,63,41,10
+    EDITTEXT        IDC_TXTNWN1INSTALL,57,31,195,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNWN1INSTALL,261,31,20,14
+    LTEXT           "Neverwinter Nights 2",IDC_STATIC,58,50,173,8
+    EDITTEXT        IDC_TXTNWN2INSTALL,57,60,195,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNWN2INSTALL,261,60,20,14
     CONTROL         "Ignore installation paths.",IDC_CHKIGNOREINSTALLPATHS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,82,96,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,82,96,10
     GROUPBOX        "Additional Include Paths",IDC_STATIC,7,104,224,137
     EDITTEXT        IDC_TXTADDPATH,12,119,186,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BTSEARCHPATH,204,119,20,14
@@ -134,20 +134,25 @@ BEGIN
     GROUPBOX        "Compiler Options",IDC_STATIC,248,104,170,137
     CONTROL         "Optimize script",IDC_CHKCOMPOPTIMIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,120,63,10
     CONTROL         "Enable non-Bioware's extensions",IDC_CHKNONBIOWAREXTENSIONS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,136,121,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,168,121,10
     CONTROL         "Generate (.ndb) debug symbols files",IDC_CHKCOMPNDBSYMBOLS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,153,132,10
-    CONTROL         "Enable strict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,169,75,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,136,132,10
+    CONTROL         "Enable strict mode",IDC_CHKCOMPSTRICTMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,185,75,10
     CONTROL         "Create makefile (.d) dependencies files",IDC_CHKCOMPMAKEFILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,185,141,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,152,141,10
     CONTROL         "Disable parsing of \\"" and \\\\ tokens",IDC_CHKCOMPDISABLESLASHPARSE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,263,201,135,10
     COMBOBOX        IDC_CBOTARGETVERSION,262,219,48,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Target game version",IDC_STATIC,317,220,67,8
+    LTEXT           "Target game version",IDC_LBLTARGETVERSION,317,220,67,8
     GROUPBOX        "Output Directory",IDC_STATIC,7,246,411,40
     CONTROL         "Same of the script file",IDC_CHKOUTPUTDIR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,264,85,10
     EDITTEXT        IDC_TXTOUTPUTDIR,115,261,263,14,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BTOUTPUTDIR,383,261,20,14
+    GROUPBOX        "Compiler Engine",IDC_STATIC,300,7,118,90
+    CONTROL         "Beamdog's Native Compiler",IDC_USEBEAMDOGCOMPILER,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,310,33,102,10
+    CONTROL         "Legacy NscLib Compiler",IDC_USELEGACYCOMPILER,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,310,61,90,10
+    CONTROL         "<a>What is this?</a>",IDC_LNKWHATISTHIS,"SysLink",0x0,334,81,41,11
 END
 
 IDD_BATCHPROCESS DIALOGEX 0, 0, 409, 171
@@ -229,6 +234,16 @@ BEGIN
     CONTROL         "",IDC_BTFILTERERRORS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,353,5,17,14
     CONTROL         "",IDC_BTFILTERWARNINGS,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,374,5,17,14
     CONTROL         "",IDC_BTFILTERINFO,"Button",BS_AUTOCHECKBOX | BS_ICON | BS_PUSHLIKE,396,5,17,14
+END
+
+IDD_WHATISTHIS DIALOGEX 0, 0, 347, 195
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_NOPARENTNOTIFY | WS_EX_WINDOWEDGE
+CAPTION "What is this?"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,147,174,50,14
+    CONTROL         "",IDC_TXTHELP,"RichEdit50W",WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x804,7,7,333,158
 END
 
 
@@ -323,6 +338,14 @@ BEGIN
         TOPMARGIN, 2
         BOTTOMMARGIN, 123
     END
+
+    IDD_WHATISTHIS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 340
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 188
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -383,6 +406,11 @@ BEGIN
 END
 
 IDD_LOGGER_CONSOLE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_WHATISTHIS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -459,6 +487,8 @@ IDI_REPAIR              SVG                     "..\\..\\Media\\icons-svg\\Repai
 
 IDI_APPLICATIONACCESS   SVG                     "..\\..\\Media\\icons-svg\\ApplicationAccess.svg"
 
+IDI_HELPTABLECONTENTS   SVG                     "..\\..\\Media\\icons-svg\\HelpTableOfContents.svg"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -468,6 +498,10 @@ IDI_APPLICATIONACCESS   SVG                     "..\\..\\Media\\icons-svg\\Appli
 IDR_ABOUTDOC            RTF                     "..\\..\\Media\\OnlineHelp.rtf"
 
 IDR_ABOUTDOCDARK        RTF                     "..\\..\\Media\\OnlineHelp-Dark.rtf"
+
+IDR_COMPILERENGINE      RTF                     "..\\..\\Media\\CompilerEngine.rtf"
+
+IDR_COMPILERENGINEDARK  RTF                     "..\\..\\Media\\CompilerEngine-Dark.rtf"
 
 
 /////////////////////////////////////////////////////////////////////////////

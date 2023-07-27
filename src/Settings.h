@@ -51,6 +51,7 @@ namespace NWScriptPlugin {
 		generic_string neverwinterOneInstallDir;
 		generic_string neverwinterTwoInstallDir;
 		bool ignoreInstallPaths = false;
+		int compilerEngine = 0;
 		UINT32 compilerFlags = 0;
 		bool optimizeScript = true;
 		bool useNonBiowareExtenstions = false;

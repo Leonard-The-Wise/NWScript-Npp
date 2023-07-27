@@ -13,12 +13,15 @@
 
 #include "Nsc.h"
 #include "CompilerSettingsDialog.h"
+#include "WhatIsThisDialog.h"
 
 #include "PluginControlsRC.h"
 #include "PluginDarkMode.h"
 
 
 using namespace NWScriptPlugin;
+
+static WhatIsThisDialog whatIsThisDialog;
 
 intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -64,10 +67,23 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 				ListBox_AddString(GetDlgItem(_hSelf, IDC_LSTADDPATH), s.c_str());
 			}
 
+			if (myset.compilerEngine == 0)
+			{
+				::CheckRadioButton(_hSelf, IDC_USEBEAMDOGCOMPILER, IDC_USELEGACYCOMPILER, IDC_USEBEAMDOGCOMPILER);
+				EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPSTRICTMODE), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_CHKNONBIOWAREXTENSIONS), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPMAKEFILE), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), false);
+				EnableWindow(GetDlgItem(_hSelf, IDC_LBLTARGETVERSION), false);
+			}
+			else
+				::CheckRadioButton(_hSelf, IDC_USEBEAMDOGCOMPILER, IDC_USELEGACYCOMPILER, IDC_USELEGACYCOMPILER);
+
 			CheckDlgButton(_hSelf, IDC_CHKCOMPOPTIMIZE, myset.optimizeScript);
-			CheckDlgButton(_hSelf, IDC_CHKNONBIOWAREXTENSIONS, myset.useNonBiowareExtenstions);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPNDBSYMBOLS, myset.generateSymbols);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPSTRICTMODE, myset.compilerFlags & NscCompilerFlag_StrictModeEnabled);
+			CheckDlgButton(_hSelf, IDC_CHKNONBIOWAREXTENSIONS, myset.useNonBiowareExtenstions);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPMAKEFILE, myset.compilerFlags & NscCompilerFlag_GenerateMakeDeps);
 			CheckDlgButton(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE, myset.compilerFlags & NscCompilerFlag_DisableDoubleQuote);
 
@@ -148,6 +164,28 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 							run_dlgProc(WM_COMMAND, IDC_USENWN2, 0);
 					}
 
+					return FALSE;
+				}
+
+				case IDC_USEBEAMDOGCOMPILER:
+				{
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPSTRICTMODE), false);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKNONBIOWAREXTENSIONS), false);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPMAKEFILE), false);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE), false);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), false);
+					EnableWindow(GetDlgItem(_hSelf, IDC_LBLTARGETVERSION), false);
+					return FALSE;
+				}
+
+				case IDC_USELEGACYCOMPILER:
+				{
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPSTRICTMODE), true);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKNONBIOWAREXTENSIONS), true);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPMAKEFILE), true);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CHKCOMPDISABLESLASHPARSE), true);
+					EnableWindow(GetDlgItem(_hSelf, IDC_CBOTARGETVERSION), true);
+					EnableWindow(GetDlgItem(_hSelf, IDC_LBLTARGETVERSION), true);
 					return FALSE;
 				}
 
@@ -241,6 +279,30 @@ intptr_t CALLBACK CompilerSettingsDialog::run_dlgProc(UINT message, WPARAM wPara
 			}
 			break;
 		}
+
+		case WM_NOTIFY:
+		{
+			switch (wParam)
+			{
+			case IDC_LNKWHATISTHIS:
+			{
+				NMHDR* nmhdr = reinterpret_cast<NMHDR*>(lParam);
+				switch (nmhdr->code)
+				{
+				case NM_CLICK:
+				case NM_RETURN:
+
+					whatIsThisDialog.init(_hInst, _hSelf);
+					whatIsThisDialog.doDialog();
+					
+					return TRUE;
+				}
+				break;
+			}
+			}
+			break;
+		}
+
 	}
 
 	// Signals done processing messages
@@ -311,6 +373,8 @@ bool CompilerSettingsDialog::keepSettings()
 	myset.neverwinterTwoInstallDir = properDirNameW(tempBuffer);
 
 	myset.ignoreInstallPaths = IsDlgButtonChecked(_hSelf, IDC_CHKIGNOREINSTALLPATHS);
+
+	myset.compilerEngine = (IsDlgButtonChecked(_hSelf, IDC_USEBEAMDOGCOMPILER) ? 0 : 1);
 
 	// If user has unsaved input in additional folders, save for him.
 	GetDlgItemText(_hSelf, IDC_TXTADDPATH, tempBuffer, std::size(tempBuffer));
