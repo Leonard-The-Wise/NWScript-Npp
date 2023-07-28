@@ -63,9 +63,6 @@ typedef uint16_t RESTYPE;
 #define NWN_max(a,b) (std::max)(a,b)
 #define NWN_min(a,b) (std::min)(a,b)
 
-// PATCH: __cplusplus macro is defined as 1999 still by Microsoft. We disable here.
-#ifdef DONT_USE_CPLUSPLUC
-
 // This would be in in c++17.
 #if __cplusplus < 201500
 namespace std
@@ -90,7 +87,6 @@ namespace std
 };
 #endif
 
-#endif
 #if ((defined __linux__) || (defined __APPLE__))
 #define stricmp strcasecmp
 #define strnicmp strncasecmp
